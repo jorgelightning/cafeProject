@@ -105,7 +105,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .btn.danger{ background:none; color:var(--acc2); }
 .toast{ position:fixed; left:50%; bottom:84px; transform:translateX(-50%) translateY(20px); background:#222; color:#fff; padding:10px 16px; border-radius:30px; font-size:13px; opacity:0; transition:.25s; z-index:200; pointer-events:none; }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-.pac-container{ z-index:9999 !important; }
+.pacced{ z-index:9999 !important; }
 
 /* ---- desktop split view ---- */
 @media (min-width:900px){
@@ -123,26 +123,30 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 	.sidebar{ width:440px; flex-basis:440px; }
 	.grid{ grid-template-columns:1fr 1fr 1fr; }
 }
+#app[data-mode="viewer"] .admin-only{ display:none !important; }
+.adminbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 16px; background:var(--surface2); border-bottom:1px solid var(--border); }
+.adminbar button{ padding:7px 11px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12px; font-weight:600; cursor:pointer; }
+.adminbar .abnote{ font-size:11px; color:var(--soft); flex-basis:100%; }
 </style>
 </head>
 <body>
-<div id="app" data-view="map">
+<div id="app" data-view="map" data-mode="viewer">
 	<aside class="sidebar">
-		<div class="side-head"><div style="flex:1"><h1>☕ Cafe Map</h1><div class="sub" id="count"></div></div></div>
+		<div class="side-head"><div style="flex:1"><h1>☕ Cafe Map</h1><div class="sub" id="count"></div></div><button class="iconbtn lockbtn" onclick="toggleAdmin()" title="Viewer mode — tap to unlock editing">🔒</button></div>
 		<div class="side-nav">
 			<button id="n-list" onclick="show('list')">☰ List</button>
 			<button id="n-fav" onclick="show('list',true)">❤️ Faves</button>
-			<button id="n-add" onclick="openForm()">＋ Add</button>
+			<button id="n-add" class="admin-only" onclick="openForm()">＋ Add</button>
 		</div>
 		<div class="panes">
-			<section class="pane" id="pane-list">
+			<section class="pane" id="pane-list"><div class="adminbar admin-only"><button onclick="exportJSON()">⬇ Export cafes.json</button><button onclick="revertPublished()">↺ Revert</button><span class="abnote">Admin mode — download cafes.json and commit it to your repo to publish changes for everyone.</span></div>
 				<div class="search">🔍<input id="q" placeholder="Search name, area, drink, tag…" oninput="renderList()"></div>
 				<div class="scroll"><div class="grid" id="grid"></div></div>
 			</section>
 			<section class="pane" id="pane-detail">
 				<div class="scroll">
 					<div class="hero" id="d-hero">
-						<div class="nav"><button class="round" onclick="goBack()">‹</button><div style="display:flex; gap:8px"><button class="round" id="d-fav" onclick="toggleFav()">🧡</button><button class="round" onclick="editCurrent()">✎</button></div></div>
+						<div class="nav"><button class="round" onclick="goBack()">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()">🧡</button><button class="round admin-only" onclick="editCurrent()">✎</button></div></div>
 						<div class="tagphoto">📷 My drink</div>
 					</div>
 					<div class="dbody">
@@ -151,7 +155,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 						<div class="chips" id="d-tags"></div>
 						<div class="lab">Drinks I had</div><div id="d-drinks"></div>
 						<div class="lab">My thoughts</div><div class="review" id="d-review"></div>
-						<div style="margin-top:22px; display:flex; gap:10px"><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn danger" onclick="deleteCurrent()">Delete</button></div>
+						<div style="margin-top:22px; display:flex; gap:10px"><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
 					</div>
 				</div>
 			</section>
@@ -173,17 +177,17 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 		</div>
 	</aside>
 	<main class="mapwrap">
-		<div class="mobile-topbar"><div style="flex:1"><h1>☕ Cafe Map</h1><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn" onclick="locate()" title="My location">📍</button></div>
+		<div class="mobile-topbar"><div style="flex:1"><h1>☕ Cafe Map</h1><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn lockbtn" onclick="toggleAdmin()" title="Viewer mode — tap to unlock editing">🔒</button><button class="iconbtn" onclick="locate()" title="My location">📍</button></div>
 		<div class="mapbox">
 			<div id="map"></div>
 			<div class="map-msg" id="map-msg"></div>
-			<button class="fab" onclick="openForm()">+</button>
+			<button class="fab admin-only" onclick="openForm()">+</button>
 		</div>
 	</main>
 	<nav class="tabbar">
 		<button class="tab on" id="t-map" onclick="show('map')"><span class="ti">🗺️</span>Map</button>
 		<button class="tab" id="t-list" onclick="show('list')"><span class="ti">☰</span>List</button>
-		<button class="tab" id="t-add" onclick="openForm()"><span class="ti">➕</span>Add</button>
+		<button class="tab admin-only" id="t-add" onclick="openForm()"><span class="ti">➕</span>Add</button>
 		<button class="tab" id="t-fav" onclick="show('list',true)"><span class="ti">❤️</span>Faves</button>
 	</nav>
 	<div class="toast" id="toast"></div>
@@ -191,7 +195,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 <script>
 "use strict";
 
-
+/* ============================================================
+   STEP 1 — PASTE YOUR *CAESAR-ENCODED* KEY BELOW.
+   Generate it with the console snippet in the page instructions.
+   (Light deterrent only: the decoded key still reaches the browser.)
+   ============================================================ */
 const GMAPS_KEY_ENC = "HPghZfJAcuuHITOQI9ZJ-BMszolL6X9GRmgTNhr";
 const CAESAR_SHIFT = 7;
 function caesar(s,k){ return s.replace(/./g,c=>{ const o=c.charCodeAt(0); if(o>=65&&o<=90)return String.fromCharCode((o-65+k%26+26)%26+65); if(o>=97&&o<=122)return String.fromCharCode((o-97+k%26+26)%26+97); if(o>=48&&o<=57)return String.fromCharCode((o-48+k%10+10)%10+48); return c; }); }
@@ -199,10 +207,14 @@ const GMAPS_KEY = caesar(GMAPS_KEY_ENC, -CAESAR_SHIFT);
 /* ============================================================ */
 
 const KEY="cafemap.v1";
+const DATA_URL="cafes.json";          // published data committed to your GitHub repo
+const ADMIN_FLAG="cafemap.admin";     // remembers admin mode in this browser
+const ADMIN_PASS="cafeAdmin";         // change this — only hides editing UI (not real security)
 const DEFAULT_CENTER=[21.300,-157.830]; // Honolulu [lat,lng]
 const ALL_TAGS=["cozy","good wifi","oat milk","outdoor","quiet","pastries","specialty","matcha","to-go"];
 let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], favOnly=false, lastMain="map";
 let gReady=false, gmap=null, fgmap=null, fgmarker=null, gmarkers=[];
+let isAdmin=false;
 
 const $=id=>document.getElementById(id);
 const app=$("app");
@@ -211,8 +223,22 @@ function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show");
 function esc(s){ return (s||"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
 
 /* ---------- storage ---------- */
-function load(){ try{ cafes=JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ cafes=[]; } if(!cafes.length){ cafes=seed(); save(); } }
-function save(){ try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){ toast("Storage full — try a smaller photo"); } }
+async function load(){
+	isAdmin = localStorage.getItem(ADMIN_FLAG)==="1";
+	let published=null;
+	try{ const r=await fetch(DATA_URL+"?t="+Date.now()); if(r.ok)published=await r.json(); }catch(e){}
+	if(isAdmin){
+		let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+		cafes=(local&&local.length)?local:((published&&published.length)?published:seed());
+	} else {
+		cafes=(published&&published.length)?published:seed();
+	}
+}
+function save(){ if(!isAdmin)return; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){ toast("Storage full — try a smaller photo"); } }
+function applyMode(){ app.dataset.mode=isAdmin?"admin":"viewer"; document.querySelectorAll(".lockbtn").forEach(b=>{ b.textContent=isAdmin?"🔓":"🔒"; b.title=isAdmin?"Admin mode — tap to sign out":"Viewer mode — tap to unlock editing"; }); if(!isAdmin&&app.dataset.view==="form")show(lastMain); }
+function toggleAdmin(){ if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; localStorage.setItem(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
+function exportJSON(){ const blob=new Blob([JSON.stringify(cafes,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="cafes.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); toast("Downloaded cafes.json — commit it to your repo"); }
+function revertPublished(){ if(!confirm("Discard local edits and reload the published cafes.json?"))return; localStorage.removeItem(KEY); load().then(()=>{ renderMarkers(); show("list"); toast("Reverted to published"); }); }
 function seed(){ return [
 	{id:uid(),name:"Morning Glass Coffee",area:"Manoa",lat:21.3140,lng:-157.8087,photo:null,emoji:"☕",rating:5,fav:true,tags:["cozy","pastries"],review:"Tucked-away neighborhood spot. The flat white is excellent and the breakfast sandwich is a must.",drinks:[{n:"Flat white",p:"$5"},{n:"Cold brew",p:"$5.5"}]},
 	{id:uid(),name:"ARS Cafe",area:"Diamond Head",lat:21.2680,lng:-157.8050,photo:null,emoji:"🍦",rating:4,fav:false,tags:["outdoor","specialty"],review:"Great post-beach stop. Affogato hits after a Diamond Head hike.",drinks:[{n:"Affogato",p:"$7"}]},
@@ -270,7 +296,8 @@ function addDrinkRow(n,p){ const div=document.createElement("div"); div.classNam
 function saveForm(){ const name=$("f-name").value.trim(); if(!name){ toast("Please add a cafe name"); return; } const drinks=[...document.querySelectorAll("#f-drinks .dr")].map(r=>({n:r.querySelector(".dn").value.trim(),p:r.querySelector(".dp").value.trim()})).filter(d=>d.n); const data={name,area:$("f-area").value.trim(),lat:picked?picked.lat:null,lng:picked?picked.lng:null,photo:formPhoto,rating:formRating,fav:$("f-fav").checked,tags:formTags.slice(),review:$("f-review").value.trim(),drinks,emoji:"☕"}; if(editId){ const c=cafes.find(x=>x.id===editId); Object.assign(c,data); } else { data.id=uid(); cafes.push(data); } save(); renderMarkers(); toast("Saved ✓"); editId?openDetail(editId):show(lastMain); }
 
 /* ---------- boot ---------- */
-load(); show("map"); startMaps();
+applyMode();
+load().then(()=>{ applyMode(); show("map"); startMaps(); });
 let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(mapResize,150); });
 </script>
 </body>
