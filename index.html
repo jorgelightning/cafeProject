@@ -159,7 +159,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 			<button id="n-add" class="admin-only" onclick="openForm()">＋ Add</button>
 		</div>
 		<div class="panes">
-			<section class="pane" id="pane-list"><div class="adminbar admin-only"><button onclick="exportJSON()">⬇ Export cafes.json</button><button onclick="revertPublished()">↺ Revert</button><span class="abnote">Admin mode — download cafes.json and commit it to your repo to publish changes for everyone.</span></div>
+			<section class="pane" id="pane-list"><div class="adminbar admin-only"><button onclick="exportJSON()">⬇ Backup .json</button><button onclick="revertPublished()">↺ Reload</button><span class="abnote" id="ab-cloud">Admin mode</span></div>
 				<div class="search">🔍<input id="q" placeholder="Search name, area, drink, tag…" oninput="renderList()"></div>
 				<div class="scroll"><div class="grid" id="grid"></div></div>
 			</section>
@@ -213,6 +213,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 	<div class="updatebar" id="updatebar" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
 <div class="toast" id="toast"></div>
 </div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 "use strict";
 
@@ -227,10 +230,31 @@ function caesar(s,k){ return s.replace(/./g,c=>{ const o=c.charCodeAt(0); if(o>=
 const GMAPS_KEY = caesar(GMAPS_KEY_ENC, -CAESAR_SHIFT);
 /* ============================================================ */
 
+/* ============================================================
+   FIREBASE (cloud sync) — paste your project's web config below.
+   One-time setup (~3 min):
+     1) console.firebase.google.com → Add project.
+     2) Build → Realtime Database → Create database → Start in test mode.
+     3) Project settings → Your apps → Web (</>) → register → copy the config.
+     4) Paste the values below (databaseURL is the important one).
+     5) Realtime Database → Rules → set { "rules": { ".read": true, ".write": true } } → Publish.
+   After this, admin edits save to the cloud instantly for everyone — no more cafes.json uploads.
+   NOTE: public write means anyone could overwrite data; ask me to add Google sign-in for real protection.
+============================================================ */
+const FIREBASE_CONFIG = {
+	apiKey: "AIzaSyDoTgqNZjj7oyoeulJAiqNvPMCGltUbrio",
+	authDomain: "cafeproject-b604f.firebaseapp.com",
+	databaseURL: "https://cafeproject-b604f-default-rtdb.firebaseio.com",
+	projectId: "cafeproject-b604f",
+storageBucket: "cafeproject-b604f.firebasestorage.app",
+messagingSenderId: "846570702792",
+appId: "1:846570702792:web:5899133d9032437e14e2fd"
+};
 const KEY="cafemap.v1";
 const DATA_URL="cafes.json";          // published data committed to your GitHub repo
 const ADMIN_FLAG="cafemap.admin";     // remembers admin mode in this browser
 const DIRTY_FLAG="cafemap.dirty";     // set on local edits, cleared on Export
+const OWNER_EMAIL="jorgemarco.portillo@gmail.com"; // only this Google account can edit (real security)
 const ADMIN_PASS="cafeAdmin";         // change this — only hides editing UI (not real security)
 const DEFAULT_CENTER=[21.300,-157.830]; // Honolulu [lat,lng]
 const ALL_TAGS=["cozy","good wifi","oat milk","outdoor","quiet","pastries","specialty","matcha","to-go"];
@@ -240,6 +264,11 @@ let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gp
 let isAdmin=false;
 
 const $=id=>document.getElementById(id);
+let fbReady=false, fbDb=null, fbAuth=null;
+function asArray(v){ return Array.isArray(v)?v:(v&&typeof v==="object"?Object.values(v):[]); }
+function initFirebase(){ try{ if(!window.firebase||!FIREBASE_CONFIG||!FIREBASE_CONFIG.databaseURL||/PASTE_/.test(FIREBASE_CONFIG.databaseURL))return false; firebase.initializeApp(FIREBASE_CONFIG); fbDb=firebase.database(); try{ fbAuth=firebase.auth(); }catch(e){} fbReady=true; return true; }catch(e){ console.warn("Firebase init failed",e); return false; } }
+function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ const val=asArray(snap.val()); if(!val.length)return; cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } }); }
+async function loadCloud(){ if(!fbReady)return false; try{ const snap=await fbDb.ref("cafes").once("value"); const val=asArray(snap.val()); if(val.length){ cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load failed",e); } return false; }
 const app=$("app");
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
@@ -248,6 +277,7 @@ function fmtDate(s){ if(!s)return ""; const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s)
 
 /* ---------- storage ---------- */
 async function load(){
+if(await loadCloud())return;
 	isAdmin = localStorage.getItem(ADMIN_FLAG)==="1";
 	let published=null;
 	try{ const r=await fetch(DATA_URL+"?t="+Date.now()); if(r.ok)published=await r.json(); }catch(e){}
@@ -261,11 +291,12 @@ async function load(){
 		cafes=(published&&published.length)?published:seed();
 	}
 }
-function save(){ if(!isAdmin)return; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); localStorage.setItem(DIRTY_FLAG,"1"); }catch(e){ toast("Storage full — try a smaller photo"); } }
+function save(){ if(!isAdmin)return; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){ toast("Storage full — try a smaller photo"); } if(fbReady){ fbDb.ref("cafes").set(cafes).then(()=>{ localStorage.removeItem(DIRTY_FLAG); }).catch(()=>{ localStorage.setItem(DIRTY_FLAG,"1"); toast("Cloud save failed — kept locally"); }); } else { try{ localStorage.setItem(DIRTY_FLAG,"1"); }catch(e){} } }
 function applyMode(){ app.dataset.mode=isAdmin?"admin":"viewer"; document.querySelectorAll(".lockbtn").forEach(b=>{ b.textContent=isAdmin?"🔓":"🔒"; b.title=isAdmin?"Admin mode — tap to sign out":"Viewer mode — tap to unlock editing"; }); if(!isAdmin&&app.dataset.view==="form")show(lastMain); }
-function toggleAdmin(){ if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; localStorage.setItem(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
-function exportJSON(){ const blob=new Blob([JSON.stringify(cafes,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="cafes.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); localStorage.removeItem(DIRTY_FLAG); toast("Downloaded cafes.json — commit it to your repo"); }
-function revertPublished(){ if(!confirm("Discard local edits and reload the published cafes.json?"))return; localStorage.removeItem(KEY); localStorage.removeItem(DIRTY_FLAG); load().then(()=>{ renderMarkers(); show("list"); toast("Reverted to published"); }); }
+function initAuth(){ if(!fbAuth)return; fbAuth.onAuthStateChanged(u=>{ const ok=!!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()); if(u&&!ok){ toast("That account can't edit this map"); fbAuth.signOut(); return; } if(ok&&!isAdmin){ isAdmin=true; localStorage.setItem(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); if(_fbOk){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)fbDb.ref("cafes").set(cafes); }).catch(()=>{}); } }); toast("Admin mode - signed in"); } else if(!ok&&isAdmin){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); }); toast("Viewer mode"); } }); }
+function toggleAdmin(){ if(fbAuth){ if(isAdmin){ if(confirm("Sign out of editing mode?"))fbAuth.signOut().then(()=>toast("Viewer mode")); } else { fbAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(()=>toast("Sign-in cancelled")); } return; } if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; localStorage.setItem(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
+function exportJSON(){ const blob=new Blob([JSON.stringify(cafes,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="cafes.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); localStorage.removeItem(DIRTY_FLAG); toast("Backup downloaded ✓"); }
+function revertPublished(){ if(!confirm("Reload the latest saved data and discard unsynced local edits?"))return; localStorage.removeItem(KEY); localStorage.removeItem(DIRTY_FLAG); load().then(()=>{ renderMarkers(); show("list"); toast("Reloaded latest data"); }); }
 function seed(){ return [
 	{id:uid(),name:"Morning Glass Coffee",area:"Manoa",lat:21.3140,lng:-157.8087,photo:null,emoji:"☕",rating:5,fav:true,tags:["cozy","pastries"],review:"Tucked-away neighborhood spot. The flat white is excellent and the breakfast sandwich is a must.",drinks:[{n:"Flat white",p:"$5"},{n:"Cold brew",p:"$5.5"}]},
 	{id:uid(),name:"ARS Cafe",area:"Diamond Head",lat:21.2680,lng:-157.8050,photo:null,emoji:"🍦",rating:4,fav:false,tags:["outdoor","specialty"],review:"Great post-beach stop. Affogato hits after a Diamond Head hike.",drinks:[{n:"Affogato",p:"$7"}]},
@@ -340,8 +371,10 @@ function saveForm(){ const name=$("f-name").value.trim(); if(!name){ toast("Plea
 function reloadLatest(){ location.replace(location.pathname+"?v="+Date.now()); }
 let _bootSrc=null, _updateShown=false;
 function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{ if(t==null)return; if(_bootSrc===null){ _bootSrc=t; return; } if(t!==_bootSrc && !_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); } }).catch(()=>{}); }
+const _fbOk=initFirebase(); initAuth();
+{ const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file. Until then, use Backup .json + commit."; }
 applyMode();
-load().then(()=>{ applyMode(); show("map"); startMaps(); });
+load().then(()=>{ applyMode(); show("map"); startMaps(); subscribeCloud(); if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)fbDb.ref("cafes").set(cafes); }).catch(()=>{}); } });
 let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(mapResize,150); });
 checkForUpdate();
 setInterval(checkForUpdate,45000);
