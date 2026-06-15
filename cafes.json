@@ -1,1 +1,44 @@
-
+[
+  {
+    "id": "seed-morning-glass",
+    "name": "Morning Glass Coffee",
+    "area": "Manoa",
+    "lat": 21.314,
+    "lng": -157.8087,
+    "photo": null,
+    "emoji": "☕",
+    "rating": 5,
+    "fav": true,
+    "tags": ["cozy", "pastries"],
+    "review": "Tucked-away neighborhood spot. The flat white is excellent and the breakfast sandwich is a must.",
+    "drinks": [{ "n": "Flat white", "p": "$5" }, { "n": "Cold brew", "p": "$5.5" }]
+  },
+  {
+    "id": "seed-ars-cafe",
+    "name": "ARS Cafe",
+    "area": "Diamond Head",
+    "lat": 21.268,
+    "lng": -157.805,
+    "photo": null,
+    "emoji": "🍦",
+    "rating": 4,
+    "fav": false,
+    "tags": ["outdoor", "specialty"],
+    "review": "Great post-beach stop. Affogato hits after a Diamond Head hike.",
+    "drinks": [{ "n": "Affogato", "p": "$7" }]
+  },
+  {
+    "id": "seed-kai-coffee",
+    "name": "Kai Coffee",
+    "area": "Waikiki",
+    "lat": 21.276,
+    "lng": -157.827,
+    "photo": null,
+    "emoji": "🥤",
+    "rating": 4,
+    "fav": false,
+    "tags": ["to-go", "good wifi"],
+    "review": "Reliable iced latte near the beach. Gets busy mid-morning.",
+    "drinks": [{ "n": "Iced latte", "p": "$6" }]
+  }
+]
