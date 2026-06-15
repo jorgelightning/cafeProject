@@ -215,7 +215,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 						<div class="chips" id="d-tags"></div>
 						<div class="lab">Drinks I had</div><div id="d-drinks"></div>
 						<div class="lab">My thoughts</div><div class="review" id="d-review"></div>
-						<div style="margin-top:22px; display:flex; gap:10px"><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
+						<div style="margin-top:22px; display:flex; gap:10px"><button class="btn" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
 					</div>
 				</div>
 			</section>
@@ -310,7 +310,7 @@ let fbReady=false, fbDb=null, fbAuth=null;
 function asArray(v){ return Array.isArray(v)?v:(v&&typeof v==="object"?Object.values(v):[]); }
 function initFirebase(){ try{ if(!window.firebase||!FIREBASE_CONFIG||!FIREBASE_CONFIG.databaseURL||/PASTE_/.test(FIREBASE_CONFIG.databaseURL))return false; firebase.initializeApp(FIREBASE_CONFIG); fbDb=firebase.database(); try{ fbAuth=firebase.auth(); }catch(e){} fbReady=true; return true; }catch(e){ console.warn("Firebase init failed",e); return false; } }
 function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ const val=asArray(snap.val()); if(!val.length)return; cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } }); }
-async function loadCloud(){ if(!fbReady)return false; try{ const snap=await fbDb.ref("cafes").once("value"); const val=asArray(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){} if(dirty&&Array.isArray(local)&&local.length){ cafes=local; resyncDirty(); return true; } if(val.length){ cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load failed",e); } return false; }
+async function loadCloud(){ if(!fbReady)return false; try{ const snap=await Promise.race([fbDb.ref("cafes").once("value"),new Promise((_,rej)=>setTimeout(()=>rej(new Error("cloud-timeout")),6000))]); const val=asArray(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){} if(dirty&&Array.isArray(local)&&local.length){ cafes=local; resyncDirty(); return true; } if(val.length){ cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load slow/failed — using cached data",e); let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(_e){} if(Array.isArray(local)&&local.length){ cafes=local; return true; } } return false; }
 const app=$("app");
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
@@ -322,7 +322,7 @@ async function load(){
 if(await loadCloud())return;
 	isAdmin = localStorage.getItem(ADMIN_FLAG)==="1";
 	let published=null;
-	try{ const r=await fetch(DATA_URL+"?t="+Date.now()); if(r.ok)published=await r.json(); }catch(e){}
+	try{ const ctrl=new AbortController(); const _to=setTimeout(()=>ctrl.abort(),8000); const r=await fetch(DATA_URL+"?t="+Date.now(),{signal:ctrl.signal}); clearTimeout(_to); if(r.ok)published=await r.json(); }catch(e){}
 	if(isAdmin){
 		const dirty = localStorage.getItem(DIRTY_FLAG)==="1";
 		let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
@@ -330,7 +330,7 @@ if(await loadCloud())return;
 		else if(published && published.length){ cafes=published; localStorage.removeItem(KEY); }
 		else { cafes=(local&&local.length)?local:seed(); }
 	} else {
-		cafes=(published&&published.length)?published:seed();
+		let _lc=null; try{ _lc=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){} cafes=(published&&published.length)?published:((Array.isArray(_lc)&&_lc.length)?_lc:seed());
 	}
 }
 function save(){ if(!isAdmin)return; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){ toast("Storage full — try a smaller photo"); } if(fbReady){ const u=fbAuth&&fbAuth.currentUser; if(!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase())){ localStorage.setItem(DIRTY_FLAG,"1"); toast("Saved on this device — tap 🔓 to sign in so it syncs"); return; } fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafes))).then(()=>{ localStorage.removeItem(DIRTY_FLAG); }).catch(()=>{ localStorage.setItem(DIRTY_FLAG,"1"); toast("Cloud save failed — kept on this device, tap 🔓 to re-sign in"); }); } else { try{ localStorage.setItem(DIRTY_FLAG,"1"); }catch(e){} } }
@@ -429,6 +429,7 @@ function openDetail(id,from){ const c=cafes.find(x=>x.id===id); if(!c)return; if
 function toggleFav(){ const c=cafes.find(x=>x.id===curId); if(!c)return; c.fav=!c.fav; save(); $("d-fav").textContent=c.fav?"❤️":"🧡"; renderMarkers(); toast(c.fav?"Added to favorites":"Removed from favorites"); }
 function deleteCurrent(){ if(!confirm("Delete this cafe?"))return; cafes=cafes.filter(x=>x.id!==curId); save(); renderMarkers(); toast("Deleted"); goBack(); }
 function shareCafe(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const txt=c.name+(c.area?" ("+c.area+")":"")+" — "+"★".repeat(c.rating||0)+(c.review?"\n"+c.review:""); if(navigator.share){ navigator.share({title:c.name,text:txt}).catch(()=>{}); } else { navigator.clipboard&&navigator.clipboard.writeText(txt); toast("Copied to clipboard"); } }
+function navigateTo(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const url=(c.lat!=null&&c.lng!=null)?("https://www.google.com/maps/dir/?api=1&destination="+c.lat+","+c.lng):("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(c.name+(c.area?" "+c.area:""))); window.open(url,"_blank","noopener"); }
 function editCurrent(){ openForm(curId); }
 
 /* ---------- form ---------- */
