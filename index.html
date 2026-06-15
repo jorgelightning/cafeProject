@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#d5803b">
 <title>JL Cafe Project</title>
 <style>
@@ -14,7 +15,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 #app{ position:fixed; inset:0; display:flex; flex-direction:column; background:var(--bg); }
 
 /* ---- shell: mobile defaults ---- */
-.sidebar{ position:absolute; inset:0 0 64px 0; display:flex; flex-direction:column; background:var(--bg); z-index:30; min-height:0; }
+.sidebar{ position:absolute; inset:0 0 64px 0; display:flex; flex-direction:column; background:color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); z-index:30; min-height:0; }
 .mapwrap{ position:absolute; inset:0 0 64px 0; display:flex; flex-direction:column; }
 #app[data-view="map"] .sidebar{ display:none; }
 #app[data-view="list"] .mapwrap, #app[data-view="detail"] .mapwrap, #app[data-view="form"] .mapwrap{ display:none; }
@@ -117,8 +118,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* ---- desktop split view ---- */
 @media (min-width:900px){
 	#app{ flex-direction:row; }
-	.sidebar{ position:relative; inset:auto; width:400px; flex:0 0 400px; border-right:1px solid var(--border); display:flex !important; box-shadow:var(--shadow); z-index:2; }
-	.mapwrap{ position:relative; inset:auto; flex:1; display:flex !important; }
+	.sidebar{ position:absolute; inset:0 auto 0 0; width:400px; border-right:1px solid var(--border); display:flex !important; box-shadow:var(--shadow); z-index:2; }
+	.mapwrap{ position:absolute; inset:0; display:flex !important; }
 	.tabbar{ display:none; }
 	.mobile-topbar{ display:none; }
 	.side-nav{ display:flex; }
@@ -172,7 +173,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 					<div class="field"><label>Cafe name *</label><input type="text" id="f-name" placeholder="Search a place or type a name…" autocomplete="off"></div>
 					<div class="field"><label>Location — tap map to drop a pin</label><div id="form-map"></div><button class="hintbtn" onclick="formLocate()">📍 Use my current location</button> <span id="f-coords" style="font-size:12px; color:var(--soft)"></span></div>
 					<div class="field"><label>Area / neighborhood</label><input type="text" id="f-area" placeholder="e.g. Manoa"></div>
-					<div class="field"><label>Drink photo</label><div class="photodrop" id="f-photodrop"><div style="font-size:26px">📷</div><span id="f-photolabel">Paste an image link below to preview</span></div><input type="text" id="f-photo-url" placeholder="Paste an image link (Google Photos, Cloudinary…)" oninput="onPhotoUrl()" style="margin-top:8px"><div style="font-size:11px; color:var(--soft); margin-top:4px">From Google Photos: open the photo, right-click it → "Copy image address" and paste that link here (the Share link won't work).</div></div>
+					<div class="field"><label>Drink photo</label><div class="photodrop" id="f-photodrop"><div style="font-size:26px">📷</div><span id="f-photolabel">Paste an image link below to preview</span></div><input type="text" id="f-photo-url" placeholder="Paste an image link (Google Photos, Cloudinary…)" oninput="onPhotoUrl()" style="margin-top:8px"><div style="font-size:11px; color:var(--soft); margin-top:4px">From Google Photos: open the photo, right-click it → "Copy image address" and paste that link here (the Share link won't work).</div><div id="f-photo-status" style="font-size:11px; margin-top:3px"></div></div>
 					<div class="field"><label>Drinks had</label><div class="drinkrows" id="f-drinks"></div><button class="hintbtn" onclick="addDrinkRow()">+ Add another drink</button></div>
 					<div class="field"><label>Rating</label><div class="rate" id="f-rate"></div></div>
 					<div class="field"><label>Review / thoughts</label><textarea id="f-review" placeholder="Vibe, taste, service…"></textarea></div>
@@ -216,11 +217,13 @@ const GMAPS_KEY = caesar(GMAPS_KEY_ENC, -CAESAR_SHIFT);
 const KEY="cafemap.v1";
 const DATA_URL="cafes.json";          // published data committed to your GitHub repo
 const ADMIN_FLAG="cafemap.admin";     // remembers admin mode in this browser
+const DIRTY_FLAG="cafemap.dirty";     // set on local edits, cleared on Export
 const ADMIN_PASS="cafeAdmin";         // change this — only hides editing UI (not real security)
 const DEFAULT_CENTER=[21.300,-157.830]; // Honolulu [lat,lng]
 const ALL_TAGS=["cozy","good wifi","oat milk","outdoor","quiet","pastries","specialty","matcha","to-go"];
 let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], favOnly=false, lastMain="map";
 let gReady=false, gmap=null, fgmap=null, fgmarker=null, gmarkers=[];
+let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gphotos"))||{}; }catch(e){}
 let isAdmin=false;
 
 const $=id=>document.getElementById(id);
@@ -236,17 +239,20 @@ async function load(){
 	let published=null;
 	try{ const r=await fetch(DATA_URL+"?t="+Date.now()); if(r.ok)published=await r.json(); }catch(e){}
 	if(isAdmin){
+		const dirty = localStorage.getItem(DIRTY_FLAG)==="1";
 		let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
-		cafes=(local&&local.length)?local:((published&&published.length)?published:seed());
+		if(dirty && local && local.length){ cafes=local; }
+		else if(published && published.length){ cafes=published; localStorage.removeItem(KEY); }
+		else { cafes=(local&&local.length)?local:seed(); }
 	} else {
 		cafes=(published&&published.length)?published:seed();
 	}
 }
-function save(){ if(!isAdmin)return; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){ toast("Storage full — try a smaller photo"); } }
+function save(){ if(!isAdmin)return; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); localStorage.setItem(DIRTY_FLAG,"1"); }catch(e){ toast("Storage full — try a smaller photo"); } }
 function applyMode(){ app.dataset.mode=isAdmin?"admin":"viewer"; document.querySelectorAll(".lockbtn").forEach(b=>{ b.textContent=isAdmin?"🔓":"🔒"; b.title=isAdmin?"Admin mode — tap to sign out":"Viewer mode — tap to unlock editing"; }); if(!isAdmin&&app.dataset.view==="form")show(lastMain); }
 function toggleAdmin(){ if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; localStorage.setItem(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
-function exportJSON(){ const blob=new Blob([JSON.stringify(cafes,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="cafes.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); toast("Downloaded cafes.json — commit it to your repo"); }
-function revertPublished(){ if(!confirm("Discard local edits and reload the published cafes.json?"))return; localStorage.removeItem(KEY); load().then(()=>{ renderMarkers(); show("list"); toast("Reverted to published"); }); }
+function exportJSON(){ const blob=new Blob([JSON.stringify(cafes,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="cafes.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); localStorage.removeItem(DIRTY_FLAG); toast("Downloaded cafes.json — commit it to your repo"); }
+function revertPublished(){ if(!confirm("Discard local edits and reload the published cafes.json?"))return; localStorage.removeItem(KEY); localStorage.removeItem(DIRTY_FLAG); load().then(()=>{ renderMarkers(); show("list"); toast("Reverted to published"); }); }
 function seed(){ return [
 	{id:uid(),name:"Morning Glass Coffee",area:"Manoa",lat:21.3140,lng:-157.8087,photo:null,emoji:"☕",rating:5,fav:true,tags:["cozy","pastries"],review:"Tucked-away neighborhood spot. The flat white is excellent and the breakfast sandwich is a must.",drinks:[{n:"Flat white",p:"$5"},{n:"Cold brew",p:"$5.5"}]},
 	{id:uid(),name:"ARS Cafe",area:"Diamond Head",lat:21.2680,lng:-157.8050,photo:null,emoji:"🍦",rating:4,fav:false,tags:["outdoor","specialty"],review:"Great post-beach stop. Affogato hits after a Diamond Head hike.",drinks:[{n:"Affogato",p:"$7"}]},
@@ -279,10 +285,18 @@ function renderMarkers(){ if(!gmap)return; gmarkers.forEach(m=>m.setMap(null)); 
 function locate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ if(gmap){ gmap.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}); gmap.setZoom(14); } },()=>toast("Couldn't get location")); }
 
 /* ---------- list ---------- */
-function renderList(){ const q=($("q").value||"").toLowerCase(); const grid=$("grid"); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(q)items=items.filter(c=>(c.name+" "+(c.area||"")+" "+(c.tags||[]).join(" ")+" "+(c.drinks||[]).map(d=>d.n).join(" ")).toLowerCase().includes(q)); if($("count"))$("count").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s"); if(!items.length){ grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">☕</div>'+(favOnly?"No favorites yet — tap the heart on a cafe.":(q?"No matches.":"No cafes yet. Tap + to add your first visit!"))+'</div>'; return; } grid.innerHTML=items.map(c=>{ const ph=c.photo?('style="background-image:url(\''+c.photo+'\')" class="ph"'):('class="ph nophoto"'); return '<div class="card" onclick="openDetail(\''+c.id+'\',\'list\')"><div '+ph+'>'+(c.photo?(c.fav?"❤️":""):(c.emoji||"☕"))+'</div><div class="b"><div class="n">'+esc(c.name)+'</div><div class="m">'+"★".repeat(c.rating||0)+' · '+esc(c.area||"")+'</div></div></div>'; }).join(""); }
+/* ---------- google place photo fallback ---------- */
+let gphotoInflight={}, _gphotoRerender=null;
+function saveGphotoCache(){ try{ localStorage.setItem("cafemap.gphotos",JSON.stringify(gphotoCache)); }catch(e){} }
+function gphotoFor(c){ return (c&&c.photo) || (c&&gphotoCache[c.id]) || null; }
+function scheduleListRerender(){ clearTimeout(_gphotoRerender); _gphotoRerender=setTimeout(()=>{ if(app.dataset.view==="list")renderList(); },600); }
+function fetchPlacePhoto(c,cb){ if(!c||c.id==null||c.lat==null){ cb&&cb(null); return; } if(gphotoCache[c.id]!==undefined){ cb&&cb(gphotoCache[c.id]); return; } if(!gReady||!window.google||!google.maps||!google.maps.places||!google.maps.places.PlacesService){ cb&&cb(null); return; } try{ const svc=new google.maps.places.PlacesService(gmap||document.createElement("div")); svc.findPlaceFromQuery({ query:(c.name+" "+(c.area||"")).trim(), fields:["photos"], locationBias:{lat:c.lat,lng:c.lng} },(res,status)=>{ let url=null; try{ if(status===google.maps.places.PlacesServiceStatus.OK && res && res[0] && res[0].photos && res[0].photos.length){ url=res[0].photos[0].getUrl({maxWidth:800,maxHeight:600}); } }catch(e){} gphotoCache[c.id]=url; saveGphotoCache(); cb&&cb(url); }); }catch(e){ cb&&cb(null); } }
+function prefetchListPhotos(items){ if(!gReady)return; items.forEach(c=>{ if(c.lat==null||c.photo||gphotoCache[c.id]!==undefined||gphotoInflight[c.id])return; gphotoInflight[c.id]=1; fetchPlacePhoto(c,(url)=>{ delete gphotoInflight[c.id]; if(url)scheduleListRerender(); }); }); }
+
+function renderList(){ const q=($("q").value||"").toLowerCase(); const grid=$("grid"); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(q)items=items.filter(c=>(c.name+" "+(c.area||"")+" "+(c.tags||[]).join(" ")+" "+(c.drinks||[]).map(d=>d.n).join(" ")).toLowerCase().includes(q)); if($("count"))$("count").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s"); if(!items.length){ grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">☕</div>'+(favOnly?"No favorites yet — tap the heart on a cafe.":(q?"No matches.":"No cafes yet. Tap + to add your first visit!"))+'</div>'; return; } grid.innerHTML=items.map(c=>{ const gp=gphotoFor(c); const ph=gp?('style="background-image:url(\''+gp+'\')" class="ph"'):('class="ph nophoto"'); return '<div class="card" onclick="openDetail(\''+c.id+'\',\'list\')"><div '+ph+'>'+(gp?(c.fav?"❤️":""):(c.emoji||"☕"))+'</div><div class="b"><div class="n">'+esc(c.name)+'</div><div class="m">'+"★".repeat(c.rating||0)+' · '+esc(c.area||"")+'</div></div></div>'; }).join(""); prefetchListPhotos(items); }
 
 /* ---------- detail ---------- */
-function openDetail(id,from){ const c=cafes.find(x=>x.id===id); if(!c)return; if(from)lastMain=from; curId=id; const hero=$("d-hero"); if(c.photo){ hero.className="hero"; hero.style.backgroundImage='url("'+c.photo+'")'; } else { hero.className="hero nophoto"; hero.style.backgroundImage=""; } $("d-name").textContent=c.name; $("d-stars").textContent="★".repeat(c.rating||0)+"☆".repeat(5-(c.rating||0)); $("d-meta").textContent=(c.area?" · "+c.area:""); $("d-fav").textContent=c.fav?"❤️":"🧡"; $("d-tags").innerHTML=(c.tags||[]).map(t=>'<span class="chip">'+esc(t)+'</span>').join(""); $("d-drinks").innerHTML=(c.drinks||[]).length?c.drinks.map(d=>{ const ds=(d.dates||[]).filter(Boolean); const cnt=Math.max(d.count||0,ds.length,1); const sub=ds.length?'<div class="dsub">'+ds.map(fmtDate).join(" · ")+'</div>':''; return '<div class="drink"><span class="ic">🥤</span><div class="dmain"><span>'+esc(d.n)+(cnt>1?' <span class="cnt">×'+cnt+'</span>':'')+'</span>'+sub+'</div><span class="pr">'+esc(d.p||"")+'</span></div>'; }).join(""):'<div class="row">No drinks logged.</div>'; $("d-review").textContent=c.review||"No notes yet."; show("detail"); if(c.lat!=null&&gmap)setTimeout(()=>{ mapResize(); gmap.setCenter({lat:c.lat,lng:c.lng}); gmap.setZoom(15); },80); }
+function openDetail(id,from){ const c=cafes.find(x=>x.id===id); if(!c)return; if(from)lastMain=from; curId=id; const hero=$("d-hero"); const gp0=gphotoFor(c); if(gp0){ hero.className="hero"; hero.style.backgroundImage='url("'+gp0+'")'; } else { hero.className="hero nophoto"; hero.style.backgroundImage=""; } if(!c.photo){ fetchPlacePhoto(c,(url)=>{ if(url && curId===c.id){ const h=$("d-hero"); h.className="hero"; h.style.backgroundImage='url("'+url+'")'; scheduleListRerender(); } }); } $("d-name").textContent=c.name; $("d-stars").textContent="★".repeat(c.rating||0)+"☆".repeat(5-(c.rating||0)); $("d-meta").textContent=(c.area?" · "+c.area:""); $("d-fav").textContent=c.fav?"❤️":"🧡"; $("d-tags").innerHTML=(c.tags||[]).map(t=>'<span class="chip">'+esc(t)+'</span>').join(""); $("d-drinks").innerHTML=(c.drinks||[]).length?c.drinks.map(d=>{ const ds=(d.dates||[]).filter(Boolean); const cnt=Math.max(d.count||0,ds.length,1); const sub=ds.length?'<div class="dsub">'+ds.map(fmtDate).join(" · ")+'</div>':''; return '<div class="drink"><span class="ic">🥤</span><div class="dmain"><span>'+esc(d.n)+(cnt>1?' <span class="cnt">×'+cnt+'</span>':'')+'</span>'+sub+'</div><span class="pr">'+esc(d.p||"")+'</span></div>'; }).join(""):'<div class="row">No drinks logged.</div>'; $("d-review").textContent=c.review||"No notes yet."; show("detail"); if(c.lat!=null&&gmap)setTimeout(()=>{ mapResize(); gmap.setCenter({lat:c.lat,lng:c.lng}); gmap.setZoom(15); },80); }
 function toggleFav(){ const c=cafes.find(x=>x.id===curId); if(!c)return; c.fav=!c.fav; save(); $("d-fav").textContent=c.fav?"❤️":"🧡"; renderMarkers(); toast(c.fav?"Added to favorites":"Removed from favorites"); }
 function deleteCurrent(){ if(!confirm("Delete this cafe?"))return; cafes=cafes.filter(x=>x.id!==curId); save(); renderMarkers(); toast("Deleted"); goBack(); }
 function shareCafe(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const txt=c.name+(c.area?" ("+c.area+")":"")+" — "+"★".repeat(c.rating||0)+(c.review?"\n"+c.review:""); if(navigator.share){ navigator.share({title:c.name,text:txt}).catch(()=>{}); } else { navigator.clipboard&&navigator.clipboard.writeText(txt); toast("Copied to clipboard"); } }
@@ -296,7 +310,7 @@ function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; i
 function formLocate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ if(fgmap){ fgmap.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}); fgmap.setZoom(15); } setPicked(p.coords.latitude,p.coords.longitude); },()=>toast("Couldn't get location")); }
 function renderPhoto(){ const d=$("f-photodrop"); const icon=d.querySelector("div"); if(formPhoto){ d.style.backgroundImage='url("'+formPhoto+'")'; if(icon)icon.style.display="none"; $("f-photolabel").textContent=""; } else { d.style.backgroundImage=""; if(icon)icon.style.display=""; $("f-photolabel").textContent="Paste an image link below to preview"; } }
 function onPhoto(e){ const file=e.target.files[0]; if(!file)return; const r=new FileReader(); r.onload=ev=>{ const img=new Image(); img.onload=()=>{ const max=1100; let w=img.width,h=img.height; if(w>max||h>max){ const s=max/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); } const cv=document.createElement("canvas"); cv.width=w; cv.height=h; cv.getContext("2d").drawImage(img,0,0,w,h); formPhoto=cv.toDataURL("image/jpeg",0.82); if($("f-photo-url"))$("f-photo-url").value=""; renderPhoto(); }; img.src=ev.target.result; }; r.readAsDataURL(file); }
-function onPhotoUrl(){ const v=$("f-photo-url").value.trim(); formPhoto=v||null; renderPhoto(); }
+function onPhotoUrl(){ const v=$("f-photo-url").value.trim(); formPhoto=v||null; renderPhoto(); const s=$("f-photo-status"); if(!s)return; if(!v){ s.textContent=""; return; } s.textContent="Checking link…"; s.style.color="var(--soft)"; const t=new Image(); t.onload=()=>{ s.textContent="✓ Image loaded"; s.style.color="#3aa76d"; }; t.onerror=()=>{ s.textContent='⚠ Couldn\'t load this link — use the photo\'s "Copy image address" link, not the Share link.'; s.style.color="var(--acc2)"; }; t.src=v; }
 function renderRate(){ $("f-rate").innerHTML=[1,2,3,4,5].map(n=>'<span class="'+(n<=formRating?"on":"")+'" onclick="formRating='+n+';renderRate()">★</span>').join(""); }
 function renderTags(){ $("f-tags").innerHTML=ALL_TAGS.map(t=>'<span class="chip '+(formTags.includes(t)?"on":"")+'" onclick="toggleTag(\''+t+'\')">'+t+'</span>').join(""); }
 function toggleTag(t){ formTags.includes(t)?formTags=formTags.filter(x=>x!==t):formTags.push(t); renderTags(); }
