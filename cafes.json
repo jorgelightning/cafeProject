@@ -58,7 +58,7 @@
     "photo": null,
     "emoji": "🧋",
     "rating": 4,
-    "fav": true,
+    "fav": false,
     "tags": [],
     "review": "A favorite — the osmanthus and jasmine milk teas are consistently excellent.",
     "drinks": [
@@ -551,7 +551,7 @@
     "photo": null,
     "emoji": "☕",
     "rating": 4,
-    "fav": false,
+    "fav": true,
     "tags": [
       "specialty"
     ],
@@ -750,7 +750,7 @@
     "photo": null,
     "emoji": "🍵",
     "rating": 4,
-    "fav": false,
+    "fav": true,
     "tags": [
       "matcha"
     ],
@@ -774,7 +774,7 @@
     "photo": null,
     "emoji": "🍵",
     "rating": 4,
-    "fav": false,
+    "fav": true,
     "tags": [
       "matcha"
     ],
@@ -812,5 +812,29 @@
         ]
       }
     ]
+  },
+  {
+    "name": "Mashio Project",
+    "area": "Downtown",
+    "lat": 21.29675,
+    "lng": -157.8566,
+    "photo": null,
+    "rating": 5,
+    "fav": true,
+    "tags": [
+      "cozy"
+    ],
+    "review": "It's a popup within Fishcakes (interior design place looks like). Solid Hojicha latte without sugar. So much great popup here as well, would recommend.",
+    "drinks": [
+      {
+        "n": "Hojica latte",
+        "p": "10",
+        "dates": [
+          "2026-06-13"
+        ]
+      }
+    ],
+    "emoji": "☕",
+    "id": "mqf1k9fidxty"
   }
 ]
