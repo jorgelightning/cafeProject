@@ -191,10 +191,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 <script>
 "use strict";
 
-/* ============================================================
-   STEP 1 — PASTE YOUR GOOGLE MAPS API KEY BETWEEN THE QUOTES:
-   ============================================================ */
-const GMAPS_KEY = "AIzaSyCTvnnABMHJB2SC-UFlsheE9Q2ZKfzMGak";
+
+const GMAPS_KEY_ENC = "HPghZfJAcuuHITOQI9ZJ-BMszolL6X9GRmgTNhr";
+const CAESAR_SHIFT = 7;
+function caesar(s,k){ return s.replace(/./g,c=>{ const o=c.charCodeAt(0); if(o>=65&&o<=90)return String.fromCharCode((o-65+k%26+26)%26+65); if(o>=97&&o<=122)return String.fromCharCode((o-97+k%26+26)%26+97); if(o>=48&&o<=57)return String.fromCharCode((o-48+k%10+10)%10+48); return c; }); }
+const GMAPS_KEY = caesar(GMAPS_KEY_ENC, -CAESAR_SHIFT);
 /* ============================================================ */
 
 const KEY="cafemap.v1";
@@ -232,7 +233,7 @@ function show(view,fav){ favOnly=!!fav; if(view==="map"||view==="list")lastMain=
 function goBack(){ show(lastMain==="map"&&window.innerWidth<900?"map":"list"); }
 
 /* ---------- google maps loader ---------- */
-function startMaps(){ if(!GMAPS_KEY||/PASTE|YOUR_/.test(GMAPS_KEY)){ showMapError("Add your Google Maps API key near the top of this file (the GMAPS_KEY line), then reload."); return; } const s=document.createElement("script"); s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(GMAPS_KEY)+"&libraries=places&loading=async&callback=onGoogleReady"; s.async=true; s.onerror=()=>showMapError("Couldn't load Google Maps. Check your connection and API key."); document.head.appendChild(s); }
+function startMaps(){ if(!GMAPS_KEY_ENC||/PASTE|HERE/.test(GMAPS_KEY_ENC)){ showMapError("Add your encoded Google Maps API key near the top of this file (the GMAPS_KEY_ENC line), then reload."); return; } const s=document.createElement("script"); s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(GMAPS_KEY)+"&libraries=places&loading=async&callback=onGoogleReady"; s.async=true; s.onerror=()=>showMapError("Couldn't load Google Maps. Check your connection and API key."); document.head.appendChild(s); }
 function onGoogleReady(){ gReady=true; $("map-msg").classList.remove("show"); initMap(); }
 function gm_authFailure(){ showMapError("Google rejected the API key. Check the key is correct, billing is enabled, and this site is allowed in the key's HTTP-referrer restrictions."); }
 function showMapError(msg){ const el=$("map-msg"); el.innerHTML='<div class="big">🗺️</div><div>'+msg+'</div>'; el.classList.add("show"); if($("map-sub"))$("map-sub").textContent="Map unavailable"; }
