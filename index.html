@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#d5803b">
+<title>Cafe Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+:root{ --acc:#d5803b; --acc2:#e0556b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#7a726b; --faint:#a9a39d; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); }
+@media (prefers-color-scheme:dark){ :root{ --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#a89e96; --faint:#6f655d; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); } }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100%; margin:0; }
+body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,"Apple Color Emoji",sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
+#app{ position:fixed; inset:0; display:flex; flex-direction:column; max-width:560px; margin:0 auto; background:var(--bg); box-shadow:0 0 40px rgba(0,0,0,.15); }
+.screen{ position:absolute; inset:0 0 64px 0; display:flex; flex-direction:column; opacity:0; pointer-events:none; transition:opacity .2s; }
+.screen.active{ opacity:1; pointer-events:auto; }
+.screen.overlay{ inset:0; z-index:40; background:var(--bg); }
+.scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+
+.topbar{ display:flex; align-items:center; gap:10px; padding:14px 16px 10px; }
+.topbar h1{ font-size:20px; margin:0; letter-spacing:-.02em; }
+.topbar .sub{ font-size:12px; color:var(--soft); margin-top:1px; }
+.iconbtn{ width:40px; height:40px; border-radius:12px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; flex:0 0 auto; color:var(--text); }
+.search{ margin:0 16px 10px; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:13px; padding:0 12px; }
+.search input{ border:none; background:none; outline:none; padding:11px 0; font-size:14px; color:var(--text); width:100%; }
+
+#map,#form-map{ flex:1; width:100%; z-index:1; }
+#form-map{ height:150px; flex:none; border-radius:14px; overflow:hidden; border:1px solid var(--border); }
+.leaflet-container{ background:#dfe7ea; font:inherit; }
+
+.fab{ position:absolute; right:18px; bottom:80px; width:58px; height:58px; border-radius:19px; background:var(--acc); color:#fff; border:none; font-size:30px; line-height:1; box-shadow:0 10px 22px rgba(213,128,59,.5); cursor:pointer; z-index:20; display:flex; align-items:center; justify-content:center; }
+
+.tabbar{ position:absolute; left:0; right:0; bottom:0; height:64px; display:flex; background:var(--surface); border-top:1px solid var(--border); z-index:50; }
+.tab{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:10px; color:var(--faint); background:none; border:none; cursor:pointer; }
+.tab .ti{ font-size:20px; }
+.tab.on{ color:var(--acc); }
+
+/* list */
+.grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 16px 20px; }
+.card{ border:1px solid var(--border); border-radius:16px; overflow:hidden; background:var(--surface); cursor:pointer; }
+.card .ph{ height:104px; background-size:cover; background-position:center; display:flex; align-items:flex-start; justify-content:flex-end; padding:7px; font-size:18px; }
+.card .nophoto{ background:linear-gradient(140deg,#caa472,#7b4a26); color:#fff; align-items:center; justify-content:center; font-size:30px; }
+.card .b{ padding:9px 11px 12px; }
+.card .n{ font-weight:700; font-size:14px; line-height:1.2; }
+.card .m{ font-size:11px; color:var(--soft); margin-top:3px; }
+.empty{ text-align:center; color:var(--soft); padding:60px 30px; }
+.empty .big{ font-size:46px; margin-bottom:10px; }
+
+/* detail */
+.hero{ position:relative; height:240px; background-size:cover; background-position:center; display:flex; align-items:flex-end; }
+.hero.nophoto{ background:linear-gradient(140deg,#caa472,#7b4a26); align-items:center; justify-content:center; font-size:84px; }
+.hero .nav{ position:absolute; top:14px; left:14px; right:14px; display:flex; justify-content:space-between; }
+.round{ width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; backdrop-filter:blur(4px); }
+.tagphoto{ position:absolute; bottom:12px; left:14px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 9px; border-radius:20px; }
+.dbody{ padding:16px 18px 30px; }
+.dbody h2{ margin:0 0 4px; font-size:23px; }
+.row{ display:flex; align-items:center; gap:8px; color:var(--soft); font-size:13px; }
+.stars{ color:#f0a93b; font-size:18px; letter-spacing:1px; }
+.chips{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
+.chip{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:4px 11px; font-size:12px; }
+.lab{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); margin:18px 0 8px; }
+.drink{ display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); font-size:14px; }
+.drink .ic{ width:34px; height:34px; border-radius:9px; background:var(--surface2); display:flex; align-items:center; justify-content:center; }
+.drink .pr{ margin-left:auto; color:var(--soft); font-size:13px; }
+.review{ background:var(--surface2); border-radius:13px; padding:14px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
+
+/* form */
+.form{ padding:6px 18px 30px; }
+.field{ margin-bottom:15px; }
+.field label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; }
+.field input[type=text],.field input[type=number],.field textarea{ width:100%; border:1px solid var(--border); border-radius:11px; padding:11px 12px; font-size:14px; background:var(--surface); color:var(--text); outline:none; font-family:inherit; }
+.field textarea{ min-height:84px; resize:vertical; }
+.hintbtn{ font-size:12px; color:var(--acc); background:none; border:none; cursor:pointer; padding:6px 0 0; font-weight:600; }
+.rate{ font-size:30px; color:#d9d3cc; letter-spacing:5px; cursor:pointer; user-select:none; }
+.rate .on{ color:#f0a93b; }
+.photodrop{ position:relative; height:150px; border:2px dashed var(--border); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--soft); font-size:13px; background-size:cover; background-position:center; overflow:hidden; }
+.photodrop input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+.photodrop .pic-overlay{ position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 8px; border-radius:20px; }
+.drinkrows .dr{ display:flex; gap:8px; margin-bottom:8px; }
+.drinkrows .dr input.dn{ flex:2; } .drinkrows .dr input.dp{ flex:1; }
+.delrow{ width:38px; flex:0 0 auto; border:1px solid var(--border); border-radius:10px; background:var(--surface2); cursor:pointer; color:var(--soft); }
+.tagpick{ display:flex; flex-wrap:wrap; gap:7px; }
+.tagpick .chip{ cursor:pointer; }
+.tagpick .chip.on{ background:var(--acc); color:#fff; border-color:transparent; }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:14px; border:none; border-radius:13px; font-size:15px; font-weight:600; cursor:pointer; background:var(--acc); color:#fff; }
+.btn.ghost{ background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.btn.danger{ background:none; color:var(--acc2); }
+.toast{ position:fixed; left:50%; bottom:84px; transform:translateX(-50%) translateY(20px); background:#222; color:#fff; padding:10px 16px; border-radius:30px; font-size:13px; opacity:0; transition:.25s; z-index:200; pointer-events:none; }
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.pin-emoji{ font-size:24px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+</style>
+</head>
+<body>
+<div id="app">
+
+	<!-- MAP -->
+	<section class="screen active" id="s-map">
+		<div class="topbar"><div style="flex:1"><h1>Cafe Map</h1><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn" onclick="locate()" title="My location">📍</button></div>
+		<div id="map"></div>
+		<button class="fab" onclick="openForm()">+</button>
+	</section>
+
+	<!-- LIST -->
+	<section class="screen" id="s-list">
+		<div class="topbar"><div style="flex:1"><h1>All cafes</h1><div class="sub" id="list-sub"></div></div><button class="iconbtn" onclick="show('map')">🗺️</button></div>
+		<div class="search">🔍<input id="q" placeholder="Search name, area, drink, tag…" oninput="renderList()"></div>
+		<div class="scroll"><div class="grid" id="grid"></div></div>
+	</section>
+
+	<!-- DETAIL -->
+	<section class="screen overlay" id="s-detail">
+		<div class="scroll">
+			<div class="hero" id="d-hero">
+				<div class="nav"><button class="round" onclick="show('map')">‹</button><div style="display:flex; gap:8px"><button class="round" id="d-fav" onclick="toggleFav()">🧡</button><button class="round" onclick="editCurrent()">✎</button></div></div>
+				<div class="tagphoto">📷 My drink</div>
+			</div>
+			<div class="dbody">
+				<h2 id="d-name"></h2>
+				<div class="row"><span class="stars" id="d-stars"></span><span id="d-meta"></span></div>
+				<div class="chips" id="d-tags"></div>
+				<div class="lab">Drinks I had</div><div id="d-drinks"></div>
+				<div class="lab">My thoughts</div><div class="review" id="d-review"></div>
+				<div style="margin-top:22px; display:flex; gap:10px"><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn danger" onclick="deleteCurrent()">Delete</button></div>
+			</div>
+		</div>
+	</section>
+
+	<!-- FORM -->
+	<section class="screen overlay" id="s-form">
+		<div class="topbar"><button class="iconbtn" onclick="closeForm()">‹</button><div style="flex:1"><h1 id="form-title">Add a visit</h1></div><button class="iconbtn" onclick="saveForm()" style="width:auto; padding:0 14px; background:var(--acc); color:#fff; border:none; font-size:14px; font-weight:600">Save</button></div>
+		<div class="scroll"><div class="form">
+			<div class="field"><label>Cafe name *</label><input type="text" id="f-name" placeholder="e.g. Morning Glass Coffee"></div>
+			<div class="field"><label>Location — tap map to drop a pin</label><div id="form-map"></div><button class="hintbtn" onclick="formLocate()">📍 Use my current location</button> <span id="f-coords" style="font-size:12px; color:var(--soft)"></span></div>
+			<div class="field"><label>Area / neighborhood</label><input type="text" id="f-area" placeholder="e.g. Manoa"></div>
+			<div class="field"><label>Drink photo</label><div class="photodrop" id="f-photodrop"><div style="font-size:26px">📷</div><span id="f-photolabel">Tap to add a photo of your drink</span><input type="file" accept="image/*" id="f-photo" onchange="onPhoto(event)"></div></div>
+			<div class="field"><label>Drinks had</label><div class="drinkrows" id="f-drinks"></div><button class="hintbtn" onclick="addDrinkRow()">+ Add another drink</button></div>
+			<div class="field"><label>Rating</label><div class="rate" id="f-rate"></div></div>
+			<div class="field"><label>Review / thoughts</label><textarea id="f-review" placeholder="Vibe, taste, service…"></textarea></div>
+			<div class="field"><label>Tags</label><div class="tagpick" id="f-tags"></div></div>
+			<div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-fav"> Mark as favorite ❤️</label></div>
+			<button class="btn" onclick="saveForm()">Save visit</button>
+		</div></div>
+	</section>
+
+	<nav class="tabbar">
+		<button class="tab on" id="t-map" onclick="show('map')"><span class="ti">🗺️</span>Map</button>
+		<button class="tab" id="t-list" onclick="show('list')"><span class="ti">☰</span>List</button>
+		<button class="tab" id="t-add" onclick="openForm()"><span class="ti">➕</span>Add</button>
+		<button class="tab" id="t-fav" onclick="show('list',true)"><span class="ti">❤️</span>Faves</button>
+	</nav>
+	<div class="toast" id="toast"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+"use strict";
+const KEY="cafemap.v1";
+const DEFAULT_CENTER=[21.300,-157.830]; // Honolulu
+const ALL_TAGS=["cozy","good wifi","oat milk","outdoor","quiet","pastries","specialty","matcha","to-go"];
+let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], favOnly=false;
+let map, markers, fmap, fmarker;
+
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
+
+function load(){ try{ cafes=JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ cafes=[]; } if(!cafes.length){ cafes=seed(); save(); } }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){ toast("Storage full — try a smaller photo"); } }
+function seed(){ return [
+	{id:uid(),name:"Morning Glass Coffee",area:"Manoa",lat:21.3140,lng:-157.8087,photo:null,emoji:"☕",rating:5,fav:true,tags:["cozy","pastries"],review:"Tucked-away neighborhood spot. The flat white is excellent and the breakfast sandwich is a must.",drinks:[{n:"Flat white",p:"$5"},{n:"Cold brew",p:"$5.5"}]},
+	{id:uid(),name:"ARS Cafe",area:"Diamond Head",lat:21.2680,lng:-157.8050,photo:null,emoji:"🍦",rating:4,fav:false,tags:["outdoor","specialty"],review:"Great post-beach stop. Affogato hits after a Diamond Head hike.",drinks:[{n:"Affogato",p:"$7"}]},
+	{id:uid(),name:"Kai Coffee",area:"Waikiki",lat:21.2760,lng:-157.8270,photo:null,emoji:"🥤",rating:4,fav:false,tags:["to-go","good wifi"],review:"Reliable iced latte near the beach. Gets busy mid-morning.",drinks:[{n:"Iced latte",p:"$6"}]}
+]; }
+
+/* ---------- navigation ---------- */
+function show(name,fav){ favOnly=!!fav; document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $("s-"+name).classList.add("active"); document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on")); if(name==="map")$("t-map").classList.add("on"); if(name==="list")$( fav?"t-fav":"t-list").classList.add("on"); if(name==="map"&&map)setTimeout(()=>map.invalidateSize(),80); if(name==="list")renderList(); }
+
+/* ---------- map ---------- */
+function initMap(){
+	map=L.map("map",{zoomControl:true,attributionControl:true}).setView(DEFAULT_CENTER,12);
+	L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"\u00a9 OpenStreetMap"}).addTo(map);
+	markers=L.layerGroup().addTo(map);
+	renderMarkers();
+}
+function icon(c){ return L.divIcon({className:"",html:'<div class="pin-emoji">'+(c.fav?"❤️":(c.emoji||"☕"))+'</div>',iconSize:[28,28],iconAnchor:[14,28]}); }
+function renderMarkers(){ if(!markers)return; markers.clearLayers(); const pts=[]; cafes.forEach(c=>{ if(c.lat==null)return; const m=L.marker([c.lat,c.lng],{icon:icon(c)}).addTo(markers); m.on("click",()=>openDetail(c.id)); pts.push([c.lat,c.lng]); }); $("map-sub").textContent=cafes.length+" cafe"+(cafes.length===1?"":"s")+" · tap a pin"; if(pts.length){ try{ map.fitBounds(pts,{padding:[50,50],maxZoom:14}); }catch(e){} } }
+function locate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>map.setView([p.coords.latitude,p.coords.longitude],14),()=>toast("Couldn't get location")); }
+
+/* ---------- list ---------- */
+function renderList(){ const q=($("q").value||"").toLowerCase(); const grid=$("grid"); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(q)items=items.filter(c=>(c.name+" "+(c.area||"")+" "+(c.tags||[]).join(" ")+" "+(c.drinks||[]).map(d=>d.n).join(" ")).toLowerCase().includes(q)); $("list-sub").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s"); if(!items.length){ grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">☕</div>'+(favOnly?"No favorites yet — tap the heart on a cafe.":(q?"No matches.":"No cafes yet. Tap + to add your first visit!"))+'</div>'; return; } grid.innerHTML=items.map(c=>{ const ph=c.photo?('style="background-image:url('+c.photo+')" class="ph"'):('class="ph nophoto"'); return '<div class="card" onclick="openDetail(\''+c.id+'\')"><div '+ph+'>'+(c.photo?(c.fav?"❤️":""):(c.emoji||"☕"))+'</div><div class="b"><div class="n">'+esc(c.name)+'</div><div class="m">'+"★".repeat(c.rating||0)+' · '+esc(c.area||"")+'</div></div></div>'; }).join(""); }
+function esc(s){ return (s||"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+
+/* ---------- detail ---------- */
+function openDetail(id){ const c=cafes.find(x=>x.id===id); if(!c)return; curId=id; const hero=$("d-hero"); if(c.photo){ hero.className="hero"; hero.style.backgroundImage="url("+c.photo+")"; } else { hero.className="hero nophoto"; hero.style.backgroundImage=""; hero.querySelector(".tagphoto")&&0; } $("d-name").textContent=c.name; $("d-stars").textContent="★".repeat(c.rating||0)+"☆".repeat(5-(c.rating||0)); $("d-meta").textContent=(c.area?" · "+c.area:""); $("d-fav").textContent=c.fav?"❤️":"🧡"; $("d-tags").innerHTML=(c.tags||[]).map(t=>'<span class="chip">'+esc(t)+'</span>').join(""); $("d-drinks").innerHTML=(c.drinks||[]).length?c.drinks.map(d=>'<div class="drink"><span class="ic">🥤</span><span>'+esc(d.n)+'</span><span class="pr">'+esc(d.p||"")+'</span></div>').join(""):'<div class="row">No drinks logged.</div>'; $("d-review").textContent=c.review||"No notes yet."; show("detail"); }
+function toggleFav(){ const c=cafes.find(x=>x.id===curId); if(!c)return; c.fav=!c.fav; save(); $("d-fav").textContent=c.fav?"❤️":"🧡"; renderMarkers(); toast(c.fav?"Added to favorites":"Removed from favorites"); }
+function deleteCurrent(){ if(!confirm("Delete this cafe?"))return; cafes=cafes.filter(x=>x.id!==curId); save(); renderMarkers(); toast("Deleted"); show("map"); }
+function shareCafe(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const txt=c.name+(c.area?" ("+c.area+")":"")+" — "+"★".repeat(c.rating||0)+(c.review?"\n"+c.review:""); if(navigator.share){ navigator.share({title:c.name,text:txt}).catch(()=>{}); } else { navigator.clipboard&&navigator.clipboard.writeText(txt); toast("Copied to clipboard"); } }
+function editCurrent(){ openForm(curId); }
+
+/* ---------- form ---------- */
+function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?(c.area||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; formPhoto=c?c.photo:null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; picked=c&&c.lat!=null?{lat:c.lat,lng:c.lng}:null; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); show("form"); setTimeout(initFormMap,90); }
+function closeForm(){ show(editId?"detail":"map"); }
+function initFormMap(){ const start=picked?[picked.lat,picked.lng]:DEFAULT_CENTER; if(!fmap){ fmap=L.map("form-map",{zoomControl:false,attributionControl:false}).setView(start,13); L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19}).addTo(fmap); fmap.on("click",e=>setPicked(e.latlng.lat,e.latlng.lng)); } fmap.invalidateSize(); fmap.setView(start,13); if(picked)setPicked(picked.lat,picked.lng); else if(fmarker){ fmap.removeLayer(fmarker); fmarker=null; $("f-coords").textContent=""; } }
+function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; if(fmarker)fmap.removeLayer(fmarker); fmarker=L.marker([lat,lng]).addTo(fmap); $("f-coords").textContent=picked.lat+", "+picked.lng; }
+function formLocate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ fmap.setView([p.coords.latitude,p.coords.longitude],15); setPicked(p.coords.latitude,p.coords.longitude); },()=>toast("Couldn't get location")); }
+function renderPhoto(){ const d=$("f-photodrop"); if(formPhoto){ d.style.backgroundImage="url("+formPhoto+")"; $("f-photolabel").innerHTML='<span class="pic-overlay">Tap to change</span>'; } else { d.style.backgroundImage=""; $("f-photolabel").textContent="Tap to add a photo of your drink"; } }
+function onPhoto(e){ const file=e.target.files[0]; if(!file)return; const r=new FileReader(); r.onload=ev=>{ const img=new Image(); img.onload=()=>{ const max=1100; let{width:w,height:h}=img; if(w>max||h>max){ const s=max/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); } const cv=document.createElement("canvas"); cv.width=w; cv.height=h; cv.getContext("2d").drawImage(img,0,0,w,h); formPhoto=cv.toDataURL("image/jpeg",0.82); renderPhoto(); }; img.src=ev.target.result; }; r.readAsDataURL(file); }
+function renderRate(){ $("f-rate").innerHTML=[1,2,3,4,5].map(n=>'<span class="'+(n<=formRating?"on":"")+'" onclick="formRating='+n+';renderRate()">★</span>').join(""); }
+function renderTags(){ $("f-tags").innerHTML=ALL_TAGS.map(t=>'<span class="chip '+(formTags.includes(t)?"on":"")+'" onclick="toggleTag(\''+t+'\')">'+t+'</span>').join(""); }
+function toggleTag(t){ formTags.includes(t)?formTags=formTags.filter(x=>x!==t):formTags.push(t); renderTags(); }
+function renderDrinkRows(drinks){ const wrap=$("f-drinks"); wrap.innerHTML=""; const list=(drinks&&drinks.length)?drinks:[{n:"",p:""}]; list.forEach(d=>addDrinkRow(d.n,d.p)); }
+function addDrinkRow(n,p){ const div=document.createElement("div"); div.className="dr"; div.innerHTML='<input class="dn" type="text" placeholder="Drink" value="'+esc(n||"")+'"><input class="dp" type="text" placeholder="Price" value="'+esc(p||"")+'"><button class="delrow" onclick="this.parentNode.remove()">✕</button>'; $("f-drinks").appendChild(div); }
+function saveForm(){ const name=$("f-name").value.trim(); if(!name){ toast("Please add a cafe name"); return; } const drinks=[...document.querySelectorAll("#f-drinks .dr")].map(r=>({n:r.querySelector(".dn").value.trim(),p:r.querySelector(".dp").value.trim()})).filter(d=>d.n); const data={name,area:$("f-area").value.trim(),lat:picked?picked.lat:null,lng:picked?picked.lng:null,photo:formPhoto,rating:formRating,fav:$("f-fav").checked,tags:formTags.slice(),review:$("f-review").value.trim(),drinks,emoji:"☕"}; if(editId){ const c=cafes.find(x=>x.id===editId); Object.assign(c,data); } else { data.id=uid(); cafes.push(data); } save(); renderMarkers(); toast("Saved ✓"); editId?openDetail(editId):show("map"); }
+
+/* ---------- boot ---------- */
+load(); initMap(); renderList();
+if("serviceWorker"in navigator){/* installable-ready */}
+</script>
+</body>
+</html>
