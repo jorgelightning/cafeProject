@@ -24,7 +24,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 #app[data-view="list"] .mapwrap, #app[data-view="detail"] .mapwrap, #app[data-view="form"] .mapwrap{ display:none; }
 
 .side-head{ padding:calc(14px + env(safe-area-inset-top)) 16px 8px; display:flex; align-items:flex-start; gap:10px; }
-.side-head h1{ font-size:21px; margin:0; letter-spacing:-.02em; }
+.side-head h1{ font-size:20px; font-weight:800; margin:0; letter-spacing:-.02em; }
 .side-head .sub{ font-size:12px; color:var(--soft); margin-top:2px; }
 .side-nav{ display:none; gap:4px; margin:0 16px 12px; padding:4px; background:var(--surface2); border-radius:12px; }
 .side-nav button{ flex:1; padding:8px 6px; border-radius:9px; border:none; background:transparent; color:var(--soft); font-size:13px; font-weight:600; cursor:pointer; transition:background .15s,color .15s; }
@@ -42,12 +42,13 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:8px; background-clip:padding-box; border:2px solid transparent; }
 .scroll:hover::-webkit-scrollbar-thumb{ background:var(--faint); background-clip:padding-box; border:2px solid transparent; }
 
-.mobile-topbar{ display:flex; align-items:center; gap:10px; padding:calc(14px + env(safe-area-inset-top)) 16px 10px; }
-.mobile-topbar h1{ font-size:21px; margin:0; letter-spacing:-.02em; }
+.mobile-topbar{ display:flex; align-items:center; gap:10px; padding:calc(14px + env(safe-area-inset-top)) 16px 10px; background:var(--surface); border-bottom:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,.04); z-index:10; }
+.mobile-topbar h1{ font-size:20px; font-weight:800; margin:0; letter-spacing:-.02em; }
 .mobile-topbar .sub{ font-size:12px; color:var(--soft); margin-top:2px; }
 .iconbtn{ width:40px; height:40px; border-radius:12px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; flex:0 0 auto; color:var(--text); }
-.search{ margin:0 16px 10px; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:13px; padding:0 12px; }
-.search input{ border:none; background:none; outline:none; padding:11px 0; font-size:16px; color:var(--text); width:100%; }
+.search{ margin:0 16px 12px; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:0 14px; transition:border-color .15s, box-shadow .15s; }
+.search:focus-within{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); background:var(--surface); }
+.search input{ border:none; background:none; outline:none; padding:12px 0; font-size:16px; color:var(--text); width:100%; }
 
 .mapbox{ position:relative; flex:1; }
 #map{ position:absolute; inset:0; width:100%; height:100%; z-index:1; background:#dfe7ea; }
@@ -58,9 +59,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .map-msg code{ background:var(--surface2); padding:2px 6px; border-radius:6px; font-size:12px; }
 .fab{ position:absolute; right:18px; bottom:18px; width:58px; height:58px; border-radius:19px; background:var(--acc); color:#fff; border:none; font-size:30px; line-height:1; box-shadow:0 10px 22px rgba(213,128,59,.5); cursor:pointer; z-index:20; display:flex; align-items:center; justify-content:center; }
 
-.tabbar{ position:absolute; left:0; right:0; bottom:0; height:calc(64px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); display:flex; background:var(--surface); border-top:1px solid var(--border); z-index:50; }
-.tab{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:10px; color:var(--faint); background:none; border:none; cursor:pointer; }
-.tab .ti{ font-size:20px; }
+.tabbar{ position:absolute; left:0; right:0; bottom:0; height:calc(64px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); display:flex; background:var(--surface); border-top:1px solid var(--border); box-shadow:0 -3px 14px rgba(0,0,0,.07); z-index:50; }
+.tab{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:11px; font-weight:600; color:var(--faint); background:none; border:none; cursor:pointer; }
+.tab.on::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%); width:26px; height:3px; border-radius:0 0 3px 3px; background:var(--acc); }
+.tab .ti{ font-size:22px; transition:transform .12s ease; }
+.tab.on .ti{ transform:translateY(-1px) scale(1.08); }
 .tab.on{ color:var(--acc); }
 
 .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 16px 24px; }
@@ -168,7 +171,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 			<button id="n-add" class="admin-only" onclick="openForm()">＋ Add</button>
 		</div>
 		<div class="panes">
-			<section class="pane" id="pane-list"><div class="adminbar admin-only"><button onclick="exportJSON()">⬇ Backup .json</button><button onclick="revertPublished()">↺ Reload</button><button onclick="importPublished()">⬆ Import cafes.json</button><span class="abnote" id="ab-cloud">Admin mode</span></div>
+			<section class="pane" id="pane-list"><div class="adminbar admin-only"><button onclick="revertPublished()">↺ Reload</button><span class="abnote" id="ab-cloud">Admin mode</span></div>
 				<div class="search">🔍<input id="q" placeholder="Search name, city, state, drink…" oninput="renderList()"></div>
 				<div class="scroll"><div class="grid" id="grid"></div></div>
 			</section>
@@ -325,7 +328,7 @@ function show(view,fav){ favOnly=!!fav; if(view==="map"||view==="list")lastMain=
 	if(view==="list"||view==="map")(fav?$("n-fav"):$("n-list")).classList.add("on");
 	if(view==="form")$("n-add").classList.add("on");
 	if(view==="list"||view==="map")renderList();
-	if(gReady)setTimeout(mapResize,60);
+	if(gReady)setTimeout(()=>{ mapResize(); if(view==="map")focusNearest(); },60);
 }
 function goBack(){ show(lastMain==="map"&&window.innerWidth<900?"map":"list"); }
 
@@ -338,9 +341,10 @@ function mapResize(){ if(gmap)google.maps.event.trigger(gmap,"resize"); if(fgmap
 
 /* ---------- main map ---------- */
 function initMap(){ gmap=new google.maps.Map($("map"),{center:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); renderMarkers(); showUserLocation(true); }
-function renderMarkers(){ if(!gmap)return; gmarkers.forEach(m=>m.setMap(null)); gmarkers=[]; const b=new google.maps.LatLngBounds(); let n=0; cafes.forEach(c=>{ if(c.lat==null)return; const opt={position:{lat:c.lat,lng:c.lng},map:gmap,title:c.name}; if(c.fav)opt.icon="https://maps.google.com/mapfiles/ms/icons/pink-dot.png"; const m=new google.maps.Marker(opt); m.addListener("click",()=>openDetail(c.id,"map")); gmarkers.push(m); b.extend(opt.position); n++; }); if($("map-sub"))$("map-sub").textContent=cafes.length+" cafe"+(cafes.length===1?"":"s")+" · tap a pin"; if(n===1){ gmap.setCenter(gmarkers[0].getPosition()); gmap.setZoom(14); } else if(n>1){ gmap.fitBounds(b,60); } }
+function renderMarkers(){ if(!gmap)return; gmarkers.forEach(m=>m.setMap(null)); gmarkers=[]; const b=new google.maps.LatLngBounds(); let n=0; const dups=dupNameKeys(); cafes.forEach(c=>{ if(c.lat==null)return; const opt={position:{lat:c.lat,lng:c.lng},map:gmap,title:(dups[(c.name||"").trim().toLowerCase()]&&c.area)?(c.name+" — "+c.area):c.name,icon:{path:google.maps.SymbolPath.CIRCLE,scale:10,fillColor:c.fav?"#e0556b":"#d5803b",fillOpacity:1,strokeColor:"#fff",strokeWeight:2.5},zIndex:c.fav?5:3}; const m=new google.maps.Marker(opt); m.addListener("click",()=>openDetail(c.id,"map")); gmarkers.push(m); b.extend(opt.position); n++; }); if($("map-sub"))$("map-sub").textContent=cafes.length+" cafe"+(cafes.length===1?"":"s")+" · tap a pin"; if(n===1){ gmap.setCenter(gmarkers[0].getPosition()); gmap.setZoom(14); } else if(n>1){ gmap.fitBounds(b,60); } }
 let userLoc=null;
 function nearestCafe(pos){ let best=null,bd=Infinity; cafes.forEach(c=>{ if(c.lat==null)return; const d=distKm(pos.lat,pos.lng,c.lat,c.lng); if(d<bd){bd=d;best=c;} }); return best; }
+function focusNearest(){ if(!gmap)return; if(userLoc){ const near=nearestCafe(userLoc); if(near){ const b=new google.maps.LatLngBounds(); b.extend(userLoc); b.extend({lat:near.lat,lng:near.lng}); gmap.fitBounds(b,80); google.maps.event.addListenerOnce(gmap,"idle",()=>{ if(gmap.getZoom()>16)gmap.setZoom(16); }); } else { gmap.setCenter(userLoc); gmap.setZoom(13); } } else { showUserLocation(true); } }
 function showUserLocation(center){ if(!navigator.geolocation)return; navigator.geolocation.getCurrentPosition(p=>{ const pos={lat:p.coords.latitude,lng:p.coords.longitude}; userLoc=pos; if(app.dataset.view==="list")renderList(); if(!gmap)return; if(userMarker)userMarker.setMap(null); userMarker=new google.maps.Marker({position:pos,map:gmap,title:"You are here",zIndex:9999,icon:{path:google.maps.SymbolPath.CIRCLE,scale:7,fillColor:"#1a73e8",fillOpacity:1,strokeColor:"#fff",strokeWeight:3}}); if(center){ const near=nearestCafe(pos); if(near){ const b=new google.maps.LatLngBounds(); b.extend(pos); b.extend({lat:near.lat,lng:near.lng}); gmap.fitBounds(b,80); google.maps.event.addListenerOnce(gmap,"idle",()=>{ if(gmap.getZoom()>16)gmap.setZoom(16); }); } else { gmap.setCenter(pos); gmap.setZoom(13); } } },()=>{ if(center)toast("Couldn't get your location"); },{enableHighAccuracy:true,timeout:8000,maximumAge:300000}); }
 function locate(){ if(!navigator.geolocation){ toast("Location not available"); return; } showUserLocation(true); }
 
@@ -362,7 +366,8 @@ function typeTerms(c){ const e=c.emoji||""; let s="cafe"; if(e==="🧋")s+=" bob
 function searchHay(c){ return (c.name+" "+(c.area||"")+" "+regionTerms(c)+" "+typeTerms(c)+" "+(c.tags||[]).join(" ")+" "+(c.drinks||[]).map(d=>d.n).join(" ")).toLowerCase(); }
 function matchSearch(c,q){ const hay=searchHay(c); return q.split(/\s+/).filter(Boolean).every(tok=>hay.includes(tok)); }
 function distKm(lat1,lng1,lat2,lng2){ const R=6371,toRad=x=>x*Math.PI/180; const dLat=toRad(lat2-lat1),dLng=toRad(lng2-lng1); const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
-function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(q)items=items.filter(c=>matchSearch(c,q)); if(userLoc){ items.sort((a,b)=>{ const da=(a.lat!=null)?distKm(userLoc.lat,userLoc.lng,a.lat,a.lng):Infinity; const db=(b.lat!=null)?distKm(userLoc.lat,userLoc.lng,b.lat,b.lng):Infinity; if(da!==db)return da-db; return (b.rating||0)-(a.rating||0); }); } else { items.sort((a,b)=>(b.rating||0)-(a.rating||0)); } if($("count"))$("count").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s"); if(!items.length){ grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">☕</div>'+(favOnly?"No favorites yet — tap the heart on a cafe.":(q?"No matches.":"No cafes yet. Tap + to add your first visit!"))+'</div>'; return; } grid.innerHTML=items.map(c=>{ const gp=gphotoFor(c); const dkm=(userLoc&&c.lat!=null)?distKm(userLoc.lat,userLoc.lng,c.lat,c.lng):null; const dstr=dkm!=null?(dkm<1?Math.round(dkm*1000)+" m":dkm.toFixed(1)+" km"):""; let cls="ph", inner, style=""; if(gp){ cls+=" loaded"; inner=(c.fav?"❤️":""); style=' style="background-image:url(\''+gp+'\')"'; } else { cls+=" nophoto"; if(gReady && c.lat!=null && gphotoCache[c.id]===undefined)cls+=" loading"; inner=(c.emoji||"☕"); } return '<div class="card" data-id="'+c.id+'" onclick="openDetail(\''+c.id+'\',\'list\')"><div class="'+cls+'"'+style+'>'+inner+'</div><div class="b"><div class="n">'+esc(c.name)+'</div><div class="m">'+"★".repeat(c.rating||0)+(c.area?' · '+esc(c.area):'')+(dstr?' · '+dstr:'')+'</div></div></div>'; }).join(""); prefetchListPhotos(items); }
+function dupNameKeys(){ const seen={},dup={}; cafes.forEach(c=>{ const k=(c.name||"").trim().toLowerCase(); if(k){ if(seen[k])dup[k]=1; seen[k]=1; } }); return dup; }
+function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); let items=cafes.slice(); const dups=dupNameKeys(); if(favOnly)items=items.filter(c=>c.fav); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ const ua=a.updated?(Date.parse(a.updated)||0):0, ub=b.updated?(Date.parse(b.updated)||0):0; if(ua!==ub)return ub-ua; if(userLoc){ const da=(a.lat!=null)?distKm(userLoc.lat,userLoc.lng,a.lat,a.lng):Infinity; const db=(b.lat!=null)?distKm(userLoc.lat,userLoc.lng,b.lat,b.lng):Infinity; if(da!==db)return da-db; } return (b.rating||0)-(a.rating||0); }); if($("count"))$("count").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s"); if(!items.length){ grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">☕</div>'+(favOnly?"No favorites yet — tap the heart on a cafe.":(q?"No matches.":"No cafes yet. Tap + to add your first visit!"))+'</div>'; return; } grid.innerHTML=items.map(c=>{ const gp=gphotoFor(c); const dkm=(userLoc&&c.lat!=null)?distKm(userLoc.lat,userLoc.lng,c.lat,c.lng):null; const dstr=dkm!=null?(dkm<1?Math.round(dkm*1000)+" m":dkm.toFixed(1)+" km"):""; let cls="ph", inner, style=""; if(gp){ cls+=" loaded"; inner=(c.fav?"❤️":""); style=' style="background-image:url(\''+gp+'\')"'; } else { cls+=" nophoto"; if(gReady && c.lat!=null && gphotoCache[c.id]===undefined)cls+=" loading"; inner=(c.emoji||"☕"); } return '<div class="card" data-id="'+c.id+'" onclick="openDetail(\''+c.id+'\',\'list\')"><div class="'+cls+'"'+style+'>'+inner+'</div><div class="b"><div class="n">'+esc(c.name)+(dups[(c.name||"").trim().toLowerCase()]&&c.area?' <span style="color:var(--soft); font-weight:500">· '+esc(c.area)+'</span>':'')+'</div><div class="m">'+"★".repeat(c.rating||0)+(c.area?' · '+esc(c.area):'')+(dstr?' · '+dstr:'')+'</div></div></div>'; }).join(""); prefetchListPhotos(items); }
 
 /* ---------- detail ---------- */
 function photoLabel(c){ if(c&&c.photo)return "📷 My drink"; const u=c&&gphotoCache[c.id]; if(u&&/streetview/.test(u))return "📍 Street View"; if(u)return "📷 Google Maps"; return ""; }
@@ -400,7 +405,7 @@ function reloadLatest(){ location.replace(location.pathname+"?v="+Date.now()); }
 let _bootSrc=null, _updateShown=false;
 function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{ if(t==null)return; if(_bootSrc===null){ _bootSrc=t; return; } if(t!==_bootSrc && !_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); } }).catch(()=>{}); }
 const _fbOk=initFirebase(); initAuth();
-{ const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file. Until then, use Backup .json + commit."; }
+{ const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file."; }
 applyMode();
 load().then(()=>{ applyMode(); show("map"); startMaps(); subscribeCloud(); if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)fbDb.ref("cafes").set(cafes); }).catch(()=>{}); } });
 let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(mapResize,150); });
