@@ -135,6 +135,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .updatebar.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
 @media (min-width:900px){ .updatebar{ bottom:24px; } }
 .pacced{ z-index:9999 !important; }
+.gm-style-iw-c{ padding:9px 13px !important; }
+.gm-style-iw-d{ overflow:hidden !important; padding:0 !important; }
+.gm-style-iw-c button.gm-ui-hover-effect{ display:none !important; }
 .card{ transition:transform .08s ease; }
 .card:active{ transform:scale(.97); }
 .tab{ transition:transform .08s ease; }
@@ -157,7 +160,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 	.grid{ grid-template-columns:1fr 1fr 1fr; }
 }
 #app[data-mode="viewer"] .admin-only{ display:none !important; }
-.adminbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 16px; background:var(--surface2); border-bottom:1px solid var(--border); }
+.adminbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 16px; background:var(--surface2); border-bottom:1px solid var(--border); margin-bottom:12px; }
 .adminbar button{ padding:7px 11px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12px; font-weight:600; cursor:pointer; }
 .adminbar .abnote{ font-size:11px; color:var(--soft); flex-basis:100%; }
 .sortrow{ display:flex; align-items:center; gap:8px; margin:0 16px 10px; font-size:13px; color:var(--soft); }
@@ -374,7 +377,7 @@ function renderMarkers(){ if(!gmap)return; gmarkers.forEach(m=>m.setMap(null)); 
 let userLoc=null;
 let gInfo=null, pendingMarkerId=null;
 function mapInfo(){ if(!gInfo)gInfo=new google.maps.InfoWindow(); return gInfo; }
-function onMarkerClick(c,m){ if(window.innerWidth>=900){ openDetail(c.id,"map"); return; } if(pendingMarkerId===c.id){ if(gInfo)gInfo.close(); pendingMarkerId=null; openDetail(c.id,"map"); return; } pendingMarkerId=c.id; const iw=mapInfo(); iw.setContent('<div style="font-weight:700; font-size:13px; color:#1d1a17">'+esc(c.name)+(c.area?'<div style="font-weight:500; color:#7a726b; font-size:11px; margin-top:1px">'+esc(c.area)+'</div>':'')+'<div style="color:#d5803b; font-size:11px; margin-top:3px">Tap again for details ›</div></div>'); iw.open(gmap,m); }
+function onMarkerClick(c,m){ if(pendingMarkerId===c.id){ if(gInfo)gInfo.close(); pendingMarkerId=null; openDetail(c.id,"map"); return; } pendingMarkerId=c.id; const iw=mapInfo(); const act=(window.innerWidth>=900?"Click":"Tap")+" again for details ›"; iw.setContent('<div style="font-weight:700; font-size:13px; color:#1d1a17">'+esc(c.name)+(c.area?'<div style="font-weight:500; color:#7a726b; font-size:11px; margin-top:1px">'+esc(c.area)+'</div>':'')+'<div style="color:#d5803b; font-size:11px; margin-top:3px">'+act+'</div></div>'); iw.open(gmap,m); }
 function nearestCafe(pos){ let best=null,bd=Infinity; cafes.forEach(c=>{ if(c.lat==null)return; const d=distKm(pos.lat,pos.lng,c.lat,c.lng); if(d<bd){bd=d;best=c;} }); return best; }
 function focusNearest(){ if(!gmap)return; if(userLoc){ const near=nearestCafe(userLoc); if(near){ const b=new google.maps.LatLngBounds(); b.extend(userLoc); b.extend({lat:near.lat,lng:near.lng}); gmap.fitBounds(b,80); google.maps.event.addListenerOnce(gmap,"idle",()=>{ if(gmap.getZoom()>16)gmap.setZoom(16); }); } else { gmap.setCenter(userLoc); gmap.setZoom(13); } } else { showUserLocation(true); } }
 function showUserLocation(center){ if(!navigator.geolocation)return; navigator.geolocation.getCurrentPosition(p=>{ const pos={lat:p.coords.latitude,lng:p.coords.longitude}; userLoc=pos; if(app.dataset.view==="list")renderList(); if(!gmap)return; if(userMarker)userMarker.setMap(null); userMarker=new google.maps.Marker({position:pos,map:gmap,title:"You are here",zIndex:9999,icon:{path:google.maps.SymbolPath.CIRCLE,scale:7,fillColor:"#1a73e8",fillOpacity:1,strokeColor:"#fff",strokeWeight:3}}); if(center){ const near=nearestCafe(pos); if(near){ const b=new google.maps.LatLngBounds(); b.extend(pos); b.extend({lat:near.lat,lng:near.lng}); gmap.fitBounds(b,80); google.maps.event.addListenerOnce(gmap,"idle",()=>{ if(gmap.getZoom()>16)gmap.setZoom(16); }); } else { gmap.setCenter(pos); gmap.setZoom(13); } } },()=>{ if(center)toast("Couldn't get your location"); },{enableHighAccuracy:true,timeout:8000,maximumAge:300000}); }
