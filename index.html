@@ -48,6 +48,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mobile-topbar h1{ font-size:20px; font-weight:800; margin:0; letter-spacing:-.02em; }
 .mobile-topbar .sub{ font-size:12px; color:var(--soft); margin-top:2px; }
 .iconbtn{ width:40px; height:40px; border-radius:12px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; flex:0 0 auto; color:var(--text); }
+.modepill{ padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; border:1px solid var(--border); background:var(--surface2); color:var(--soft); letter-spacing:.01em; }
+#app[data-mode="admin"] .modepill{ background:rgba(46,158,91,.14); border-color:rgba(46,158,91,.25); color:#2e9e5b; }
 .search{ margin:0 16px 12px; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:0 14px; transition:border-color .15s, box-shadow .15s; }
 .search:focus-within{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); background:var(--surface); }
 .search input{ border:none; background:none; outline:none; padding:12px 0; font-size:16px; color:var(--text); width:100%; }
@@ -227,7 +229,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 <body>
 <div id="app" data-view="map" data-mode="viewer">
 	<aside class="sidebar">
-		<div class="side-head"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="count"></div></div><button class="iconbtn lockbtn" onclick="toggleAdmin()" title="Viewer mode — tap to unlock editing">🔒</button></div>
+		<div class="side-head"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="count"></div></div><span class="modepill" id="modepill">Viewer</span><button class="iconbtn lockbtn" onclick="toggleAdmin()" title="Viewer mode — tap to unlock editing">🔒</button></div>
 		<div class="side-nav">
 			<button id="n-list" onclick="show('list')">☰ List</button>
 			<button id="n-fav" onclick="show('list',true)">❤️ Faves</button>
@@ -280,7 +282,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 		</div>
 	</aside>
 	<main class="mapwrap">
-		<div class="mobile-topbar"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn lockbtn" onclick="toggleAdmin()" title="Viewer mode — tap to unlock editing">🔒</button><button class="iconbtn" onclick="locate()" title="My location">📍</button></div>
+		<div class="mobile-topbar"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="map-sub">Loading…</div></div><span class="modepill" id="modepill2">Viewer</span><button class="iconbtn lockbtn" onclick="toggleAdmin()" title="Viewer mode — tap to unlock editing">🔒</button><button class="iconbtn" onclick="showLegend()" title="Legend">ℹ️</button><button class="iconbtn" onclick="locate()" title="My location">📍</button></div>
 		<div class="mapbox">
 			<div id="map"></div>
 			<div class="map-msg" id="map-msg"></div>
@@ -377,7 +379,8 @@ if(await loadCloud())return;
 	}
 }
 function save(){ if(!isAdmin)return; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){ toast("Storage full — try a smaller photo"); } if(fbReady){ const u=fbAuth&&fbAuth.currentUser; if(!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase())){ localStorage.setItem(DIRTY_FLAG,"1"); toast("Saved on this device — tap 🔓 to sign in so it syncs"); return; } fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafes))).then(()=>{ localStorage.removeItem(DIRTY_FLAG); }).catch(()=>{ localStorage.setItem(DIRTY_FLAG,"1"); toast("Cloud save failed — kept on this device, tap 🔓 to re-sign in"); }); } else { try{ localStorage.setItem(DIRTY_FLAG,"1"); }catch(e){} } }
-function applyMode(){ app.dataset.mode=isAdmin?"admin":"viewer"; document.querySelectorAll(".lockbtn").forEach(b=>{ b.textContent=isAdmin?"🔓":"🔒"; b.title=isAdmin?"Admin mode — tap to sign out":"Viewer mode — tap to unlock editing"; }); if(!isAdmin&&(app.dataset.view==="form"||app.dataset.view==="compare"))show(lastMain); if(app.dataset.view==="stats")renderStats(); }
+function showLegend(){ alert("Legend:\n• Color = rating (greener = higher)\n• Pink ring = favorite\n• Tap a pin, then tap again for details"); }
+function applyMode(){ app.dataset.mode=isAdmin?"admin":"viewer"; document.querySelectorAll(".lockbtn").forEach(b=>{ b.textContent=isAdmin?"🔓":"🔒"; b.title=isAdmin?"Admin mode — tap to sign out":"Viewer mode — tap to unlock editing"; }); const pill=$("modepill"), pill2=$("modepill2"); if(pill)pill.textContent=isAdmin?"Admin":"Viewer"; if(pill2)pill2.textContent=isAdmin?"Admin":"Viewer"; if(!isAdmin&&(app.dataset.view==="form"||app.dataset.view==="compare"))show(lastMain); if(app.dataset.view==="stats")renderStats(); }
 function authMsg(code){ if(code==="auth/operation-not-allowed"||code==="auth/configuration-not-found")return "Turn on Google sign-in: Firebase Console → Authentication → Sign-in method → Google → Enable."; if(code==="auth/unauthorized-domain")return "This site's domain isn't allowed. Add it in Firebase → Authentication → Settings → Authorized domains."; if(code==="auth/popup-blocked"||code==="auth/cancelled-popup-request")return "Your browser blocked the popup — allow popups for this site and try again."; if(code==="auth/popup-closed-by-user")return "Sign-in window closed."; return "Sign-in failed ("+code+")"; }
 function adminSignIn(){ if(!fbAuth){ toast("Cloud not connected"); return; } const prov=new firebase.auth.GoogleAuthProvider(); fbAuth.signInWithPopup(prov).catch(e=>{ const code=(e&&e.code)||""; console.error("Sign-in error",e); if(code==="auth/popup-blocked"||code==="auth/operation-not-supported-in-this-environment"){ fbAuth.signInWithRedirect(prov).catch(er=>toast(authMsg((er&&er.code)||""))); return; } toast(authMsg(code)); }); }
 function resyncDirty(){ if(!fbReady||!fbAuth)return; const u=fbAuth.currentUser; if(!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()))return; const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; fbDb.ref("cafes").once("value").then(s=>{ const cloudEmpty=!asArray(s.val()).length; if((dirty||cloudEmpty)&&cafes.length){ fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafes))).then(()=>{ localStorage.removeItem(DIRTY_FLAG); if(dirty)toast("Synced your edits to the cloud ✓"); }).catch(()=>{}); } }).catch(()=>{}); }
@@ -525,6 +528,10 @@ function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"n
 const _fbOk=initFirebase(); initAuth();
 { const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file."; }
 applyMode();
+if(!localStorage.getItem("cafemap.seenTip")){
+	localStorage.setItem("cafemap.seenTip","1");
+	if(!isAdmin)toast("Tip: tap 🔒 to unlock editing");
+}
 load().then(()=>{ applyMode(); show("map"); startMaps(); subscribeCloud(); if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)fbDb.ref("cafes").set(cafes); }).catch(()=>{}); } });
 let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{ mapResize(); refitMap(); },150); });
 checkForUpdate();
