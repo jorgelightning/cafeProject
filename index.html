@@ -10,15 +10,15 @@
 <meta name="theme-color" content="#d5803b">
 <title>JL Cafe Project</title>
 <style>
-:root{ --acc:#d5803b; --acc2:#e0556b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#7a726b; --faint:#a9a39d; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); }
-@media (prefers-color-scheme:dark){ :root{ --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#a89e96; --faint:#6f655d; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); } }
+:root{ --acc:#d5803b; --acc2:#e0556b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#7a726b; --faint:#a9a39d; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); --glass:rgba(255,255,255,.78); --glass-strong:rgba(248,246,244,.85); }
+@media (prefers-color-scheme:dark){ :root{ --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#a89e96; --faint:#6f655d; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(30,24,20,.72); --glass-strong:rgba(20,16,13,.82); } }
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html,body{ height:100%; margin:0; }
 body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,"Apple Color Emoji",sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
-#app{ position:fixed; inset:0; display:flex; flex-direction:column; background:var(--bg); }
+#app{ position:fixed; inset:0; display:flex; flex-direction:column; background:radial-gradient(125% 90% at 0% 0%, rgba(213,128,59,.10), transparent 55%), radial-gradient(125% 90% at 100% 100%, rgba(224,85,107,.08), transparent 52%), var(--bg); }
 
 /* ---- shell: mobile defaults ---- */
-.sidebar{ position:absolute; inset:0 0 calc(64px + env(safe-area-inset-bottom)) 0; display:flex; flex-direction:column; background:var(--bg); z-index:30; min-height:0; }
+.sidebar{ position:absolute; inset:0 0 calc(64px + env(safe-area-inset-bottom)) 0; display:flex; flex-direction:column; background:var(--glass-strong); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); z-index:30; min-height:0; }
 .mapwrap{ position:absolute; inset:0 0 calc(64px + env(safe-area-inset-bottom)) 0; display:flex; flex-direction:column; }
 #app[data-view="map"] .sidebar{ display:none; }
 #app[data-view="list"] .mapwrap, #app[data-view="detail"] .mapwrap, #app[data-view="form"] .mapwrap, #app[data-view="compare"] .mapwrap{ display:none; }
@@ -44,7 +44,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:8px; background-clip:padding-box; border:2px solid transparent; }
 .scroll:hover::-webkit-scrollbar-thumb{ background:var(--faint); background-clip:padding-box; border:2px solid transparent; }
 
-.mobile-topbar{ display:flex; align-items:center; gap:10px; padding:calc(14px + env(safe-area-inset-top)) 16px 10px; background:var(--surface); border-bottom:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,.04); z-index:10; }
+.mobile-topbar{ display:flex; align-items:center; gap:10px; padding:calc(14px + env(safe-area-inset-top)) 16px 10px; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-bottom:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,.04); z-index:10; }
 .mobile-topbar h1{ font-size:20px; font-weight:800; margin:0; letter-spacing:-.02em; }
 .mobile-topbar .sub{ font-size:12px; color:var(--soft); margin-top:2px; }
 .iconbtn{ width:40px; height:40px; border-radius:12px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; flex:0 0 auto; color:var(--text); }
@@ -61,7 +61,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .map-msg code{ background:var(--surface2); padding:2px 6px; border-radius:6px; font-size:12px; }
 .fab{ position:absolute; right:18px; bottom:18px; width:58px; height:58px; border-radius:19px; background:var(--acc); color:#fff; border:none; font-size:30px; line-height:1; box-shadow:0 10px 22px rgba(213,128,59,.5); cursor:pointer; z-index:20; display:flex; align-items:center; justify-content:center; }
 
-.tabbar{ position:absolute; left:0; right:0; bottom:0; height:calc(64px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); display:flex; background:var(--surface); border-top:1px solid var(--border); box-shadow:0 -3px 14px rgba(0,0,0,.07); z-index:50; }
+.tabbar{ position:absolute; left:0; right:0; bottom:0; height:calc(64px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); display:flex; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); box-shadow:0 -3px 14px rgba(0,0,0,.07); z-index:50; }
 .tab{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:11px; font-weight:600; color:var(--faint); background:none; border:none; cursor:pointer; }
 .tab.on::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%); width:26px; height:3px; border-radius:0 0 3px 3px; background:var(--acc); }
 .tab .ti{ font-size:22px; transition:transform .12s ease; }
@@ -168,8 +168,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* ---- desktop split view ---- */
 @media (min-width:900px){
 	#app{ flex-direction:row; }
-	.sidebar{ position:absolute; inset:0 auto 0 0; width:400px; border-right:1px solid var(--border); display:flex !important; box-shadow:var(--shadow); z-index:2; }
-	.mapwrap{ position:absolute; inset:0; display:flex !important; }
+	.sidebar{ position:absolute; inset:0 auto 0 0; width:400px; border-right:1px solid var(--border); display:flex !important; box-shadow:var(--shadow); z-index:2; background:var(--glass); backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4); }
+	.mapwrap{ position:absolute; inset:0 0 0 400px; display:flex !important; }
 	.tabbar{ display:none; }
 	.mobile-topbar{ display:none; }
 	.side-nav{ display:flex; }
@@ -179,6 +179,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 }
 @media (min-width:1400px){
 	.sidebar{ width:440px; flex-basis:440px; }
+.mapwrap{ inset:0 0 0 440px; }
 	.grid{ grid-template-columns:1fr 1fr 1fr; }
 }
 #app[data-mode="viewer"] .admin-only{ display:none !important; }
@@ -412,6 +413,7 @@ function onGoogleReady(){ gReady=true; $("map-msg").classList.remove("show"); in
 function gm_authFailure(){ showMapError("Google rejected the API key. Check the key is correct, billing is enabled, and this site is allowed in the key's HTTP-referrer restrictions."); }
 function showMapError(msg){ const el=$("map-msg"); el.innerHTML='<div class="big">🗺️</div><div>'+msg+'</div>'; el.classList.add("show"); if($("map-sub"))$("map-sub").textContent="Map unavailable"; }
 function mapResize(){ if(gmap)google.maps.event.trigger(gmap,"resize"); if(fgmap)google.maps.event.trigger(fgmap,"resize"); }
+function refitMap(){ if(!gmap)return; const pts=gmarkers.map(m=>m.getPosition()).filter(Boolean); if(userMarker)pts.push(userMarker.getPosition()); if(!pts.length)return; if(pts.length===1){ gmap.setCenter(pts[0]); } else { const b=new google.maps.LatLngBounds(); pts.forEach(p=>b.extend(p)); gmap.fitBounds(b,60); } }
 
 /* ---------- main map ---------- */
 function initMap(){ gmap=new google.maps.Map($("map"),{center:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); renderMarkers(); autoLocate(); gmap.addListener("click",()=>{ pendingMarkerId=null; if(gInfo)gInfo.close(); }); }
@@ -523,7 +525,7 @@ const _fbOk=initFirebase(); initAuth();
 { const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file."; }
 applyMode();
 load().then(()=>{ applyMode(); show("map"); startMaps(); subscribeCloud(); if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)fbDb.ref("cafes").set(cafes); }).catch(()=>{}); } });
-let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(mapResize,150); });
+let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{ mapResize(); refitMap(); },150); });
 checkForUpdate();
 setInterval(checkForUpdate,45000);
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden)checkForUpdate(); });
