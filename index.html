@@ -1,516 +1,840 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="referrer" content="no-referrer">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<meta name="theme-color" content="#d5803b">
-<title>JL Cafe Project</title>
-<style>
-:root{ --acc:#d5803b; --acc2:#e0556b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#7a726b; --faint:#a9a39d; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); }
-@media (prefers-color-scheme:dark){ :root{ --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#a89e96; --faint:#6f655d; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); } }
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html,body{ height:100%; margin:0; }
-body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,"Apple Color Emoji",sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
-#app{ position:fixed; inset:0; display:flex; flex-direction:column; background:var(--bg); }
-
-/* ---- shell: mobile defaults ---- */
-.sidebar{ position:absolute; inset:0 0 calc(64px + env(safe-area-inset-bottom)) 0; display:flex; flex-direction:column; background:var(--bg); z-index:30; min-height:0; }
-.mapwrap{ position:absolute; inset:0 0 calc(64px + env(safe-area-inset-bottom)) 0; display:flex; flex-direction:column; }
-#app[data-view="map"] .sidebar{ display:none; }
-#app[data-view="list"] .mapwrap, #app[data-view="detail"] .mapwrap, #app[data-view="form"] .mapwrap, #app[data-view="compare"] .mapwrap{ display:none; }
-
-.side-head{ padding:calc(14px + env(safe-area-inset-top)) 16px 8px; display:flex; align-items:flex-start; gap:10px; }
-.side-head h1{ font-size:20px; font-weight:800; margin:0; letter-spacing:-.02em; }
-.side-head .sub{ font-size:12px; color:var(--soft); margin-top:2px; }
-.side-nav{ display:none; gap:4px; margin:0 16px 12px; padding:4px; background:var(--surface2); border-radius:12px; }
-.side-nav button{ flex:1; padding:8px 6px; border-radius:9px; border:none; background:transparent; color:var(--soft); font-size:13px; font-weight:600; cursor:pointer; transition:background .15s,color .15s; }
-.side-nav button:hover{ color:var(--text); }
-.side-nav button.on{ background:var(--surface); color:var(--acc); box-shadow:0 1px 4px rgba(0,0,0,.1); }
-
-.panes{ flex:1; display:flex; min-height:0; }
-.pane{ display:none; flex-direction:column; flex:1; min-height:0; width:100%; }
-#app[data-view="list"] #pane-list, #app[data-view="map"] #pane-list{ display:flex; }
-#app[data-view="detail"] #pane-detail{ display:flex; }
-#app[data-view="form"] #pane-form{ display:flex; }
-#app[data-view="compare"] #pane-compare{ display:flex; }
-#app[data-view="stats"] #pane-stats{ display:flex; }
-.scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
-.scroll::-webkit-scrollbar{ width:8px; }
-.scroll::-webkit-scrollbar-track{ background:transparent; }
-.scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:8px; background-clip:padding-box; border:2px solid transparent; }
-.scroll:hover::-webkit-scrollbar-thumb{ background:var(--faint); background-clip:padding-box; border:2px solid transparent; }
-
-.mobile-topbar{ display:flex; align-items:center; gap:10px; padding:calc(14px + env(safe-area-inset-top)) 16px 10px; background:var(--surface); border-bottom:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,.04); z-index:10; }
-.mobile-topbar h1{ font-size:20px; font-weight:800; margin:0; letter-spacing:-.02em; }
-.mobile-topbar .sub{ font-size:12px; color:var(--soft); margin-top:2px; }
-.iconbtn{ width:40px; height:40px; border-radius:12px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; flex:0 0 auto; color:var(--text); }
-.search{ margin:0 16px 12px; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:0 14px; transition:border-color .15s, box-shadow .15s; }
-.search:focus-within{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); background:var(--surface); }
-.search input{ border:none; background:none; outline:none; padding:12px 0; font-size:16px; color:var(--text); width:100%; }
-
-.mapbox{ position:relative; flex:1; }
-#map{ position:absolute; inset:0; width:100%; height:100%; z-index:1; background:#dfe7ea; }
-#form-map{ height:160px; border-radius:14px; overflow:hidden; border:1px solid var(--border); background:#dfe7ea; }
-.map-msg{ position:absolute; inset:0; z-index:5; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:8px; padding:30px; background:var(--bg); color:var(--soft); font-size:14px; }
-.map-msg .big{ font-size:40px; }
-.map-msg.show{ display:flex; }
-.map-msg code{ background:var(--surface2); padding:2px 6px; border-radius:6px; font-size:12px; }
-.fab{ position:absolute; right:18px; bottom:18px; width:58px; height:58px; border-radius:19px; background:var(--acc); color:#fff; border:none; font-size:30px; line-height:1; box-shadow:0 10px 22px rgba(213,128,59,.5); cursor:pointer; z-index:20; display:flex; align-items:center; justify-content:center; }
-
-.tabbar{ position:absolute; left:0; right:0; bottom:0; height:calc(64px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); display:flex; background:var(--surface); border-top:1px solid var(--border); box-shadow:0 -3px 14px rgba(0,0,0,.07); z-index:50; }
-.tab{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:11px; font-weight:600; color:var(--faint); background:none; border:none; cursor:pointer; }
-.tab.on::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%); width:26px; height:3px; border-radius:0 0 3px 3px; background:var(--acc); }
-.tab .ti{ font-size:22px; transition:transform .12s ease; }
-.tab.on .ti{ transform:translateY(-1px) scale(1.08); }
-.tab.on{ color:var(--acc); }
-
-.grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 16px 24px; }
-.card{ border:1px solid var(--border); border-radius:16px; overflow:hidden; background:var(--surface); cursor:pointer; }
-.card .ph{ height:104px; background-size:cover; background-position:center; display:flex; align-items:flex-start; justify-content:flex-end; padding:7px; font-size:18px; }
-.card .nophoto{ background:linear-gradient(140deg,#caa472,#7b4a26); color:#fff; align-items:center; justify-content:center; font-size:30px; }
-.card .ph{ position:relative; overflow:hidden; }
-.card .ph.loaded{ animation:phIn .4s ease; }
-.card .ph.loading::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent); transform:translateX(-100%); animation:shimmer 1.25s infinite; }
-@keyframes phIn{ from{ opacity:.25 } to{ opacity:1 } }
-@keyframes shimmer{ 100%{ transform:translateX(100%) } }
-.statwrap{ padding:14px 16px 34px; width:100%; }
-.statgrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.statcard{ background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:13px 14px; }
-.statcard .v{ font-size:22px; font-weight:800; color:var(--text); }
-.statcard .k{ font-size:12px; color:var(--soft); margin-top:2px; font-weight:600; }
-.statsec{ font-size:12px; font-weight:700; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; margin:20px 0 8px; }
-.lbrow{ display:flex; align-items:center; gap:11px; padding:9px 2px; border-bottom:1px solid var(--border); }
-.lbrow:last-child{ border-bottom:none; }
-.lbrank{ font-size:15px; font-weight:800; color:var(--soft); width:26px; text-align:center; flex:none; }
-.lbmain{ flex:1; min-width:0; }
-.lbname{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.lbsub{ font-size:12px; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.lbscore{ font-weight:800; color:#2e9e5b; font-size:14px; flex:none; }
-.spendrow{ display:flex; align-items:center; gap:10px; margin:7px 0; font-size:13px; }
-.spendrow .lab2{ width:78px; flex:none; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.spendbar{ flex:1; height:9px; background:var(--surface2); border-radius:6px; overflow:hidden; }
-.spendbar > i{ display:block; height:100%; background:var(--acc); }
-.spendrow .amt{ width:62px; flex:none; text-align:right; font-weight:700; }
-.card .b{ padding:9px 11px 12px; }
-.card .n{ font-weight:700; font-size:14px; line-height:1.2; }
-.card .m{ font-size:11px; color:var(--soft); margin-top:3px; }
-.empty{ text-align:center; color:var(--soft); padding:60px 30px; }
-.empty .big{ font-size:46px; margin-bottom:10px; }
-
-.hero{ position:relative; height:240px; background-size:cover; background-position:center; display:flex; align-items:flex-end; }
-.hero.nophoto{ background:linear-gradient(140deg,#caa472,#7b4a26); align-items:center; justify-content:center; font-size:84px; }
-.hero .nav{ position:absolute; top:14px; left:14px; right:14px; display:flex; justify-content:space-between; }
-.round{ width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; backdrop-filter:blur(4px); }
-.tagphoto{ position:absolute; bottom:12px; left:14px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 9px; border-radius:20px; }
-.dbody{ padding:16px 18px 30px; }
-.dbody h2{ margin:0 0 4px; font-size:23px; }
-.row{ display:flex; align-items:center; gap:8px; color:var(--soft); font-size:13px; }
-.stars{ color:#f0a93b; font-size:18px; letter-spacing:1px; }
-.chips{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
-.chip{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:4px 11px; font-size:12px; }
-.locpills{ display:none; flex-wrap:wrap; gap:7px; margin:2px 0 12px; }
-.locpill{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; font-weight:600; color:var(--soft); cursor:pointer; white-space:nowrap; }
-.locpill.on{ background:var(--acc); color:#fff; border-color:var(--acc); cursor:default; }
-.lab{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); margin:18px 0 8px; }
-.drink{ display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); font-size:14px; }
-.drink .ic{ width:34px; height:34px; border-radius:9px; background:var(--surface2); display:flex; align-items:center; justify-content:center; }
-.drink .pr{ margin-left:auto; color:var(--soft); font-size:13px; align-self:flex-start; }
-.drink .dmain{ display:flex; flex-direction:column; min-width:0; }
-.drink .cnt{ background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0 6px; font-size:11px; color:var(--soft); margin-left:6px; }
-.drink .dsub{ font-size:11px; color:var(--faint); margin-top:2px; }
-.review{ background:var(--surface2); border-radius:13px; padding:14px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
-
-.form-top{ display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); }
-.savebtn{ padding:9px 15px; border:none; border-radius:10px; background:var(--acc); color:#fff; font-weight:600; font-size:14px; cursor:pointer; }
-.form{ padding:14px 18px 30px; }
-.field{ margin-bottom:15px; }
-.field label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; }
-.field input[type=text],.field input[type=number],.field input[type=date],.field textarea{ width:100%; border:1px solid var(--border); border-radius:11px; padding:11px 12px; font-size:16px; background:var(--surface); color:var(--text); outline:none; font-family:inherit; }
-.field textarea{ min-height:84px; resize:vertical; }
-.hintbtn{ font-size:12px; color:var(--acc); background:none; border:none; cursor:pointer; padding:6px 0 0; font-weight:600; }
-.rate{ font-size:30px; color:#d9d3cc; letter-spacing:5px; cursor:pointer; user-select:none; }
-.rate .on{ color:#f0a93b; }
-.photodrop{ position:relative; height:150px; border:2px dashed var(--border); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--soft); font-size:13px; background-size:cover; background-position:center; overflow:hidden; }
-.photodrop input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
-.pic-overlay{ position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 8px; border-radius:20px; }
-.drinkrows .dr{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
-.drinkrows .dr input.dn{ flex:1 1 100%; } .drinkrows .dr input.dp{ flex:1 1 70px; } .drinkrows .dr input.dd{ flex:2 1 130px; }
-.drinkrows .dr .szwrap, .drinkrows .dr .swwrap, .drinkrows .dr .icwrap{ flex:1 1 100%; display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 12px; }
-.drinkrows .dr .szwrap input[type=range], .drinkrows .dr .swwrap input[type=range], .drinkrows .dr .icwrap input[type=range]{ flex:1; accent-color:var(--acc); min-width:0; }
-.drinkrows .dr .swlabel{ font-size:12px; color:var(--soft); flex:0 0 auto; }
-.drinkrows .dr .swval{ font-size:13px; color:var(--text); flex:0 0 42px; text-align:right; font-weight:600; }
-.drinkrows .dr .icval, .drinkrows .dr .szval{ font-size:13px; color:var(--text); flex:0 0 90px; text-align:right; font-weight:600; }
-.delrow{ width:38px; flex:0 0 auto; border:1px solid var(--border); border-radius:10px; background:var(--surface2); cursor:pointer; color:var(--soft); }
-.tagpick{ display:flex; flex-wrap:wrap; gap:7px; }
-.tagpick .chip{ cursor:pointer; }
-.tagpick .chip.on{ background:var(--acc); color:#fff; border-color:transparent; }
-.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:14px; border:none; border-radius:13px; font-size:15px; font-weight:600; cursor:pointer; background:var(--acc); color:#fff; }
-.btn.ghost{ background:var(--surface2); color:var(--text); border:1px solid var(--border); }
-.btn.danger{ background:none; color:var(--acc2); }
-.toast{ position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#222; color:#fff; padding:10px 16px; border-radius:30px; font-size:13px; opacity:0; transition:.25s; z-index:200; pointer-events:none; }
-.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-.updatebar{ position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:var(--acc); color:#fff; padding:11px 18px; border-radius:30px; font-size:13px; font-weight:600; box-shadow:var(--shadow); cursor:pointer; opacity:0; transition:.25s; z-index:300; pointer-events:none; }
-.updatebar.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
-@media (min-width:900px){ .updatebar{ bottom:24px; } }
-.pacced{ z-index:9999 !important; }
-.gm-style-iw-c{ padding:9px 13px !important; }
-.gm-style-iw-d{ overflow:hidden !important; padding:0 !important; }
-.gm-style-iw-c button.gm-ui-hover-effect{ display:none !important; }
-.card{ transition:transform .08s ease; }
-.card:active{ transform:scale(.97); }
-.tab{ transition:transform .08s ease; }
-.iconbtn:active,.round:active,.fab:active,.savebtn:active,.btn:active,.tab:active,.chip:active,.hintbtn:active,.adminbar button:active,.side-nav button:active{ transform:scale(.95); opacity:.9; }
-
-/* ---- desktop split view ---- */
-@media (min-width:900px){
-	#app{ flex-direction:row; }
-	.sidebar{ position:absolute; inset:0 auto 0 0; width:400px; border-right:1px solid var(--border); display:flex !important; box-shadow:var(--shadow); z-index:2; }
-	.mapwrap{ position:absolute; inset:0; display:flex !important; }
-	.tabbar{ display:none; }
-	.mobile-topbar{ display:none; }
-	.side-nav{ display:flex; }
-	.fab{ display:none; }
-	.hero{ height:200px; }
-	.dbody h2{ font-size:21px; }
-}
-@media (min-width:1400px){
-	.sidebar{ width:440px; flex-basis:440px; }
-	.grid{ grid-template-columns:1fr 1fr 1fr; }
-}
-#app[data-mode="viewer"] .admin-only{ display:none !important; }
-.adminbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 16px; background:var(--surface2); border-bottom:1px solid var(--border); margin-bottom:12px; }
-.adminbar button{ padding:7px 11px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12px; font-weight:600; cursor:pointer; }
-.adminbar .abnote{ font-size:11px; color:var(--soft); flex-basis:100%; }
-.sortrow{ display:flex; align-items:center; gap:8px; margin:0 16px 10px; font-size:13px; color:var(--soft); }
-.sortrow select{ margin-left:auto; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); font-size:13px; padding:7px 10px; cursor:pointer; }
-.compare{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; padding:16px; display:flex; flex-direction:column; gap:14px; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
-.compare::-webkit-scrollbar{ width:8px; } .compare::-webkit-scrollbar-thumb{ background:var(--border); border-radius:8px; background-clip:padding-box; border:2px solid transparent; }
-.cmp-head{ text-align:center; }
-.cmp-head .ct{ font-size:19px; font-weight:800; letter-spacing:-.01em; }
-.cmp-head .cs{ font-size:13px; color:var(--soft); margin-top:4px; }
-.cmp-trait{ display:inline-block; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:4px 13px; font-size:12px; color:var(--acc); font-weight:700; margin-top:9px; }
-.cmp-pair{ display:flex; flex-direction:column; gap:12px; }
-.cmp-card{ display:block; width:100%; text-align:left; padding:0; border:1px solid var(--border); border-radius:18px; overflow:hidden; background:var(--surface); cursor:pointer; transition:transform .08s ease, box-shadow .15s, border-color .15s; font:inherit; color:inherit; }
-.cmp-card:hover{ box-shadow:var(--shadow); border-color:var(--acc); }
-.cmp-card:active{ transform:scale(.98); }
-.cmp-card .cph{ height:150px; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-size:52px; }
-.cmp-card .cph.nophoto{ background:linear-gradient(140deg,#caa472,#7b4a26); color:#fff; }
-.cmp-card .cb{ padding:12px 15px 15px; }
-.cmp-card .cn{ font-weight:800; font-size:16px; line-height:1.2; }
-.cmp-card .cm{ font-size:12px; color:var(--soft); margin-top:5px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
-.cmp-score{ background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:1px 8px; font-size:11px; color:var(--soft); }
-.dscore{ background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:1px 7px; font-size:11px; font-weight:600; color:var(--acc); }
-.cmp-modes{ display:flex; gap:6px; justify-content:center; margin-bottom:14px; }
-.cmp-mode{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:6px 16px; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; }
-.cmp-mode.on{ background:var(--acc); color:#fff; border-color:var(--acc); }
-.cmp-vs{ text-align:center; font-weight:800; color:var(--faint); font-size:13px; letter-spacing:.12em; }
-.cmp-actions{ display:flex; gap:10px; margin-top:2px; }
-@media (min-width:560px) and (max-width:899px){ .cmp-pair{ flex-direction:row; } .cmp-pair .cmp-card{ flex:1; } .cmp-vs{ align-self:center; } }
-@media (min-width:1100px){ .cmp-pair{ flex-direction:row; } .cmp-pair .cmp-card{ flex:1; } .cmp-vs{ align-self:center; } }
-</style>
-</head>
-<body>
-<div id="app" data-view="map" data-mode="viewer">
-	<aside class="sidebar">
-		<div class="side-head"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="count"></div></div><button class="iconbtn lockbtn" onclick="toggleAdmin()" title="Viewer mode — tap to unlock editing">🔒</button></div>
-		<div class="side-nav">
-			<button id="n-list" onclick="show('list')">☰ List</button>
-			<button id="n-fav" onclick="show('list',true)">❤️ Faves</button>
-			<button id="n-rank" class="admin-only" onclick="show('compare')">⚖️ Rank</button>
-<button id="n-stats" onclick="show('stats')">📊 Stats</button>
-			<button id="n-add" class="admin-only" onclick="openForm()">＋ Add</button>
-		</div>
-		<div class="panes">
-			<section class="pane" id="pane-list"><div class="adminbar admin-only"><span class="abnote" id="ab-cloud">Admin mode</span></div>
-				<div class="search">🔍<input id="q" placeholder="Search name, city, state, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
-<div class="sortrow"><span>Sort by</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="ranked">Top ranked</option><option value="rating">★ Highest rated</option><option value="near">📍 Nearest to me</option></select></div>
-				<div class="scroll"><div class="grid" id="grid"></div></div>
-			</section>
-			<section class="pane" id="pane-detail">
-				<div class="scroll">
-					<div class="hero" id="d-hero">
-						<div class="nav"><button class="round" onclick="goBack()">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()">🧡</button><button class="round admin-only" onclick="editCurrent()">✎</button></div></div>
-						<div class="tagphoto" id="d-tagphoto">📷 My drink</div>
-					</div>
-					<div class="dbody">
-						<h2 id="d-name"></h2>
-						<div class="row"><span class="stars" id="d-stars"></span><span id="d-meta"></span></div>
-						<div class="locpills" id="d-locs"></div>
-<div class="chips" id="d-tags"></div>
-						<div class="lab">Drinks I had</div><div id="d-drinks"></div>
-						<div class="lab">My thoughts</div><div class="review" id="d-review"></div>
-						<div style="margin-top:22px; display:flex; gap:10px"><button class="btn" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
-					</div>
-				</div>
-			</section>
-			<section class="pane" id="pane-form">
-				<div class="form-top"><button class="iconbtn" onclick="closeForm()">‹</button><h1 id="form-title" style="flex:1; font-size:18px; margin:0">Add a visit</h1><button class="savebtn" onclick="saveForm()">Save</button></div>
-				<div class="scroll"><div class="form">
-					<div class="field"><label>Cafe name *</label><input type="text" id="f-name" placeholder="Search a place or type a name…" autocomplete="off" onblur="checkExisting()"></div>
-					<div class="field"><label>Location — tap map to drop a pin</label><div id="form-map"></div><button class="hintbtn" onclick="formLocate()">📍 Use my current location</button> <span id="f-coords" style="font-size:12px; color:var(--soft)"></span></div>
-					<div class="field"><label>Area / neighborhood</label><input type="text" id="f-area" placeholder="e.g. Manoa" autocomplete="off"></div>
-<div class="field"><label>Brand / chain (optional)</label><input type="text" id="f-brand" placeholder="e.g. Tadaima — groups locations together" autocomplete="off"></div>
-					<div class="field"><label>Drink photo</label><div class="photodrop" id="f-photodrop"><div style="font-size:26px">📷</div><span id="f-photolabel">Paste an image link below to preview</span></div><input type="text" id="f-photo-url" placeholder="Paste an image link (Google Photos, Cloudinary…)" oninput="onPhotoUrl()" autocomplete="off" style="margin-top:8px"><div style="font-size:11px; color:var(--soft); margin-top:4px">From Google Photos: open the photo, right-click it → "Copy image address" and paste that link here (the Share link won't work).</div><div id="f-photo-status" style="font-size:11px; margin-top:3px"></div></div>
-					<div class="field"><label>Drinks had</label><div class="drinkrows" id="f-drinks"></div><button class="hintbtn" onclick="addDrinkRow()">+ Add another drink</button></div>
-					<div class="field"><label>Rating</label><div class="rate" id="f-rate"></div></div>
-					<div class="field"><label>Review / thoughts</label><textarea id="f-review" placeholder="Vibe, taste, service…"></textarea></div>
-					<div class="field"><label>Tags</label><div class="tagpick" id="f-tags"></div></div>
-					<div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-fav"> Mark as favorite ❤️</label></div>
-					<button class="btn" onclick="saveForm()">Save visit</button>
-				</div></div>
-			</section>
-			<section class="pane" id="pane-compare"><div class="compare" id="cmp-body"></div></section>
-<section class="pane" id="pane-stats"><div class="scroll"><div class="statwrap" id="stats-body"></div></div></section>
-		</div>
-	</aside>
-	<main class="mapwrap">
-		<div class="mobile-topbar"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn lockbtn" onclick="toggleAdmin()" title="Viewer mode — tap to unlock editing">🔒</button><button class="iconbtn" onclick="locate()" title="My location">📍</button></div>
-		<div class="mapbox">
-			<div id="map"></div>
-			<div class="map-msg" id="map-msg"></div>
-			
-		</div>
-	</main>
-	<nav class="tabbar">
-		<button class="tab on" id="t-map" onclick="show('map')"><span class="ti">🗺️</span>Map</button>
-		<button class="tab" id="t-list" onclick="show('list')"><span class="ti">☰</span>List</button>
-		<button class="tab admin-only" id="t-add" onclick="openForm()"><span class="ti">➕</span>Add</button>
-		<button class="tab" id="t-fav" onclick="show('list',true)"><span class="ti">❤️</span>Faves</button>
-		<button class="tab admin-only" id="t-rank" onclick="show('compare')"><span class="ti">⚖️</span>Rank</button>
-<button class="tab" id="t-stats" onclick="show('stats')"><span class="ti">📊</span>Stats</button>
-	</nav>
-	<div class="updatebar" id="updatebar" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
-<div class="toast" id="toast"></div>
-</div>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script>
-"use strict";
-
-/* ============================================================
-   STEP 1 — PASTE YOUR *CAESAR-ENCODED* KEY BELOW.
-   Generate it with the console snippet in the page instructions.
-   (Light deterrent only: the decoded key still reaches the browser.)
-   ============================================================ */
-const GMAPS_KEY_ENC = "HPghZfJAcuuHITOQI9ZJ-BMszolL6X9GRmgTNhr";
-const CAESAR_SHIFT = 7;
-function caesar(s,k){ return s.replace(/./g,c=>{ const o=c.charCodeAt(0); if(o>=65&&o<=90)return String.fromCharCode((o-65+k%26+26)%26+65); if(o>=97&&o<=122)return String.fromCharCode((o-97+k%26+26)%26+97); if(o>=48&&o<=57)return String.fromCharCode((o-48+k%10+10)%10+48); return c; }); }
-const GMAPS_KEY = caesar(GMAPS_KEY_ENC, -CAESAR_SHIFT);
-/* ============================================================ */
-
-/* ============================================================
-   FIREBASE (cloud sync) — paste your project's web config below.
-   One-time setup (~3 min):
-     1) console.firebase.google.com → Add project.
-     2) Build → Realtime Database → Create database → Start in test mode.
-     3) Project settings → Your apps → Web (</>) → register → copy the config.
-     4) Paste the values below (databaseURL is the important one).
-     5) Realtime Database → Rules → set { "rules": { ".read": true, ".write": true } } → Publish.
-   After this, admin edits save to the cloud instantly for everyone — no more cafes.json uploads.
-   NOTE: public write means anyone could overwrite data; ask me to add Google sign-in for real protection.
-============================================================ */
-const FIREBASE_CONFIG = {
-	apiKey: "AIzaSyDoTgqNZjj7oyoeulJAiqNvPMCGltUbrio",
-	authDomain: "cafeproject-b604f.firebaseapp.com",
-	databaseURL: "https://cafeproject-b604f-default-rtdb.firebaseio.com",
-	projectId: "cafeproject-b604f",
-storageBucket: "cafeproject-b604f.firebasestorage.app",
-messagingSenderId: "846570702792",
-appId: "1:846570702792:web:5899133d9032437e14e2fd"
-};
-const KEY="cafemap.v1";
-const DATA_URL="cafes.json";          // published data committed to your GitHub repo
-const ADMIN_FLAG="cafemap.admin";     // remembers admin mode in this browser
-const DIRTY_FLAG="cafemap.dirty";     // set on local edits, cleared on Export
-const OWNER_EMAIL="jorgemarco.portillo@gmail.com"; // only this Google account can edit (real security)
-const ADMIN_PASS="cafeAdmin";         // change this — only hides editing UI (not real security)
-const DEFAULT_CENTER=[21.300,-157.830]; // Honolulu [lat,lng]
-const ALL_TAGS=["cozy","good wifi","oat milk","outdoor","quiet","pastries","specialty","matcha","to-go"];
-let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], favOnly=false, lastMain="map";
-let gReady=false, gmap=null, fgmap=null, fgmarker=null, gmarkers=[], userMarker=null;
-let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gphotos"))||{}; }catch(e){}
-let isAdmin=false;
-
-const $=id=>document.getElementById(id);
-let fbReady=false, fbDb=null, fbAuth=null;
-function asArray(v){ return Array.isArray(v)?v:(v&&typeof v==="object"?Object.values(v):[]); }
-function initFirebase(){ try{ if(!window.firebase||!FIREBASE_CONFIG||!FIREBASE_CONFIG.databaseURL||/PASTE_/.test(FIREBASE_CONFIG.databaseURL))return false; firebase.initializeApp(FIREBASE_CONFIG); fbDb=firebase.database(); try{ fbAuth=firebase.auth(); }catch(e){} fbReady=true; return true; }catch(e){ console.warn("Firebase init failed",e); return false; } }
-function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ const val=asArray(snap.val()); if(!val.length)return; cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } else if(v==="stats")renderStats(); }); }
-async function loadCloud(){ if(!fbReady)return false; try{ const snap=await Promise.race([fbDb.ref("cafes").once("value"),new Promise((_,rej)=>setTimeout(()=>rej(new Error("cloud-timeout")),6000))]); const val=asArray(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){} if(dirty&&Array.isArray(local)&&local.length){ cafes=local; resyncDirty(); return true; } if(val.length){ cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load slow/failed — using cached data",e); let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(_e){} if(Array.isArray(local)&&local.length){ cafes=local; return true; } } return false; }
-const app=$("app");
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
-function esc(s){ return (s||"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
-function fmtDate(s){ if(!s)return ""; const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); if(!m)return s; const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2]-1]; return mo+" "+(+m[3])+", "+m[1]; }
-
-/* ---------- storage ---------- */
-async function load(){
-if(await loadCloud())return;
-	isAdmin = localStorage.getItem(ADMIN_FLAG)==="1";
-	let published=null;
-	try{ const ctrl=new AbortController(); const _to=setTimeout(()=>ctrl.abort(),8000); const r=await fetch(DATA_URL+"?t="+Date.now(),{signal:ctrl.signal}); clearTimeout(_to); if(r.ok)published=await r.json(); }catch(e){}
-	if(isAdmin){
-		const dirty = localStorage.getItem(DIRTY_FLAG)==="1";
-		let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
-		if(dirty && local && local.length){ cafes=local; }
-		else if(published && published.length){ cafes=published; localStorage.removeItem(KEY); }
-		else { cafes=(local&&local.length)?local:seed(); }
-	} else {
-		let _lc=null; try{ _lc=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){} cafes=(published&&published.length)?published:((Array.isArray(_lc)&&_lc.length)?_lc:seed());
-	}
-}
-function save(){ if(!isAdmin)return; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){ toast("Storage full — try a smaller photo"); } if(fbReady){ const u=fbAuth&&fbAuth.currentUser; if(!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase())){ localStorage.setItem(DIRTY_FLAG,"1"); toast("Saved on this device — tap 🔓 to sign in so it syncs"); return; } fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafes))).then(()=>{ localStorage.removeItem(DIRTY_FLAG); }).catch(()=>{ localStorage.setItem(DIRTY_FLAG,"1"); toast("Cloud save failed — kept on this device, tap 🔓 to re-sign in"); }); } else { try{ localStorage.setItem(DIRTY_FLAG,"1"); }catch(e){} } }
-function applyMode(){ app.dataset.mode=isAdmin?"admin":"viewer"; document.querySelectorAll(".lockbtn").forEach(b=>{ b.textContent=isAdmin?"🔓":"🔒"; b.title=isAdmin?"Admin mode — tap to sign out":"Viewer mode — tap to unlock editing"; }); if(!isAdmin&&(app.dataset.view==="form"||app.dataset.view==="compare"))show(lastMain); if(app.dataset.view==="stats")renderStats(); }
-function authMsg(code){ if(code==="auth/operation-not-allowed"||code==="auth/configuration-not-found")return "Turn on Google sign-in: Firebase Console → Authentication → Sign-in method → Google → Enable."; if(code==="auth/unauthorized-domain")return "This site's domain isn't allowed. Add it in Firebase → Authentication → Settings → Authorized domains."; if(code==="auth/popup-blocked"||code==="auth/cancelled-popup-request")return "Your browser blocked the popup — allow popups for this site and try again."; if(code==="auth/popup-closed-by-user")return "Sign-in window closed."; return "Sign-in failed ("+code+")"; }
-function adminSignIn(){ if(!fbAuth){ toast("Cloud not connected"); return; } const prov=new firebase.auth.GoogleAuthProvider(); fbAuth.signInWithPopup(prov).catch(e=>{ const code=(e&&e.code)||""; console.error("Sign-in error",e); if(code==="auth/popup-blocked"||code==="auth/operation-not-supported-in-this-environment"){ fbAuth.signInWithRedirect(prov).catch(er=>toast(authMsg((er&&er.code)||""))); return; } toast(authMsg(code)); }); }
-function resyncDirty(){ if(!fbReady||!fbAuth)return; const u=fbAuth.currentUser; if(!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()))return; const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; fbDb.ref("cafes").once("value").then(s=>{ const cloudEmpty=!asArray(s.val()).length; if((dirty||cloudEmpty)&&cafes.length){ fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafes))).then(()=>{ localStorage.removeItem(DIRTY_FLAG); if(dirty)toast("Synced your edits to the cloud ✓"); }).catch(()=>{}); } }).catch(()=>{}); }
-function initAuth(){ if(!fbAuth)return; fbAuth.onAuthStateChanged(u=>{ const ok=!!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()); if(u&&!ok){ toast("That account can't edit this map"); fbAuth.signOut(); return; } if(ok){ if(!isAdmin){ isAdmin=true; localStorage.setItem(ADMIN_FLAG,"1"); applyMode(); toast("Admin mode - signed in"); } load().then(()=>{ if(gReady)renderMarkers(); renderList(); resyncDirty(); }); } else if(!ok&&isAdmin){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); }); toast("Viewer mode"); } }); }
-function toggleAdmin(){ if(fbAuth){ if(isAdmin){ if(confirm("Sign out of editing mode?"))fbAuth.signOut().then(()=>toast("Viewer mode")); } else { adminSignIn(); } return; } if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; localStorage.setItem(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
-function importPublished(){ if(!isAdmin){ toast("Sign in to edit first"); return; } if(!fbReady){ toast("Cloud not connected"); return; } if(!confirm("Replace the cloud data with cafes.json from the site? This overwrites what's currently in the cloud."))return; fetch(DATA_URL+"?t="+Date.now()).then(r=>r.json()).then(d=>{ if(!Array.isArray(d)||!d.length){ toast("cafes.json looks empty"); return; } return fbDb.ref("cafes").set(d).then(()=>{ cafes=d; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} localStorage.removeItem(DIRTY_FLAG); if(gReady)renderMarkers(); renderList(); toast("Imported "+d.length+" cafes ✓"); }); }).catch(()=>toast("Couldn't load cafes.json")); }
-function exportJSON(){ const blob=new Blob([JSON.stringify(cafes,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="cafes.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); localStorage.removeItem(DIRTY_FLAG); toast("Backup downloaded ✓"); }
-function revertPublished(){ if(!confirm("Reload the latest saved data and discard unsynced local edits?"))return; localStorage.removeItem(KEY); localStorage.removeItem(DIRTY_FLAG); load().then(()=>{ renderMarkers(); show("list"); toast("Reloaded latest data"); }); }
-function seed(){ return [
-	{id:uid(),name:"Morning Glass Coffee",area:"Manoa",lat:21.3140,lng:-157.8087,photo:null,emoji:"☕",rating:5,fav:true,tags:["cozy","pastries"],review:"Tucked-away neighborhood spot. The flat white is excellent and the breakfast sandwich is a must.",drinks:[{n:"Flat white",p:"$5"},{n:"Cold brew",p:"$5.5"}]},
-	{id:uid(),name:"ARS Cafe",area:"Diamond Head",lat:21.2680,lng:-157.8050,photo:null,emoji:"🍦",rating:4,fav:false,tags:["outdoor","specialty"],review:"Great post-beach stop. Affogato hits after a Diamond Head hike.",drinks:[{n:"Affogato",p:"$7"}]},
-	{id:uid(),name:"Kai Coffee",area:"Waikiki",lat:21.2760,lng:-157.8270,photo:null,emoji:"🥤",rating:4,fav:false,tags:["to-go","good wifi"],review:"Reliable iced latte near the beach. Gets busy mid-morning.",drinks:[{n:"Iced latte",p:"$6"}]}
-]; }
-
-/* ---------- navigation ---------- */
-function show(view,fav){ if(view==="compare"&&!isAdmin)view="list"; favOnly=!!fav; if(view==="map"||view==="list")lastMain=view; app.dataset.view=view;
-	document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
-	if(view==="map")$("t-map").classList.add("on");
-	if(view==="list")(fav?$("t-fav"):$("t-list")).classList.add("on");
-	document.querySelectorAll(".side-nav button").forEach(b=>b.classList.remove("on"));
-	if(view==="list"||view==="map")(fav?$("n-fav"):$("n-list")).classList.add("on");
-	if(view==="form")$("n-add").classList.add("on");
-	if(view==="compare"){ const _tr=$("t-rank"); if(_tr)_tr.classList.add("on"); const _nr=$("n-rank"); if(_nr)_nr.classList.add("on"); newMatchup(); }
-if(view==="stats"){ const _ts=$("t-stats"); if(_ts)_ts.classList.add("on"); const _ns=$("n-stats"); if(_ns)_ns.classList.add("on"); renderStats(); }
-	if(view==="list"||view==="map")renderList();
-	if(gReady)setTimeout(()=>{ mapResize(); if(view==="map")focusNearest(); },60);
-}
-function goBack(){ show(lastMain==="map"&&window.innerWidth<900?"map":"list"); }
-
-/* ---------- google maps loader ---------- */
-function startMaps(){ if(!GMAPS_KEY_ENC||/PASTE|HERE/.test(GMAPS_KEY_ENC)){ showMapError("Add your encoded Google Maps API key near the top of this file (the GMAPS_KEY_ENC line), then reload."); return; } const s=document.createElement("script"); s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(GMAPS_KEY)+"&libraries=places&loading=async&callback=onGoogleReady"; s.async=true; s.onerror=()=>showMapError("Couldn't load Google Maps. Check your connection and API key."); document.head.appendChild(s); }
-function onGoogleReady(){ gReady=true; $("map-msg").classList.remove("show"); initMap(); if(app.dataset.view==="list")renderList(); }
-function gm_authFailure(){ showMapError("Google rejected the API key. Check the key is correct, billing is enabled, and this site is allowed in the key's HTTP-referrer restrictions."); }
-function showMapError(msg){ const el=$("map-msg"); el.innerHTML='<div class="big">🗺️</div><div>'+msg+'</div>'; el.classList.add("show"); if($("map-sub"))$("map-sub").textContent="Map unavailable"; }
-function mapResize(){ if(gmap)google.maps.event.trigger(gmap,"resize"); if(fgmap)google.maps.event.trigger(fgmap,"resize"); }
-
-/* ---------- main map ---------- */
-function initMap(){ gmap=new google.maps.Map($("map"),{center:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); renderMarkers(); autoLocate(); gmap.addListener("click",()=>{ pendingMarkerId=null; if(gInfo)gInfo.close(); }); }
-function ratingColor(r){ r=r||0; return r>=5?"#2e9e5b":r>=4?"#7cb342":r>=3?"#f0a93b":r>=2?"#ef7c2b":r>=1?"#e0556b":"#9aa0a6"; }
-function renderMarkers(){ if(!gmap)return; gmarkers.forEach(m=>m.setMap(null)); gmarkers=[]; const b=new google.maps.LatLngBounds(); let n=0; const dups=dupNameKeys(); cafes.forEach(c=>{ if(c.lat==null)return; const opt={position:{lat:c.lat,lng:c.lng},map:gmap,title:(dups[(c.name||"").trim().toLowerCase()]&&c.area)?(c.name+" — "+c.area):c.name,icon:{path:google.maps.SymbolPath.CIRCLE,scale:c.fav?11:9,fillColor:ratingColor(c.rating),fillOpacity:1,strokeColor:c.fav?"#e0556b":"#ffffff",strokeWeight:c.fav?3:2},zIndex:c.fav?5:3}; const m=new google.maps.Marker(opt); m.addListener("click",()=>onMarkerClick(c,m)); gmarkers.push(m); b.extend(opt.position); n++; }); if($("map-sub"))$("map-sub").textContent=cafes.length+" cafe"+(cafes.length===1?"":"s")+" · tap a pin"; if(n===1){ gmap.setCenter(gmarkers[0].getPosition()); gmap.setZoom(14); } else if(n>1){ gmap.fitBounds(b,60); } }
-let userLoc=null;
-let gInfo=null, pendingMarkerId=null;
-function mapInfo(){ if(!gInfo)gInfo=new google.maps.InfoWindow(); return gInfo; }
-function onMarkerClick(c,m){ if(pendingMarkerId===c.id){ if(gInfo)gInfo.close(); pendingMarkerId=null; openDetail(c.id,"map"); return; } pendingMarkerId=c.id; const iw=mapInfo(); const act=(window.innerWidth>=900?"Click":"Tap")+" for details ›"; iw.setContent('<div onclick="openDetail(\''+c.id+'\',\'map\')" style="cursor:pointer; font-weight:700; font-size:13px; color:#1d1a17">'+esc(c.name)+(c.area?'<div style="font-weight:500; color:#7a726b; font-size:11px; margin-top:1px">'+esc(c.area)+'</div>':'')+(c.matches?'<div style="color:#2e9e5b; font-weight:600; font-size:11px; margin-top:3px">Score '+eloScore(c)+'</div>':'')+'<div style="color:#d5803b; font-size:11px; margin-top:3px">'+act+'</div></div>'); iw.open(gmap,m); }
-function nearestCafe(pos){ let best=null,bd=Infinity; cafes.forEach(c=>{ if(c.lat==null)return; const d=distKm(pos.lat,pos.lng,c.lat,c.lng); if(d<bd){bd=d;best=c;} }); return best; }
-function focusNearest(){ if(!gmap)return; if(userLoc){ const near=nearestCafe(userLoc); if(near){ const b=new google.maps.LatLngBounds(); b.extend(userLoc); b.extend({lat:near.lat,lng:near.lng}); gmap.fitBounds(b,80); google.maps.event.addListenerOnce(gmap,"idle",()=>{ if(gmap.getZoom()>16)gmap.setZoom(16); }); } else { gmap.setCenter(userLoc); gmap.setZoom(13); } } else { showUserLocation(true); } }
-function showUserLocation(center){ if(!navigator.geolocation)return; navigator.geolocation.getCurrentPosition(p=>{ const pos={lat:p.coords.latitude,lng:p.coords.longitude}; userLoc=pos; if(app.dataset.view==="list")renderList(); if(!gmap)return; if(userMarker)userMarker.setMap(null); userMarker=new google.maps.Marker({position:pos,map:gmap,title:"You are here",zIndex:9999,icon:{path:google.maps.SymbolPath.CIRCLE,scale:7,fillColor:"#1a73e8",fillOpacity:1,strokeColor:"#fff",strokeWeight:3}}); if(center){ const near=nearestCafe(pos); if(near){ const b=new google.maps.LatLngBounds(); b.extend(pos); b.extend({lat:near.lat,lng:near.lng}); gmap.fitBounds(b,80); google.maps.event.addListenerOnce(gmap,"idle",()=>{ if(gmap.getZoom()>16)gmap.setZoom(16); }); } else { gmap.setCenter(pos); gmap.setZoom(13); } } },()=>{ if(center)toast("Couldn't get your location"); },{enableHighAccuracy:true,timeout:8000,maximumAge:300000}); }
-function locate(){ if(!navigator.geolocation){ toast("Location not available"); return; } showUserLocation(true); }
-function autoLocate(){ if(!navigator.geolocation)return; if(navigator.permissions&&navigator.permissions.query){ navigator.permissions.query({name:"geolocation"}).then(r=>{ if(r.state!=="denied")showUserLocation(true); }).catch(()=>showUserLocation(true)); } else { showUserLocation(true); } }
-
-/* ---------- list ---------- */
-/* ---------- google place photo fallback ---------- */
-let gphotoInflight={}, _gphotoRerender=null;
-function saveGphotoCache(){ try{ localStorage.setItem("cafemap.gphotos",JSON.stringify(gphotoCache)); }catch(e){} }
-let _persistT=null; function schedulePersistPhotos(){ clearTimeout(_persistT); _persistT=setTimeout(()=>{ if(isAdmin)save(); },2500); }
-function gphotoFor(c){ return (c&&c.photo) || (c&&c.gphoto) || (c&&gphotoCache[c.id]) || null; }
-function applyCardPhoto(id,url){ const el=document.querySelector('.card[data-id="'+id+'"] .ph'); if(!el)return; if(url){ el.style.backgroundImage='url("'+url+'")'; el.classList.remove("nophoto","loading"); el.classList.add("loaded"); const c=cafes.find(x=>x.id===id); el.textContent=(c&&c.fav)?"❤️":""; } else { el.classList.remove("loading"); } }
-function scheduleListRerender(){ clearTimeout(_gphotoRerender); _gphotoRerender=setTimeout(()=>{ if(app.dataset.view==="list")renderList(); },600); }
-function fetchStreetView(c,cb){ if(!c||c.lat==null){ cb&&cb(null); return; } const loc=c.lat+","+c.lng; let done=false; const fin=(u)=>{ if(done)return; done=true; cb&&cb(u); }; const ctrl=("AbortController"in window)?new AbortController():null; const to=setTimeout(()=>{ if(ctrl){try{ctrl.abort();}catch(e){}} fin(null); },6000); fetch("https://maps.googleapis.com/maps/api/streetview/metadata?location="+loc+"&key="+encodeURIComponent(GMAPS_KEY),ctrl?{signal:ctrl.signal}:undefined).then(r=>r.json()).then(j=>{ clearTimeout(to); fin((j&&j.status==="OK")?("https://maps.googleapis.com/maps/api/streetview?size=800x600&location="+loc+"&fov=85&key="+encodeURIComponent(GMAPS_KEY)):null); }).catch(()=>{ clearTimeout(to); fin(null); }); }
-function fetchPlacePhoto(c,cb){ if(!c||c.id==null||c.lat==null){ cb&&cb(null); return; } if(gphotoCache[c.id]!==undefined){ cb&&cb(gphotoCache[c.id]); return; } let settled=false; const done=(u)=>{ if(settled)return; settled=true; cb&&cb(u); }; const guard=setTimeout(()=>{ if(!settled&&gphotoCache[c.id]===undefined)gphotoCache[c.id]=null; done(null); },9000); if(!gReady||!window.google||!google.maps||!google.maps.places||!google.maps.places.PlacesService){ fetchStreetView(c,(sv)=>{ clearTimeout(guard); if(sv){ gphotoCache[c.id]=sv; saveGphotoCache(); c.gphoto=sv; schedulePersistPhotos(); } done(sv); }); return; } try{ const svc=new google.maps.places.PlacesService(gmap||document.createElement("div")); svc.findPlaceFromQuery({ query:(c.name+" "+(c.area||"")).trim(), fields:["photos"], locationBias:{lat:c.lat,lng:c.lng} },(res,status)=>{ let url=null; try{ if(status===google.maps.places.PlacesServiceStatus.OK && res && res[0] && res[0].photos && res[0].photos.length){ url=res[0].photos[0].getUrl({maxWidth:800,maxHeight:600}); } }catch(e){} if(url){ clearTimeout(guard); gphotoCache[c.id]=url; saveGphotoCache(); c.gphoto=url; schedulePersistPhotos(); done(url); } else { fetchStreetView(c,(sv)=>{ clearTimeout(guard); gphotoCache[c.id]=sv||null; saveGphotoCache(); if(sv){ c.gphoto=sv; schedulePersistPhotos(); } done(sv); }); } }); }catch(e){ clearTimeout(guard); done(null); } }
-function prefetchListPhotos(items){ if(!gReady)return; items.forEach(c=>{ if(c.lat==null||c.photo)return; if(gphotoCache[c.id]!==undefined){ if(isAdmin&&!c.gphoto&&gphotoCache[c.id]){ c.gphoto=gphotoCache[c.id]; schedulePersistPhotos(); } return; } if(gphotoInflight[c.id])return; gphotoInflight[c.id]=1; fetchPlacePhoto(c,(url)=>{ delete gphotoInflight[c.id]; applyCardPhoto(c.id,url); }); }); }
-
-const STATE_NAMES={HI:"Hawaii",CA:"California",NV:"Nevada",NY:"New York",WA:"Washington",OR:"Oregon",TX:"Texas",AZ:"Arizona"};
-function regionTerms(c){ const t=[]; const m=/,\s*([A-Za-z]{2})\b/.exec(c.area||""); if(m){ const ab=m[1].toUpperCase(); if(STATE_NAMES[ab])t.push(STATE_NAMES[ab],ab); } if(c.lat!=null&&c.lng!=null){ if(c.lng<-150&&c.lat>18&&c.lat<23){ t.push("Hawaii","Oahu","Honolulu"); } else if(c.lng>=-125&&c.lng<=-117&&c.lat>=32&&c.lat<=42.5){ t.push("California"); if(c.lat>=36.8&&c.lat<=38.6&&c.lng<=-121.4)t.push("Bay Area","Northern California","NorCal"); if(c.lat<34.5)t.push("Southern California","SoCal"); } else if(c.lng>-117&&c.lng<=-114&&c.lat>=35&&c.lat<=37.5){ t.push("Nevada","Las Vegas"); } } return t.join(" "); }
-function typeTerms(c){ const e=c.emoji||""; let s="cafe"; if(e==="🧋")s+=" boba bubble milk tea"; else if(e==="🍵")s+=" matcha tea"; else s+=" coffee"; return s; }
-function searchHay(c){ return (c.name+" "+(c.area||"")+" "+regionTerms(c)+" "+typeTerms(c)+" "+(c.tags||[]).join(" ")+" "+(c.drinks||[]).map(d=>d.n).join(" ")).toLowerCase(); }
-function matchSearch(c,q){ const hay=searchHay(c); return q.split(/\s+/).filter(Boolean).every(tok=>hay.includes(tok)); }
-function distKm(lat1,lng1,lat2,lng2){ const R=6371,toRad=x=>x*Math.PI/180; const dLat=toRad(lat2-lat1),dLng=toRad(lng2-lng1); const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
-function dupNameKeys(){ const seen={},dup={}; cafes.forEach(c=>{ const k=(c.name||"").trim().toLowerCase(); if(k){ if(seen[k])dup[k]=1; seen[k]=1; } }); return dup; }
-function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); let items=cafes.slice(); const dups=dupNameKeys(); if(favOnly)items=items.filter(c=>c.fav); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ if(sortMode==="ranked"){ const ea=eloScoreNum(a),eb=eloScoreNum(b); if(ea!==eb)return eb-ea; const ma=matchCount(a),mb=matchCount(b); if(ma!==mb)return mb-ma; if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); return (a.name||"").localeCompare(b.name||""); } if(sortMode==="rating"){ if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); const sa=eloScoreNum(a),sb=eloScoreNum(b); if(sa!==sb)return sb-sa; return (a.name||"").localeCompare(b.name||""); } if(sortMode==="near"){ const da=(userLoc&&a.lat!=null)?distKm(userLoc.lat,userLoc.lng,a.lat,a.lng):Infinity; const db=(userLoc&&b.lat!=null)?distKm(userLoc.lat,userLoc.lng,b.lat,b.lng):Infinity; if(da!==db)return da-db; if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); return (a.name||"").localeCompare(b.name||""); } const ua=a.updated?(Date.parse(a.updated)||0):0, ub=b.updated?(Date.parse(b.updated)||0):0; if(ua!==ub)return ub-ua; if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); return (a.name||"").localeCompare(b.name||""); }); if($("count"))$("count").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s"); if(!items.length){ grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">☕</div>'+(favOnly?"No favorites yet — tap the heart on a cafe.":(q?"No matches.":"No cafes yet. Tap + to add your first visit!"))+'</div>'; return; } grid.innerHTML=items.map(c=>{ const gp=gphotoFor(c); const dkm=(userLoc&&c.lat!=null)?distKm(userLoc.lat,userLoc.lng,c.lat,c.lng):null; const dstr=dkm!=null?((dkm*0.621371)<0.1?Math.round(dkm*0.621371*5280)+" ft":(dkm*0.621371).toFixed(1)+" mi"):""; let cls="ph", inner, style=""; if(gp){ cls+=" loaded"; inner=(c.fav?"❤️":""); style=' style="background-image:url(\''+gp+'\')"'; } else { cls+=" nophoto"; if(gReady && c.lat!=null && gphotoCache[c.id]===undefined)cls+=" loading"; inner=(c.emoji||"☕"); } return '<div class="card" data-id="'+c.id+'" onclick="openDetail(\''+c.id+'\',\'list\')"><div class="'+cls+'"'+style+'>'+inner+'</div><div class="b"><div class="n">'+esc(c.name)+(dups[(c.name||"").trim().toLowerCase()]&&c.area?' <span style="color:var(--soft); font-weight:500">· '+esc(c.area)+'</span>':'')+'</div><div class="m">'+"★".repeat(c.rating||0)+(c.area?' · '+esc(c.area):'')+(dstr?' · '+dstr:'')+(c.matches?' · '+eloScore(c):'')+'</div></div></div>'; }).join(""); prefetchListPhotos(items); }
-function renderStats(){ const host=$("stats-body"); if(!host)return; const money=(n)=>"$"+(n||0).toFixed(2); const dpr=(d)=>{ const n=parseFloat(String(d&&d.p||"").replace(/[^0-9.]/g,"")); return isNaN(n)?0:n; }; const nCafes=cafes.length; let nDrinks=0, spend=0; const rated=[]; const monthly={}; cafes.forEach(c=>{ (c.drinks||[]).forEach(d=>{ const vc=visitCount(d); nDrinks+=vc; const pr=dpr(d); spend+=pr*vc; (d.dates||[]).filter(Boolean).forEach(dt=>{ const m=/^(\d{4})-(\d{2})/.exec(dt); if(m){ const k=m[1]+"-"+m[2]; monthly[k]=(monthly[k]||0)+pr; } }); }); if(c.rating)rated.push(c.rating); }); const avg=rated.length?(rated.reduce((a,b)=>a+b,0)/rated.length):0; const byCafe=cafes.map(c=>({c,amt:(c.drinks||[]).reduce((t,d)=>t+dpr(d)*visitCount(d),0)})).filter(x=>x.amt>0).sort((a,b)=>b.amt-a.amt).slice(0,6); const maxCafe=byCafe.length?byCafe[0].amt:1; const mk=Object.keys(monthly).sort().slice(-6); const maxM=mk.reduce((m,k)=>Math.max(m,monthly[k]),1); const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; const ranked=allDrinks().filter(D=>drinkMatches(D.drink)>0).sort((a,b)=>drinkScoreNum(b.drink)-drinkScoreNum(a.drink)).slice(0,10); const groups={}; allDrinks().forEach(D=>{ const k=normDrink(D.drink.n); if(!k)return; (groups[k]=groups[k]||[]).push(D); }); const bestOf=Object.keys(groups).filter(k=>groups[k].length>=2).map(k=>{ const arr=groups[k].slice().sort((a,b)=>drinkScoreNum(b.drink)-drinkScoreNum(a.drink)); return {name:groups[k][0].drink.n,best:arr[0],rivals:groups[k].length,anyCmp:arr.some(D=>drinkMatches(D.drink)>0)}; }).filter(x=>x.anyCmp).sort((a,b)=>drinkScoreNum(b.best.drink)-drinkScoreNum(a.best.drink)).slice(0,8); let h=""; h+='<div class="statgrid"><div class="statcard"><div class="v">'+nCafes+'</div><div class="k">Cafes</div></div><div class="statcard"><div class="v">'+nDrinks+'</div><div class="k">Drinks logged</div></div>'+(isAdmin?'<div class="statcard"><div class="v">'+money(spend)+'</div><div class="k">Total spent</div></div>':'<div class="statcard"><div class="v">'+cafes.filter(c=>c.fav).length+'</div><div class="k">Favorites</div></div>')+'<div class="statcard"><div class="v">'+(avg?avg.toFixed(1):"—")+' ★</div><div class="k">Avg rating</div></div></div>'; const CA_HOME={lat:37.7749,lng:-122.4194}; const far=cafes.filter(c=>c.lat!=null).map(c=>({c,km:distKm(CA_HOME.lat,CA_HOME.lng,c.lat,c.lng)})).sort((a,b)=>b.km-a.km).slice(0,6); const maxFar=far.length?far[0].km:1; if(far.length){ h+='<div class="statsec">✈️ Farthest travelled <span style="text-transform:none;font-weight:500;color:var(--faint)">· from California</span></div>'; far.forEach(x=>{ const ds=Math.round(x.km*0.621371)+" mi"; h+='<div class="spendrow"><span class="lab2">'+esc((x.c.name||"").slice(0,16))+'</span><span class="spendbar"><i style="width:'+Math.round(x.km/maxFar*100)+'%"></i></span><span class="amt">'+ds+'</span></div>'; }); } if(isAdmin&&byCafe.length){ h+='<div class="statsec">💸 Top spending</div>'; byCafe.forEach(x=>{ h+='<div class="spendrow"><span class="lab2">'+esc((x.c.name||"").slice(0,16))+'</span><span class="spendbar"><i style="width:'+Math.round(x.amt/maxCafe*100)+'%"></i></span><span class="amt">'+money(x.amt)+'</span></div>'; }); } if(isAdmin&&mk.length){ h+='<div class="statsec">📅 Spend by month</div>'; mk.forEach(k=>{ const mm=MO[(+k.slice(5,7))-1]+" '"+k.slice(2,4); h+='<div class="spendrow"><span class="lab2">'+mm+'</span><span class="spendbar"><i style="width:'+Math.round(monthly[k]/maxM*100)+'%"></i></span><span class="amt">'+money(monthly[k])+'</span></div>'; }); } h+='<div class="statsec">🏆 Top drinks</div>'; if(ranked.length){ ranked.forEach((D,i)=>{ const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":String(i+1); h+='<div class="lbrow"><span class="lbrank">'+medal+'</span><div class="lbmain"><div class="lbname">'+esc(D.drink.n)+'</div><div class="lbsub">'+esc(D.cafe.name)+(D.cafe.area?" · "+esc(D.cafe.area):"")+'</div></div><span class="lbscore">'+drinkScore(D.drink)+'</span></div>'; }); } else { h+='<div class="lbsub" style="padding:8px 2px">No ranked drinks yet — open ⚖️ Rank → Drinks to compare them head-to-head.</div>'; } if(bestOf.length){ h+='<div class="statsec">🥇 Best of each drink</div>'; bestOf.forEach(x=>{ h+='<div class="lbrow"><span class="lbrank">🥤</span><div class="lbmain"><div class="lbname">Best '+esc(x.name)+'</div><div class="lbsub">'+esc(x.best.cafe.name)+' · beats '+(x.rivals-1)+' other'+(x.rivals-1===1?"":"s")+'</div></div><span class="lbscore">'+drinkScore(x.best.drink)+'</span></div>'; }); } host.innerHTML=h; }
-let sortMode="recent";
-function setSort(v){ sortMode=v; renderList(); }
-/* ---------- compare / ranking (Elo) ---------- */
-const ELO_BASE=1500, ELO_K=32;
-function eloFor(c){ return (c&&typeof c.elo==="number")?c.elo:ELO_BASE; }
-function eloScoreNum(c){ const m=matchCount(c); const conf=m/(m+5); return Math.max(0,Math.min(10,5+((eloFor(c)-ELO_BASE)/80)*conf)); }
-function eloScore(c){ return eloScoreNum(c).toFixed(1); }
-function traitsOf(c){ const t=new Set(); const hay=((c.name||"")+" "+typeTerms(c)+" "+(c.drinks||[]).map(d=>d.n).join(" ")).toLowerCase(); [["matcha","🍵 Matcha"],["hojicha","🍵 Matcha"],["espresso","☕ Coffee"],["latte","☕ Coffee"],["coffee","☕ Coffee"],["boba","🧋 Boba"],["bubble","🧋 Boba"],["milk tea","🧋 Boba"],["gelato","🍦 Gelato"],["tea","🍵 Tea"]].forEach(p=>{ if(hay.includes(p[0]))t.add("type|"+p[1]); }); if(c.emoji==="🍵")t.add("type|🍵 Matcha"); if(c.emoji==="🧋")t.add("type|🧋 Boba"); if(c.emoji==="☕")t.add("type|☕ Coffee"); if(c.emoji==="🍦")t.add("type|🍦 Gelato"); (c.tags||[]).forEach(x=>t.add("tag|#"+x)); if(c.area&&c.area.trim())t.add("area|📍 "+c.area.trim()); return t; }
-function sharedTraitLabel(a,b){ const tb=traitsOf(b); const shared=[...traitsOf(a)].filter(x=>tb.has(x)); if(!shared.length)return null; const ord={type:0,tag:1,area:2}; shared.sort((x,y)=>ord[x.split("|")[0]]-ord[y.split("|")[0]]); return shared[0].split("|")[1]; }
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
-function matchCount(c){ return (c&&c.matches)||0; }
-let cmpPair=null, cmpMode="cafe", cmpDrinkPair=null;
-function setCmpMode(m){ cmpMode=m; newMatchup(); }
-function allDrinks(){ const out=[]; cafes.forEach(c=>{ (c.drinks||[]).forEach(d=>{ if(d&&d.n)out.push({cafe:c,drink:d}); }); }); return out; }
-function drinkElo(d){ return (d&&typeof d.elo==="number")?d.elo:ELO_BASE; }
-function drinkMatches(d){ return (d&&d.matches)||0; }
-function drinkScoreNum(d){ const m=drinkMatches(d); const conf=m/(m+5); return Math.max(0,Math.min(10,5+((drinkElo(d)-ELO_BASE)/80)*conf)); }
-function drinkScore(d){ return drinkScoreNum(d).toFixed(1); }
-function findDrink(ref){ const c=cafes.find(x=>x.id===ref[0]); if(!c)return null; const d=(c.drinks||[]).find(x=>(x.n||"").toLowerCase()===ref[1]); return d?{cafe:c,drink:d}:null; }
-function eligiblePairs(){ const out=[]; for(let i=0;i<cafes.length;i++){ for(let j=i+1;j<cafes.length;j++){ const lab=sharedTraitLabel(cafes[i],cafes[j]); if(lab)out.push([cafes[i],cafes[j],lab]); } } return out; }
-function newMatchup(){ if(cmpMode==="drink"){ newDrinkMatchup(); return; } const pairs=eligiblePairs(); if(!pairs.length){ cmpPair=null; renderCompare(); return; } pairs.sort((p,q)=>(matchCount(p[0])+matchCount(p[1]))-(matchCount(q[0])+matchCount(q[1]))); const head=pairs.slice(0,Math.max(4,Math.ceil(pairs.length*0.25))); shuffle(head); const pick=head[0]; cmpPair=[pick[0].id,pick[1].id,pick[2]]; renderCompare(); }
-function normDrink(n){ return (n||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
-function grpMatches(g){ return g.reduce((s,p)=>s+drinkMatches(p.drink),0); }
-function newDrinkMatchup(){ const pool=allDrinks(); const groups={}; pool.forEach(p=>{ const k=normDrink(p.drink.n); if(!k)return; (groups[k]=groups[k]||[]).push(p); }); const keys=Object.keys(groups).filter(k=>groups[k].length>=2); if(!keys.length){ cmpDrinkPair=null; renderCompare(); return; } keys.sort((a,b)=>grpMatches(groups[a])-grpMatches(groups[b])); const khead=keys.slice(0,Math.max(3,Math.ceil(keys.length*0.4))); shuffle(khead); const g=groups[khead[0]].slice(); g.sort((a,b)=>drinkMatches(a.drink)-drinkMatches(b.drink)); const ghead=g.slice(0,Math.max(4,Math.ceil(g.length*0.6))); shuffle(ghead); const first=ghead[0]; let second=ghead.find((p,i)=>i>0&&p.cafe.id!==first.cafe.id)||g.find(p=>p.cafe.id!==first.cafe.id)||ghead.find((p,i)=>i>0)||g.find(p=>p!==first); if(!second){ cmpDrinkPair=null; renderCompare(); return; } cmpDrinkPair=[[first.cafe.id,(first.drink.n||"").toLowerCase()],[second.cafe.id,(second.drink.n||"").toLowerCase()]]; renderCompare(); }
-function drinkCardHTML(D,side){ const c=D.cafe, d=D.drink; const gp=gphotoFor(c); let cls="cph", style="", inner=""; if(gp){ style=' style="background-image:url(\''+gp+'\')"'; } else { cls+=" nophoto"; inner="🥤"; } return '<button class="cmp-card" onclick="pickDrinkWinner('+side+')"><div class="'+cls+'"'+style+'>'+inner+'</div><div class="cb"><div class="cn">'+esc(d.n)+'</div><div class="cm">'+esc(c.name)+'<span class="cmp-score">Score '+drinkScore(d)+'</span>'+(drinkMatches(d)?'<span class="cmp-score">'+drinkMatches(d)+' cmp</span>':'')+'</div></div></button>'; }
-function pickDrinkWinner(side){ if(!cmpDrinkPair)return; const A=findDrink(cmpDrinkPair[0]), B=findDrink(cmpDrinkPair[1]); if(!A||!B){ newDrinkMatchup(); return; } const win=side===0?A.drink:B.drink, lose=side===0?B.drink:A.drink; const Rw=drinkElo(win), Rl=drinkElo(lose); const Ew=1/(1+Math.pow(10,(Rl-Rw)/400)); const delta=Math.max(1,Math.round(ELO_K*(1-Ew))); win.elo=Rw+delta; lose.elo=Rl-delta; win.matches=drinkMatches(win)+1; lose.matches=drinkMatches(lose)+1; save(); toast(win.n+" wins · score "+drinkScore(win)); newDrinkMatchup(); }
-function cmpCardHTML(c,side){ const gp=gphotoFor(c); let cls="cph", style="", inner=""; if(gp){ style=' style="background-image:url(\''+gp+'\')"'; } else { cls+=" nophoto"; inner=(c.emoji||"☕"); } return '<button class="cmp-card" onclick="pickWinner('+side+')"><div class="'+cls+'"'+style+'>'+inner+'</div><div class="cb"><div class="cn">'+esc(c.name)+'</div><div class="cm">'+(c.area?esc(c.area):"")+'<span class="cmp-score">Score '+eloScore(c)+'</span>'+(matchCount(c)?'<span class="cmp-score">'+matchCount(c)+' cmp</span>':'')+'</div></div></button>'; }
-function renderCompare(){ const host=$("cmp-body"); if(!host)return; const toggle='<div class="cmp-modes"><button class="cmp-mode'+(cmpMode==="cafe"?" on":"")+'" onclick="setCmpMode(\'cafe\')">Cafes</button><button class="cmp-mode'+(cmpMode==="drink"?" on":"")+'" onclick="setCmpMode(\'drink\')">Drinks</button></div>'; if(cmpMode==="drink"){ if(!cmpDrinkPair){ host.innerHTML=toggle+'<div class="empty"><div class="big">🥤</div>Log the same drink at two or more cafes, then rank them head-to-head to see who does it best.</div>'; return; } const A=findDrink(cmpDrinkPair[0]), B=findDrink(cmpDrinkPair[1]); if(!A||!B){ newDrinkMatchup(); return; } host.innerHTML=toggle+'<div class="cmp-head"><div class="ct">Which drink is better?</div><div class="cs">Tap your pick — both are:</div><div class="cmp-trait">'+esc(A.drink.n)+'</div></div><div class="cmp-pair">'+drinkCardHTML(A,0)+'<div class="cmp-vs">VS</div>'+drinkCardHTML(B,1)+'</div><div class="cmp-actions"><button class="btn ghost" onclick="newMatchup()">↻ Skip — new pair</button></div>'; return; } if(!cmpPair){ host.innerHTML=toggle+'<div class="empty"><div class="big">⚖️</div>Add at least two cafes that share a trait — same drink type, tag, or area — to start ranking them.</div>'; return; } const a=cafes.find(x=>x.id===cmpPair[0]), b=cafes.find(x=>x.id===cmpPair[1]); if(!a||!b){ newMatchup(); return; } host.innerHTML=toggle+'<div class="cmp-head"><div class="ct">Which do you prefer?</div><div class="cs">Tap your pick — both share:</div><div class="cmp-trait">'+esc(cmpPair[2])+'</div></div><div class="cmp-pair">'+cmpCardHTML(a,0)+'<div class="cmp-vs">VS</div>'+cmpCardHTML(b,1)+'</div><div class="cmp-actions"><button class="btn ghost" onclick="newMatchup()">↻ Skip — new pair</button></div>'; }
-function pickWinner(side){ if(!cmpPair)return; const a=cafes.find(x=>x.id===cmpPair[0]), b=cafes.find(x=>x.id===cmpPair[1]); if(!a||!b){ newMatchup(); return; } const win=side===0?a:b, lose=side===0?b:a; const Rw=eloFor(win), Rl=eloFor(lose); const Ew=1/(1+Math.pow(10,(Rl-Rw)/400)); const delta=Math.max(1,Math.round(ELO_K*(1-Ew))); win.elo=Rw+delta; lose.elo=Rl-delta; win.matches=matchCount(win)+1; lose.matches=matchCount(lose)+1; save(); toast(win.name+" wins · score "+eloScore(win)); newMatchup(); }
-
-/* ---------- detail ---------- */
-function photoLabel(c){ if(c&&c.photo)return "📷 My drink"; const u=c&&gphotoCache[c.id]; if(u&&/streetview/.test(u))return "📍 Street View"; if(u)return "📷 Google Maps"; return ""; }
-function setHeroTag(c){ const t=$("d-tagphoto"); if(!t)return; const l=photoLabel(c); if(l){ t.textContent=l; t.style.display=""; } else { t.style.display="none"; } }
-function fmtPrice(p){ p=(p==null?"":String(p)).trim(); if(!p)return ""; const m=p.replace(/[^0-9.]/g,""); if(m&&!isNaN(parseFloat(m)))return "$"+parseFloat(m).toFixed(2); return p; }
-function openDetail(id,from){ const c=cafes.find(x=>x.id===id); if(!c)return; if(from)lastMain=from; curId=id; const hero=$("d-hero"); const gp0=gphotoFor(c); if(gp0){ hero.className="hero"; hero.style.backgroundImage='url("'+gp0+'")'; } else { hero.className="hero nophoto"; hero.style.backgroundImage=""; } setHeroTag(c); if(!c.photo){ fetchPlacePhoto(c,(url)=>{ if(url && curId===c.id){ const h=$("d-hero"); h.className="hero"; h.style.backgroundImage='url("'+url+'")'; } if(curId===c.id)setHeroTag(c); applyCardPhoto(c.id,url); }); } $("d-name").textContent=c.name; $("d-stars").textContent="★".repeat(c.rating||0)+"☆".repeat(5-(c.rating||0)); $("d-meta").textContent=[c.area||"",c.matches?(eloScore(c)+" score · "+c.matches+(c.matches===1?" compare":" compares")):"",c.updated?"edited "+fmtEdited(c.updated):""].filter(Boolean).join("  ·  "); $("d-fav").textContent=c.fav?"❤️":"🧡"; $("d-tags").innerHTML=(c.tags||[]).map(t=>'<span class="chip">'+esc(t)+'</span>').join(""); const _bk=(c.brand||"").trim().toLowerCase()||(c.name||"").trim().toLowerCase(); const _sibs=cafes.filter(x=>(((x.brand||"").trim().toLowerCase())||((x.name||"").trim().toLowerCase()))===_bk).sort((a,b)=>(a.area||"").localeCompare(b.area||"")); const _le=$("d-locs"); if(_sibs.length>1){ _le.style.display="flex"; _le.innerHTML=_sibs.map(x=>'<span class="locpill'+(x.id===c.id?' on':'')+'" onclick="openDetail(\''+x.id+'\',\''+(lastMain||"list")+'\')">📍 '+esc(x.area||x.name||"Location")+'</span>').join(""); } else { _le.style.display="none"; _le.innerHTML=""; } $("d-drinks").innerHTML=(c.drinks||[]).length?c.drinks.map(d=>{ const ds=(d.dates||[]).filter(Boolean); const cnt=Math.max(d.count||0,ds.length,1); const opts=[d.size,d.sweet?d.sweet+" sweet":"",d.ice].filter(Boolean).join(" · "); const optEl=opts?'<div class="dsub">'+esc(opts)+'</div>':''; const sub=ds.length?'<div class="dsub">'+ds.map(fmtDate).join(" · ")+'</div>':''; return '<div class="drink"><span class="ic">🥤</span><div class="dmain"><span>'+esc(d.n)+(cnt>1?' <span class="cnt">×'+cnt+'</span>':'')+(drinkMatches(d)?' <span class="dscore">'+drinkScore(d)+'</span>':'')+'</span>'+optEl+sub+'</div><span class="pr">'+esc(fmtPrice(d.p))+'</span></div>'; }).join(""):'<div class="row">No drinks logged.</div>'; $("d-review").textContent=c.review||"No notes yet."; show("detail"); if(c.lat!=null&&gmap)setTimeout(()=>{ mapResize(); gmap.setCenter({lat:c.lat,lng:c.lng}); gmap.setZoom(15); },80); }
-function toggleFav(){ const c=cafes.find(x=>x.id===curId); if(!c)return; c.fav=!c.fav; save(); $("d-fav").textContent=c.fav?"❤️":"🧡"; renderMarkers(); toast(c.fav?"Added to favorites":"Removed from favorites"); }
-function deleteCurrent(){ if(!confirm("Delete this cafe?"))return; cafes=cafes.filter(x=>x.id!==curId); save(); renderMarkers(); toast("Deleted"); goBack(); }
-function shareCafe(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const txt=c.name+(c.area?" ("+c.area+")":"")+" — "+"★".repeat(c.rating||0)+(c.review?"\n"+c.review:""); if(navigator.share){ navigator.share({title:c.name,text:txt}).catch(()=>{}); } else { navigator.clipboard&&navigator.clipboard.writeText(txt); toast("Copied to clipboard"); } }
-function navigateTo(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const dest=(c.lat!=null&&c.lng!=null)?(c.lat+","+c.lng):encodeURIComponent(c.name+(c.area?" "+c.area:"")); const url="https://www.google.com/maps/dir/?api=1&destination="+dest; if(window.innerWidth>=900){ window.open(url,"_blank"); } else { window.location.href=url; } }
-function editCurrent(){ openForm(curId); }
-
-/* ---------- form ---------- */
-function checkExisting(){ if(editId)return; const name=$("f-name").value.trim(); if(!name)return; const ex=findSameCafe(name,$("f-area").value.trim(),picked?picked.lat:null,picked?picked.lng:null); if(ex){ openForm(ex.id); toast("Found "+ex.name+" — loaded your notes to edit"); } }
-function fmtEdited(iso){ if(!iso)return ""; const d=new Date(iso); if(isNaN(d))return ""; return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+" · "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
-function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?(c.area||""):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; picked=c&&c.lat!=null?{lat:c.lat,lng:c.lng}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); show("form"); setTimeout(initFormMap,90); }
-function closeForm(){ show(editId?"detail":lastMain); }
-function initFormMap(){ if(!gReady)return; const start=picked?{lat:picked.lat,lng:picked.lng}:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]}; if(!fgmap){ fgmap=new google.maps.Map($("form-map"),{center:start,zoom:13,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); fgmap.addListener("click",e=>setPicked(e.latLng.lat(),e.latLng.lng())); try{ const ac=new google.maps.places.Autocomplete($("f-name"),{fields:["name","geometry","address_components"]}); ac.addListener("place_changed",()=>{ const p=ac.getPlace(); if(p.geometry&&p.geometry.location){ const loc=p.geometry.location; setPicked(loc.lat(),loc.lng()); fgmap.setCenter(loc); fgmap.setZoom(16); } if(p.name)$("f-name").value=p.name; if(p.address_components&&!$("f-area").value){ const nb=p.address_components.find(x=>x.types.includes("neighborhood")||x.types.includes("sublocality")||x.types.includes("locality")); if(nb)$("f-area").value=nb.long_name; } checkExisting(); }); }catch(e){} } google.maps.event.trigger(fgmap,"resize"); fgmap.setCenter(start); if(picked)setPicked(picked.lat,picked.lng); else if(fgmarker){ fgmarker.setMap(null); fgmarker=null; $("f-coords").textContent=""; } }
-function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; if(fgmarker)fgmarker.setMap(null); fgmarker=new google.maps.Marker({position:{lat:picked.lat,lng:picked.lng},map:fgmap}); $("f-coords").textContent=picked.lat+", "+picked.lng; }
-function formLocate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ if(fgmap){ fgmap.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}); fgmap.setZoom(15); } setPicked(p.coords.latitude,p.coords.longitude); },()=>toast("Couldn't get location")); }
-function renderPhoto(){ const d=$("f-photodrop"); const icon=d.querySelector("div"); if(formPhoto){ d.style.backgroundImage='url("'+formPhoto+'")'; if(icon)icon.style.display="none"; $("f-photolabel").textContent=""; } else { d.style.backgroundImage=""; if(icon)icon.style.display=""; $("f-photolabel").textContent="Paste an image link below to preview"; } }
-function onPhoto(e){ const file=e.target.files[0]; if(!file)return; const r=new FileReader(); r.onload=ev=>{ const img=new Image(); img.onload=()=>{ const max=1100; let w=img.width,h=img.height; if(w>max||h>max){ const s=max/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); } const cv=document.createElement("canvas"); cv.width=w; cv.height=h; cv.getContext("2d").drawImage(img,0,0,w,h); formPhoto=cv.toDataURL("image/jpeg",0.82); if($("f-photo-url"))$("f-photo-url").value=""; renderPhoto(); }; img.src=ev.target.result; }; r.readAsDataURL(file); }
-function onPhotoUrl(){ const v=$("f-photo-url").value.trim(); formPhoto=v||null; renderPhoto(); const s=$("f-photo-status"); if(!s)return; if(!v){ s.textContent=""; return; } s.textContent="Checking link…"; s.style.color="var(--soft)"; const t=new Image(); t.onload=()=>{ s.textContent="✓ Image loaded"; s.style.color="#3aa76d"; }; t.onerror=()=>{ s.textContent='⚠ Couldn\'t load this link — use the photo\'s "Copy image address" link, not the Share link.'; s.style.color="var(--acc2)"; }; t.src=v; }
-function renderRate(){ $("f-rate").innerHTML=[1,2,3,4,5].map(n=>'<span class="'+(n<=formRating?"on":"")+'" onclick="formRating='+n+';renderRate()">★</span>').join(""); }
-function renderTags(){ $("f-tags").innerHTML=ALL_TAGS.map(t=>'<span class="chip '+(formTags.includes(t)?"on":"")+'" onclick="toggleTag(\''+t+'\')">'+t+'</span>').join(""); }
-function toggleTag(t){ formTags.includes(t)?formTags=formTags.filter(x=>x!==t):formTags.push(t); renderTags(); }
-function renderDrinkRows(drinks){ $("f-drinks").innerHTML=""; const rows=[]; (drinks&&drinks.length?drinks:[{n:"",p:""}]).forEach(d=>{ const ds=(d.dates||[]).filter(Boolean); const cnt=Math.max(d.count||0,ds.length,1); for(let i=0;i<cnt;i++)rows.push({n:d.n,p:d.p,date:ds[i]||"",sweet:d.sweet,ice:d.ice,size:d.size}); }); rows.forEach(r=>addDrinkRow(r.n,r.p,r.date,r.sweet,r.ice,r.size)); }
-function addDrinkRow(n,p,date,sweet,ice,size){ const sv=parseInt(String(sweet||"").replace(/[^0-9]/g,""),10); const hasSweet=!isNaN(sv); const sval=hasSweet?sv:50; const ICS=["Hot","Warm","No ice","Less ice","Regular ice","Extra ice"]; const iv=ICS.indexOf(ice||""); const hasIce=iv>=0; const ival=hasIce?iv:2; const SIZES=["8 oz","12 oz","16 oz","20 oz","24 oz","32 oz"]; const zv=SIZES.indexOf(size||""); const hasSize=zv>=0; const zval=hasSize?zv:2; const div=document.createElement("div"); div.className="dr"; div.innerHTML='<input class="dn" type="text" autocomplete="off" placeholder="Drink" value="'+esc(n||"")+'"><input class="dp" type="text" autocomplete="off" placeholder="Price" value="'+esc(p||"")+'"><input class="dd" type="date" value="'+esc(date||"")+'"><div class="szwrap"><span class="swlabel">Cup size</span><input class="dsz" type="range" min="0" max="5" step="1" value="'+zval+'" data-set="'+(hasSize?1:0)+'" data-labels="8 oz|12 oz|16 oz|20 oz|24 oz|32 oz" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.szval\').textContent=this.dataset.labels.split(\'|\')[this.value];"><span class="szval">'+(hasSize?SIZES[zv]:"—")+'</span></div><div class="swwrap"><span class="swlabel">Sweetness</span><input class="dsw" type="range" min="0" max="100" step="5" value="'+sval+'" data-set="'+(hasSweet?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.swval\').textContent=this.value+\'%\';"><span class="swval">'+(hasSweet?sval+"%":"—")+'</span></div><div class="icwrap"><span class="swlabel">Ice / Temp</span><input class="dic" type="range" min="0" max="5" step="1" value="'+ival+'" data-set="'+(hasIce?1:0)+'" data-labels="Hot|Warm|No ice|Less ice|Regular ice|Extra ice" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.icval\').textContent=this.dataset.labels.split(\'|\')[this.value];"><span class="icval">'+(hasIce?ICS[iv]:"—")+'</span></div><button class="delrow" onclick="this.parentNode.remove()">✕</button>'; $("f-drinks").appendChild(div); }
-function visitCount(d){ const ds=(d&&d.dates||[]).filter(Boolean); return Math.max((d&&d.count)||0, ds.length, 1); }
-function findSameCafe(name,area,lat,lng){ const nm=(name||"").trim().toLowerCase(); if(!nm)return null; return cafes.find(c=>{ if((c.name||"").trim().toLowerCase()!==nm)return false; if(lat!=null&&c.lat!=null)return Math.abs(lat-c.lat)<0.004&&Math.abs(lng-c.lng)<0.004; const a1=(area||"").trim().toLowerCase(), a2=(c.area||"").trim().toLowerCase(); if(a1&&a2)return a1===a2; return true; })||null; }
-function mergeVisitInto(c,data){ c.drinks=c.drinks||[]; (data.drinks||[]).forEach(nd=>{ const k=nd.n.toLowerCase(); const ex=c.drinks.find(d=>d.n.toLowerCase()===k); if(ex){ if(nd.p)ex.p=nd.p; if(nd.size)ex.size=nd.size; if(nd.sweet)ex.sweet=nd.sweet; if(nd.ice)ex.ice=nd.ice; const dates=[...new Set([...(ex.dates||[]),...(nd.dates||[])])].filter(Boolean).sort(); const cnt=visitCount(ex)+visitCount(nd); if(dates.length)ex.dates=dates; if(cnt>1)ex.count=Math.max(cnt,dates.length); } else { c.drinks.push(nd); } }); c.tags=[...new Set([...(c.tags||[]),...(data.tags||[])])]; if(data.fav)c.fav=true; if(data.rating)c.rating=data.rating; if(data.photo&&!c.photo)c.photo=data.photo; if(!c.area&&data.area)c.area=data.area; if(c.lat==null&&data.lat!=null){ c.lat=data.lat; c.lng=data.lng; } if(data.review){ c.review=c.review?(c.review.indexOf(data.review)>=0?c.review:(c.review+"\n\n"+data.review)):data.review; } if(data.updated)c.updated=data.updated; }
-function saveForm(){ try{ const name=$("f-name").value.trim(); if(!name){ toast("Please add a cafe name"); return; } const raw=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const dn=r.querySelector(".dn"),dp=r.querySelector(".dp"),dsz=r.querySelector(".dsz"),dd=r.querySelector(".dd"),dsw=r.querySelector(".dsw"),dic=r.querySelector(".dic"); return {n:dn?dn.value.trim():"",p:dp?dp.value.trim():"",size:(dsz&&dsz.dataset.set==="1")?(dsz.dataset.labels.split("|")[dsz.value]):"",date:dd?dd.value:"",sweet:(dsw&&dsw.dataset.set==="1")?(dsw.value+"%"):"",ice:(dic&&dic.dataset.set==="1")?(dic.dataset.labels.split("|")[dic.value]):""}; }).filter(d=>d.n); const dmap=new Map(); raw.forEach(d=>{ const k=d.n.toLowerCase(); if(!dmap.has(k))dmap.set(k,{n:d.n,p:d.p,dates:[],count:0}); const e=dmap.get(k); if(d.p&&!e.p)e.p=d.p; if(d.size)e.size=d.size; if(d.sweet)e.sweet=d.sweet; if(d.ice)e.ice=d.ice; e.count++; if(d.date&&!e.dates.includes(d.date))e.dates.push(d.date); }); const drinks=[...dmap.values()].map(d=>{ d.dates.sort(); const o={n:d.n,p:d.p}; if(d.size)o.size=d.size; if(d.sweet)o.sweet=d.sweet; if(d.ice)o.ice=d.ice; if(d.dates.length)o.dates=d.dates; const cnt=Math.max(d.count,d.dates.length); if(cnt>1)o.count=cnt; return o; }); const data={name,area:$("f-area").value.trim(),brand:$("f-brand")?$("f-brand").value.trim():"",lat:picked?picked.lat:null,lng:picked?picked.lng:null,photo:formPhoto,rating:formRating,fav:$("f-fav").checked,tags:formTags.slice(),review:$("f-review").value.trim(),drinks,updated:new Date().toISOString()}; let savedId=editId, msg="Saved ✓"; const c=editId?cafes.find(x=>x.id===editId):null; if(c){ Object.assign(c,data); } else { const ex=findSameCafe(data.name,data.area,data.lat,data.lng); if(ex){ mergeVisitInto(ex,data); savedId=ex.id; msg="Added another visit to "+ex.name+" ✓"; } else { data.id=uid(); data.emoji="☕"; savedId=data.id; cafes.push(data); } } save(); try{ renderMarkers(); }catch(e){ console.warn("renderMarkers failed",e); } try{ renderList(); }catch(e){} toast(msg); savedId?openDetail(savedId):show(lastMain); }catch(err){ console.error("saveForm failed",err); toast("Couldn't save — "+(err&&err.message?err.message:"unexpected error")); } }
-
-/* ---------- boot ---------- */
-function reloadLatest(){ location.replace(location.pathname+"?v="+Date.now()); }
-let _bootSrc=null, _updateShown=false;
-function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{ if(t==null)return; if(_bootSrc===null){ _bootSrc=t; return; } if(t!==_bootSrc && !_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); } }).catch(()=>{}); }
-const _fbOk=initFirebase(); initAuth();
-{ const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file."; }
-applyMode();
-load().then(()=>{ applyMode(); show("map"); startMaps(); subscribeCloud(); if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)fbDb.ref("cafes").set(cafes); }).catch(()=>{}); } });
-let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(mapResize,150); });
-checkForUpdate();
-setInterval(checkForUpdate,45000);
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden)checkForUpdate(); });
-</script>
-</body>
-</html>
+[
+  {
+    "name": "Zen Gelato & Bar",
+    "area": "Diamond Head / Kapahulu / St. Louis Heights",
+    "lat": 21.2808,
+    "lng": -157.81429,
+    "photo": null,
+    "rating": 5,
+    "fav": true,
+    "tags": [
+      "cozy"
+    ],
+    "review": "There were four different type of matcha to choose from, I have tried all four. They were all very good, as normal no sugar. There were nice harmony between the matcha and milk, whereas the matcha still stands out.",
+    "drinks": [
+      {
+        "n": "Matcha latte",
+        "p": "9",
+        "dates": [
+          "2026-06-11"
+        ],
+        "count": 4
+      }
+    ],
+    "emoji": "☕",
+    "id": "mqeytadswkv9"
+  },
+  {
+    "name": "ANDO",
+    "area": "Kailua",
+    "lat": 21.39181,
+    "lng": -157.7419,
+    "photo": null,
+    "rating": 5,
+    "fav": true,
+    "tags": [
+      "cozy"
+    ],
+    "review": "As the owners are interior design, the cafe atmosphere was amazing as their drinks! What stood out to me the most is the sweetness from monk fruit with a big takeaway from sugar.",
+    "drinks": [
+      {
+        "n": "Matcha latte",
+        "p": "9"
+      },
+      {
+        "n": "Hojicha latte",
+        "p": "9"
+      }
+    ],
+    "emoji": "☕",
+    "id": "mqeywfe5ramt"
+  },
+  {
+    "id": "tea-molly",
+    "name": "Molly Tea",
+    "area": "Sunnyvale, CA",
+    "lat": 37.36179,
+    "lng": -122.02442,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "A favorite — the osmanthus and jasmine milk teas are consistently excellent.",
+    "drinks": [
+      {
+        "n": "Osmanthus milk tea",
+        "p": "",
+        "dates": [
+          "2024-11-03"
+        ]
+      },
+      {
+        "n": "Premium jasmine milk tea",
+        "p": "",
+        "dates": [
+          "2024-10-20"
+        ]
+      },
+      {
+        "n": "Snowy jasmine",
+        "p": "",
+        "dates": [
+          "2024-11-03"
+        ]
+      },
+      {
+        "n": "White champaca oolong milk tea",
+        "p": "",
+        "dates": [
+          "2024-10-20"
+        ]
+      },
+      {
+        "n": "Camellia oolong milk tea",
+        "p": "",
+        "dates": [
+          "2026-02-17"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-wanpo",
+    "name": "Wanpo Tea",
+    "area": "Millbrae, CA",
+    "lat": 37.60619,
+    "lng": -122.398,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Plum green tea was a 5/5 standout. Ginger milk tea was less exciting.",
+    "drinks": [
+      {
+        "n": "Plum green tea",
+        "p": "",
+        "dates": [
+          "2026-03-01"
+        ]
+      },
+      {
+        "n": "Tieguanyin tea latte",
+        "p": "",
+        "dates": [
+          "2024-11-16"
+        ]
+      },
+      {
+        "n": "Ginger milk tea",
+        "p": "",
+        "dates": [
+          "2024-11-16"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-tp",
+    "name": "TP Tea",
+    "area": "Millbrae, CA",
+    "lat": 37.60186,
+    "lng": -122.39258,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "The osmanthus drinks are the move here.",
+    "drinks": [
+      {
+        "n": "Golden osmanthus fresh milk tea",
+        "p": "",
+        "dates": [
+          "2024-11-02"
+        ]
+      },
+      {
+        "n": "Four season osmanthus ice tea",
+        "p": "",
+        "dates": [
+          "2024-11-02"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-7leaves",
+    "name": "7Leaves Cafe",
+    "area": "San Francisco, CA",
+    "lat": 37.71089,
+    "lng": -122.46684,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Solid Vietnamese-style chain. Sunrise passion and green Thai tea were both decent.",
+    "drinks": [
+      {
+        "n": "Sunrise passion",
+        "p": "",
+        "dates": [
+          "2024-10-17"
+        ]
+      },
+      {
+        "n": "Green thai tea",
+        "p": "",
+        "dates": [
+          "2024-10-17"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-asha",
+    "name": "Asha Tea House",
+    "area": "San Francisco, CA",
+    "lat": 37.78813,
+    "lng": -122.40374,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Classic HK milk tea, nicely balanced.",
+    "drinks": [
+      {
+        "n": "HK milk tea",
+        "p": "",
+        "dates": [
+          "2024-10-18"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-zero",
+    "name": "ZERO& SF Hayes Store",
+    "area": "San Francisco, CA",
+    "lat": 37.77663,
+    "lng": -122.42363,
+    "photo": null,
+    "emoji": "☕",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Osmanthus teas were good and not too sweet.",
+    "drinks": [
+      {
+        "n": "Osmanthus oolong tea",
+        "p": "",
+        "dates": [
+          "2024-10-29"
+        ]
+      },
+      {
+        "n": "Osmanthus milk tea",
+        "p": "",
+        "dates": [
+          "2024-10-23"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-yokee",
+    "name": "Yokee Milk Tea",
+    "area": "Fremont, CA",
+    "lat": 37.49373,
+    "lng": -121.9302,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Reliable — the oolong-based teas are the best picks.",
+    "drinks": [
+      {
+        "n": "Roasted oolong tea",
+        "p": "",
+        "dates": [
+          "2026-03-29"
+        ]
+      },
+      {
+        "n": "Oolong milk tea",
+        "p": "",
+        "dates": [
+          "2024-11-12"
+        ]
+      },
+      {
+        "n": "Osmanthus oolong tea",
+        "p": "",
+        "dates": [
+          "2024-11-04"
+        ]
+      },
+      {
+        "n": "Kumquat lemon green tea",
+        "p": "",
+        "dates": [
+          "2024-10-24"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-chicha",
+    "name": "CHICHA San Chen",
+    "area": "Cupertino, CA",
+    "lat": 37.32211,
+    "lng": -122.03576,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 3,
+    "fav": false,
+    "tags": [],
+    "review": "Osmanthus milk tea was great; the cassia milk tea less so.",
+    "drinks": [
+      {
+        "n": "Osmanthus milk tea",
+        "p": "",
+        "dates": [
+          "2026-02-16"
+        ]
+      },
+      {
+        "n": "Cassia milk tea",
+        "p": "",
+        "dates": [
+          "2026-02-16"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-moon",
+    "name": "Moon Tea",
+    "area": "Cupertino, CA",
+    "lat": 37.32257,
+    "lng": -122.01654,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Ceylon milk tea was tasty.",
+    "drinks": [
+      {
+        "n": "Ceylon milk tea",
+        "p": "",
+        "dates": [
+          "2026-02-25"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-sunright",
+    "name": "Sunright Tea Studio",
+    "area": "Burlingame, CA",
+    "lat": 37.58002,
+    "lng": -122.34689,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Sugar-free oolong milk tea hit the spot.",
+    "drinks": [
+      {
+        "n": "Oolong milk tea",
+        "p": "",
+        "dates": [
+          "2026-02-26"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-yy",
+    "name": "YY Coffee & Tea",
+    "area": "San Francisco, CA",
+    "lat": 37.73206,
+    "lng": -122.47348,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Mulberry lemon tea was refreshing.",
+    "drinks": [
+      {
+        "n": "Mulberry lemon tea",
+        "p": "",
+        "dates": [
+          "2024-11-18"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-yifang",
+    "name": "Yifang Taiwan Fruit Tea",
+    "area": "San Francisco, CA",
+    "lat": 37.78517,
+    "lng": -122.43055,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Grape fruit tea was fine, a bit on the sweet side.",
+    "drinks": [
+      {
+        "n": "Grape fruit tea",
+        "p": "",
+        "dates": [
+          "2024-11-01"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-coffee-or-tea",
+    "name": "Coffee or Tea",
+    "area": "Honolulu, HI",
+    "lat": 21.28999,
+    "lng": -157.83297,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Honolulu spot — reliable black milk tea.",
+    "drinks": [
+      {
+        "n": "Black milk tea",
+        "p": "",
+        "dates": [
+          "2024-08-12"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-brew-tea-bar",
+    "name": "Brew Tea Bar",
+    "area": "Las Vegas, NV",
+    "lat": 36.1148,
+    "lng": -115.20128,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 4,
+    "fav": false,
+    "tags": [],
+    "review": "Vegas stop — phoenix oolong tea was good.",
+    "drinks": [
+      {
+        "n": "Phoenix oolong tea",
+        "p": "",
+        "dates": [
+          "2026-03-07"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-heytea",
+    "name": "HEYTEA",
+    "area": "Daly City, CA",
+    "lat": 37.69957,
+    "lng": -122.48261,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 1,
+    "fav": false,
+    "tags": [],
+    "review": "Yingde cheese milk tea was way too sweet — not for me.",
+    "drinks": [
+      {
+        "n": "Yingde cheese milk tea",
+        "p": "",
+        "dates": [
+          "2026-04-14"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-purple-kow",
+    "name": "Purple Kow",
+    "area": "Berkeley, CA",
+    "lat": 37.87026,
+    "lng": -122.26618,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 1,
+    "fav": false,
+    "tags": [],
+    "review": "Low-quality tea and an awkwardly huge cup. Skip.",
+    "drinks": [
+      {
+        "n": "House milk tea",
+        "p": "",
+        "dates": [
+          "2026-02-14"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-wonderful",
+    "name": "Wonderful Desserts & Cafe",
+    "area": "San Francisco, CA",
+    "lat": 37.76318,
+    "lng": -122.47999,
+    "photo": null,
+    "emoji": "🧋",
+    "rating": 1,
+    "fav": false,
+    "tags": [],
+    "review": "Pudding milk tea was too sugary — not great.",
+    "drinks": [
+      {
+        "n": "Pudding milk tea",
+        "p": "",
+        "dates": [
+          "2026-03-26"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-q-specialty",
+    "name": "Q Specialty Coffee",
+    "area": "San Francisco, CA",
+    "lat": 37.78683,
+    "lng": -122.45162,
+    "photo": null,
+    "emoji": "☕",
+    "rating": 4,
+    "fav": false,
+    "tags": [
+      "specialty"
+    ],
+    "review": "My regular for a reliable hojicha latte.",
+    "drinks": [
+      {
+        "n": "Hojicha latte",
+        "p": "",
+        "dates": [
+          "2026-02-11",
+          "2026-02-12",
+          "2026-02-20",
+          "2026-02-23"
+        ],
+        "count": 5
+      }
+    ]
+  },
+  {
+    "id": "tea-kissaten",
+    "name": "Kissaten HiFi",
+    "area": "San Francisco, CA",
+    "lat": 37.7852,
+    "lng": -122.46477,
+    "photo": null,
+    "emoji": "☕",
+    "rating": 4,
+    "fav": true,
+    "tags": [
+      "specialty"
+    ],
+    "review": "Go-to for hojicha lattes — consistent and cozy.",
+    "drinks": [
+      {
+        "n": "Hojicha latte",
+        "p": "",
+        "dates": [
+          "2026-03-22",
+          "2026-03-25",
+          "2026-04-09"
+        ]
+      },
+      {
+        "n": "Matcha latte",
+        "p": "",
+        "dates": [
+          "2026-03-23"
+        ]
+      },
+      {
+        "n": "Flat white",
+        "p": "",
+        "dates": [
+          "2026-03-24"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-kiss-of-matcha",
+    "name": "Kiss of Matcha",
+    "area": "San Francisco, CA",
+    "lat": 37.78296,
+    "lng": -122.46745,
+    "photo": null,
+    "emoji": "🍵",
+    "rating": 4,
+    "fav": false,
+    "tags": [
+      "matcha"
+    ],
+    "review": "Good hojicha — low sugar and earthy.",
+    "drinks": [
+      {
+        "n": "Hojicha latte",
+        "p": "",
+        "dates": [
+          "2026-02-17"
+        ]
+      },
+      {
+        "n": "Hojicha tea",
+        "p": "",
+        "dates": [
+          "2026-03-24"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-matsu-matcha",
+    "name": "Matsu Matcha",
+    "area": "Santa Clara, CA",
+    "lat": 37.35155,
+    "lng": -121.98143,
+    "photo": null,
+    "emoji": "🍵",
+    "rating": 4,
+    "fav": false,
+    "tags": [
+      "matcha"
+    ],
+    "review": "Smooth hojicha, drinkable and not too sweet.",
+    "drinks": [
+      {
+        "n": "Hojicha",
+        "p": "",
+        "dates": [
+          "2026-02-15"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-maruwu-seicha",
+    "name": "Maruwu Seicha",
+    "area": "San Francisco, CA",
+    "lat": 37.78517,
+    "lng": -122.43055,
+    "photo": null,
+    "emoji": "🍵",
+    "rating": 3,
+    "fav": false,
+    "tags": [
+      "matcha"
+    ],
+    "review": "Decent hojicha latte, a touch sweet.",
+    "drinks": [
+      {
+        "n": "Hojicha latte",
+        "p": "",
+        "dates": [
+          "2026-02-19"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-tokyo-cream",
+    "name": "Tokyo Cream",
+    "area": "San Francisco, CA",
+    "lat": 37.76378,
+    "lng": -122.47778,
+    "photo": null,
+    "emoji": "🍵",
+    "rating": 3,
+    "fav": false,
+    "tags": [
+      "matcha"
+    ],
+    "review": "Nice hojicha aftertaste, but the tea was too diluted.",
+    "drinks": [
+      {
+        "n": "Hojicha latte",
+        "p": "",
+        "dates": [
+          "2026-05-05"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-tori-coffee",
+    "name": "Tori Coffee",
+    "area": "San Diego, CA",
+    "lat": 32.71377,
+    "lng": -117.15453,
+    "photo": null,
+    "emoji": "🍵",
+    "rating": 4,
+    "fav": false,
+    "tags": [
+      "specialty",
+      "matcha"
+    ],
+    "review": "San Diego stop — matcha latte with banana cream, a little light on matcha.",
+    "drinks": [
+      {
+        "n": "Matcha latte w/ banana cream",
+        "p": "",
+        "dates": [
+          "2026-05-30"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-haiku",
+    "name": "Haiku Teahouse",
+    "area": "San Jose, CA",
+    "lat": 37.37026,
+    "lng": -121.87977,
+    "photo": null,
+    "emoji": "🍵",
+    "rating": 4,
+    "fav": false,
+    "tags": [
+      "matcha"
+    ],
+    "review": "Corn latte is a fun, creamy surprise. The matcha guava cream top is worth recreating at home.",
+    "drinks": [
+      {
+        "n": "Corn latte",
+        "p": "",
+        "dates": [
+          "2026-05-29"
+        ]
+      },
+      {
+        "n": "Matcha guava cream top",
+        "p": "",
+        "dates": [
+          "2026-05-29"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-komeya",
+    "name": "Komeya No Bento",
+    "area": "San Francisco, CA",
+    "lat": 37.80007,
+    "lng": -122.43134,
+    "photo": null,
+    "emoji": "🍵",
+    "rating": 4,
+    "fav": true,
+    "tags": [
+      "matcha"
+    ],
+    "review": "Surprisingly good hojicha latte alongside the bento.",
+    "drinks": [
+      {
+        "n": "Hojicha latte",
+        "p": "",
+        "dates": [
+          "2026-02-13"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-shoji",
+    "name": "Shoji",
+    "area": "San Francisco, CA",
+    "lat": 37.78661,
+    "lng": -122.4,
+    "photo": null,
+    "emoji": "🍵",
+    "rating": 4,
+    "fav": true,
+    "tags": [
+      "matcha"
+    ],
+    "review": "Nice hojicha latte, well made.",
+    "drinks": [
+      {
+        "n": "Hojicha latte",
+        "p": "",
+        "dates": [
+          "2026-03-30"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tea-trung-nguyen",
+    "name": "Trung Nguyen Legend",
+    "area": "San Jose, CA",
+    "lat": 37.3308,
+    "lng": -121.8576,
+    "photo": null,
+    "emoji": "☕",
+    "rating": 4,
+    "fav": false,
+    "tags": [
+      "specialty"
+    ],
+    "review": "Vietnamese egg coffee done right.",
+    "drinks": [
+      {
+        "n": "Egg coffee",
+        "p": "",
+        "dates": [
+          "2026-03-02"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Mashio Project",
+    "area": "Downtown",
+    "lat": 21.29675,
+    "lng": -157.8566,
+    "photo": null,
+    "rating": 5,
+    "fav": true,
+    "tags": [
+      "cozy"
+    ],
+    "review": "It's a popup within Fishcakes (interior design place looks like). Solid Hojicha latte without sugar. So much great popup here as well, would recommend.",
+    "drinks": [
+      {
+        "n": "Hojica latte",
+        "p": "10",
+        "dates": [
+          "2026-06-13"
+        ]
+      }
+    ],
+    "emoji": "☕",
+    "id": "mqf1k9fidxty"
+  }
+]
