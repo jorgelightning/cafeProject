@@ -538,13 +538,34 @@ function findSameCafe(name,area,lat,lng){ const nm=(name||"").trim().toLowerCase
 function mergeVisitInto(c,data){ c.drinks=c.drinks||[]; (data.drinks||[]).forEach(nd=>{ const k=nd.n.toLowerCase(); const ex=c.drinks.find(d=>d.n.toLowerCase()===k); if(ex){ if(nd.p)ex.p=nd.p; if(nd.size)ex.size=nd.size; if(nd.sweet)ex.sweet=nd.sweet; if(nd.ice)ex.ice=nd.ice; if(nd.reorder)ex.reorder=nd.reorder; const dates=[...new Set([...(ex.dates||[]),...(nd.dates||[])])].filter(Boolean).sort(); const cnt=visitCount(ex)+visitCount(nd); if(dates.length)ex.dates=dates; if(cnt>1)ex.count=Math.max(cnt,dates.length); } else { c.drinks.push(nd); } }); c.tags=[...new Set([...(c.tags||[]),...(data.tags||[])])]; if(data.fav)c.fav=true; if(data.rating)c.rating=data.rating; if(data.photo&&!c.photo)c.photo=data.photo; if(!c.area&&data.area)c.area=data.area; if(c.lat==null&&data.lat!=null){ c.lat=data.lat; c.lng=data.lng; } if(data.review){ c.review=c.review?(c.review.indexOf(data.review)>=0?c.review:(c.review+"\n\n"+data.review)):data.review; } if(data.updated)c.updated=data.updated; }
 function saveForm(){ try{ const name=$("f-name").value.trim(); if(!name){ toast("Please add a cafe name"); return; } const raw=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const dn=r.querySelector(".dn"),dp=r.querySelector(".dp"),dsz=r.querySelector(".dsz"),dd=r.querySelector(".dd"),dsw=r.querySelector(".dsw"),dic=r.querySelector(".dic"),dre=r.querySelector(".dre"); return {n:dn?dn.value.trim():"",p:dp?dp.value.trim():"",size:(dsz&&dsz.dataset.set==="1")?(dsz.dataset.labels.split("|")[dsz.value]):"",date:dd?dd.value:"",sweet:(dsw&&dsw.dataset.set==="1")?(dsw.value+"%"):"",ice:(dic&&dic.dataset.set==="1")?(dic.dataset.labels.split("|")[dic.value]):"",reorder:dre?dre.value:""}; }).filter(d=>d.n); const dmap=new Map(); raw.forEach(d=>{ const k=d.n.toLowerCase(); if(!dmap.has(k))dmap.set(k,{n:d.n,p:d.p,dates:[],count:0}); const e=dmap.get(k); if(d.p&&!e.p)e.p=d.p; if(d.size)e.size=d.size; if(d.sweet)e.sweet=d.sweet; if(d.ice)e.ice=d.ice; if(d.reorder)e.reorder=d.reorder; e.count++; if(d.date&&!e.dates.includes(d.date))e.dates.push(d.date); }); const drinks=[...dmap.values()].map(d=>{ d.dates.sort(); const o={n:d.n,p:d.p}; if(d.size)o.size=d.size; if(d.sweet)o.sweet=d.sweet; if(d.ice)o.ice=d.ice; if(d.reorder)o.reorder=d.reorder; if(d.dates.length)o.dates=d.dates; const cnt=Math.max(d.count,d.dates.length); if(cnt>1)o.count=cnt; return o; }); const data={name,area:$("f-area").value.trim(),brand:$("f-brand")?$("f-brand").value.trim():"",lat:picked?picked.lat:null,lng:picked?picked.lng:null,photo:formPhoto,rating:formRating,fav:$("f-fav").checked,tags:formTags.slice(),review:$("f-review").value.trim(),drinks,updated:new Date().toISOString()}; let savedId=editId, msg="Saved ✓"; const c=editId?cafes.find(x=>x.id===editId):null; if(c){ const moved=(c.lat!==data.lat||c.lng!==data.lng); Object.assign(c,data); if(moved){ delete gphotoCache[c.id]; if(c.gphoto)delete c.gphoto; saveGphotoCache(); } } else { const ex=findSameCafe(data.name,data.area,data.lat,data.lng); if(ex){ mergeVisitInto(ex,data); savedId=ex.id; msg="Added another visit to "+ex.name+" ✓"; } else { data.id=uid(); data.emoji="☕"; savedId=data.id; cafes.push(data); } } save(); try{ renderMarkers(); }catch(e){ console.warn("renderMarkers failed",e); } try{ renderList(); }catch(e){} toast(msg); savedId?openDetail(savedId):show(lastMain); }catch(err){ console.error("saveForm failed",err); toast("Couldn't save — "+(err&&err.message?err.message:"unexpected error")); } }
 /* ---------- boot ---------- */
+function migratePhotoCache(){
+  // Remove old plain-string cache entries (pre-TTL format) and any nulls
+  let cacheDirty=false;
+  Object.keys(gphotoCache).forEach(k=>{
+    const v=gphotoCache[k];
+    if(v===null||typeof v==="string"){ delete gphotoCache[k]; cacheDirty=true; }
+  });
+  if(cacheDirty)saveGphotoCache();
+  // Strip stale gphoto fields from cafe objects
+  let cafeDirty=false;
+  cafes.forEach(c=>{ if(c.gphoto){ delete c.gphoto; cafeDirty=true; } });
+  if(cafeDirty){
+    try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){}
+    if(fbReady&&fbAuth&&fbAuth.currentUser){
+      const u=fbAuth.currentUser;
+      if(u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()){
+        fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafes))).catch(()=>{});
+      }
+    }
+  }
+}
 function reloadLatest(){ location.replace(location.pathname+"?v="+Date.now()); }
 let _bootSrc=null, _updateShown=false;
 function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{ if(t==null)return; if(_bootSrc===null){ _bootSrc=t; return; } if(t!==_bootSrc && !_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); } }).catch(()=>{}); }
 const _fbOk=initFirebase(); initAuth();
 { const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁️ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file."; }
 applyMode();
-load().then(()=>{ applyMode(); show("map"); startMaps(); subscribeCloud(); if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)fbDb.ref("cafes").set(cafes); }).catch(()=>{}); } });
+load().then(()=>{ migratePhotoCache(); applyMode(); show("map"); startMaps(); subscribeCloud(); if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)fbDb.ref("cafes").set(cafes); }).catch(()=>{}); } });
 let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{ mapResize(); refitMap(); },150); });
 checkForUpdate();
 setInterval(checkForUpdate,45000);
