@@ -411,7 +411,7 @@ function seed(){ return [
 {id:uid(),name:"Kai Coffee",area:"Waikiki",lat:21.2760,lng:-157.8270,photo:null,emoji:"🥤",rating:4,fav:false,tags:["to-go","good wifi"],review:"Reliable iced latte near the beach. Gets busy mid-morning.",drinks:[{n:"Iced latte",p:"$6"}]}
 ]; }
 /* ---------- navigation ---------- */
-function show(view,fav){ if(view==="compare"&&!isAdmin)view="list"; if(view==="wish"){ wishOnly=true; favOnly=false; view="list"; } else { wishOnly=false; favOnly=!!fav; } if(view==="map"||view==="list")lastMain=view; app.dataset.view=view;
+function show(view,fav){ if(view==="compare"&&!isAdmin)view="list"; if(view==="wish"){ wishOnly=true; favOnly=false; view="list"; } else if(view==="list"||view==="map"){ wishOnly=false; favOnly=!!fav; } if(view==="map"||view==="list")lastMain=view; app.dataset.view=view;
 document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
 if(view==="map")$("t-map").classList.add("on");
 if(view==="list")(wishOnly?$("t-wish"):(fav?$("t-fav"):$("t-list"))).classList.add("on");
