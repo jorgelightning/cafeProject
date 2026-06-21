@@ -521,17 +521,17 @@ let cmpPair=null, cmpMode="cafe", cmpDrinkPair=null, cmpAnchorId=null, recentDri
 function drinkId(D){ return D.cafe.id+"|"+((D.drink.n||"").toLowerCase()); }
 function pairKey(a,b){ return [a,b].sort().join("###"); }
 function setCmpMode(m){ cmpMode=m; if(m==="cafe")cmpAnchorId=null; newMatchup(); }
-function allDrinks(){ const out=[]; cafes.forEach(c=>{ (c.drinks||[]).forEach(d=>{ if(d&&d.n)out.push({cafe:c,drink:d}); }); }); return out; }
+function allDrinks(){ const out=[]; cafes.filter(c=>!c.wish).forEach(c=>{ (c.drinks||[]).forEach(d=>{ if(d&&d.n)out.push({cafe:c,drink:d}); }); }); return out; }
 function drinkElo(d){ return (d&&typeof d.elo==="number")?d.elo:ELO_BASE; }
 function drinkMatches(d){ return (d&&d.matches)||0; }
 function drinkScoreNum(d){ const m=drinkMatches(d); const conf=m/(m+12); return Math.max(0,Math.min(10,5+((drinkElo(d)-ELO_BASE)/80)*conf)); }
 function drinkScore(d){ return drinkScoreNum(d).toFixed(1); }
 function findDrink(ref){ const c=cafes.find(x=>x.id===ref[0]); if(!c)return null; const d=(c.drinks||[]).find(x=>(x.n||"").toLowerCase()===ref[1]); return d?{cafe:c,drink:d}:null; }
-function eligiblePairs(){ const out=[]; for(let i=0;i<cafes.length;i++){ for(let j=i+1;j<cafes.length;j++){ const lab=sharedTraitLabel(cafes[i],cafes[j]); if(lab)out.push([cafes[i],cafes[j],lab]); } } return out; }
+function eligiblePairs(){ const out=[]; const vis=cafes.filter(c=>!c.wish); for(let i=0;i<vis.length;i++){ for(let j=i+1;j<vis.length;j++){ const lab=sharedTraitLabel(vis[i],vis[j]); if(lab)out.push([vis[i],vis[j],lab]); } } return out; }
 function openRank(){ cmpAnchorId=null; cmpMode="cafe"; show("compare"); }
 function startAnchorCompare(id){ const cid=(typeof id==="string")?id:editId; if(!cid){ toast("Save the cafe first, then compare"); return; } if(cmpAnchorId!==cid)recentCafeKeys=[]; cmpAnchorId=cid; cmpMode="cafe"; show("compare"); }
 function clearAnchor(){ cmpAnchorId=null; cmpPair=null; cmpMode="cafe"; renderCompare(); }
-function anchorOpponents(anchor){ return cafes.filter(x=>x.id!==anchor.id).map(x=>({c:x,lab:sharedTraitLabel(anchor,x)})).filter(o=>o.lab); }
+function anchorOpponents(anchor){ return cafes.filter(x=>x.id!==anchor.id&&!x.wish).map(x=>({c:x,lab:sharedTraitLabel(anchor,x)})).filter(o=>o.lab); }
 function newMatchup(){ if(cmpMode==="drink"){ newDrinkMatchup(); return; } const pairs=eligiblePairs(); if(!pairs.length){ cmpPair=null; renderCompare(); return; } const enriched=pairs.map(p=>({a:p[0],b:p[1],lab:p[2],key:pairKey(p[0].id,p[1].id),m:matchCount(p[0])+matchCount(p[1])})); let avail=enriched.filter(p=>recentCafeKeys.indexOf(p.key)<0); if(!avail.length){ recentCafeKeys=[]; avail=enriched; } const minM=Math.min.apply(null,avail.map(p=>p.m)); const tier=avail.filter(p=>p.m<=minM+1); const choice=tier[Math.floor(Math.random()*tier.length)]; recentCafeKeys.push(choice.key); const cap=Math.max(1,Math.min(enriched.length-1,Math.ceil(enriched.length*0.6))); while(recentCafeKeys.length>cap)recentCafeKeys.shift(); const flip=Math.random()<0.5; cmpPair=flip?[choice.b.id,choice.a.id,choice.lab]:[choice.a.id,choice.b.id,choice.lab]; renderCompare(); }
 function normDrink(n){ return (n||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
 function grpMatches(g){ return g.reduce((s,p)=>s+drinkMatches(p.drink),0); }
