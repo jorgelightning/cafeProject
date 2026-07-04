@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
 <div id="app" data-view="map" data-mode="viewer">
@@ -30,6 +30,7 @@
 <div class="panes">
 <section class="pane" id="pane-list"><div class="adminbar admin-only"><button onclick="fetchAllPhotos()">📷 Fetch all photos</button><span class="abnote" id="ab-cloud">Admin mode</span></div>
 <div class="search">🔍<input id="q" placeholder="Search name, city, state, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+<div class="chiprow" id="filterchips"></div>
 <div class="sortrow"><span>Sort by</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="ranked">Top ranked</option><option value="rating">★ Highest rated</option><option value="near">📍 Nearest to me</option></select><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" style="width:34px;height:34px;font-size:15px;flex:0 0 auto;margin-left:4px">🗺️</button></div>
 <div class="scroll"><div class="grid" id="grid"></div></div>
 </section>
@@ -37,7 +38,7 @@
 <div class="scroll">
 <div class="hero" id="d-hero">
 <div class="hero-emoji" id="d-hero-emoji">☕</div>
-<div class="nav"><button class="round" onclick="goBack()">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()">🧡</button><button class="round admin-only" id="d-wish" onclick="toggleWish()">📌</button><button class="round admin-only" onclick="editCurrent()">✎</button></div></div>
+<div class="nav"><button class="round" onclick="goBack()" aria-label="Back">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()" aria-label="Toggle favorite">🧡</button><button class="round admin-only" id="d-wish" onclick="toggleWish()" aria-label="Toggle wishlist">📌</button><button class="round admin-only" onclick="editCurrent()" aria-label="Edit cafe">✎</button></div></div>
 <div class="tagphoto" id="d-tagphoto">📷 My drink</div>
 </div>
 <div class="dbody">
@@ -78,6 +79,7 @@
 <div class="mapbox">
 <div id="map"></div>
 <div class="mapsearch"><select id="locsel" aria-label="Jump to a country or state" onchange="jumpToLocation(this.value)"></select></div>
+<div class="maplegend"><span><i style="background:#2e9e5b"></i>4–5★</span><span><i style="background:#f0a93b"></i>≤3★</span><span><i class="wl"></i>wishlist</span><span><i style="background:#d5803b"></i>group</span></div>
 <div class="map-msg" id="map-msg"></div>
 </div>
 </main>
@@ -97,21 +99,22 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://unpkg.com/@googlemaps/markerclusterer@2.5.3/dist/index.min.js"></script>
 <!-- App code, split by feature. IMPORTANT: when you change ANY js/ or css file,
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=4"></script>
-<script src="js/core.js?v=4"></script>
-<script src="js/storage.js?v=4"></script>
-<script src="js/nav.js?v=4"></script>
-<script src="js/map.js?v=4"></script>
-<script src="js/photos.js?v=4"></script>
-<script src="js/list.js?v=4"></script>
-<script src="js/stats.js?v=4"></script>
-<script src="js/rank.js?v=4"></script>
-<script src="js/detail.js?v=4"></script>
-<script src="js/form.js?v=4"></script>
-<script src="js/boot.js?v=4"></script>
+<script src="js/config.js?v=5"></script>
+<script src="js/core.js?v=5"></script>
+<script src="js/storage.js?v=5"></script>
+<script src="js/nav.js?v=5"></script>
+<script src="js/map.js?v=5"></script>
+<script src="js/photos.js?v=5"></script>
+<script src="js/list.js?v=5"></script>
+<script src="js/stats.js?v=5"></script>
+<script src="js/rank.js?v=5"></script>
+<script src="js/detail.js?v=5"></script>
+<script src="js/form.js?v=5"></script>
+<script src="js/boot.js?v=5"></script>
 </body>
 </html>
