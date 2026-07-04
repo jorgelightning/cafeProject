@@ -90,8 +90,10 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .spendrow .amt{ width:62px; flex:none; text-align:right; font-weight:700; }
 .card .b{ padding:8px 11px 11px; }
 .card .n{ font-weight:700; font-size:14px; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.card .m{ font-size:11px; color:var(--soft); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.card .m2{ font-size:10px; color:var(--faint); margin-top:3px; display:flex; align-items:center; gap:5px; flex-wrap:nowrap; overflow:hidden; }
+.card .m{ font-size:12px; color:var(--soft); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card .m2{ font-size:11px; color:var(--faint); margin-top:3px; display:flex; align-items:center; gap:5px; flex-wrap:nowrap; overflow:hidden; }
+.cstars{ color:#f0a93b; letter-spacing:.5px; }
+.scorebadge{ background:rgba(46,158,91,.14); color:#2e9e5b; border-radius:6px; padding:1px 7px; font-weight:700; }
 .empty{ text-align:center; color:var(--soft); padding:60px 30px; }
 .empty .big{ font-size:46px; margin-bottom:10px; }
 .hero{ position:relative; height:240px; background-size:cover; background-position:center; display:flex; align-items:flex-end; }
@@ -107,6 +109,14 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .stars{ color:#f0a93b; font-size:18px; letter-spacing:1px; }
 .chips{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
 .chip{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:4px 11px; font-size:12px; }
+.chiprow{ display:flex; gap:6px; overflow-x:auto; padding:2px 16px 8px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.chiprow::-webkit-scrollbar{ display:none; }
+.chiprow .chip{ flex:0 0 auto; cursor:pointer; white-space:nowrap; user-select:none; }
+.chiprow .chip.on{ background:var(--acc); color:#fff; border-color:transparent; }
+.maplegend{ position:absolute; right:12px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:6; display:flex; gap:9px; align-items:center; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--border); border-radius:20px; padding:6px 12px; font-size:11px; color:var(--soft); white-space:nowrap; }
+.maplegend i{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; }
+.maplegend i.wl{ width:5px; height:5px; background:transparent; border:2px solid #5b9bd5; }
+@media (min-width:900px){ .maplegend{ bottom:26px; } }
 .locpills{ display:none; flex-wrap:wrap; gap:7px; margin:2px 0 12px; }
 .locpill{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; font-weight:600; color:var(--soft); cursor:pointer; white-space:nowrap; }
 .locpill.on{ background:var(--acc); color:#fff; border-color:var(--acc); cursor:default; }
