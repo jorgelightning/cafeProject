@@ -10,9 +10,10 @@ function migratePhotoCache(){
     if(v===null||typeof v==="string"||isSessionPhotoUrl(v&&v.url)){ delete gphotoCache[k]; cacheDirty=true; }
   });
   if(cacheDirty)saveGphotoCache();
-  // Strip stale gphoto fields from cafe objects
+  // Strip only session-bound gphoto URLs (they break silently once stale);
+  // stable URLs persisted by fetchAllPhotos() are kept so viewers get instant thumbnails
   let cafeDirty=false;
-  cafes.forEach(c=>{ if(c.gphoto){ delete c.gphoto; cafeDirty=true; } });
+  cafes.forEach(c=>{ if(c.gphoto&&isSessionPhotoUrl(c.gphoto)){ delete c.gphoto; cafeDirty=true; } });
   if(cafeDirty){
     try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){}
     if(fbReady&&fbAuth&&fbAuth.currentUser){
