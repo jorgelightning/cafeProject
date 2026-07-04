@@ -131,6 +131,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .photodrop{ position:relative; height:150px; border:2px dashed var(--border); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--soft); font-size:13px; background-size:cover; background-position:center; overflow:hidden; }
 .pic-overlay{ position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 8px; border-radius:20px; }
 .drinkrows .dr{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.drinkrows .dr .drhead{ flex:1 1 100%; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; color:var(--text); text-align:left; }
+.drinkrows .dr .drhead .drchev{ color:var(--soft); flex:0 0 auto; }
+.drinkrows .dr .drhead .drtitle{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.drinkrows .dr .drhead .dredit{ color:var(--soft); font-size:12px; flex:0 0 auto; }
+.drinkrows .dr.collapsed > :not(.drhead){ display:none; }
 .drinkrows .dr.dr-old{ opacity:.72; border-left:3px solid var(--border); padding-left:8px; }
 .drinkrows .dr-oldertoggle{ display:block; padding:4px 0 8px; }
 .drinkrows .dr input.dn{ flex:1 1 100%; } .drinkrows .dr input.dp{ flex:1 1 70px; } .drinkrows .dr input.dd{ flex:2 1 130px; }
