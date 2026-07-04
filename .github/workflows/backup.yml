@@ -1,0 +1,38 @@
+name: Backup cafes data
+
+# Snapshots the Firebase Realtime Database into cafes.json daily.
+# This gives versioned backups in git history AND keeps the app's
+# offline-fallback file (DATA_URL in js/config.js) fresh.
+
+on:
+  schedule:
+    - cron: "17 9 * * *" # daily ~09:17 UTC (odd minute avoids the on-the-hour rush)
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch data from Firebase
+        run: |
+          curl -fsS "https://cafeproject-b604f-default-rtdb.firebaseio.com/cafes.json" \
+            | jq 'if type=="object" then [.[]] else . end' > cafes.json
+          # Safety: never commit an empty/invalid snapshot over a good backup
+          jq -e 'type=="array" and length>0' cafes.json > /dev/null
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- cafes.json; then
+            echo "No changes since last backup."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898270+github-actions[bot]@users.noreply.github.com"
+          git add cafes.json
+          git commit -m "Backup cafes.json ($(date -u +%Y-%m-%d))"
+          git push
