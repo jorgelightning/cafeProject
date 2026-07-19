@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 <div id="app" data-view="map" data-mode="viewer">
@@ -49,7 +49,7 @@
 <div class="chips" id="d-tags"></div>
 <div class="lab">Drinks I had</div><div id="d-drinks"></div>
 <div class="lab">My thoughts</div><div class="review" id="d-review"></div>
-<div style="margin-top:22px; display:flex; gap:10px"><button class="btn" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
+<div style="margin-top:22px; display:flex; gap:10px"><button class="btn" id="d-dir" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
 </div>
 </div>
 </section>
@@ -60,6 +60,7 @@
 <div class="field"><label>Location — tap map to drop a pin</label><div id="form-map"></div><button class="hintbtn" onclick="formLocate()">📍 Use my current location</button> <span id="f-coords" style="font-size:12px; color:var(--soft)"></span></div>
 <div class="field"><label>Area / neighborhood</label><input type="text" id="f-area" placeholder="e.g. Manoa" autocomplete="off"></div>
 <div class="field"><label>Brand / chain (optional)</label><input type="text" id="f-brand" placeholder="e.g. Tadaima — groups locations together" autocomplete="off"></div>
+<div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-custom"> Private spot 🏠 <span style="font-size:11px;color:var(--soft);font-weight:400">(friend's place, pop-up, event — skips Google photos and place matching)</span></label></div>
 <div class="field"><label>Drink photo</label><div class="photodrop" id="f-photodrop"><div style="font-size:26px">📷</div><span id="f-photolabel">Paste an image link below to preview</span></div><input type="text" id="f-photo-url" placeholder="Paste an image link (Google Photos, Cloudinary…)" oninput="onPhotoUrl()" autocomplete="off" style="margin-top:8px"><div style="font-size:11px; color:var(--soft); margin-top:4px">From Google Photos: open the photo, right-click it → "Copy image address" and paste that link here (the Share link won't work).</div><div id="f-photo-status" style="font-size:11px; margin-top:3px"></div></div>
 <div class="field"><label>Drinks had</label><div class="drinkrows" id="f-drinks"></div><button class="hintbtn" onclick="addDrinkRow()">+ Add another drink</button></div>
 <div class="field"><label>Rating</label><div class="rate" id="f-rate"></div></div>
@@ -104,17 +105,17 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=5"></script>
-<script src="js/core.js?v=5"></script>
-<script src="js/storage.js?v=5"></script>
-<script src="js/nav.js?v=5"></script>
-<script src="js/map.js?v=5"></script>
-<script src="js/photos.js?v=5"></script>
-<script src="js/list.js?v=5"></script>
-<script src="js/stats.js?v=5"></script>
-<script src="js/rank.js?v=5"></script>
-<script src="js/detail.js?v=5"></script>
-<script src="js/form.js?v=5"></script>
-<script src="js/boot.js?v=5"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/core.js?v=6"></script>
+<script src="js/storage.js?v=6"></script>
+<script src="js/nav.js?v=6"></script>
+<script src="js/map.js?v=6"></script>
+<script src="js/photos.js?v=6"></script>
+<script src="js/list.js?v=6"></script>
+<script src="js/stats.js?v=6"></script>
+<script src="js/rank.js?v=6"></script>
+<script src="js/detail.js?v=6"></script>
+<script src="js/form.js?v=6"></script>
+<script src="js/boot.js?v=6"></script>
 </body>
 </html>
