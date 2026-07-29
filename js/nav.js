@@ -2,7 +2,7 @@
 /* nav.js — View switching between map / list / detail / form / rank / stats.
    Loaded by index.html; script order matters (config first, boot last). */
 /* ---------- navigation ---------- */
-function show(view,fav){ if(typeof closeMore==="function")closeMore(); if(view==="wish"){ wishOnly=true; favOnly=false; view="list"; } else if(view==="list"||view==="map"){ wishOnly=false; favOnly=!!fav; } if(view==="map"||view==="list")lastMain=view; app.dataset.view=view;
+function show(view,fav){ if(app.dataset.view==="form"&&view!=="form"&&typeof formDirty==="function"&&formDirty()){ if(!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; } if(typeof closeMore==="function")closeMore(); if(view==="wish"){ wishOnly=true; favOnly=false; view="list"; } else if(view==="list"||view==="map"){ wishOnly=false; favOnly=!!fav; } if(view==="map"||view==="list")lastMain=view; app.dataset.view=view;
 document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
 if(view==="map")$("t-map").classList.add("on");
 if(view==="list")(wishOnly?$("t-wish"):(fav?$("t-fav"):$("t-list"))).classList.add("on");

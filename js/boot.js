@@ -41,3 +41,4 @@ _rearmBack();
 window.addEventListener("popstate",()=>{ const qs=$("quick-sheet"); if(qs&&qs.classList.contains("show")){ closeQuick(); _rearmBack(); return; } const mp=$("more-popup"); if(mp&&mp.classList.contains("show")){ closeMore(); _rearmBack(); return; } const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
 document.addEventListener("click",e=>{ if(!e.target.closest("#t-more")&&!e.target.closest("#more-popup"))closeMore(); });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden)checkForUpdate(); });
+window.addEventListener("beforeunload",e=>{ if(typeof formDirty==="function"&&formDirty()){ e.preventDefault(); e.returnValue=""; } });
