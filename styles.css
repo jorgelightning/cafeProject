@@ -1,5 +1,11 @@
-:root{ --acc:#d5803b; --acc2:#e0556b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#7a726b; --faint:#a9a39d; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); --glass:rgba(255,255,255,.93); --glass-strong:rgba(248,246,244,.88); }
-@media (prefers-color-scheme:dark){ :root{ --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#8b817a; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); } }
+/* Three blocks so the 🌗 toggle can override the system preference in both directions:
+   bare :root = light, the media block = system dark (unless explicitly set to light),
+   and [data-theme="dark"] = manually chosen dark. Keep any new colour in all three.
+   --acc stays the identity orange for fills/pins/underlines; --acc-strong is the only
+   one that may sit under white text (--acc is 3.01:1 there, --acc-strong is 4.94:1). */
+:root{ --acc:#d5803b; --acc-strong:#a8551a; --on-acc:#fff; --acc2:#c0374b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#7a726b; --faint:#726a63; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d9d3cc; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); --glass:rgba(255,255,255,.93); --glass-strong:rgba(248,246,244,.88); }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#8b817a; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); } }
+:root[data-theme="dark"]{ --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#8b817a; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); }
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html,body{ height:100%; margin:0; }
 body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,"Apple Color Emoji",sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
@@ -67,9 +73,10 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .card .nophoto .em{ font-size:24px; text-shadow:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
 .card .ph{ position:relative; overflow:hidden; }
 .card .ph.loaded{ animation:phIn .4s ease; }
-.card .ph.loading::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent); transform:translateX(-100%); animation:shimmer 1.25s infinite; }
+.card .ph.loading::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent); transform:translateX(-100%); animation:shimmer 1.4s 3; }
 @keyframes phIn{ from{ opacity:.25 } to{ opacity:1 } }
 @keyframes shimmer{ 100%{ transform:translateX(100%) } }
+@media (prefers-reduced-motion:reduce){ *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }
 .statwrap{ padding:14px 16px 34px; width:100%; }
 .statgrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .statcard{ background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:13px 14px; }
@@ -82,31 +89,43 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lbmain{ flex:1; min-width:0; }
 .lbname{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbsub{ font-size:12px; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.lbscore{ font-weight:800; color:#2e9e5b; font-size:14px; flex:none; }
+.lbscore{ font-weight:800; color:var(--good); font-size:14px; flex:none; }
 .spendrow{ display:flex; align-items:center; gap:10px; margin:7px 0; font-size:13px; }
 .spendrow .lab2{ width:78px; flex:none; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .spendbar{ flex:1; height:9px; background:var(--surface2); border-radius:6px; overflow:hidden; }
 .spendbar > i{ display:block; height:100%; background:var(--acc); }
 .spendrow .amt{ width:62px; flex:none; text-align:right; font-weight:700; }
 .card .b{ padding:8px 11px 11px; }
-.card .n{ font-weight:700; font-size:14px; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.card .m{ font-size:12px; color:var(--soft); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.card .m2{ font-size:11px; color:var(--faint); margin-top:3px; display:flex; align-items:center; gap:5px; flex-wrap:nowrap; overflow:hidden; }
-.cstars{ color:#f0a93b; letter-spacing:.5px; }
-.scorebadge{ background:rgba(46,158,91,.14); color:#2e9e5b; border-radius:6px; padding:1px 7px; font-weight:700; }
+/* min-height pins every card to the same height so the star pills line up down the column */
+.card .n{ font-weight:700; font-size:15px; line-height:1.25; min-height:38px; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.card .m{ font-size:12px; font-weight:500; color:var(--soft); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card .m .near{ color:var(--text); font-weight:700; }
+/* Two-colour track using the SAME glyph for both halves — ☆ is optically lighter and a
+   different advance width, so a filled/hollow mix does not read as a proportion. */
+.cstars{ color:var(--star-off); letter-spacing:.5px; }
+.cstars b{ color:var(--star); font-weight:inherit; }
+/* On the tile the pill sits on its own dark scrim, so it uses literal colours: identical
+   contrast in both themes and over any photo that later resolves. */
+.card .ph .cstars{ position:absolute; left:6px; bottom:6px; height:24px; display:flex; align-items:center; padding:0 7px; border-radius:8px; background:rgba(20,16,13,.78); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); font-size:12px; letter-spacing:1px; color:rgba(255,255,255,.34); text-shadow:none; }
+.card .ph .cstars b{ color:#f5b544; }
+/* Absolutely positioned so they survive the .nophoto column-flex centring */
+.card .ph .favbadge{ position:absolute; top:6px; right:7px; font-size:16px; line-height:1; }
+.card .ph .wishbadge{ position:absolute; top:6px; left:7px; background:rgba(91,155,213,.9); color:#fff; border-radius:6px; padding:1px 7px; font-size:11px; font-weight:700; line-height:1.4; }
+.scorebadge{ background:rgba(46,158,91,.14); color:var(--good); border-radius:6px; padding:1px 7px; font-weight:700; }
 .empty{ text-align:center; color:var(--soft); padding:60px 30px; }
 .empty .big{ font-size:46px; margin-bottom:10px; }
-.hero{ position:relative; height:240px; background-size:cover; background-position:center; display:flex; align-items:flex-end; }
+.hero{ position:relative; height:176px; background-size:cover; background-position:center; display:flex; align-items:flex-end; }
 .hero.nophoto{ background:linear-gradient(140deg,#caa472,#7b4a26); align-items:center; justify-content:center; font-size:84px; }
 .hero .hero-emoji{ display:none; filter:drop-shadow(0 4px 12px rgba(0,0,0,.3)); }
 .hero.nophoto .hero-emoji{ display:block; }
 .hero .nav{ position:absolute; top:14px; left:14px; right:14px; display:flex; justify-content:space-between; }
-.round{ width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; backdrop-filter:blur(4px); }
+.round{ width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.16); box-shadow:inset 0 0 0 1px rgba(255,255,255,.28); color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); text-shadow:0 1px 3px rgba(0,0,0,.5); }
 .tagphoto{ position:absolute; bottom:12px; left:14px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 9px; border-radius:20px; }
-.dbody{ padding:16px 18px 30px; }
+.dbody{ padding:16px 16px 30px; }
 .dbody h2{ margin:0 0 4px; font-size:23px; }
 .row{ display:flex; align-items:center; gap:8px; color:var(--soft); font-size:13px; }
-.stars{ color:#f0a93b; font-size:18px; letter-spacing:1px; }
+.stars{ color:var(--star-off); font-size:18px; letter-spacing:1px; }
+.stars b{ color:var(--star); font-weight:inherit; }
 .chips{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
 .chip{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:4px 11px; font-size:12px; }
 .chiprow{ display:flex; gap:6px; overflow-x:auto; padding:2px 16px 8px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
@@ -120,24 +139,41 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .locpills{ display:none; flex-wrap:wrap; gap:7px; margin:2px 0 12px; }
 .locpill{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; font-weight:600; color:var(--soft); cursor:pointer; white-space:nowrap; }
 .locpill.on{ background:var(--acc); color:#fff; border-color:var(--acc); cursor:default; }
-.lab{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); margin:18px 0 8px; }
-.drink{ display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); font-size:14px; }
-.drink .ic{ width:34px; height:34px; border-radius:9px; background:var(--surface2); display:flex; align-items:center; justify-content:center; }
-.drink .pr{ margin-left:auto; color:var(--soft); font-size:13px; align-self:flex-start; }
-.drink .dmain{ display:flex; flex-direction:column; min-width:0; }
-.drink .cnt{ background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0 6px; font-size:11px; color:var(--soft); margin-left:6px; }
-.drink .dsub{ font-size:11px; color:var(--faint); margin-top:2px; }
+.lab{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--soft); margin:18px 0 8px; }
+/* The old 34px 🥤 tile was identical on every drink. The left rail replaces it and
+   carries the verdict instead, so the row costs less height and says more. */
+.drink{ display:flex; align-items:flex-start; gap:10px; padding:9px 0 9px 12px; border-bottom:1px solid var(--border); border-left:4px solid var(--border); font-size:14px; }
+.drink.v-yes{ border-left-color:var(--good); }
+.drink.v-neutral{ border-left-color:var(--mid); }
+.drink.v-no{ border-left-color:var(--bad); }
+.drink .pr{ margin-left:auto; color:var(--text); font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; flex:none; }
+.drink .dmain{ display:flex; flex-direction:column; min-width:0; flex:1; }
+.drink .dtop{ font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.drink .cnt{ background:var(--acc-strong); color:var(--on-acc); border-radius:7px; padding:0 6px; font-size:11px; font-weight:800; margin-left:5px; }
+.drink .dsub{ font-size:12px; color:var(--soft); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.drink .dalso{ font-size:12px; color:var(--faint); margin-top:2px; }
+.drink .reorder{ margin-top:0; margin-right:2px; vertical-align:-1px; }
 .review{ background:var(--surface2); border-radius:13px; padding:14px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
 .form-top{ display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); }
-.savebtn{ padding:9px 15px; border:none; border-radius:10px; background:var(--acc); color:#fff; font-weight:600; font-size:14px; cursor:pointer; }
-.form{ padding:14px 18px 30px; }
+.form{ padding:14px 16px 0; }
+/* Sticky commit rail. .sidebar is already inset by the tab-bar height, so bottom:0
+   lands exactly on top of it and needs no safe-area padding of its own. */
+.savebar{ position:sticky; bottom:0; margin:20px -16px 0; padding:10px 16px calc(10px + env(safe-area-inset-bottom)); background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); z-index:5; }
+.savebar .btn{ width:100%; height:52px; border-radius:14px; background:var(--acc-strong); color:var(--on-acc); font-size:16px; font-weight:700; border:none; }
+/* The native picker stays: the real input is stretched over the pill at opacity 0.
+   16px font-size on it is what stops iOS zooming when it takes focus. */
+.datepill{ position:relative; flex:0 0 108px; height:44px; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:1px solid var(--border); border-radius:12px; font-size:13px; font-weight:700; color:var(--text); overflow:hidden; }
+.datepill .dpv{ pointer-events:none; }
+.datepill .dd{ position:absolute; inset:0; width:100%; height:100%; opacity:0; border:0; padding:0; margin:0; font-size:16px; }
+.priceline{ display:flex; gap:8px; flex:1 1 100%; }
+.priceline input.dp{ flex:1 1 auto; height:44px; }
 .field{ margin-bottom:15px; }
 .field label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; }
 .field input[type=text],.field input[type=number],.field input[type=date],.field textarea{ width:100%; border:1px solid var(--border); border-radius:11px; padding:11px 12px; font-size:16px; background:var(--surface); color:var(--text); outline:none; font-family:inherit; }
 .field textarea{ min-height:84px; resize:vertical; }
 .hintbtn{ font-size:12px; color:var(--acc); background:none; border:none; cursor:pointer; padding:6px 0 0; font-weight:600; }
-.rate{ font-size:30px; color:#d9d3cc; letter-spacing:5px; cursor:pointer; user-select:none; }
-.rate .on{ color:#f0a93b; }
+.rate{ font-size:34px; color:var(--star-off); letter-spacing:10px; cursor:pointer; user-select:none; }
+.rate .on{ color:var(--star); }
 .photodrop{ position:relative; height:150px; border:2px dashed var(--border); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--soft); font-size:13px; background-size:cover; background-position:center; overflow:hidden; }
 .pic-overlay{ position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 8px; border-radius:20px; }
 .drinkrows .dr{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
@@ -148,7 +184,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkrows .dr.collapsed > :not(.drhead){ display:none; }
 .drinkrows .dr.dr-old{ opacity:.72; border-left:3px solid var(--border); padding-left:8px; }
 .drinkrows .dr-oldertoggle{ display:block; padding:4px 0 8px; }
-.drinkrows .dr input.dn{ flex:1 1 100%; } .drinkrows .dr input.dp{ flex:1 1 70px; } .drinkrows .dr input.dd{ flex:2 1 130px; }
+.drinkrows .dr input.dn{ flex:1 1 100%; } .drinkrows .dr input.dp{ flex:1 1 70px; }
 .drinkrows .dr .szwrap, .drinkrows .dr .swwrap, .drinkrows .dr .icwrap{ flex:1 1 100%; display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 12px; }
 .drinkrows .dr .szwrap input[type=range], .drinkrows .dr .swwrap input[type=range], .drinkrows .dr .icwrap input[type=range]{ flex:1; accent-color:var(--acc); min-width:0; }
 .drinkrows .dr .swlabel{ font-size:12px; color:var(--soft); flex:0 0 auto; }
@@ -173,7 +209,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .card{ transition:transform .08s ease; }
 .card:active{ transform:scale(.97); }
 .tab{ transition:transform .08s ease; }
-.iconbtn:active,.round:active,.fab:active,.savebtn:active,.btn:active,.tab:active,.chip:active,.hintbtn:active,.adminbar button:active,.side-nav button:active{ transform:scale(.95); opacity:.9; }
+.iconbtn:active,.round:active,.fab:active,.btn:active,.tab:active,.chip:active,.hintbtn:active,.adminbar button:active,.side-nav button:active{ transform:scale(.95); opacity:.9; }
 /* ---- desktop split view ---- */
 @media (min-width:900px){
 #app{ flex-direction:row; }
@@ -215,20 +251,21 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .cmp-score{ background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:1px 8px; font-size:11px; color:var(--soft); }
 .dscore{ background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:1px 7px; font-size:11px; font-weight:600; color:var(--acc); }
 .reorder{ display:inline-flex; align-items:center; gap:4px; border-radius:8px; padding:2px 9px; font-size:11px; font-weight:700; margin-top:6px; }
-.reorder.yes{ background:rgba(46,158,91,.14); color:#2e9e5b; }
-.reorder.no{ background:rgba(224,85,107,.14); color:#e0556b; }
+.reorder.yes{ background:rgba(46,158,91,.14); color:var(--good); }
+.reorder.no{ background:rgba(224,85,107,.14); color:var(--bad); }
+.reorder.neutral{ background:rgba(138,90,9,.14); color:var(--mid); }
 .reorder-rollup{ display:flex; align-items:center; gap:10px; margin:11px 0 2px; }
 .ro-badge{ font-size:12px; font-weight:700; padding:3px 10px; border-radius:9px; white-space:nowrap; flex:none; }
-.ro-badge.yes{ background:rgba(46,158,91,.14); color:#2e9e5b; }
-.ro-badge.no{ background:rgba(224,85,107,.14); color:#e0556b; }
+.ro-badge.yes{ background:rgba(46,158,91,.14); color:var(--good); }
+.ro-badge.no{ background:rgba(224,85,107,.14); color:var(--bad); }
 .ro-bar{ flex:1; height:8px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
-.ro-bar > i{ display:block; height:100%; background:#2e9e5b; }
+.ro-bar > i{ display:block; height:100%; background:var(--good); }
 .rorate{ background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:13px 15px; }
 .rorate-top{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
-.rorate-pct{ font-size:26px; font-weight:800; color:#2e9e5b; }
+.rorate-pct{ font-size:26px; font-weight:800; color:var(--good); }
 .rorate-sub{ font-size:12px; color:var(--soft); font-weight:600; }
 .robar{ margin-top:10px; height:9px; background:var(--surface); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
-.robar > i{ display:block; height:100%; background:#2e9e5b; }
+.robar > i{ display:block; height:100%; background:var(--good); }
 .drinkrows .dr .rowrap{ flex:1 1 100%; display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 12px; }
 .drinkrows .dr .qtywrap{ flex:1 1 100%; display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 12px; }
 .qbtn{ width:32px; height:32px; flex:0 0 auto; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:9px; font-size:18px; font-weight:700; line-height:1; cursor:pointer; font-family:inherit; }
@@ -239,9 +276,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mkbtn.on{ background:var(--acc); color:#fff; border-color:transparent; }
 .rbtn{ border:1px solid var(--border); background:var(--surface); border-radius:9px; padding:4px 13px; font-size:16px; cursor:pointer; opacity:.4; filter:grayscale(.6); transition:opacity .12s, filter .12s; }
 .rbtn.on{ opacity:1; filter:none; }
-.rbtn.yes.on{ border-color:#2e9e5b; background:rgba(46,158,91,.14); }
-.rbtn.no.on{ border-color:#e0556b; background:rgba(224,85,107,.14); }
-.rbtn.neutral.on{ border-color:#f0a93b; background:rgba(240,169,59,.14); }
+.rbtn.yes.on{ border-color:var(--good); background:rgba(46,158,91,.14); }
+.rbtn.no.on{ border-color:var(--bad); background:rgba(224,85,107,.14); }
+.rbtn.neutral.on{ border-color:var(--mid); background:rgba(240,169,59,.14); }
 .cmp-modes{ display:flex; gap:6px; justify-content:center; margin-bottom:14px; }
 .cmp-mode{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:6px 16px; font-size:13px; font-weight:600; color:var(--soft); cursor:pointer; }
 .cmp-mode.on{ background:var(--acc); color:#fff; border-color:var(--acc); }
