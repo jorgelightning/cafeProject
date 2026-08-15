@@ -6,14 +6,15 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="theme-color" content="#d5803b">
+<meta name="theme-color" content="#f6f5f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15110e" media="(prefers-color-scheme: dark)">
 <title>JL Cafe Project</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=14">
+<link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
 <div id="app" data-view="map" data-mode="viewer">
@@ -54,7 +55,7 @@
 </div>
 </section>
 <section class="pane" id="pane-form">
-<div class="form-top"><button class="iconbtn" onclick="closeForm()">‹</button><h1 id="form-title" style="flex:1; font-size:18px; margin:0">Add a visit</h1><button class="savebtn" onclick="saveForm()">Save</button></div>
+<div class="form-top"><button class="iconbtn" onclick="closeForm()" aria-label="Back">‹</button><h1 id="form-title" style="flex:1; font-size:18px; margin:0">Add a visit</h1></div>
 <div class="scroll"><div class="form">
 <div class="field"><label>Cafe name *</label><input type="text" id="f-name" placeholder="Search a place or type a name…" autocomplete="off" onblur="checkExisting()"></div>
 <div class="field"><label>Location — tap map to drop a pin</label><div id="form-map"></div><button class="hintbtn" onclick="formLocate()">📍 Use my current location</button> <span id="f-coords" style="font-size:12px; color:var(--soft)"></span></div>
@@ -62,13 +63,13 @@
 <div class="field"><label>Brand / chain (optional)</label><input type="text" id="f-brand" placeholder="e.g. Tadaima — groups locations together" autocomplete="off"></div>
 <div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-custom"> Private spot 🏠 <span style="font-size:11px;color:var(--soft);font-weight:400">(friend's place, pop-up, event — skips Google photos and place matching)</span></label></div>
 <div class="field"><label>Drink photo</label><div class="photodrop" id="f-photodrop"><div style="font-size:26px">📷</div><span id="f-photolabel">Paste an image link below to preview</span></div><input type="text" id="f-photo-url" placeholder="Paste an image link (Google Photos, Cloudinary…)" oninput="onPhotoUrl()" autocomplete="off" style="margin-top:8px"><div style="font-size:11px; color:var(--soft); margin-top:4px">From Google Photos: open the photo, right-click it → "Copy image address" and paste that link here (the Share link won't work).</div><div id="f-photo-status" style="font-size:11px; margin-top:3px"></div></div>
-<div class="field"><label>Drinks had</label><div class="drinkrows" id="f-drinks"></div><button class="hintbtn" onclick="addDrinkRow()">+ Add another drink</button></div>
+<div class="field"><label>Drinks had</label><div class="drinkrows" id="f-drinks"></div><button class="hintbtn" onclick="addDrinkRow('','',localToday())">+ Add another drink</button></div>
 <div class="field"><label>Rating</label><div class="rate" id="f-rate"></div></div>
 <div class="field"><label>Review / thoughts</label><textarea id="f-review" placeholder="Vibe, taste, service…"></textarea></div>
 <div class="field"><label>Tags</label><div class="tagpick" id="f-tags"></div></div>
 <div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-fav"> Mark as favorite ❤️</label></div>
 <div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-wish"> Add to wishlist 🔖 <span style="font-size:11px;color:var(--soft);font-weight:400">(haven’t visited yet)</span></label></div>
-<button class="btn" onclick="saveForm()">Save visit</button>
+<div class="savebar"><button class="btn" onclick="saveForm()">Save visit</button></div>
 </div></div>
 </section>
 <section class="pane" id="pane-compare"><div class="compare" id="cmp-body"></div></section>
@@ -90,7 +91,7 @@
 <button class="tab" id="t-fav" onclick="show('list',true)"><span class="ti">❤️</span>Faves</button>
 <button class="tab" id="t-wish" onclick="show('wish')"><span class="ti">🔖</span>Wish</button>
 <button class="tab" id="t-more" onclick="toggleMore()"><span class="ti">⋯</span>More</button>
-<div class="more-popup" id="more-popup"><button id="mp-stats" onclick="closeMore();show('stats')"><span style="font-size:18px">📊</span>Stats</button><button id="mp-rank" onclick="closeMore();openRank()"><span style="font-size:18px">⚖️</span>Rank</button><button class="admin-only" onclick="closeMore();openForm()"><span style="font-size:18px">➕</span>Add visit</button></div>
+<div class="more-popup" id="more-popup"><button id="mp-theme" onclick="closeMore();cycleTheme()"><span style="font-size:18px">🌗</span><span id="mp-theme-lab">Theme: auto</span></button><button id="mp-stats" onclick="closeMore();show('stats')"><span style="font-size:18px">📊</span>Stats</button><button id="mp-rank" onclick="closeMore();openRank()"><span style="font-size:18px">⚖️</span>Rank</button><button class="admin-only" onclick="closeMore();openForm()"><span style="font-size:18px">➕</span>Add visit</button></div>
 </nav>
 <div class="updatebar" id="updatebar" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
 <div class="toast" id="toast"></div>
@@ -103,17 +104,17 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=14"></script>
-<script src="js/core.js?v=14"></script>
-<script src="js/storage.js?v=14"></script>
-<script src="js/nav.js?v=14"></script>
-<script src="js/map.js?v=14"></script>
-<script src="js/photos.js?v=14"></script>
-<script src="js/list.js?v=14"></script>
-<script src="js/stats.js?v=14"></script>
-<script src="js/rank.js?v=14"></script>
-<script src="js/detail.js?v=14"></script>
-<script src="js/form.js?v=14"></script>
-<script src="js/boot.js?v=14"></script>
+<script src="js/config.js?v=15"></script>
+<script src="js/core.js?v=15"></script>
+<script src="js/storage.js?v=15"></script>
+<script src="js/nav.js?v=15"></script>
+<script src="js/map.js?v=15"></script>
+<script src="js/photos.js?v=15"></script>
+<script src="js/list.js?v=15"></script>
+<script src="js/stats.js?v=15"></script>
+<script src="js/rank.js?v=15"></script>
+<script src="js/detail.js?v=15"></script>
+<script src="js/form.js?v=15"></script>
+<script src="js/boot.js?v=15"></script>
 </body>
 </html>

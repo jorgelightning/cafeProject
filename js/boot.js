@@ -24,6 +24,12 @@ function migratePhotoCache(){
     }
   }
 }
+/* auto → light → dark. "auto" removes the attribute so the media query decides;
+   the other two set [data-theme], which both token blocks are written to honour. */
+const THEME_KEY="cafemap.theme";
+function applyTheme(t){ const r=document.documentElement; if(t==="light"||t==="dark")r.dataset.theme=t; else delete r.dataset.theme; const lab=$("mp-theme-lab"); if(lab)lab.textContent="Theme: "+(t||"auto"); }
+function cycleTheme(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){} const next=t==="light"?"dark":(t==="dark"?"":"light"); try{ next?localStorage.setItem(THEME_KEY,next):localStorage.removeItem(THEME_KEY); }catch(e){} applyTheme(next); toast("Theme: "+(next||"auto")); }
+(function(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){} applyTheme(t); })();
 function reloadLatest(){ location.replace(location.pathname+"?v="+Date.now()); }
 let _bootSrc=null, _updateShown=false;
 function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{ if(t==null)return; if(_bootSrc===null){ _bootSrc=t; return; } if(t!==_bootSrc && !_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); } }).catch(()=>{}); }
