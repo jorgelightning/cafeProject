@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=13">
+<link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
 <div id="app" data-view="map" data-mode="viewer">
@@ -87,13 +87,11 @@
 <nav class="tabbar">
 <button class="tab on" id="t-map" onclick="show('map')"><span class="ti">🗺️</span>Map</button>
 <button class="tab" id="t-list" onclick="show('list')"><span class="ti">☰</span>List</button>
-<button class="tab admin-only" id="t-quick" onclick="openQuick()"><span class="ti">⚡</span>Quick</button>
 <button class="tab" id="t-fav" onclick="show('list',true)"><span class="ti">❤️</span>Faves</button>
 <button class="tab" id="t-wish" onclick="show('wish')"><span class="ti">🔖</span>Wish</button>
 <button class="tab" id="t-more" onclick="toggleMore()"><span class="ti">⋯</span>More</button>
-<div class="more-popup" id="more-popup"><button id="mp-stats" onclick="closeMore();show('stats')"><span style="font-size:18px">📊</span>Stats</button><button id="mp-rank" onclick="closeMore();openRank()"><span style="font-size:18px">⚖️</span>Rank</button><button class="admin-only" onclick="closeMore();openForm()"><span style="font-size:18px">➕</span>Full add</button></div>
+<div class="more-popup" id="more-popup"><button id="mp-stats" onclick="closeMore();show('stats')"><span style="font-size:18px">📊</span>Stats</button><button id="mp-rank" onclick="closeMore();openRank()"><span style="font-size:18px">⚖️</span>Rank</button><button class="admin-only" onclick="closeMore();openForm()"><span style="font-size:18px">➕</span>Add visit</button></div>
 </nav>
-<div class="quick-sheet" id="quick-sheet"><div class="quick-overlay" onclick="closeQuick()"></div><div class="quick-body"><div class="quick-handle"></div><div class="quick-head">⚡ Quick Log</div><div class="quick-field"><label>Cafe name *</label><input class="quick-input" type="text" id="q-name" placeholder="Where are you?" autocomplete="off" autocorrect="off" autocapitalize="words" oninput="quickSuggest()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('q-drink').focus();}"><div class="quick-sugg" id="q-sugg"></div></div><div class="quick-field"><label>Drink (optional)</label><input class="quick-input" type="text" id="q-drink" placeholder="What did you have?" autocomplete="off" autocorrect="off" autocapitalize="words" onkeydown="if(event.key==='Enter'){saveQuick();}"></div><div class="quick-field"><label>Rating</label><div class="quick-stars" id="q-rate"></div></div><button class="quick-save" onclick="saveQuick()">Save visit ✓</button><button class="quick-fullink" onclick="closeQuick();openForm()">Need more options? Open full form →</button></div></div>
 <div class="updatebar" id="updatebar" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
 <div class="toast" id="toast"></div>
 </div>
@@ -105,17 +103,17 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=13"></script>
-<script src="js/core.js?v=13"></script>
-<script src="js/storage.js?v=13"></script>
-<script src="js/nav.js?v=13"></script>
-<script src="js/map.js?v=13"></script>
-<script src="js/photos.js?v=13"></script>
-<script src="js/list.js?v=13"></script>
-<script src="js/stats.js?v=13"></script>
-<script src="js/rank.js?v=13"></script>
-<script src="js/detail.js?v=13"></script>
-<script src="js/form.js?v=13"></script>
-<script src="js/boot.js?v=13"></script>
+<script src="js/config.js?v=14"></script>
+<script src="js/core.js?v=14"></script>
+<script src="js/storage.js?v=14"></script>
+<script src="js/nav.js?v=14"></script>
+<script src="js/map.js?v=14"></script>
+<script src="js/photos.js?v=14"></script>
+<script src="js/list.js?v=14"></script>
+<script src="js/stats.js?v=14"></script>
+<script src="js/rank.js?v=14"></script>
+<script src="js/detail.js?v=14"></script>
+<script src="js/form.js?v=14"></script>
+<script src="js/boot.js?v=14"></script>
 </body>
 </html>
