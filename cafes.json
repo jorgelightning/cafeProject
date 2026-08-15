@@ -626,9 +626,22 @@
     "drinks": [
       {
         "dates": [
+          "2026-08-07"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte / oak",
+        "p": "7.25",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
           "2026-08-05"
         ],
         "ice": "Regular ice",
+        "milk": "Oat",
         "n": "Hojicha latte w/ oak milk",
         "p": "7.25",
         "reorder": "yes",
@@ -640,6 +653,7 @@
           "2026-07-31"
         ],
         "ice": "Warm",
+        "milk": "Oat",
         "n": "Hojicha latte /w oak milk",
         "p": "7.25",
         "reorder": "yes",
@@ -651,7 +665,8 @@
           "2026-07-28"
         ],
         "ice": "Less ice",
-        "n": "Matcha Matcha w/ oak",
+        "milk": "Oat",
+        "n": "Matcha Matcha",
         "p": "7.75",
         "reorder": "yes",
         "size": "12 oz",
@@ -664,6 +679,7 @@
           "2026-07-27"
         ],
         "ice": "Warm",
+        "milk": "Oat",
         "n": "Flat White w/ oak milk",
         "p": "5",
         "reorder": "yes",
@@ -671,14 +687,20 @@
         "sweet": "0%"
       },
       {
-        "count": 3,
+        "count": 4,
         "dates": [
           "2026-03-22",
           "2026-03-25",
-          "2026-04-09"
+          "2026-04-09",
+          "2026-08-11"
         ],
+        "ice": "Warm",
+        "milk": "Oat",
         "n": "Hojicha latte",
-        "p": ""
+        "p": "7.25",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
       },
       {
         "dates": [
@@ -693,17 +715,6 @@
         ],
         "n": "Matcha latte",
         "p": ""
-      },
-      {
-        "dates": [
-          "2026-08-07"
-        ],
-        "ice": "Warm",
-        "n": "Hojicha latte / oak",
-        "p": "7.25",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
       }
     ],
     "elo": 1560,
@@ -719,7 +730,7 @@
     "tags": [
       "specialty"
     ],
-    "updated": "2026-08-08T01:33:15.132Z",
+    "updated": "2026-08-15T07:22:35.732Z",
     "wish": false
   },
   {
@@ -1153,7 +1164,8 @@
           "2026-08-06"
         ],
         "ice": "Less ice",
-        "n": "Phoenix Oolong Milk Tea lactose free",
+        "milk": "Lactose-free",
+        "n": "Phoenix Oolong Milk Tea",
         "p": "7.04",
         "reorder": "yes",
         "size": "16 oz",
@@ -1920,7 +1932,8 @@
           "2026-08-12"
         ],
         "ice": "Less ice",
-        "n": "Matcha Einspanner w/ oak milk",
+        "milk": "Oat",
+        "n": "Matcha Einspanner",
         "p": "8",
         "reorder": "yes",
         "size": "12 oz",
@@ -1942,7 +1955,8 @@
           "2026-07-02"
         ],
         "ice": "Warm",
-        "n": "Cassia black tea latte w/ oak milk",
+        "milk": "Oat",
+        "n": "Cassia black tea latte",
         "p": "7.50",
         "reorder": "yes",
         "size": "16 oz",
@@ -1964,7 +1978,8 @@
           "2026-06-25"
         ],
         "ice": "Extra ice",
-        "n": "Hojicha Latte w/ Oak Milk",
+        "milk": "Oat",
+        "n": "Hojicha Latte",
         "p": "7",
         "reorder": "yes",
         "size": "32 oz",
@@ -1975,6 +1990,7 @@
           "2026-06-20"
         ],
         "ice": "Less ice",
+        "milk": "Oat",
         "n": "Black Matcha latte + oak milk",
         "p": "7.75",
         "reorder": "yes",
@@ -1998,6 +2014,7 @@
           "2026-08-12"
         ],
         "ice": "Less ice",
+        "milk": "Oat",
         "n": "Black matcha latte w/ oak milk",
         "p": "7.75",
         "reorder": "yes",
@@ -2030,7 +2047,8 @@
         "dates": [
           "2026-07-03"
         ],
-        "n": "Matcha Einspaner Oat Milk",
+        "milk": "Oat",
+        "n": "Matcha Einspaner",
         "p": "",
         "reorder": "yes"
       },
@@ -2077,7 +2095,8 @@
     "drinks": [
       {
         "ice": "Warm",
-        "n": "Hojicha latte w/ oak",
+        "milk": "Oat",
+        "n": "Hojicha latte",
         "p": "7.84",
         "reorder": "yes",
         "size": "16 oz",
@@ -2337,7 +2356,8 @@
           "2026-07-20"
         ],
         "ice": "Warm",
-        "n": "Hojicha latte w/ oak milk",
+        "milk": "Oat",
+        "n": "Hojicha latte",
         "p": "",
         "reorder": "no",
         "size": "12 oz",
@@ -2420,7 +2440,8 @@
           "2026-08-02"
         ],
         "ice": "Less ice",
-        "n": "Coconut Matcha Latte w/ oak milk",
+        "milk": "Oat",
+        "n": "Coconut Matcha Latte",
         "p": "0",
         "reorder": "yes",
         "size": "12 oz",
@@ -2501,6 +2522,135 @@
       "to-go"
     ],
     "updated": "2026-08-15T06:32:07.819Z",
+    "wish": false
+  },
+  {
+    "area": "West of Twin Peaks",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-11"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojica latte",
+        "p": "8.50",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "msu1j50kxltv",
+    "lat": 37.74058,
+    "lng": -122.46647,
+    "name": "Hardware Coffee Co.",
+    "rating": 4,
+    "review": "Great study spot! Hojicha is ok!",
+    "updated": "2026-08-15T07:14:33.379Z",
+    "wish": false
+  },
+  {
+    "area": "Serramonte",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "count": 2,
+        "dates": [
+          "2026-08-12"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Dong Ding Oolong Latte",
+        "p": "7.70",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "25%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "msu1q6bvm46n",
+    "lat": 37.66805,
+    "lng": -122.46815,
+    "name": "Chicha San Chen 吃茶三千",
+    "rating": 4,
+    "review": "Nice cafe but like it may take a while to get your order!",
+    "updated": "2026-08-15T07:21:05.832Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown San Jose",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-10"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Pandan Muối Latte",
+        "p": "7.50",
+        "reorder": "yes"
+      },
+      {
+        "dates": [
+          "2026-08-10"
+        ],
+        "n": "Davao Mocha",
+        "p": "7",
+        "reorder": "yes"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "msu1xc32ec38",
+    "lat": 37.33282,
+    "lng": -121.90455,
+    "name": "Kasama Cà Phê",
+    "rating": 5,
+    "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-08-15T07:25:35.726Z",
+    "wish": false
+  },
+  {
+    "area": "Cole Valley",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-08"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Cloud 9",
+        "p": "7.60",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "msu21vly3a9b",
+    "lat": 37.76538,
+    "lng": -122.45015,
+    "name": "Yardsale San Francisco",
+    "rating": 4,
+    "review": "Matcha was above average but the atmosphere is great and clothing too!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-08-15T07:29:07.654Z",
     "wish": false
   }
 ]
