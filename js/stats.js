@@ -206,8 +206,9 @@ function renderStats(){
   }
 
   /* ---------- 9. keep ranking ---------- */
-  const dAll=allDrinks(), dCmp=dAll.filter(function(D){ return drinkMatches(D.drink)>0; }).length;
-  h+='<div class="handoff" onclick="openRank()">⚖️ Rank a few more drinks <span>· only '+dCmp+' of '+dAll.length+' compared</span></div>';
+  /* Cafe coverage, not the drink count — drinks are no longer what ranking moves. */
+  const rankedN=nonWish.filter(function(c){ return matchCount(c)>0; }).length;
+  h+='<div class="handoff" onclick="openRank()">⚖️ '+rankedN+' of '+nonWish.length+' cafes ranked'+((nonWish.length-rankedN)?' <span>· '+(nonWish.length-rankedN)+' to go</span>':'')+'</div>';
 
   host.innerHTML=h;
 }

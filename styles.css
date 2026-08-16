@@ -108,6 +108,31 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lbname{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbsub{ font-size:12px; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbscore{ font-weight:800; color:var(--good); font-size:14px; flex:none; }
+/* ---- post-save ranking card ---- */
+#d-chaser:empty{ display:none; }
+.chaser{ margin:14px 0 2px; padding:12px 13px 13px; background:var(--surface2); border:1px solid var(--border); border-radius:16px; }
+.ch-hd{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.ch-qwrap{ min-width:0; }
+.ch-why{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); }
+.ch-q{ display:block; font-size:16px; font-weight:800; letter-spacing:-.01em; margin-top:3px; }
+.ch-x{ flex:0 0 auto; width:44px; height:44px; margin:-11px -10px -11px 0; background:none; border:none; color:var(--faint); font-size:17px; cursor:pointer; border-radius:50%; font-family:inherit; }
+.ch-pair{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+/* Stacked, not side by side: 19 of the cafe names run past 20 characters and two-up leaves
+   about 120px each. Full width gives a name ~266px after the thumbnail. */
+.ch-opt{ display:flex; align-items:center; gap:10px; width:100%; min-height:56px; padding:9px 12px; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:13px; font-family:inherit; color:inherit; cursor:pointer; }
+.ch-opt:active{ transform:scale(.97); }
+.ch-th{ width:40px; height:40px; flex:0 0 40px; border-radius:10px; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; font-weight:800; }
+.ch-m{ flex:1; min-width:0; }
+.ch-n{ display:block; font-size:15px; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ch-s{ display:block; font-size:11.5px; font-weight:500; color:var(--soft); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ch-even{ width:100%; height:42px; margin-top:8px; background:transparent; border:1px dashed var(--border); border-radius:12px; font-size:12.5px; font-weight:600; color:var(--soft); font-family:inherit; cursor:pointer; }
+.chaser.res{ padding:13px; }
+.ch-rl{ font-size:14px; font-weight:800; }
+.ch-mv{ display:flex; flex-direction:column; gap:3px; margin-top:6px; font-size:12.5px; color:var(--soft); }
+.ch-mv b{ font-weight:700; }
+.ch-mv .up{ color:var(--good); }
+.ch-mv .dn{ color:var(--bad); }
+.ch-lnk{ margin-top:9px; background:none; border:none; padding:0; font-family:inherit; font-size:12.5px; font-weight:700; color:var(--acc-strong); cursor:pointer; }
 /* ---- stats components ---- */
 /* Magnitude rows: the bar is a 3px rule along the row's bottom edge, so a leaderboard row
    carries rank, full name, area and value AND its proportion without a separate bar column
