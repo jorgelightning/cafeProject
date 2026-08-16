@@ -108,11 +108,52 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lbname{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbsub{ font-size:12px; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbscore{ font-weight:800; color:var(--good); font-size:14px; flex:none; }
-.spendrow{ display:flex; align-items:center; gap:10px; margin:7px 0; font-size:13px; }
-.spendrow .lab2{ width:78px; flex:none; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.spendbar{ flex:1; height:9px; background:var(--surface2); border-radius:6px; overflow:hidden; }
-.spendbar > i{ display:block; height:100%; background:var(--acc); }
-.spendrow .amt{ width:62px; flex:none; text-align:right; font-weight:700; }
+/* ---- stats components ---- */
+/* Magnitude rows: the bar is a 3px rule along the row's bottom edge, so a leaderboard row
+   carries rank, full name, area and value AND its proportion without a separate bar column
+   eating half the width. --mag is set inline per row. */
+.lbrow.mag{ position:relative; border-bottom:none; padding:11px 2px 13px; }
+.lbrow.mag::before{ content:""; position:absolute; left:2px; right:2px; bottom:0; height:3px; border-radius:2px; background:var(--star-off); }
+.lbrow.mag::after{ content:""; position:absolute; left:2px; bottom:0; height:3px; border-radius:2px; background:var(--acc); width:calc((100% - 4px) * var(--mag) / 100); }
+.lbrow.one .lbname i{ font-style:normal; font-weight:500; color:var(--soft); }
+.lbrow.tap{ cursor:pointer; }
+.statcard{ min-height:92px; display:flex; flex-direction:column; }
+.statcard .v .of{ font-size:15px; color:var(--soft); font-weight:700; }
+.statcard .s{ font-size:11px; font-weight:600; color:var(--faint); margin-top:auto; padding-top:5px; line-height:1.25; }
+.sc-meter{ display:block; height:4px; border-radius:3px; background:var(--star-off); overflow:hidden; margin-bottom:4px; }
+.sc-meter > i{ display:block; height:100%; background:var(--mid); }
+.sc-meter.g > i{ background:var(--good); }
+.statnote{ font-size:12px; color:var(--faint); line-height:1.45; margin:7px 2px 0; }
+/* The only --surface block on the screen, so it lifts without introducing a new colour. */
+.hero-go{ background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:var(--shadow); }
+.hero-go .eyebrow{ display:flex; justify-content:space-between; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); }
+.hero-go .eyebrow span:last-child{ text-transform:none; letter-spacing:0; font-weight:600; color:var(--faint); }
+.hero-go .hname{ font-size:21px; font-weight:800; letter-spacing:-.02em; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hero-go .hmeta{ margin-top:3px; font-size:13px; }
+.hero-go .hmeta span{ color:var(--soft); font-weight:500; }
+.hero-go .why{ margin-top:10px; font-size:13.5px; line-height:1.4; }
+.hero-go .acts{ display:flex; gap:8px; margin-top:14px; }
+.hero-go .acts .btn{ flex:1; height:44px; border-radius:12px; font-size:15px; font-weight:700; background:var(--acc-strong); color:var(--on-acc); border:none; }
+.hero-go .acts .btn.ghost{ flex:0 0 132px; background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.gorow{ display:flex; align-items:center; gap:11px; min-height:48px; padding:5px 2px; cursor:pointer; }
+.gotile{ width:34px; height:34px; flex:0 0 34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.gostar{ font-size:14px; font-weight:800; color:var(--star); flex:none; }
+.foldbox{ display:none; }
+.foldbox[data-open]{ display:block; }
+.morebtn{ display:block; width:100%; text-align:left; min-height:44px; background:none; border:none; border-top:1px solid var(--border); color:var(--acc-strong); font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; padding:0 2px; }
+.rhythm .rhead{ font-size:13px; font-weight:700; color:var(--soft); }
+.rhythm .rhead b{ font-size:20px; font-weight:800; color:var(--text); }
+.rchart{ display:flex; align-items:flex-end; gap:3px; height:72px; margin-top:12px; }
+.rcol{ flex:1; display:flex; align-items:flex-end; justify-content:stretch; }
+.rbar{ position:relative; width:100%; background:var(--star-off); border-radius:4px 4px 0 0; overflow:hidden; }
+.rbar > i{ position:absolute; left:0; right:0; bottom:0; background:var(--acc); }
+.rax{ display:flex; gap:3px; margin-top:5px; }
+.rax span{ flex:1; text-align:center; font-size:10px; font-weight:700; color:var(--faint); }
+.rax span.on{ color:var(--acc-strong); }
+.usualcard .usual{ font-size:17px; font-weight:700; line-height:1.4; }
+.usualcard .chips{ margin:10px 0 0; }
+.handoff{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-height:52px; margin-top:22px; padding:0 14px; background:var(--surface2); border:1px solid var(--border); border-radius:14px; font-size:13px; font-weight:700; color:var(--acc-strong); cursor:pointer; }
+.handoff span{ font-weight:600; color:var(--soft); }
 .card .b{ padding:8px 11px 11px; }
 /* min-height pins every card to the same height so the star pills line up down the column */
 .card .n{ font-weight:700; font-size:15px; line-height:1.25; min-height:38px; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -290,12 +331,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .ro-badge.no{ background:rgba(224,85,107,.14); color:var(--bad); }
 .ro-bar{ flex:1; height:8px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
 .ro-bar > i{ display:block; height:100%; background:var(--good); }
-.rorate{ background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:13px 15px; }
-.rorate-top{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
-.rorate-pct{ font-size:26px; font-weight:800; color:var(--good); }
-.rorate-sub{ font-size:12px; color:var(--soft); font-weight:600; }
-.robar{ margin-top:10px; height:9px; background:var(--surface); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
-.robar > i{ display:block; height:100%; background:var(--good); }
 .drinkrows .dr .rowrap{ flex:1 1 100%; display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 12px; }
 .drinkrows .dr .qtywrap{ flex:1 1 100%; display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 12px; }
 .qbtn{ width:32px; height:32px; flex:0 0 auto; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:9px; font-size:18px; font-weight:700; line-height:1; cursor:pointer; font-family:inherit; }

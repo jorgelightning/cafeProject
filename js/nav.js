@@ -18,5 +18,7 @@ if(view==="stats")renderStats();
 if(view==="list"||view==="map")renderList();
 if(gReady)setTimeout(()=>{ mapResize(); if(view==="map")focusNearest(); },60);
 }
-function goBack(){ show(lastMain==="map"&&window.innerWidth<900?"map":"list"); }
+/* openDetail(id,"stats") sets lastMain="stats", so honour it — otherwise tapping a cafe
+   from Stats and pressing back silently drops you on List. */
+function goBack(){ if(lastMain==="stats"||lastMain==="compare"){ show(lastMain); return; } show(lastMain==="map"&&window.innerWidth<900?"map":"list"); }
 function toggleAdminBar(){ const b=$("adminbar"); if(!b)return; if(b.hasAttribute("data-open"))b.removeAttribute("data-open"); else b.setAttribute("data-open",""); }
