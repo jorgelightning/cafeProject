@@ -34,3 +34,148 @@ function pickDrinkWinner(side){ if(!cmpDrinkPair)return; const A=findDrink(cmpDr
 function cmpCardHTML(c,side){ const gp=(_imgFail[c.id]?null:gphotoFor(c)); let cls="cph", style="", inner=""; if(gp){ style=' style="background-image:url(\''+safeUrl(gp)+'\')"'; } else { cls+=" nophoto"; style=' style="background:'+nophotoBg(c.name)+'"'; inner=initials(c); } return '<button class="cmp-card" onclick="pickWinner('+side+')"><div class="'+cls+'"'+style+'>'+inner+'</div><div class="cb"><div class="cn">'+esc(c.name)+'</div><div class="cm">'+(c.area?esc(c.area):"")+'<span class="cmp-score">'+eloScore(c)+'<span style="opacity:.5;font-size:10px;margin-left:3px">'+(matchCount(c)?'('+matchCount(c)+' cmp)':'(new)')+'</span></span>'+'</div></div></button>'; }
 function renderCompare(){ const host=$("cmp-body"); if(!host)return; if(!isAdmin){ const _rc=cafes.filter(c=>matchCount(c)>0).sort((a,b)=>eloScoreNum(b)-eloScoreNum(a)).slice(0,15); const _rd=allDrinks().filter(D=>drinkMatches(D.drink)>0).sort((a,b)=>drinkScoreNum(b.drink)-drinkScoreNum(a.drink)).slice(0,10); let h='<div class="cmp-head" style="padding-top:4px"><div class="ct">⚖️ Rankings</div><div class="cs">Scores from head-to-head comparisons</div></div>'; if(_rc.length){ h+='<div class="statsec" style="margin:16px 0 8px">☕ Cafes</div>'; _rc.forEach((c,i)=>{ const m=i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1); h+='<div class="lbrow" style="cursor:pointer" onclick="openDetail(\''+c.id+'\',\'compare\')"><span class="lbrank">'+m+'</span><div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+(c.area?esc(c.area)+' &middot; ':'')+matchCount(c)+' comparison'+(matchCount(c)===1?'':'s')+'</div></div><span class="lbscore">'+eloScore(c)+'</span></div>'; }); } else { h+='<div class="empty"><div class="big">⚖️</div>No rankings yet.</div>'; } if(_rd.length){ h+='<div class="statsec" style="margin:16px 0 8px">🥤 Drinks</div>'; _rd.forEach((D,i)=>{ const m=i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1); h+='<div class="lbrow" style="cursor:pointer" onclick="openDetail(\''+D.cafe.id+'\',\'compare\')"><span class="lbrank">'+m+'</span><div class="lbmain"><div class="lbname">'+esc(D.drink.n)+'</div><div class="lbsub">'+esc(D.cafe.name)+(D.cafe.area?' &middot; '+esc(D.cafe.area):'')+'</div></div><span class="lbscore">'+drinkScore(D.drink)+'</span></div>'; }); } host.innerHTML='<div style="padding:16px">'+h+'</div>'; return; } const toggle='<div class="cmp-modes"><button class="cmp-mode'+(cmpMode==="cafe"?" on":"")+'" onclick="setCmpMode(\'cafe\')">☕ Cafes</button><button class="cmp-mode'+(cmpMode==="open"?" on":"")+'" onclick="setCmpMode(\'open\')">🌐 Any</button><button class="cmp-mode'+(cmpMode==="drink"?" on":"")+'" onclick="setCmpMode(\'drink\')">🥤 Drinks</button></div>'; if(cmpMode==="drink"){ if(!cmpDrinkPair){ host.innerHTML=toggle+'<div class="empty"><div class="big">🥤</div>Log the same drink at two or more cafes, then rank them head-to-head to see who does it best.</div>'; return; } const A=findDrink(cmpDrinkPair[0]), B=findDrink(cmpDrinkPair[1]); if(!A||!B){ newDrinkMatchup(); return; } host.innerHTML=toggle+'<div class="cmp-head"><div class="ct">Which drink is better?</div><div class="cs">Tap your pick — both are:</div><div class="cmp-trait">'+esc(A.drink.n)+'</div></div><div class="cmp-pair">'+drinkCardHTML(A,0)+'<div class="cmp-vs">VS</div>'+drinkCardHTML(B,1)+'</div><div class="cmp-actions"><button class="btn ghost" onclick="newMatchup()">↻ Skip — new pair</button></div>'; return; } if(cmpMode==="open"&&!cmpPair){ host.innerHTML=toggle+'<div class="empty"><div class="big">⚖️</div>Add at least two visited cafes to rank them.</div>'; return; } if(!cmpPair){ host.innerHTML=toggle+'<div class="empty"><div class="big">⚖️</div>Add at least two cafes that share a trait (drink type, tag, or area) to rank them head-to-head.</div>'; return; } const a=cafes.find(x=>x.id===cmpPair[0]), b=cafes.find(x=>x.id===cmpPair[1]); if(!a||!b){ newMatchup(); return; } host.innerHTML=toggle+'<div class="cmp-head"><div class="ct">Which cafe do you prefer?</div><div class="cs">Tap your pick — both share:</div><div class="cmp-trait">'+esc(cmpPair[2])+'</div></div><div class="cmp-pair">'+cmpCardHTML(a,0)+'<div class="cmp-vs">VS</div>'+cmpCardHTML(b,1)+'</div><div class="cmp-actions"><button class="btn ghost" onclick="newMatchup()">↻ Skip — new pair</button></div>'; }
 function pickWinner(side){ if(!cmpPair)return; const a=cafes.find(x=>x.id===cmpPair[0]), b=cafes.find(x=>x.id===cmpPair[1]); if(!a||!b){ newMatchup(); return; } const win=side===0?a:b, lose=side===0?b:a; const Rw=eloFor(win), Rl=eloFor(lose); const Ew=1/(1+Math.pow(10,(Rl-Rw)/400)); const _Kc=Math.max(16,32-matchCount(win)); const delta=Math.max(1,Math.round(_Kc*(1-Ew))); win.elo=Rw+delta; lose.elo=Rl-delta; win.matches=matchCount(win)+1; lose.matches=matchCount(lose)+1; save(); toast(win.name+" wins · score "+eloScore(win)); newMatchup(); }
+
+/* ---------- post-save ranking card ("chaser") ----------
+   Ranking as a destination went unused, so the question comes to the save instead. It ranks
+   CAFES, not drinks: a chronological replay of all 114 logs found a same-name drink opponent
+   existed only 26% of the time, 120 of the 140 possible drink pairs are hojicha-vs-hojicha,
+   and drink elo has only just stopped being erased on save. Cafes pair 100% of the time and
+   already spread 2.9-7.4. The drink just logged still does the work — it picks the opponent
+   and justifies the pairing, which is far more honest than sharedTraitLabel, whose label is
+   "Coffee" on 71% of eligible pairs. Everything here is additive; nothing above is modified. */
+let _chaser=null, _chaserSeen=[];
+/* Read-only: the drink is recovered from the SAVED cafe, never from the form or _formSnap, so
+   it works identically on all three save branches and cannot couple to the unsaved guard. */
+function chaserFresh(c){
+  const T=localToday();
+  const today=(c.drinks||[]).filter(function(d){ return (d.dates||[]).indexOf(T)>=0; });
+  if(today.length)return today[today.length-1];
+  let best=null,bd="";
+  (c.drinks||[]).forEach(function(d){ (d.dates||[]).filter(Boolean).forEach(function(dt){ if(dt>bd){ bd=dt; best=d; } }); });
+  if(best&&(Date.now()-new Date(bd).getTime())/86400000<=3)return best;
+  return null;
+}
+/* Ordered: matcha before coffee so "Matcha Einspaner" is matcha, tea before coffee so
+   "Dong Ding Oolong Latte" is tea. First match wins. */
+const CHASER_FAM=[
+  ["hojicha",/hojicha|houjicha|hojica|hoji/],
+  ["matcha",/matcha/],
+  ["milk tea",/milk tea|boba|bubble|pudding|brown sugar|taro|yakult|cheese foam/],
+  ["tea",/oolong|jasmine|osmanthus|genmai|earl ?grey|chai|yuzu|dong ?ding|tieguanyin|pu.?er|\btea\b|\bcha\b/],
+  ["coffee",/latte|espresso|americano|cappuccino|coffee|cortado|mocha|drip|pour.?over|cold ?brew|caphe|einspan|flat white|affogato/]
+];
+function chaserFam(n){ const s=(n||"").toLowerCase(); for(let i=0;i<CHASER_FAM.length;i++)if(CHASER_FAM[i][1].test(s))return CHASER_FAM[i][0]; return null; }
+function chaserLast(c){ const ds=[]; (c.drinks||[]).forEach(function(d){ (d.dates||[]).filter(Boolean).forEach(function(x){ ds.push(x); }); }); return ds.sort().slice(-1)[0]||""; }
+function chaserWhen(iso){ if(!iso)return "no dates"; const dd=Math.floor((Date.now()-new Date(iso).getTime())/86400000); if(dd<=0)return "today"; if(dd===1)return "yesterday"; if(dd<7)return dd+"d ago"; if(dd<31)return Math.floor(dd/7)+"w ago"; if(dd<=120)return Math.floor(dd/30)+"mo ago"; return fmtDate(iso).replace(/ \d+,/,""); }
+function chaserArm(id){
+  _chaser=null;
+  if(!isAdmin)return;
+  const c=cafes.find(function(x){ return x.id===id; });
+  if(!c||c.wish)return;
+  const base=cafes.filter(function(x){ return !x.wish&&x.id!==c.id; });
+  if(!base.length)return;
+  const fresh=chaserFresh(c), fam=fresh?chaserFam(fresh.n):null;
+  let tier="C", cand=base;
+  if(fresh){
+    const twin=base.filter(function(x){ return (x.drinks||[]).some(function(od){ return normDrink(od.n)===normDrink(fresh.n); }); });
+    if(twin.length){ tier="A"; cand=twin; }
+    else if(fam){ const f=base.filter(function(x){ return (x.drinks||[]).some(function(od){ return chaserFam(od.n)===fam; }); }); if(f.length){ tier="B"; cand=f; } }
+  }
+  /* Coverage is the binding constraint — 17 cafes have never been compared and 16 of those
+     were visited in the last 51 days — so fewest-matches dominates the cost. */
+  const scored=cand.map(function(x){
+    let cost=0.35*matchCount(x);
+    const lv=chaserLast(x);
+    if(!lv)cost+=0.60; else if((Date.now()-new Date(lv).getTime())/86400000>180)cost+=1.20;
+    if(x.area&&c.area&&x.area.trim()===c.area.trim())cost-=0.40;
+    if(_chaserSeen.indexOf(pairKey(c.id,x.id))>=0)cost+=2.00;
+    return {x:x,cost:cost+Math.random()*0.30};
+  }).sort(function(a,b){ return a.cost-b.cost; });
+  const shortlist=scored.slice(0,5);
+  const pick=shortlist[Math.floor(Math.random()*shortlist.length)].x;
+  let theirDrink=null;
+  if(tier==="A"||tier==="B"){
+    const m=(pick.drinks||[]).filter(function(od){ return tier==="A"?normDrink(od.n)===normDrink(fresh.n):chaserFam(od.n)===fam; });
+    if(m.length)theirDrink=m[0].n;
+  }
+  _chaser={cafe:c.id,opp:pick.id,tier:tier,fam:fam,myDrink:fresh?fresh.n:null,theirDrink:theirDrink,flip:Math.random()<0.5,ts:Date.now(),res:null};
+}
+function chaserBoard(){ return cafes.filter(function(c){ return !c.wish&&matchCount(c)>0; }).sort(function(a,b){ return eloScoreNum(b)-eloScoreNum(a); }); }
+function chaserRank(c,board){ let n=1; const s=eloScoreNum(c); board.forEach(function(x){ if(x.id!==c.id&&eloScoreNum(x)>s)n++; }); return n; }
+/* Both cafes are re-resolved by id from the live array, so the Firebase echo that repaints a
+   few hundred ms after every save can never orphan the vote. */
+function chaserApply(winId,loseId,draw){
+  const a=cafes.find(function(x){ return x.id===winId; }), b=cafes.find(function(x){ return x.id===loseId; });
+  if(!a||!b){ _chaser=null; return null; }
+  const pre=chaserBoard();
+  const preA=matchCount(a)?chaserRank(a,pre):null, preB=matchCount(b)?chaserRank(b,pre):null;
+  const Ra=eloFor(a), Rb=eloFor(b);
+  const Ea=1/(1+Math.pow(10,(Rb-Ra)/400));
+  const K=Math.max(16,32-matchCount(a));
+  const delta=draw?Math.round(K*(0.5-Ea)):Math.max(1,Math.round(K*(1-Ea)));
+  a.elo=Ra+delta; b.elo=Rb-delta;
+  a.matches=matchCount(a)+1; b.matches=matchCount(b)+1;
+  save();
+  const post=chaserBoard();
+  return {a:a,b:b,draw:!!draw,preA:preA,preB:preB,postA:chaserRank(a,post),postB:chaserRank(b,post),postN:post.length};
+}
+function chaserSeen(l,r){ _chaserSeen.push(pairKey(l,r)); while(_chaserSeen.length>40)_chaserSeen.shift(); }
+function chaserPick(side){
+  if(!_chaser||_chaser.res)return;
+  const L=_chaser.flip?_chaser.opp:_chaser.cafe, R=_chaser.flip?_chaser.cafe:_chaser.opp;
+  chaserSeen(L,R);
+  _chaser.res=chaserApply(side===0?L:R,side===0?R:L,false);
+  chaserRepaint();
+}
+function chaserEven(){
+  if(!_chaser||_chaser.res)return;
+  const L=_chaser.flip?_chaser.opp:_chaser.cafe, R=_chaser.flip?_chaser.cafe:_chaser.opp;
+  chaserSeen(L,R);
+  _chaser.res=chaserApply(L,R,true);
+  chaserRepaint();
+}
+function chaserDismiss(){ _chaser=null; chaserRepaint(); }
+function chaserRepaint(){ const c=cafes.find(function(x){ return x.id===curId; }); if(c)renderChaser(c); try{ renderList(); }catch(e){} }
+function chaserOpt(c,drink,side){
+  const gp=(typeof gphotoFor==="function")?gphotoFor(c):null;
+  const th=(gp&&!_imgFail[c.id])
+    ? '<span class="ch-th" style="background-image:url(\'' + safeUrl(gp) + '\')"></span>'
+    : '<span class="ch-th" style="background:' + nophotoBg(c.name) + '">' + esc(initials(c)) + '</span>';
+  const sub=[drink?esc(drink):"",chaserWhen(chaserLast(c))].filter(Boolean).join(" · ");
+  return '<button class="ch-opt" onclick="chaserPick(' + side + ')">' + th
+    + '<span class="ch-m"><span class="ch-n">' + esc(c.name) + '</span><span class="ch-s">' + sub + '</span></span></button>';
+}
+/* Rendered from inside openDetail rather than injected, so the cloud echo repaints the card
+   instead of wiping it. The id + isAdmin + 3-minute guard covers every other openDetail
+   caller: map pins, list cards, stats rows, the viewer leaderboard and the ?cafe= deep link. */
+function renderChaser(c){
+  const host=$("d-chaser"); if(!host)return;
+  if(!_chaser||_chaser.cafe!==c.id||!isAdmin||Date.now()-_chaser.ts>180000){ host.innerHTML=""; return; }
+  const r=_chaser.res;
+  if(r){
+    const line=function(x,pre,post,n){
+      const nm=esc(x.name);
+      if(pre===null)return nm+' <b class="up">enters at #'+post+' of '+n+'</b>';
+      if(post<pre)return nm+' <b class="up">#'+pre+' → #'+post+'</b>';
+      if(post>pre)return nm+' <b class="dn">#'+pre+' → #'+post+'</b>';
+      return nm+' <b>stays #'+post+'</b>';
+    };
+    host.innerHTML='<div class="chaser res"><div class="ch-rl">'+(r.draw?"🤝 Called it even":"👍 "+esc(r.a.name))+'</div>'
+      +'<div class="ch-mv"><span>'+line(r.a,r.preA,r.postA,r.postN)+'</span><span>'+line(r.b,r.preB,r.postB,r.postN)+'</span></div>'
+      +'<button class="ch-lnk" onclick="openRank()">See the board ›</button></div>';
+    return;
+  }
+  const opp=cafes.find(function(x){ return x.id===_chaser.opp; });
+  if(!opp){ host.innerHTML=""; return; }
+  const eyebrow=_chaser.tier==="A"?("Both do "+esc(_chaser.myDrink)):(_chaser.tier==="B"?("Both do "+esc(_chaser.fam)):"");
+  const lv=chaserLast(opp);
+  const stale=!!lv&&(Date.now()-new Date(lv).getTime())/86400000>120;
+  const L=_chaser.flip?opp:c, R=_chaser.flip?c:opp;
+  const LD=_chaser.flip?_chaser.theirDrink:_chaser.myDrink, RD=_chaser.flip?_chaser.myDrink:_chaser.theirDrink;
+  host.innerHTML='<div class="chaser"><div class="ch-hd"><span class="ch-qwrap">'
+    +(eyebrow?'<span class="ch-why">'+eyebrow+'</span>':"")
+    +'<span class="ch-q">Which would you go back to?</span></span>'
+    +'<button class="ch-x" onclick="chaserDismiss()" aria-label="Not now">✕</button></div>'
+    +'<div class="ch-pair">'+chaserOpt(L,LD,0)+chaserOpt(R,RD,1)+'</div>'
+    +'<button class="ch-even" onclick="chaserEven()">'+(stale?"Too long ago to say":"Too close to call")+'</button></div>';
+}
