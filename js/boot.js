@@ -27,7 +27,7 @@ function migratePhotoCache(){
 /* auto → light → dark. "auto" removes the attribute so the media query decides;
    the other two set [data-theme], which both token blocks are written to honour. */
 const THEME_KEY="cafemap.theme";
-function applyTheme(t){ const r=document.documentElement; if(t==="light"||t==="dark")r.dataset.theme=t; else delete r.dataset.theme; ["mp-theme-lab","n-theme-lab"].forEach(id=>{ const el=$(id); if(el)el.textContent="Theme: "+(t||"auto"); }); /* the two media-scoped meta tags follow the SYSTEM preference, so a manual choice needs an explicit override tag to keep the browser chrome in step */ let m=document.getElementById("tc-override"); if(t){ if(!m){ m=document.createElement("meta"); m.id="tc-override"; m.name="theme-color"; document.head.appendChild(m); } m.content=(t==="dark")?"#15110e":"#f6f5f3"; } else if(m)m.remove(); }
+function applyTheme(t){ const r=document.documentElement; if(t==="light"||t==="dark")r.dataset.theme=t; else delete r.dataset.theme; const lab=$("n-theme-lab"); if(lab)lab.textContent="Theme: "+(t||"auto"); /* the two media-scoped meta tags follow the SYSTEM preference, so a manual choice needs an explicit override tag to keep the browser chrome in step */ let m=document.getElementById("tc-override"); if(t){ if(!m){ m=document.createElement("meta"); m.id="tc-override"; m.name="theme-color"; document.head.appendChild(m); } m.content=(t==="dark")?"#15110e":"#f6f5f3"; } else if(m)m.remove(); }
 function cycleTheme(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){} const next=t==="light"?"dark":(t==="dark"?"":"light"); try{ next?localStorage.setItem(THEME_KEY,next):localStorage.removeItem(THEME_KEY); }catch(e){} applyTheme(next); toast("Theme: "+(next||"auto")); }
 (function(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){} applyTheme(t); })();
 function reloadLatest(){ location.replace(location.pathname+"?v="+Date.now()); }
@@ -44,7 +44,6 @@ setInterval(checkForUpdate,45000);
 let _exitArmed=false,_exitT=null;
 function _rearmBack(){ try{ history.pushState({cafeapp:1},""); }catch(e){} }
 _rearmBack();
-window.addEventListener("popstate",()=>{ const mp=$("more-popup"); if(mp&&mp.classList.contains("show")){ closeMore(); _rearmBack(); return; } const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
-document.addEventListener("click",e=>{ if(!e.target.closest("#t-more")&&!e.target.closest("#more-popup"))closeMore(); });
+window.addEventListener("popstate",()=>{ const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden)checkForUpdate(); });
 window.addEventListener("beforeunload",e=>{ if(typeof formDirty==="function"&&formDirty()){ e.preventDefault(); e.returnValue=""; } });
