@@ -2652,5 +2652,33 @@
     ],
     "updated": "2026-08-15T07:29:07.654Z",
     "wish": false
+  },
+  {
+    "area": "Cupertino",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-15"
+        ],
+        "ice": "Less ice",
+        "n": "Signature Black Milk Tea",
+        "p": "4",
+        "reorder": "neutral",
+        "size": "20 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "msvag8ahm8ih",
+    "lat": 37.33693,
+    "lng": -122.04031,
+    "name": "Shang Yu Lin-Cupertino上宇林",
+    "rating": 3,
+    "review": "First impression it was okay, the way the milk and the black tea combination, the milk over powers but the tea caffeine hits hard.",
+    "updated": "2026-08-16T04:12:15.325Z",
+    "wish": false
   }
 ]
