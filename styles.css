@@ -49,7 +49,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .map-msg .big{ font-size:40px; }
 .map-msg.show{ display:flex; }
 .map-msg code{ background:var(--surface2); padding:2px 6px; border-radius:6px; font-size:12px; }
-.mapsearch{ position:absolute; z-index:6; top:calc(12px + env(safe-area-inset-top)); left:12px; right:12px; display:flex; align-items:center; gap:8px; }
+/* Width must hug its contents — a full-width strip here would swallow map drags. */
+.mapsearch{ position:absolute; z-index:6; top:calc(12px + env(safe-area-inset-top)); left:12px; max-width:calc(100% - 24px); display:flex; align-items:center; gap:8px; }
 .mapsearch .lockbtn{ margin-left:auto; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); }
 /* Buttons that only exist because the mobile title bars are hidden */
 .mobonly{ display:none; }
@@ -59,7 +60,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
   .mobonly{ display:flex; }
   .search{ padding:0 6px 0 14px; }
   .search input{ padding:14px 0; }
-  .grid{ padding-bottom:34px; }
+  /* .side-head used to carry the only top inset in the sidebar; with it hidden the
+     panes would start under the notch, so the inset moves to the sidebar itself. */
+  .sidebar{ padding-top:env(safe-area-inset-top); }
 }
 .search .iconbtn{ width:40px; height:40px; flex:0 0 40px; font-size:15px; }
 .mapsearch select{ font-family:inherit; max-width:62vw; appearance:none; -webkit-appearance:none; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--border); border-radius:12px; padding:10px 34px 10px 14px; font-size:14px; font-weight:600; color:var(--text); box-shadow:var(--shadow); cursor:pointer; outline:none; background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%); background-position:calc(100% - 17px) calc(50% - 2px),calc(100% - 12px) calc(50% - 2px); background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
@@ -79,6 +82,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .tab.primary.on::before{ display:none; }
 #app[data-mode="admin"] .viewer-only{ display:none !important; }
 .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 16px 24px; }
+/* Clears the raised ＋ tab, which overhangs the bar by 16px. Must sit after the shorthand
+   above or it loses to it regardless of the media query. */
+@media (max-width:899px){ .grid{ padding-bottom:44px; } }
 .card{ border:1px solid var(--border); border-radius:16px; overflow:hidden; background:var(--surface); cursor:pointer; }
 .card .ph{ height:104px; background-size:cover; background-position:center; display:flex; align-items:flex-start; justify-content:flex-end; padding:7px; font-size:18px; }
 .card .nophoto{ background:linear-gradient(140deg,#caa472,#7b4a26); color:#fff; flex-direction:column; align-items:center; justify-content:center; gap:1px; font-size:21px; font-weight:800; letter-spacing:1px; line-height:1.15; text-shadow:0 1px 3px rgba(0,0,0,.3); }
@@ -143,7 +149,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .chips{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
 .chip{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:4px 11px; font-size:12px; }
 /* The mask fades the right edge so the hidden horizontal scroll is discoverable. */
-.chiprow{ display:flex; gap:8px; overflow-x:auto; padding:2px 16px 8px; scrollbar-width:none; -webkit-overflow-scrolling:touch; mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent); -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent); }
+.chiprow{ display:flex; gap:8px; overflow-x:auto; padding:2px 32px 8px 16px; scrollbar-width:none; -webkit-overflow-scrolling:touch; mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent); -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent); }
 .chiprow::-webkit-scrollbar{ display:none; }
 .chiprow.tagrow{ flex-wrap:wrap; overflow:visible; mask-image:none; -webkit-mask-image:none; }
 .chiprow .chip{ flex:0 0 auto; cursor:pointer; white-space:nowrap; user-select:none; min-height:44px; display:inline-flex; align-items:center; padding:0 14px; border-radius:22px; font-size:13px; font-weight:600; }

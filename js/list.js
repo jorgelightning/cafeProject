@@ -21,18 +21,22 @@ function chipMatch(c,chip){ if(chip.slice(0,4)==="tag:")return (c.tags||[]).incl
 let showTagRow=false;
 function toggleFavFilter(){ favOnly=!favOnly; if(favOnly)wishOnly=false; renderList(); }
 function toggleWishFilter(){ wishOnly=!wishOnly; if(wishOnly)favOnly=false; renderList(); }
-function toggleTagRow(){ showTagRow=!showTagRow; renderList(); }
+/* Closing the row also drops an active tag filter, otherwise the chip would be inert
+   (the row has to stay open to show the lit tag) and the list would stay filtered by
+   something no longer on screen. */
+function toggleTagRow(){ showTagRow=!showTagRow; if(!showTagRow&&activeChip.slice(0,4)==="tag:")activeChip=""; renderList(); }
 function renderFilterChips(){ const host=$("filterchips"); if(!host)return; const nFav=cafes.filter(c=>c.fav).length, nWish=cafes.filter(c=>c.wish).length; const usedTags=ALL_TAGS.filter(t=>t!=="matcha"&&cafes.some(c=>(c.tags||[]).includes(t)));
  let h='<span class="chip'+((activeChip===""&&!favOnly&&!wishOnly)?" on":"")+'" onclick="clearFilters()">All</span>';
- if(nFav)h+='<span class="chip'+(favOnly?" on":"")+'" onclick="toggleFavFilter()">❤️ '+nFav+'</span>';
- if(nWish)h+='<span class="chip'+(wishOnly?" on":"")+'" onclick="toggleWishFilter()">🔖 '+nWish+'</span>';
+ /* keep a lit chip on screen even if the set empties, or the list looks broken with
+    nothing explaining why it is filtered */
+ if(nFav||favOnly)h+='<span class="chip'+(favOnly?" on":"")+'" onclick="toggleFavFilter()">❤️ '+nFav+'</span>';
+ if(nWish||wishOnly)h+='<span class="chip'+(wishOnly?" on":"")+'" onclick="toggleWishFilter()">🔖 '+nWish+'</span>';
  CHIP_DEFS.forEach(d=>{ h+='<span class="chip'+(activeChip===d[0]?" on":"")+'" onclick="setChip(\''+d[0]+'\')">'+d[1]+'</span>'; });
- const tagActive=activeChip.slice(0,4)==="tag:";
- if(usedTags.length)h+='<span class="chip'+((showTagRow||tagActive)?" on":"")+'" onclick="toggleTagRow()"># Tags</span>';
+ if(usedTags.length)h+='<span class="chip'+(showTagRow?" on":"")+'" onclick="toggleTagRow()"># Tags</span>';
  host.innerHTML=h;
- const trow=$("tagchips"); if(trow){ if(showTagRow||tagActive){ trow.style.display=""; trow.innerHTML=usedTags.map(t=>'<span class="chip'+(activeChip==="tag:"+t?" on":"")+'" onclick="setChip(\'tag:'+esc(t)+'\')">'+esc(t)+'</span>').join(""); } else { trow.style.display="none"; trow.innerHTML=""; } } }
-function clearFilters(){ activeChip=""; favOnly=false; wishOnly=false; renderList(); }
-function setChip(v){ activeChip=(activeChip===v)?"":v; renderList(); }
+ const trow=$("tagchips"); if(trow){ if(showTagRow){ trow.style.display=""; trow.innerHTML=usedTags.map(t=>'<span class="chip'+(activeChip==="tag:"+t?" on":"")+'" onclick="setChip(\'tag:'+esc(t)+'\')">'+esc(t)+'</span>').join(""); } else { trow.style.display="none"; trow.innerHTML=""; } } }
+function clearFilters(){ activeChip=""; favOnly=false; wishOnly=false; showTagRow=false; renderList(); }
+function setChip(v){ activeChip=(activeChip===v)?"":v; if(activeChip.slice(0,4)==="tag:")showTagRow=true; renderList(); }
 function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderFilterChips(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ if(sortMode==="ranked"){ const ea=eloScoreNum(a),eb=eloScoreNum(b); if(ea!==eb)return eb-ea; const ma=matchCount(a),mb=matchCount(b); if(ma!==mb)return mb-ma; if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); return (a.name||"").localeCompare(b.name||""); } if(sortMode==="rating"){ if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); const sa=eloScoreNum(a),sb=eloScoreNum(b); if(sa!==sb)return sb-sa; return (a.name||"").localeCompare(b.name||""); } if(sortMode==="near"){ const da=(userLoc&&a.lat!=null)?distKm(userLoc.lat,userLoc.lng,a.lat,a.lng):Infinity; const db=(userLoc&&b.lat!=null)?distKm(userLoc.lat,userLoc.lng,b.lat,b.lng):Infinity; if(da!==db)return da-db; if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); return (a.name||"").localeCompare(b.name||""); } const ua=a.updated?(Date.parse(a.updated)||0):0, ub=b.updated?(Date.parse(b.updated)||0):0; if(ua!==ub)return ub-ua; if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); return (a.name||"").localeCompare(b.name||""); }); if($("count"))$("count").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s"); if(!items.length){ grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">'+(wishOnly?"🔖":"☕")+'</div>'+(wishOnly?"No wishlist cafes yet — tap the bookmark on a cafe to save it for later.":(favOnly?"No favorites yet — tap the heart on a cafe.":(q?"No matches.":"No cafes yet. Tap + to add your first visit!")))+'</div>'; return; } /* Card meta reads distance · area · time — shortest and most perishable token first, so
    only the time clips. The rating now lives in the tile pill, and the liked tally is gone:
    its denominator was degenerate (all-yes or all-no in every non-zero case). */
