@@ -44,6 +44,6 @@ setInterval(checkForUpdate,45000);
 let _exitArmed=false,_exitT=null;
 function _rearmBack(){ try{ history.pushState({cafeapp:1},""); }catch(e){} }
 _rearmBack();
-window.addEventListener("popstate",()=>{ const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
+window.addEventListener("popstate",()=>{ if(typeof chaserOpen==="function"&&chaserOpen()){ chaserDismiss(); _rearmBack(); return; } const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden)checkForUpdate(); });
 window.addEventListener("beforeunload",e=>{ if(typeof formDirty==="function"&&formDirty()){ e.preventDefault(); e.returnValue=""; } });
