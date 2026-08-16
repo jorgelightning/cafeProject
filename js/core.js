@@ -20,7 +20,7 @@ const _imgFail={}; let _photoRetried={};
 function initials(c){ const n=((c&&c.name)||"").trim(); if(!n)return "?"; const w=n.split(/\s+/).filter(Boolean); let s=(w[0]&&w[0][0])||""; if(w.length>1&&w[1][0])s+=w[1][0]; return s.toUpperCase(); }
 function cafeColor(name){ const P=["#e07b54","#d4a843","#7cb87c","#5b9bd5","#9b6fc4","#e06b8a","#4db8aa","#e08040"]; let h=0; for(let i=0;i<(name||"").length;i++)h=(h*31+name.charCodeAt(i))>>>0; return P[h%P.length]; }
 function nophotoBg(name){ return 'linear-gradient(140deg,rgba(255,255,255,.18),rgba(0,0,0,.26)) '+cafeColor(name); }
-function nophotoHTML(c,extra){ return '<span class="em">'+esc((c&&c.emoji)||"☕")+'</span><span>'+initials(c)+'</span>'+(extra||""); }
+function nophotoHTML(c){ return '<span class="em">'+esc((c&&c.emoji)||"☕")+'</span><span>'+initials(c)+'</span>'; }
 /* Local calendar date. Plain toISOString() would hand back yesterday (or tomorrow) when
    logging from Hawaii or Taipei, so shift by the timezone offset before slicing. */
 function localToday(){ return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10); }
