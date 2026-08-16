@@ -160,9 +160,10 @@ function renderChaser(c){
       if(post>pre)return nm+' <b class="dn">#'+pre+' → #'+post+'</b>';
       return nm+' <b>stays #'+post+'</b>';
     };
-    host.innerHTML='<div class="chaser res"><div class="ch-rl">'+(r.draw?"🤝 Called it even":"👍 "+esc(r.a.name))+'</div>'
+    host.innerHTML=chaserShell('<div class="ch-rl">'+(r.draw?"🤝 Called it even":"👍 "+esc(r.a.name))+'</div>'
       +'<div class="ch-mv"><span>'+line(r.a,r.preA,r.postA,r.postN)+'</span><span>'+line(r.b,r.preB,r.postB,r.postN)+'</span></div>'
-      +'<button class="ch-lnk" onclick="openRank()">See the board ›</button></div>';
+      +'<div class="ch-done"><button class="ch-lnk" onclick="openRank()">See the board ›</button>'
+      +'<button class="ch-close" onclick="chaserDismiss()">Done</button></div>');
     return;
   }
   const opp=cafes.find(function(x){ return x.id===_chaser.opp; });
@@ -172,10 +173,13 @@ function renderChaser(c){
   const stale=!!lv&&(Date.now()-new Date(lv).getTime())/86400000>120;
   const L=_chaser.flip?opp:c, R=_chaser.flip?c:opp;
   const LD=_chaser.flip?_chaser.theirDrink:_chaser.myDrink, RD=_chaser.flip?_chaser.myDrink:_chaser.theirDrink;
-  host.innerHTML='<div class="chaser"><div class="ch-hd"><span class="ch-qwrap">'
+  host.innerHTML=chaserShell('<div class="ch-hd"><span class="ch-qwrap">'
     +(eyebrow?'<span class="ch-why">'+eyebrow+'</span>':"")
     +'<span class="ch-q">Which would you go back to?</span></span>'
     +'<button class="ch-x" onclick="chaserDismiss()" aria-label="Not now">✕</button></div>'
     +'<div class="ch-pair">'+chaserOpt(L,LD,0)+chaserOpt(R,RD,1)+'</div>'
-    +'<button class="ch-even" onclick="chaserEven()">'+(stale?"Too long ago to say":"Too close to call")+'</button></div>';
+    +'<button class="ch-even" onclick="chaserEven()">'+(stale?"Too long ago to say":"Too close to call")+'</button>');
 }
+/* Bottom sheet. The scrim dismisses, matching every other sheet the app has had. */
+function chaserShell(inner){ return '<div class="ch-scrim" onclick="chaserDismiss()"></div><div class="ch-sheet" role="dialog" aria-modal="true" aria-label="Quick ranking"><div class="ch-grab"></div>'+inner+'</div>'; }
+function chaserOpen(){ const h=$("d-chaser"); return !!(h&&h.innerHTML); }

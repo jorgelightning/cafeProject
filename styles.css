@@ -108,9 +108,19 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lbname{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbsub{ font-size:12px; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbscore{ font-weight:800; color:var(--good); font-size:14px; flex:none; }
-/* ---- post-save ranking card ---- */
+/* ---- post-save ranking sheet ---- */
+#d-chaser{ position:fixed; inset:0; z-index:150; display:flex; align-items:flex-end; }
 #d-chaser:empty{ display:none; }
-.chaser{ margin:14px 0 2px; padding:12px 13px 13px; background:var(--surface2); border:1px solid var(--border); border-radius:16px; }
+.ch-scrim{ position:absolute; inset:0; background:rgba(0,0,0,.45); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+.ch-sheet{ position:relative; width:100%; max-height:86vh; overflow-y:auto; background:var(--surface); border-radius:22px 22px 0 0; padding:12px 18px calc(20px + env(safe-area-inset-bottom)); animation:chUp .22s ease; }
+@keyframes chUp{ from{ transform:translateY(28px); opacity:.6; } to{ transform:translateY(0); opacity:1; } }
+.ch-grab{ width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 14px; }
+/* Centre it as a dialog once there is room, rather than a full-width strip on desktop */
+@media (min-width:900px){
+  #d-chaser{ align-items:center; justify-content:center; }
+  .ch-sheet{ max-width:420px; border-radius:20px; padding:12px 20px 20px; animation:none; }
+  .ch-grab{ display:none; }
+}
 .ch-hd{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
 .ch-qwrap{ min-width:0; }
 .ch-why{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); }
@@ -126,13 +136,14 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .ch-n{ display:block; font-size:15px; font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ch-s{ display:block; font-size:11.5px; font-weight:500; color:var(--soft); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ch-even{ width:100%; height:42px; margin-top:8px; background:transparent; border:1px dashed var(--border); border-radius:12px; font-size:12.5px; font-weight:600; color:var(--soft); font-family:inherit; cursor:pointer; }
-.chaser.res{ padding:13px; }
-.ch-rl{ font-size:14px; font-weight:800; }
-.ch-mv{ display:flex; flex-direction:column; gap:3px; margin-top:6px; font-size:12.5px; color:var(--soft); }
+.ch-rl{ font-size:17px; font-weight:800; }
+.ch-mv{ display:flex; flex-direction:column; gap:4px; margin-top:8px; font-size:13px; color:var(--soft); }
 .ch-mv b{ font-weight:700; }
 .ch-mv .up{ color:var(--good); }
 .ch-mv .dn{ color:var(--bad); }
-.ch-lnk{ margin-top:9px; background:none; border:none; padding:0; font-family:inherit; font-size:12.5px; font-weight:700; color:var(--acc-strong); cursor:pointer; }
+.ch-done{ display:flex; align-items:center; gap:10px; margin-top:16px; }
+.ch-lnk{ flex:1; text-align:left; background:none; border:none; padding:0; font-family:inherit; font-size:13px; font-weight:700; color:var(--acc-strong); cursor:pointer; }
+.ch-close{ flex:0 0 108px; height:44px; border-radius:12px; border:none; background:var(--acc-strong); color:var(--on-acc); font-family:inherit; font-size:15px; font-weight:700; cursor:pointer; }
 /* ---- stats components ---- */
 /* Magnitude rows: the bar is a 3px rule along the row's bottom edge, so a leaderboard row
    carries rank, full name, area and value AND its proportion without a separate bar column
