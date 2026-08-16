@@ -49,23 +49,35 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .map-msg .big{ font-size:40px; }
 .map-msg.show{ display:flex; }
 .map-msg code{ background:var(--surface2); padding:2px 6px; border-radius:6px; font-size:12px; }
-.mapsearch{ position:absolute; z-index:6; top:12px; left:12px; max-width:calc(100% - 24px); }
+.mapsearch{ position:absolute; z-index:6; top:calc(12px + env(safe-area-inset-top)); left:12px; right:12px; display:flex; align-items:center; gap:8px; }
+.mapsearch .lockbtn{ margin-left:auto; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); }
+/* Buttons that only exist because the mobile title bars are hidden */
+.mobonly{ display:none; }
+@media (max-width:899px){
+  .side-head{ display:none; }
+  .mobile-topbar{ display:none; }
+  .mobonly{ display:flex; }
+  .search{ padding:0 6px 0 14px; }
+  .search input{ padding:14px 0; }
+  .grid{ padding-bottom:34px; }
+}
+.search .iconbtn{ width:40px; height:40px; flex:0 0 40px; font-size:15px; }
 .mapsearch select{ font-family:inherit; max-width:62vw; appearance:none; -webkit-appearance:none; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--border); border-radius:12px; padding:10px 34px 10px 14px; font-size:14px; font-weight:600; color:var(--text); box-shadow:var(--shadow); cursor:pointer; outline:none; background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%); background-position:calc(100% - 17px) calc(50% - 2px),calc(100% - 12px) calc(50% - 2px); background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
 .mapsearch select:focus{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); }
 @media (min-width:900px){ .mapsearch{ left:412px; } .mapsearch select{ max-width:300px; } }
 @media (min-width:1400px){ .mapsearch{ left:452px; } }
-.fab{ position:absolute; right:18px; bottom:18px; width:58px; height:58px; border-radius:19px; background:var(--acc); color:#fff; border:none; font-size:30px; line-height:1; box-shadow:0 10px 22px rgba(213,128,59,.5); cursor:pointer; z-index:20; display:flex; align-items:center; justify-content:center; }
 .tabbar{ position:absolute; left:0; right:0; bottom:0; height:calc(64px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); display:flex; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); box-shadow:0 -3px 14px rgba(0,0,0,.07); z-index:50; }
 .tab{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:11px; font-weight:600; color:var(--faint); background:none; border:none; cursor:pointer; }
 .tab.on::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%); width:26px; height:3px; border-radius:0 0 3px 3px; background:var(--acc); }
 .tab .ti{ font-size:22px; transition:transform .12s ease; }
 .tab.on .ti{ transform:translateY(-1px) scale(1.08); }
 .tab.on{ color:var(--acc); }
-.more-popup{ position:absolute; bottom:calc(64px + env(safe-area-inset-bottom) + 8px); right:4px; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border:1px solid var(--border); border-radius:16px; padding:6px; display:none; flex-direction:column; min-width:150px; box-shadow:var(--shadow); z-index:60; }
-.more-popup.show{ display:flex; }
-.more-popup button{ display:flex; align-items:center; gap:10px; padding:11px 14px; border:none; background:none; color:var(--text); font-size:14px; font-weight:600; border-radius:10px; cursor:pointer; width:100%; text-align:left; font-family:inherit; }
-.more-popup button:active{ background:var(--surface2); }
-.more-popup button.on{ color:var(--acc); }
+/* The primary slot overhangs the bar; its label sits below the raised circle, so the
+   five slots keep identical geometry whether admin (＋ Log) or viewer (🔍 Find) shows. */
+.tab.primary{ gap:2px; }
+.tab.primary .plus{ width:56px; height:56px; border-radius:18px; background:var(--acc); color:#fff; font-size:30px; line-height:1; display:flex; align-items:center; justify-content:center; margin-top:-16px; box-shadow:0 6px 18px rgba(213,128,59,.45); }
+.tab.primary.on::before{ display:none; }
+#app[data-mode="admin"] .viewer-only{ display:none !important; }
 .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 16px 24px; }
 .card{ border:1px solid var(--border); border-radius:16px; overflow:hidden; background:var(--surface); cursor:pointer; }
 .card .ph{ height:104px; background-size:cover; background-position:center; display:flex; align-items:flex-start; justify-content:flex-end; padding:7px; font-size:18px; }
@@ -130,10 +142,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .stars b{ color:var(--star); font-weight:inherit; }
 .chips{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
 .chip{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:4px 11px; font-size:12px; }
-.chiprow{ display:flex; gap:6px; overflow-x:auto; padding:2px 16px 8px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+/* The mask fades the right edge so the hidden horizontal scroll is discoverable. */
+.chiprow{ display:flex; gap:8px; overflow-x:auto; padding:2px 16px 8px; scrollbar-width:none; -webkit-overflow-scrolling:touch; mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent); -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent); }
 .chiprow::-webkit-scrollbar{ display:none; }
-.chiprow .chip{ flex:0 0 auto; cursor:pointer; white-space:nowrap; user-select:none; }
-.chiprow .chip.on{ background:var(--acc); color:#fff; border-color:transparent; }
+.chiprow.tagrow{ flex-wrap:wrap; overflow:visible; mask-image:none; -webkit-mask-image:none; }
+.chiprow .chip{ flex:0 0 auto; cursor:pointer; white-space:nowrap; user-select:none; min-height:44px; display:inline-flex; align-items:center; padding:0 14px; border-radius:22px; font-size:13px; font-weight:600; }
+.chiprow .chip.on{ background:var(--acc-strong); color:var(--on-acc); border-color:transparent; }
 .maplegend{ position:absolute; right:12px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:6; display:flex; gap:9px; align-items:center; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--border); border-radius:20px; padding:6px 12px; font-size:11px; color:var(--soft); white-space:nowrap; }
 .maplegend i{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; }
 .maplegend i.wl{ width:5px; height:5px; background:transparent; border:2px solid #5b9bd5; }
@@ -160,6 +174,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .form{ padding:14px 16px 0; }
 /* Sticky commit rail. .sidebar is already inset by the tab-bar height, so bottom:0
    lands exactly on top of it and needs no safe-area padding of its own. */
+/* Same sticky-commit pattern as the form's save rail. */
+.dstickybar{ position:sticky; bottom:0; margin-top:8px; padding:10px 16px; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); z-index:5; }
+.dstickybar .btn{ width:100%; height:50px; border-radius:14px; background:var(--acc-strong); color:var(--on-acc); font-size:15px; font-weight:700; border:none; }
 .savebar{ position:sticky; bottom:0; margin:20px -16px 0; padding:10px 16px; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); z-index:5; }
 .savebar .btn{ width:100%; height:52px; border-radius:14px; background:var(--acc-strong); color:var(--on-acc); font-size:16px; font-weight:700; border:none; }
 /* The native picker stays: the real input is stretched over the pill at opacity 0.
@@ -211,7 +228,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .card{ transition:transform .08s ease; }
 .card:active{ transform:scale(.97); }
 .tab{ transition:transform .08s ease; }
-.iconbtn:active,.round:active,.fab:active,.btn:active,.tab:active,.chip:active,.hintbtn:active,.adminbar button:active,.side-nav button:active{ transform:scale(.95); opacity:.9; }
+.iconbtn:active,.round:active,.btn:active,.tab:active,.chip:active,.hintbtn:active,.adminbar button:active,.side-nav button:active{ transform:scale(.95); opacity:.9; }
 /* ---- desktop split view ---- */
 @media (min-width:900px){
 #app{ flex-direction:row; }
@@ -219,8 +236,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mapwrap{ position:absolute; inset:0; display:flex !important; }
 .tabbar{ display:none; }
 .mobile-topbar{ display:none; }
-.side-nav{ display:flex; }
-.fab{ display:none; }
+.side-nav{ display:flex; flex-wrap:wrap; }
+.side-nav .navlog{ flex-basis:100%; background:var(--acc-strong); color:var(--on-acc); margin-top:4px; }
 .hero{ height:200px; }
 .dbody h2{ font-size:21px; }
 }
@@ -230,10 +247,15 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .grid{ grid-template-columns:1fr 1fr 1fr; }
 }
 #app[data-mode="viewer"] .admin-only{ display:none !important; }
-.adminbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 16px; background:var(--surface2); border-bottom:1px solid var(--border); margin-bottom:12px; }
+/* Collapsed to a single line; the bulk actions only unfold when asked for. */
+.adminbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:6px 16px; background:var(--surface2); border-bottom:1px solid var(--border); margin-bottom:10px; }
 .adminbar button{ padding:7px 11px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12px; font-weight:600; cursor:pointer; }
-.adminbar .abnote{ font-size:11px; color:var(--soft); flex-basis:100%; }
+.adminbar .abnote{ font-size:11px; color:var(--soft); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.adminbar .abactions{ display:none; flex-basis:100%; gap:8px; padding-bottom:4px; }
+.adminbar[data-open] .abactions{ display:flex; flex-wrap:wrap; }
+.adminbar[data-open] .abchev{ display:inline-block; transform:rotate(180deg); }
 .sortrow{ display:flex; align-items:center; gap:8px; margin:0 16px 10px; font-size:13px; color:var(--soft); }
+.sortrow #count{ font-weight:700; color:var(--text); }
 .sortrow select{ margin-left:auto; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); font-size:13px; padding:7px 10px; cursor:pointer; }
 .compare{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; padding:16px; display:flex; flex-direction:column; gap:14px; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
 .compare::-webkit-scrollbar{ width:8px; } .compare::-webkit-scrollbar-thumb{ background:var(--border); border-radius:8px; background-clip:padding-box; border:2px solid transparent; }

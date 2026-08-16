@@ -14,34 +14,33 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=16">
+<link rel="stylesheet" href="styles.css?v=17">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
 <div id="app" data-view="map" data-mode="viewer">
 <aside class="sidebar">
-<div class="side-head"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="count"></div></div><button class="iconbtn lockbtn" onclick="toggleAdmin()">🔒 Viewer</button></div>
+<div class="side-head"><div style="flex:1"><h1>☕ JL Cafe Project</h1></div><button class="iconbtn lockbtn" onclick="toggleAdmin()">🔒 Viewer</button></div>
 <div class="side-nav">
 <button id="n-list" onclick="show('list')">☰ List</button>
-<button id="n-fav" onclick="show('list',true)">❤️ Faves</button>
-<button id="n-wish" onclick="show('wish')">🔖 Wish</button>
 <button id="n-rank" onclick="openRank()">⚖️ Rank</button>
 <button id="n-stats" onclick="show('stats')">📊 Stats</button>
-<button id="n-add" class="admin-only" onclick="openForm()">＋ Add</button>
 <button id="n-theme" onclick="cycleTheme()">🌗 <span id="n-theme-lab">Theme: auto</span></button>
+<button id="n-add" class="admin-only navlog" onclick="openForm()">＋ Log a visit</button>
 </div>
 <div class="panes">
-<section class="pane" id="pane-list"><div class="adminbar admin-only"><button onclick="fetchAllPhotos()">📷 Fetch all photos</button><button id="ab-milk" onclick="cleanupMilkNames()" style="display:none">🥛 Fix milk in names</button><span class="abnote" id="ab-cloud">Admin mode</span></div>
-<div class="search">🔍<input id="q" placeholder="Search name, city, state, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+<section class="pane" id="pane-list"><div class="adminbar admin-only" id="adminbar"><button class="abtoggle" onclick="toggleAdminBar()">⚙︎ Admin <span class="abchev">▾</span></button><span class="abnote" id="ab-cloud">Admin mode</span><div class="abactions"><button onclick="fetchAllPhotos()">📷 Fetch all photos</button><button id="ab-milk" onclick="cleanupMilkNames()" style="display:none">🥛 Fix milk in names</button></div></div>
+<div class="search">🔍<input id="q" placeholder="Search name, city, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="iconbtn lockbtn mobonly" onclick="toggleAdmin()" aria-label="Toggle editing mode">🔒</button><button class="iconbtn mobonly" onclick="cycleTheme()" aria-label="Switch theme">🌗</button></div>
 <div class="chiprow" id="filterchips"></div>
-<div class="sortrow"><span>Sort by</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="ranked">Top ranked</option><option value="rating">★ Highest rated</option><option value="near">📍 Nearest to me</option></select><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" style="width:34px;height:34px;font-size:15px;flex:0 0 auto;margin-left:4px">🗺️</button></div>
+<div class="chiprow tagrow" id="tagchips" style="display:none"></div>
+<div class="sortrow"><span class="sub" id="count"></span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="ranked">Top ranked</option><option value="rating">★ Highest rated</option><option value="near">📍 Nearest to me</option></select><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" style="width:34px;height:34px;font-size:15px;flex:0 0 auto;margin-left:4px">🗺️</button></div>
 <div class="scroll"><div class="grid" id="grid"></div></div>
 </section>
 <section class="pane" id="pane-detail">
 <div class="scroll">
 <div class="hero" id="d-hero">
 <div class="hero-emoji" id="d-hero-emoji">☕</div>
-<div class="nav"><button class="round" onclick="goBack()" aria-label="Back">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()" aria-label="Toggle favorite">🤍</button><button class="round admin-only" id="d-wish" onclick="toggleWish()" aria-label="Toggle wishlist" style="opacity:.45">🔖</button><button class="round admin-only" onclick="editCurrent()" aria-label="Edit cafe">✎</button></div></div>
+<div class="nav"><button class="round" onclick="goBack()" aria-label="Back">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()" aria-label="Toggle favorite">🤍</button><button class="round admin-only" id="d-wish" onclick="toggleWish()" aria-label="Toggle wishlist" style="opacity:.45">🔖</button></div></div>
 <div class="tagphoto" id="d-tagphoto">📷 My drink</div>
 </div>
 <div class="dbody">
@@ -52,8 +51,9 @@
 <div class="chips" id="d-tags"></div>
 <div class="lab">Drinks I had</div><div id="d-drinks"></div>
 <div class="lab">My thoughts</div><div class="review" id="d-review"></div>
-<div style="margin-top:22px; display:flex; gap:10px"><button class="btn" id="d-dir" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
+<div style="margin-top:22px; display:flex; gap:10px"><button class="btn" id="d-dir" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn ghost admin-only" onclick="editCurrent()">✎ Edit</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
 </div>
+<div class="dstickybar admin-only"><button class="btn" onclick="logDrinkHere()">＋ Log a drink here</button></div>
 </div>
 </section>
 <section class="pane" id="pane-form">
@@ -82,7 +82,7 @@
 <div class="mobile-topbar"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn lockbtn" onclick="toggleAdmin()">🔒 Viewer</button></div>
 <div class="mapbox">
 <div id="map"></div>
-<div class="mapsearch"><select id="locsel" aria-label="Jump to a country or state" onchange="jumpToLocation(this.value)"></select></div>
+<div class="mapsearch"><select id="locsel" aria-label="Jump to a country or state" onchange="jumpToLocation(this.value)"></select><button class="iconbtn lockbtn mobonly" onclick="toggleAdmin()" aria-label="Toggle editing mode">🔒</button></div>
 <div class="maplegend"><span><i style="background:#2e9e5b"></i>4–5★</span><span><i style="background:#f0a93b"></i>≤3★</span><span><i class="wl"></i>wishlist</span><span><i style="background:#d5803b"></i>group</span></div>
 <div class="map-msg" id="map-msg"></div>
 </div>
@@ -90,10 +90,10 @@
 <nav class="tabbar">
 <button class="tab on" id="t-map" onclick="show('map')"><span class="ti">🗺️</span>Map</button>
 <button class="tab" id="t-list" onclick="show('list')"><span class="ti">☰</span>List</button>
-<button class="tab" id="t-fav" onclick="show('list',true)"><span class="ti">❤️</span>Faves</button>
-<button class="tab" id="t-wish" onclick="show('wish')"><span class="ti">🔖</span>Wish</button>
-<button class="tab" id="t-more" onclick="toggleMore()"><span class="ti">⋯</span>More</button>
-<div class="more-popup" id="more-popup"><button id="mp-theme" onclick="closeMore();cycleTheme()"><span style="font-size:18px">🌗</span><span id="mp-theme-lab">Theme: auto</span></button><button id="mp-stats" onclick="closeMore();show('stats')"><span style="font-size:18px">📊</span>Stats</button><button id="mp-rank" onclick="closeMore();openRank()"><span style="font-size:18px">⚖️</span>Rank</button><button class="admin-only" onclick="closeMore();openForm()"><span style="font-size:18px">➕</span>Add visit</button></div>
+<button class="tab primary admin-only" id="t-log" onclick="openForm()"><span class="plus">＋</span>Log</button>
+<button class="tab primary viewer-only" id="t-find" onclick="show('list');document.getElementById('q').focus()"><span class="plus">🔍</span>Find</button>
+<button class="tab" id="t-rank" onclick="openRank()"><span class="ti">⚖️</span>Rank</button>
+<button class="tab" id="t-stats" onclick="show('stats')"><span class="ti">📊</span>Stats</button>
 </nav>
 <div class="updatebar" id="updatebar" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
 <div class="toast" id="toast"></div>
@@ -106,17 +106,17 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=16"></script>
-<script src="js/core.js?v=16"></script>
-<script src="js/storage.js?v=16"></script>
-<script src="js/nav.js?v=16"></script>
-<script src="js/map.js?v=16"></script>
-<script src="js/photos.js?v=16"></script>
-<script src="js/list.js?v=16"></script>
-<script src="js/stats.js?v=16"></script>
-<script src="js/rank.js?v=16"></script>
-<script src="js/detail.js?v=16"></script>
-<script src="js/form.js?v=16"></script>
-<script src="js/boot.js?v=16"></script>
+<script src="js/config.js?v=17"></script>
+<script src="js/core.js?v=17"></script>
+<script src="js/storage.js?v=17"></script>
+<script src="js/nav.js?v=17"></script>
+<script src="js/map.js?v=17"></script>
+<script src="js/photos.js?v=17"></script>
+<script src="js/list.js?v=17"></script>
+<script src="js/stats.js?v=17"></script>
+<script src="js/rank.js?v=17"></script>
+<script src="js/detail.js?v=17"></script>
+<script src="js/form.js?v=17"></script>
+<script src="js/boot.js?v=17"></script>
 </body>
 </html>
