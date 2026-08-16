@@ -119,7 +119,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .hero .hero-emoji{ display:none; filter:drop-shadow(0 4px 12px rgba(0,0,0,.3)); }
 .hero.nophoto .hero-emoji{ display:block; }
 .hero .nav{ position:absolute; top:14px; left:14px; right:14px; display:flex; justify-content:space-between; }
-.round{ width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.16); box-shadow:inset 0 0 0 1px rgba(255,255,255,.28); color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); text-shadow:0 1px 3px rgba(0,0,0,.5); }
+/* Tinted dark rather than white glass: the hero sits over arbitrary photos, and a white
+   scrim drops to near-zero contrast over a bright one. */
+.round{ width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.34); box-shadow:inset 0 0 0 1px rgba(255,255,255,.3); color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); text-shadow:0 1px 3px rgba(0,0,0,.5); }
 .tagphoto{ position:absolute; bottom:12px; left:14px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 9px; border-radius:20px; }
 .dbody{ padding:16px 16px 30px; }
 .dbody h2{ margin:0 0 4px; font-size:23px; }
@@ -158,7 +160,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .form{ padding:14px 16px 0; }
 /* Sticky commit rail. .sidebar is already inset by the tab-bar height, so bottom:0
    lands exactly on top of it and needs no safe-area padding of its own. */
-.savebar{ position:sticky; bottom:0; margin:20px -16px 0; padding:10px 16px calc(10px + env(safe-area-inset-bottom)); background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); z-index:5; }
+.savebar{ position:sticky; bottom:0; margin:20px -16px 0; padding:10px 16px; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); z-index:5; }
 .savebar .btn{ width:100%; height:52px; border-radius:14px; background:var(--acc-strong); color:var(--on-acc); font-size:16px; font-weight:700; border:none; }
 /* The native picker stays: the real input is stretched over the pill at opacity 0.
    16px font-size on it is what stops iOS zooming when it takes focus. */

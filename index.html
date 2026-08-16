@@ -14,7 +14,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=15">
+<link rel="stylesheet" href="styles.css?v=16">
+<script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
 <div id="app" data-view="map" data-mode="viewer">
@@ -27,6 +28,7 @@
 <button id="n-rank" onclick="openRank()">⚖️ Rank</button>
 <button id="n-stats" onclick="show('stats')">📊 Stats</button>
 <button id="n-add" class="admin-only" onclick="openForm()">＋ Add</button>
+<button id="n-theme" onclick="cycleTheme()">🌗 <span id="n-theme-lab">Theme: auto</span></button>
 </div>
 <div class="panes">
 <section class="pane" id="pane-list"><div class="adminbar admin-only"><button onclick="fetchAllPhotos()">📷 Fetch all photos</button><button id="ab-milk" onclick="cleanupMilkNames()" style="display:none">🥛 Fix milk in names</button><span class="abnote" id="ab-cloud">Admin mode</span></div>
@@ -39,7 +41,7 @@
 <div class="scroll">
 <div class="hero" id="d-hero">
 <div class="hero-emoji" id="d-hero-emoji">☕</div>
-<div class="nav"><button class="round" onclick="goBack()" aria-label="Back">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()" aria-label="Toggle favorite">🧡</button><button class="round admin-only" id="d-wish" onclick="toggleWish()" aria-label="Toggle wishlist">📌</button><button class="round admin-only" onclick="editCurrent()" aria-label="Edit cafe">✎</button></div></div>
+<div class="nav"><button class="round" onclick="goBack()" aria-label="Back">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()" aria-label="Toggle favorite">🤍</button><button class="round admin-only" id="d-wish" onclick="toggleWish()" aria-label="Toggle wishlist" style="opacity:.45">🔖</button><button class="round admin-only" onclick="editCurrent()" aria-label="Edit cafe">✎</button></div></div>
 <div class="tagphoto" id="d-tagphoto">📷 My drink</div>
 </div>
 <div class="dbody">
@@ -104,17 +106,17 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=15"></script>
-<script src="js/core.js?v=15"></script>
-<script src="js/storage.js?v=15"></script>
-<script src="js/nav.js?v=15"></script>
-<script src="js/map.js?v=15"></script>
-<script src="js/photos.js?v=15"></script>
-<script src="js/list.js?v=15"></script>
-<script src="js/stats.js?v=15"></script>
-<script src="js/rank.js?v=15"></script>
-<script src="js/detail.js?v=15"></script>
-<script src="js/form.js?v=15"></script>
-<script src="js/boot.js?v=15"></script>
+<script src="js/config.js?v=16"></script>
+<script src="js/core.js?v=16"></script>
+<script src="js/storage.js?v=16"></script>
+<script src="js/nav.js?v=16"></script>
+<script src="js/map.js?v=16"></script>
+<script src="js/photos.js?v=16"></script>
+<script src="js/list.js?v=16"></script>
+<script src="js/stats.js?v=16"></script>
+<script src="js/rank.js?v=16"></script>
+<script src="js/detail.js?v=16"></script>
+<script src="js/form.js?v=16"></script>
+<script src="js/boot.js?v=16"></script>
 </body>
 </html>
