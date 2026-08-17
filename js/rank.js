@@ -1,48 +1,114 @@
 "use strict";
-/* rank.js — Head-to-head compare and Elo ranking for cafes and drinks.
+/* rank.js — Elo scoring, the board, and the post-save ranking sheet.
    Loaded by index.html; script order matters (config first, boot last). */
-/* ---------- compare / ranking (Elo) ---------- */
-const ELO_BASE=1500, ELO_K=32;
+/* ---------- Elo ---------- */
+const ELO_BASE=1500;
 function eloFor(c){ return (c&&typeof c.elo==="number")?c.elo:ELO_BASE; }
 function eloScoreNum(c){ const m=matchCount(c); const conf=m/(m+4); return Math.max(0,Math.min(10,5+((eloFor(c)-ELO_BASE)/45)*conf)); }
 function eloScore(c){ return eloScoreNum(c).toFixed(1); }
-function traitsOf(c){ const t=new Set(); const hay=((c.name||"")+" "+typeTerms(c)+" "+(c.drinks||[]).map(d=>d.n).join(" ")).toLowerCase(); [["matcha","🍵 Matcha"],["hojicha","🍵 Matcha"],["espresso","☕ Coffee"],["latte","☕ Coffee"],["coffee","☕ Coffee"],["boba","🧋 Boba"],["bubble","🧋 Boba"],["milk tea","🧋 Boba"],["gelato","🍦 Gelato"],["tea","🍵 Tea"]].forEach(p=>{ if(hay.includes(p[0]))t.add("type|"+p[1]); }); if(c.emoji==="🍵")t.add("type|🍵 Matcha"); if(c.emoji==="🧋")t.add("type|🧋 Boba"); if(c.emoji==="☕")t.add("type|☕ Coffee"); if(c.emoji==="🍦")t.add("type|🍦 Gelato"); (c.tags||[]).forEach(x=>t.add("tag|#"+x)); if(c.area&&c.area.trim())t.add("area|📍 "+c.area.trim()); return t; }
-function sharedTraitLabel(a,b){ const tb=traitsOf(b); const shared=[...traitsOf(a)].filter(x=>tb.has(x)); if(!shared.length)return null; const ord={type:0,tag:1,area:2}; shared.sort((x,y)=>ord[x.split("|")[0]]-ord[y.split("|")[0]]); return shared[0].split("|")[1]; }
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function matchCount(c){ return (c&&c.matches)||0; }
-let cmpPair=null, cmpMode="cafe", cmpDrinkPair=null, cmpAnchorId=null, recentDrinkKeys=[], recentCafeKeys=[];
-function drinkId(D){ return D.cafe.id+"|"+((D.drink.n||"").toLowerCase()); }
 function pairKey(a,b){ return [a,b].sort().join("###"); }
-function setCmpMode(m){ cmpMode=m; if(m==="cafe")cmpAnchorId=null; newMatchup(); }
-function allDrinks(){ const out=[]; cafes.filter(c=>!c.wish).forEach(c=>{ (c.drinks||[]).forEach(d=>{ if(d&&d.n)out.push({cafe:c,drink:d}); }); }); return out; }
+function normDrink(n){ return (n||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
+/* Drinks are no longer ranked head-to-head — the pairing rate was 26% and 120 of the 140
+   possible pairs were the same drink — but 22 cafes carry scores from before that stopped,
+   and the detail page still shows them. See DESIGN_NOTES.md. */
 function drinkElo(d){ return (d&&typeof d.elo==="number")?d.elo:ELO_BASE; }
 function drinkMatches(d){ return (d&&d.matches)||0; }
 function drinkScoreNum(d){ const m=drinkMatches(d); const conf=m/(m+12); return Math.max(0,Math.min(10,5+((drinkElo(d)-ELO_BASE)/80)*conf)); }
 function drinkScore(d){ return drinkScoreNum(d).toFixed(1); }
-function findDrink(ref){ const c=cafes.find(x=>x.id===ref[0]); if(!c)return null; const d=(c.drinks||[]).find(x=>normDrink(x.n)===normDrink(ref[1])); return d?{cafe:c,drink:d}:null; }
-function eligiblePairs(){ const out=[]; const vis=cafes.filter(c=>!c.wish); for(let i=0;i<vis.length;i++){ for(let j=i+1;j<vis.length;j++){ const lab=sharedTraitLabel(vis[i],vis[j]); if(lab)out.push([vis[i],vis[j],lab]); } } return out; }
-function openRank(){ cmpAnchorId=null; cmpMode="cafe"; show("compare"); }
-function startAnchorCompare(id){ const cid=(typeof id==="string")?id:editId; if(!cid){ toast("Save the cafe first, then compare"); return; } if(cmpAnchorId!==cid)recentCafeKeys=[]; cmpAnchorId=cid; cmpMode="cafe"; show("compare"); }
-function clearAnchor(){ cmpAnchorId=null; cmpPair=null; cmpMode="cafe"; renderCompare(); }
-function anchorOpponents(anchor){ return cafes.filter(x=>x.id!==anchor.id&&!x.wish).map(x=>({c:x,lab:sharedTraitLabel(anchor,x)})).filter(o=>o.lab); }
-function newOpenMatchup(){ const vis=cafes.filter(c=>!c.wish); if(vis.length<2){ cmpPair=null; renderCompare(); return; } const pairs=[]; for(let i=0;i<vis.length;i++){ for(let j=i+1;j<vis.length;j++){ pairs.push({a:vis[i],b:vis[j],key:pairKey(vis[i].id,vis[j].id),m:matchCount(vis[i])+matchCount(vis[j])}); } } let avail=pairs.filter(p=>recentCafeKeys.indexOf(p.key)<0); if(!avail.length){ recentCafeKeys=[]; avail=pairs; } const minM=Math.min.apply(null,avail.map(p=>p.m)); const tier=avail.filter(p=>p.m<=minM+1); const choice=tier[Math.floor(Math.random()*tier.length)]; recentCafeKeys.push(choice.key); const cap=Math.max(1,Math.min(pairs.length-1,Math.ceil(pairs.length*0.6))); while(recentCafeKeys.length>cap)recentCafeKeys.shift(); const flip=Math.random()<0.5; cmpPair=flip?[choice.b.id,choice.a.id,'Open comparison']:[choice.a.id,choice.b.id,'Open comparison']; renderCompare(); } function newMatchup(){ if(cmpMode==="drink"){ newDrinkMatchup(); return; } if(cmpMode==="open"){ newOpenMatchup(); return; } const pairs=eligiblePairs(); if(!pairs.length){ cmpPair=null; renderCompare(); return; } const enriched=pairs.map(p=>({a:p[0],b:p[1],lab:p[2],key:pairKey(p[0].id,p[1].id),m:matchCount(p[0])+matchCount(p[1])})); let avail=enriched.filter(p=>recentCafeKeys.indexOf(p.key)<0); if(!avail.length){ recentCafeKeys=[]; avail=enriched; } const minM=Math.min.apply(null,avail.map(p=>p.m)); const tier=avail.filter(p=>p.m<=minM+1); const choice=tier[Math.floor(Math.random()*tier.length)]; recentCafeKeys.push(choice.key); const cap=Math.max(1,Math.min(enriched.length-1,Math.ceil(enriched.length*0.6))); while(recentCafeKeys.length>cap)recentCafeKeys.shift(); const flip=Math.random()<0.5; cmpPair=flip?[choice.b.id,choice.a.id,choice.lab]:[choice.a.id,choice.b.id,choice.lab]; renderCompare(); }
-function normDrink(n){ return (n||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
-function grpMatches(g){ return g.reduce((s,p)=>s+drinkMatches(p.drink),0); }
-function newDrinkMatchup(){ const pool=allDrinks(); const groups={}; pool.forEach(p=>{ const k=normDrink(p.drink.n); if(!k)return; (groups[k]=groups[k]||[]).push(p); }); const pairs=[]; Object.keys(groups).forEach(k=>{ const g=groups[k]; for(let i=0;i<g.length;i++){ for(let j=i+1;j<g.length;j++){ if(g[i].cafe.id===g[j].cafe.id)continue; const ka=drinkId(g[i]),kb=drinkId(g[j]); pairs.push({A:g[i],B:g[j],key:pairKey(ka,kb),m:drinkMatches(g[i].drink)+drinkMatches(g[j].drink)}); } } }); if(!pairs.length){ cmpDrinkPair=null; renderCompare(); return; } let avail=pairs.filter(p=>recentDrinkKeys.indexOf(p.key)<0); if(!avail.length){ recentDrinkKeys=[]; avail=pairs; } const minM=Math.min.apply(null,avail.map(p=>p.m)); const tier=avail.filter(p=>p.m<=minM+1); const choice=tier[Math.floor(Math.random()*tier.length)]; recentDrinkKeys.push(choice.key); const cap=Math.max(1,Math.min(pairs.length-1,Math.ceil(pairs.length*0.6))); while(recentDrinkKeys.length>cap)recentDrinkKeys.shift(); const flip=Math.random()<0.5; const first=flip?choice.B:choice.A, second=flip?choice.A:choice.B; cmpDrinkPair=[[first.cafe.id,normDrink(first.drink.n)],[second.cafe.id,normDrink(second.drink.n)]]; renderCompare(); }
-function drinkCardHTML(D,side){ const c=D.cafe, d=D.drink; const gp=(_imgFail[c.id]?null:gphotoFor(c)); let cls="cph", style="", inner=""; if(gp){ style=' style="background-image:url(\''+safeUrl(gp)+'\')"'; } else { cls+=" nophoto"; style=' style="background:'+nophotoBg(d.n)+'"'; inner=initials({name:d.n}); } return '<button class="cmp-card" onclick="pickDrinkWinner('+side+')"><div class="'+cls+'"'+style+'>'+inner+'</div><div class="cb"><div class="cn">'+esc(d.n)+'</div><div class="cm">'+esc(c.name)+'<span class="cmp-score">'+drinkScore(d)+'<span style="opacity:.5;font-size:10px;margin-left:3px">'+(drinkMatches(d)?'('+drinkMatches(d)+' cmp)':'(new)')+'</span></span>'+'</div></div></button>'; }
-function pickDrinkWinner(side){ if(!cmpDrinkPair)return; const A=findDrink(cmpDrinkPair[0]), B=findDrink(cmpDrinkPair[1]); if(!A||!B){ newDrinkMatchup(); return; } const win=side===0?A.drink:B.drink, lose=side===0?B.drink:A.drink; const Rw=drinkElo(win), Rl=drinkElo(lose); const Ew=1/(1+Math.pow(10,(Rl-Rw)/400)); const _Kd=Math.max(16,32-drinkMatches(win)); const delta=Math.max(1,Math.round(_Kd*(1-Ew))); win.elo=Rw+delta; lose.elo=Rl-delta; win.matches=drinkMatches(win)+1; lose.matches=drinkMatches(lose)+1; save(); toast(win.n+" wins · score "+drinkScore(win)); newDrinkMatchup(); }
-function cmpCardHTML(c,side){ const gp=(_imgFail[c.id]?null:gphotoFor(c)); let cls="cph", style="", inner=""; if(gp){ style=' style="background-image:url(\''+safeUrl(gp)+'\')"'; } else { cls+=" nophoto"; style=' style="background:'+nophotoBg(c.name)+'"'; inner=initials(c); } return '<button class="cmp-card" onclick="pickWinner('+side+')"><div class="'+cls+'"'+style+'>'+inner+'</div><div class="cb"><div class="cn">'+esc(c.name)+'</div><div class="cm">'+(c.area?esc(c.area):"")+'<span class="cmp-score">'+eloScore(c)+'<span style="opacity:.5;font-size:10px;margin-left:3px">'+(matchCount(c)?'('+matchCount(c)+' cmp)':'(new)')+'</span></span>'+'</div></div></button>'; }
-function renderCompare(){ const host=$("cmp-body"); if(!host)return; if(!isAdmin){ const _rc=cafes.filter(c=>matchCount(c)>0).sort((a,b)=>eloScoreNum(b)-eloScoreNum(a)).slice(0,15); const _rd=allDrinks().filter(D=>drinkMatches(D.drink)>0).sort((a,b)=>drinkScoreNum(b.drink)-drinkScoreNum(a.drink)).slice(0,10); let h='<div class="cmp-head" style="padding-top:4px"><div class="ct">⚖️ Rankings</div><div class="cs">Scores from head-to-head comparisons</div></div>'; if(_rc.length){ h+='<div class="statsec" style="margin:16px 0 8px">☕ Cafes</div>'; _rc.forEach((c,i)=>{ const m=i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1); h+='<div class="lbrow" style="cursor:pointer" onclick="openDetail(\''+c.id+'\',\'compare\')"><span class="lbrank">'+m+'</span><div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+(c.area?esc(c.area)+' &middot; ':'')+matchCount(c)+' comparison'+(matchCount(c)===1?'':'s')+'</div></div><span class="lbscore">'+eloScore(c)+'</span></div>'; }); } else { h+='<div class="empty"><div class="big">⚖️</div>No rankings yet.</div>'; } if(_rd.length){ h+='<div class="statsec" style="margin:16px 0 8px">🥤 Drinks</div>'; _rd.forEach((D,i)=>{ const m=i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1); h+='<div class="lbrow" style="cursor:pointer" onclick="openDetail(\''+D.cafe.id+'\',\'compare\')"><span class="lbrank">'+m+'</span><div class="lbmain"><div class="lbname">'+esc(D.drink.n)+'</div><div class="lbsub">'+esc(D.cafe.name)+(D.cafe.area?' &middot; '+esc(D.cafe.area):'')+'</div></div><span class="lbscore">'+drinkScore(D.drink)+'</span></div>'; }); } host.innerHTML='<div style="padding:16px">'+h+'</div>'; return; } const toggle='<div class="cmp-modes"><button class="cmp-mode'+(cmpMode==="cafe"?" on":"")+'" onclick="setCmpMode(\'cafe\')">☕ Cafes</button><button class="cmp-mode'+(cmpMode==="open"?" on":"")+'" onclick="setCmpMode(\'open\')">🌐 Any</button><button class="cmp-mode'+(cmpMode==="drink"?" on":"")+'" onclick="setCmpMode(\'drink\')">🥤 Drinks</button></div>'; if(cmpMode==="drink"){ if(!cmpDrinkPair){ host.innerHTML=toggle+'<div class="empty"><div class="big">🥤</div>Log the same drink at two or more cafes, then rank them head-to-head to see who does it best.</div>'; return; } const A=findDrink(cmpDrinkPair[0]), B=findDrink(cmpDrinkPair[1]); if(!A||!B){ newDrinkMatchup(); return; } host.innerHTML=toggle+'<div class="cmp-head"><div class="ct">Which drink is better?</div><div class="cs">Tap your pick — both are:</div><div class="cmp-trait">'+esc(A.drink.n)+'</div></div><div class="cmp-pair">'+drinkCardHTML(A,0)+'<div class="cmp-vs">VS</div>'+drinkCardHTML(B,1)+'</div><div class="cmp-actions"><button class="btn ghost" onclick="newMatchup()">↻ Skip — new pair</button></div>'; return; } if(cmpMode==="open"&&!cmpPair){ host.innerHTML=toggle+'<div class="empty"><div class="big">⚖️</div>Add at least two visited cafes to rank them.</div>'; return; } if(!cmpPair){ host.innerHTML=toggle+'<div class="empty"><div class="big">⚖️</div>Add at least two cafes that share a trait (drink type, tag, or area) to rank them head-to-head.</div>'; return; } const a=cafes.find(x=>x.id===cmpPair[0]), b=cafes.find(x=>x.id===cmpPair[1]); if(!a||!b){ newMatchup(); return; } host.innerHTML=toggle+'<div class="cmp-head"><div class="ct">Which cafe do you prefer?</div><div class="cs">Tap your pick — both share:</div><div class="cmp-trait">'+esc(cmpPair[2])+'</div></div><div class="cmp-pair">'+cmpCardHTML(a,0)+'<div class="cmp-vs">VS</div>'+cmpCardHTML(b,1)+'</div><div class="cmp-actions"><button class="btn ghost" onclick="newMatchup()">↻ Skip — new pair</button></div>'; }
-function pickWinner(side){ if(!cmpPair)return; const a=cafes.find(x=>x.id===cmpPair[0]), b=cafes.find(x=>x.id===cmpPair[1]); if(!a||!b){ newMatchup(); return; } const win=side===0?a:b, lose=side===0?b:a; const Rw=eloFor(win), Rl=eloFor(lose); const Ew=1/(1+Math.pow(10,(Rl-Rw)/400)); const _Kc=Math.max(16,32-matchCount(win)); const delta=Math.max(1,Math.round(_Kc*(1-Ew))); win.elo=Rw+delta; lose.elo=Rl-delta; win.matches=matchCount(win)+1; lose.matches=matchCount(lose)+1; save(); toast(win.name+" wins · score "+eloScore(win)); newMatchup(); }
+function openRank(){ show("compare"); }
 
-/* ---------- post-save ranking card ("chaser") ----------
+/* ---------- the board ----------
+   The tab used to open a matchup and hide the standing behind `if(!isAdmin)`, so the owner
+   had cast 184 head-to-heads and never seen the ordering they produced. Now the slot holds
+   the standing for both roles and ranking is a button on it. */
+/* Several ranked cafes have an empty or numeric area; fall back to state, then country,
+   suppressing "Other" — COUNTRY_INFO has no entry for Vietnam or Indonesia, so printing it
+   would be worse than printing nothing. */
+function boardArea(c){
+  const a=(c.area||"").trim();
+  if(a&&!/^\d+$/.test(a))return a;
+  const st=(typeof cafeStateName==="function")?cafeStateName(c):"";
+  if(st)return st;
+  const co=(typeof cafeCountryName==="function")?cafeCountryName(c):"";
+  return (co&&co!=="Other")?co:"";
+}
+function boardRow(c,pos,unique){
+  const rank=(pos<=3&&unique)?["🥇","🥈","🥉"][pos-1]:("#"+pos);
+  const ar=boardArea(c), m=matchCount(c);
+  const sub=m+" comparison"+(m===1?"":"s")+(ar?" · "+esc(ar):"");
+  return '<div class="lbrow tap" onclick="openDetail(\''+c.id+'\',\'compare\')"><span class="lbrank">'+rank+'</span>'
+    +'<span class="gotile" style="background:'+cafeColor(c.name)+'">'+esc(c.emoji||"☕")+'</span>'
+    +'<div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+sub+'</div></div>'
+    +'<span class="lbscore soft">'+eloScore(c)+'</span></div>';
+}
+function boardQueueRow(c){
+  const ar=boardArea(c), lv=chaserLast(c);
+  const sub=[ar?esc(ar):"",chaserWhen(lv)].filter(Boolean).join(" · ");
+  const right=isAdmin?'<span class="rank-lnk">Rank ›</span>':'<span class="gostar">'+(c.rating||0)+'★</span>';
+  const act=isAdmin?("boardRank('"+c.id+"')"):("openDetail('"+c.id+"','compare')");
+  return '<div class="gorow" onclick="'+act+'"><span class="gotile" style="background:'+cafeColor(c.name)+'">'+esc(c.emoji||"☕")+'</span>'
+    +'<div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+sub+'</div></div>'+right+'</div>';
+}
+function renderBoard(){
+  const host=$("cmp-body"); if(!host)return;
+  const vis=cafes.filter(function(c){ return !c.wish; });
+  const board=chaserBoard();
+  const never=vis.filter(function(c){ return matchCount(c)===0; })
+    .sort(function(a,b){ return (chaserLast(b)||"").localeCompare(chaserLast(a)||""); });
+  const h2h=Math.round(vis.reduce(function(s,c){ return s+matchCount(c); },0)/2);
+  let h='<div class="cmp-head left"><div class="ct">🏆 The board</div><div class="cs">'
+    +board.length+' of '+vis.length+' cafes ranked'+(h2h?' · '+h2h+' head-to-head'+(h2h===1?"":"s"):"")+'</div></div>';
+  if(isAdmin&&vis.length>1)h+='<div class="handoff top" onclick="boardRank()">⚖️ Rank a pair'+(never.length?' <span>· '+never.length+' never compared</span>':'')+'</div>';
+  if(!board.length){
+    h+='<div class="empty"><div class="big">🏆</div>Nothing ranked yet.'+(isAdmin?" Tap “Rank a pair”, or log a visit and answer the question that follows.":"")+'</div>';
+  } else {
+    /* Competition ranking off the same helper the sheet quotes, so "#2 → #1" in the popup and
+       "#1" here can never disagree. Genuine ties share a position. */
+    const pos=board.map(function(c){ return chaserRank(c,board); });
+    const uniq={}; pos.forEach(function(p){ uniq[p]=(uniq[p]||0)+1; });
+    const rows=board.map(function(c,i){ return boardRow(c,pos[i],uniq[pos[i]]===1); });
+    h+=rows.slice(0,10).join("");
+    if(rows.length>10)h+='<div class="foldbox">'+rows.slice(10).join("")+'</div>'
+      +'<button class="morebtn" data-lab="Show all '+rows.length+'" onclick="statFold(this)">Show all '+rows.length+' ▾</button>';
+    const thin=board.filter(function(c){ return matchCount(c)<3; }).length;
+    h+='<div class="statnote">Positions come from '+h2h+' head-to-head pick'+(h2h===1?"":"s")+', not from stars.'
+      +(thin?' '+thin+' cafe'+(thin===1?" has":"s have")+' fewer than three comparisons, so '+(thin===1?"its place is":"their places are")+' provisional.':"")+'</div>';
+  }
+  if(never.length){
+    const q=never.map(boardQueueRow);
+    h+='<div class="statsec">Never compared — '+never.length+'</div>'+q.slice(0,3).join("");
+    if(q.length>3)h+='<div class="foldbox">'+q.slice(3).join("")+'</div>'
+      +'<button class="morebtn" data-lab="Show all '+q.length+'" onclick="statFold(this)">Show all '+q.length+' ▾</button>';
+  }
+  h+='<div class="handoff" onclick="show(\'stats\')">📊 See the numbers behind this <span>›</span></div>';
+  host.innerHTML='<div class="boardwrap">'+h+'</div>';
+}
+/* On-demand ranking. Anchors on a never-compared cafe when there is one, so the button
+   closes the coverage gap rather than re-testing the well-tested. */
+function boardRank(id){
+  if(!isAdmin){ toast("Sign in to rank"); return; }
+  const vis=cafes.filter(function(c){ return !c.wish; });
+  if(vis.length<2){ toast("Add another cafe first"); return; }
+  let anchor=id?cafes.find(function(c){ return c.id===id; }):null;
+  if(!anchor){
+    const never=vis.filter(function(c){ return matchCount(c)===0; });
+    const pool=never.length?never:vis.slice().sort(function(a,b){ return matchCount(a)-matchCount(b); }).slice(0,12);
+    anchor=pool[Math.floor(Math.random()*pool.length)];
+  }
+  if(!anchor)return;
+  chaserArm(anchor.id);
+  if(!_chaser){ toast("No opponent available yet"); return; }
+  _chaser.board=true;
+  chaserPaint();
+}
+
+/* ---------- post-save ranking sheet ("chaser") ----------
    Ranking as a destination went unused, so the question comes to the save instead. It ranks
-   CAFES, not drinks: a chronological replay of all 114 logs found a same-name drink opponent
-   existed only 26% of the time, 120 of the 140 possible drink pairs are hojicha-vs-hojicha,
-   and drink elo has only just stopped being erased on save. Cafes pair 100% of the time and
-   already spread 2.9-7.4. The drink just logged still does the work — it picks the opponent
-   and justifies the pairing, which is far more honest than sharedTraitLabel, whose label is
-   "Coffee" on 71% of eligible pairs. Everything here is additive; nothing above is modified. */
+   CAFES, not drinks: replaying all dated logs chronologically, a same-name drink opponent
+   existed only 26% of the time and drink scores cannot move at the observed match counts.
+   Cafes pair 100% of the time and already spread 2.9-7.4. The drink just logged still does
+   the work — it picks the opponent and justifies the pairing. See DESIGN_NOTES.md. */
 let _chaser=null, _chaserSeen=[];
 /* Read-only: the drink is recovered from the SAVED cafe, never from the form or _formSnap, so
    it works identically on all three save branches and cannot couple to the unsaved guard. */
@@ -81,8 +147,8 @@ function chaserArm(id){
     if(twin.length){ tier="A"; cand=twin; }
     else if(fam){ const f=base.filter(function(x){ return (x.drinks||[]).some(function(od){ return chaserFam(od.n)===fam; }); }); if(f.length){ tier="B"; cand=f; } }
   }
-  /* Coverage is the binding constraint — 17 cafes have never been compared and 16 of those
-     were visited in the last 51 days — so fewest-matches dominates the cost. */
+  /* Coverage is the binding constraint — 18 cafes have never been compared and most were
+     visited recently — so fewest-matches dominates the cost. */
   const scored=cand.map(function(x){
     let cost=0.35*matchCount(x);
     const lv=chaserLast(x);
@@ -98,7 +164,7 @@ function chaserArm(id){
     const m=(pick.drinks||[]).filter(function(od){ return tier==="A"?normDrink(od.n)===normDrink(fresh.n):chaserFam(od.n)===fam; });
     if(m.length)theirDrink=m[0].n;
   }
-  _chaser={cafe:c.id,opp:pick.id,tier:tier,fam:fam,myDrink:fresh?fresh.n:null,theirDrink:theirDrink,flip:Math.random()<0.5,ts:Date.now(),res:null};
+  _chaser={cafe:c.id,opp:pick.id,tier:tier,fam:fam,myDrink:fresh?fresh.n:null,theirDrink:theirDrink,flip:Math.random()<0.5,ts:Date.now(),res:null,board:false};
 }
 function chaserBoard(){ return cafes.filter(function(c){ return !c.wish&&matchCount(c)>0; }).sort(function(a,b){ return eloScoreNum(b)-eloScoreNum(a); }); }
 function chaserRank(c,board){ let n=1; const s=eloScoreNum(c); board.forEach(function(x){ if(x.id!==c.id&&eloScoreNum(x)>s)n++; }); return n; }
@@ -134,8 +200,27 @@ function chaserEven(){
   _chaser.res=chaserApply(L,R,true);
   chaserRepaint();
 }
-function chaserDismiss(){ _chaser=null; chaserRepaint(); }
-function chaserRepaint(){ const c=cafes.find(function(x){ return x.id===curId; }); if(c)renderChaser(c); try{ renderList(); }catch(e){} }
+/* One more pair without leaving the sheet — only offered from the board, where ranking is
+   the task; after a save one question is the whole contract. */
+function chaserAgain(){
+  if(!_chaser)return;
+  const from=_chaser.cafe;
+  boardRank();
+  if(_chaser&&_chaser.cafe===from&&_chaser.opp)return;
+}
+function chaserDismiss(){
+  const wasBoard=!!(_chaser&&_chaser.board);
+  _chaser=null;
+  const host=$("d-chaser"); if(host)host.innerHTML="";
+  if(wasBoard){ try{ renderBoard(); }catch(e){} return; }
+  const c=cafes.find(function(x){ return x.id===curId; }); if(c)renderChaser(c);
+  try{ renderList(); }catch(e){}
+}
+function chaserRepaint(){
+  if(_chaser&&_chaser.board){ chaserPaint(); try{ renderBoard(); }catch(e){} return; }
+  const c=cafes.find(function(x){ return x.id===curId; }); if(c)renderChaser(c);
+  try{ renderList(); }catch(e){}
+}
 function chaserOpt(c,drink,side){
   const gp=(typeof gphotoFor==="function")?gphotoFor(c):null;
   const th=(gp&&!_imgFail[c.id])
@@ -145,12 +230,24 @@ function chaserOpt(c,drink,side){
   return '<button class="ch-opt" onclick="chaserPick(' + side + ')">' + th
     + '<span class="ch-m"><span class="ch-n">' + esc(c.name) + '</span><span class="ch-s">' + sub + '</span></span></button>';
 }
-/* Rendered from inside openDetail rather than injected, so the cloud echo repaints the card
-   instead of wiping it. The id + isAdmin + 3-minute guard covers every other openDetail
-   caller: map pins, list cards, stats rows, the viewer leaderboard and the ?cafe= deep link. */
+/* Bottom sheet. The scrim dismisses, matching every other sheet the app has had. */
+function chaserShell(inner){ return '<div class="ch-scrim" onclick="chaserDismiss()"></div><div class="ch-sheet" role="dialog" aria-modal="true" aria-label="Quick ranking"><div class="ch-grab"></div>'+inner+'</div>'; }
+function chaserOpen(){ const h=$("d-chaser"); return !!(h&&h.innerHTML); }
+/* Called from openDetail so the Firebase echo repaints the sheet instead of wiping it. The
+   id + isAdmin + 3-minute guard covers every other openDetail caller: map pins, list cards,
+   stats rows, board rows and the ?cafe= deep link. */
 function renderChaser(c){
   const host=$("d-chaser"); if(!host)return;
+  if(_chaser&&_chaser.board)return;
   if(!_chaser||_chaser.cafe!==c.id||!isAdmin||Date.now()-_chaser.ts>180000){ host.innerHTML=""; return; }
+  chaserPaint();
+}
+function chaserPaint(){
+  const host=$("d-chaser"); if(!host)return;
+  if(!_chaser){ host.innerHTML=""; return; }
+  const c=cafes.find(function(x){ return x.id===_chaser.cafe; });
+  const opp=cafes.find(function(x){ return x.id===_chaser.opp; });
+  if(!c||!opp){ host.innerHTML=""; return; }
   const r=_chaser.res;
   if(r){
     const line=function(x,pre,post,n){
@@ -162,12 +259,12 @@ function renderChaser(c){
     };
     host.innerHTML=chaserShell('<div class="ch-rl">'+(r.draw?"🤝 Called it even":"👍 "+esc(r.a.name))+'</div>'
       +'<div class="ch-mv"><span>'+line(r.a,r.preA,r.postA,r.postN)+'</span><span>'+line(r.b,r.preB,r.postB,r.postN)+'</span></div>'
-      +'<div class="ch-done"><button class="ch-lnk" onclick="openRank()">See the board ›</button>'
+      +'<div class="ch-done">'+(_chaser.board
+        ? '<button class="ch-lnk" onclick="chaserAgain()">↻ Rank another</button>'
+        : '<button class="ch-lnk" onclick="chaserDismiss();openRank()">See the board ›</button>')
       +'<button class="ch-close" onclick="chaserDismiss()">Done</button></div>');
     return;
   }
-  const opp=cafes.find(function(x){ return x.id===_chaser.opp; });
-  if(!opp){ host.innerHTML=""; return; }
   const eyebrow=_chaser.tier==="A"?("Both do "+esc(_chaser.myDrink)):(_chaser.tier==="B"?("Both do "+esc(_chaser.fam)):"");
   const lv=chaserLast(opp);
   const stale=!!lv&&(Date.now()-new Date(lv).getTime())/86400000>120;
@@ -180,6 +277,3 @@ function renderChaser(c){
     +'<div class="ch-pair">'+chaserOpt(L,LD,0)+chaserOpt(R,RD,1)+'</div>'
     +'<button class="ch-even" onclick="chaserEven()">'+(stale?"Too long ago to say":"Too close to call")+'</button>');
 }
-/* Bottom sheet. The scrim dismisses, matching every other sheet the app has had. */
-function chaserShell(inner){ return '<div class="ch-scrim" onclick="chaserDismiss()"></div><div class="ch-sheet" role="dialog" aria-modal="true" aria-label="Quick ranking"><div class="ch-grab"></div>'+inner+'</div>'; }
-function chaserOpen(){ const h=$("d-chaser"); return !!(h&&h.innerHTML); }

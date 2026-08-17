@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=22">
+<link rel="stylesheet" href="styles.css?v=23">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -23,7 +23,7 @@
 <div class="side-head"><div style="flex:1"><h1>☕ JL Cafe Project</h1></div><button class="iconbtn lockbtn" onclick="toggleAdmin()">🔒 Viewer</button></div>
 <div class="side-nav">
 <button id="n-list" onclick="show('list')">☰ List</button>
-<button id="n-rank" onclick="openRank()">⚖️ Rank</button>
+<button id="n-rank" onclick="openRank()">🏆 Board</button>
 <button id="n-stats" onclick="show('stats')">📊 Stats</button>
 <button id="n-theme" onclick="cycleTheme()">🌗 <span id="n-theme-lab">Theme: auto</span></button>
 <button id="n-add" class="admin-only navlog" onclick="openForm()">＋ Log a visit</button>
@@ -92,7 +92,7 @@
 <button class="tab" id="t-list" onclick="show('list')"><span class="ti">☰</span>List</button>
 <button class="tab primary admin-only" id="t-log" onclick="openForm()"><span class="plus">＋</span>Log</button>
 <button class="tab primary viewer-only" id="t-find" onclick="show('list');document.getElementById('q').focus()"><span class="plus">🔍</span>Find</button>
-<button class="tab" id="t-rank" onclick="openRank()"><span class="ti">⚖️</span>Rank</button>
+<button class="tab" id="t-rank" onclick="openRank()"><span class="ti">🏆</span>Board</button>
 <button class="tab" id="t-stats" onclick="show('stats')"><span class="ti">📊</span>Stats</button>
 </nav>
 <div id="d-chaser"></div>
@@ -107,17 +107,17 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=22"></script>
-<script src="js/core.js?v=22"></script>
-<script src="js/storage.js?v=22"></script>
-<script src="js/nav.js?v=22"></script>
-<script src="js/map.js?v=22"></script>
-<script src="js/photos.js?v=22"></script>
-<script src="js/list.js?v=22"></script>
-<script src="js/stats.js?v=22"></script>
-<script src="js/rank.js?v=22"></script>
-<script src="js/detail.js?v=22"></script>
-<script src="js/form.js?v=22"></script>
-<script src="js/boot.js?v=22"></script>
+<script src="js/config.js?v=23"></script>
+<script src="js/core.js?v=23"></script>
+<script src="js/storage.js?v=23"></script>
+<script src="js/nav.js?v=23"></script>
+<script src="js/map.js?v=23"></script>
+<script src="js/photos.js?v=23"></script>
+<script src="js/list.js?v=23"></script>
+<script src="js/stats.js?v=23"></script>
+<script src="js/rank.js?v=23"></script>
+<script src="js/detail.js?v=23"></script>
+<script src="js/form.js?v=23"></script>
+<script src="js/boot.js?v=23"></script>
 </body>
 </html>
