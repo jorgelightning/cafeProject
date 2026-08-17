@@ -625,36 +625,19 @@
     "custom": false,
     "drinks": [
       {
+        "count": 7,
         "dates": [
-          "2026-08-07"
+          "2026-03-22",
+          "2026-03-25",
+          "2026-04-09",
+          "2026-07-31",
+          "2026-08-05",
+          "2026-08-07",
+          "2026-08-11"
         ],
         "ice": "Warm",
         "milk": "Oat",
-        "n": "Hojicha latte / oak",
-        "p": "7.25",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
-      },
-      {
-        "dates": [
-          "2026-08-05"
-        ],
-        "ice": "Regular ice",
-        "milk": "Oat",
-        "n": "Hojicha latte w/ oak milk",
-        "p": "7.25",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
-      },
-      {
-        "dates": [
-          "2026-07-31"
-        ],
-        "ice": "Warm",
-        "milk": "Oat",
-        "n": "Hojicha latte /w oak milk",
+        "n": "Hojicha Latte",
         "p": "7.25",
         "reorder": "yes",
         "size": "12 oz",
@@ -673,41 +656,19 @@
         "sweet": "0%"
       },
       {
-        "count": 2,
+        "count": 3,
         "dates": [
+          "2026-03-24",
           "2026-07-09",
           "2026-07-27"
         ],
         "ice": "Warm",
         "milk": "Oat",
-        "n": "Flat White w/ oak milk",
+        "n": "Flat White",
         "p": "5",
         "reorder": "yes",
         "size": "8 oz",
         "sweet": "0%"
-      },
-      {
-        "count": 4,
-        "dates": [
-          "2026-03-22",
-          "2026-03-25",
-          "2026-04-09",
-          "2026-08-11"
-        ],
-        "ice": "Warm",
-        "milk": "Oat",
-        "n": "Hojicha latte",
-        "p": "7.25",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
-      },
-      {
-        "dates": [
-          "2026-03-24"
-        ],
-        "n": "Flat white",
-        "p": ""
       },
       {
         "dates": [
@@ -717,20 +678,20 @@
         "p": ""
       }
     ],
-    "elo": 1560,
+    "elo": 1582,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 6,
+    "matches": 11,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-08-15T07:22:35.732Z",
+    "updated": "2026-08-16T20:35:57.717Z",
     "wish": false
   },
   {
@@ -2061,11 +2022,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1485,
     "emoji": "☕",
     "fav": false,
     "id": "mqm06fjnsrlj",
     "lat": 37.74313,
     "lng": -122.47803,
+    "matches": 2,
     "name": "Jandii Cafe",
     "rating": 4,
     "review": "I like the taste of hojicha and I like it! Great for study!",
@@ -2131,11 +2094,13 @@
         "sweet": "25%"
       }
     ],
+    "elo": 1484,
     "emoji": "☕",
     "fav": false,
     "id": "mqvibm9dlg55",
     "lat": 37.76446,
     "lng": -122.42229,
+    "matches": 1,
     "name": "Binge Coffee House",
     "rating": 4,
     "review": "",
@@ -2158,11 +2123,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1516,
     "emoji": "☕",
     "fav": false,
     "id": "mr2l65dhmczg",
     "lat": 37.87214,
     "lng": -122.26962,
+    "matches": 1,
     "name": "ChaHalo 茶话弄 - Berkeley",
     "rating": 4,
     "review": "",
@@ -2183,11 +2150,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1515,
     "emoji": "☕",
     "fav": false,
     "id": "mr7ejpw1qafq",
     "lat": 37.86832,
     "lng": -122.26044,
+    "matches": 1,
     "name": "8 Grams Matcha",
     "rating": 5,
     "review": "I like they have different blends!",
@@ -2274,11 +2243,13 @@
         "size": "12 oz"
       }
     ],
+    "elo": 1503,
     "emoji": "🏠",
     "fav": true,
     "id": "mrr7zovlvqbp",
     "lat": 37.56299,
     "lng": -122.32553,
+    "matches": 1,
     "name": "Cafe Plaza",
     "rating": 5,
     "review": "Amazing vibes, the host were extremely the best, drinks tailored to your taste!",
@@ -2307,11 +2278,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1499,
     "emoji": "☕",
     "fav": false,
     "id": "mrsr4gr9snf3",
     "lat": 37.31521,
     "lng": -122.03291,
+    "matches": 1,
     "name": "Shu Shia 树夏",
     "rating": 5,
     "review": "Avocado was tasty and a little bit of lightness!",
@@ -2335,11 +2308,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1500,
     "emoji": "☕",
     "fav": false,
     "id": "mrsr6rvphhm7",
     "lat": 37.36752,
     "lng": -122.03358,
+    "matches": 1,
     "name": "TANING - Sunnyvale",
     "rating": 4,
     "review": "Great lemon taste but the drink are very hot and it'll take a while before drinking it and the cups leaks a lot.",
@@ -2364,11 +2339,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1484,
     "emoji": "☕",
     "fav": false,
     "id": "mrv3oazshy7o",
     "lat": 37.78969,
     "lng": -122.40414,
+    "matches": 1,
     "name": "Origin Lab Coffee & Matcha",
     "rating": 3,
     "review": "Nice place with limited sitting, drink wasn't good, felt water down.",
@@ -2392,11 +2369,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1490,
     "emoji": "☕",
     "fav": false,
     "id": "mryqopi0d1nh",
     "lat": 37.78367,
     "lng": -122.43266,
+    "matches": 1,
     "name": "Boba Guys Fillmore",
     "rating": 3,
     "review": "The hojicha latte was only decent because of our friend Ang!",
@@ -2419,11 +2398,13 @@
         "size": "16 oz"
       }
     ],
+    "elo": 1491,
     "emoji": "☕",
     "fav": false,
     "id": "ms29gjndhrtd",
     "lat": 39.1675,
     "lng": -123.21174,
+    "matches": 1,
     "name": "Royal Tea Boba & Sandwiches",
     "rating": 2,
     "review": "Many of their drinks are powder but she was so nice to offer samples and taste their boba!",
@@ -2448,11 +2429,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1504,
     "emoji": "🏠",
     "fav": true,
     "id": "mscep73jjytf",
     "lat": 37.79306,
     "lng": -122.42298,
+    "matches": 2,
     "name": "Viv & Iv's Cafe",
     "rating": 5,
     "review": "The matcha made well and thoughtful, amazing work from the host! The wifi tho \n\nHouse warming cafe, great interior decor, amazing food especially the kasama in chicago inspired one!",
@@ -2479,11 +2462,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1516,
     "emoji": "☕",
     "fav": false,
     "id": "msgmmvs974rs",
     "lat": 37.56659,
     "lng": -122.32329,
+    "matches": 1,
     "name": "Molly Tea (San Mateo)",
     "rating": 5,
     "review": "Solid Jasmine tea taste",
@@ -2510,11 +2495,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1490,
     "emoji": "☕",
     "fav": false,
     "id": "msu00kujuuz2",
     "lat": 37.58007,
     "lng": -122.34666,
+    "matches": 1,
     "name": "Sunright Tea Studio - Burlingame",
     "rating": 4,
     "review": "Classic, if you can't decide this is the place to go to!",
@@ -2542,11 +2529,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1516,
     "emoji": "☕",
     "fav": false,
     "id": "msu1j50kxltv",
     "lat": 37.74058,
     "lng": -122.46647,
+    "matches": 1,
     "name": "Hardware Coffee Co.",
     "rating": 4,
     "review": "Great study spot! Hojicha is ok!",
@@ -2572,11 +2561,13 @@
         "sweet": "25%"
       }
     ],
+    "elo": 1516,
     "emoji": "☕",
     "fav": false,
     "id": "msu1q6bvm46n",
     "lat": 37.66805,
     "lng": -122.46815,
+    "matches": 1,
     "name": "Chicha San Chen 吃茶三千",
     "rating": 4,
     "review": "Nice cafe but like it may take a while to get your order!",
@@ -2607,11 +2598,13 @@
         "reorder": "yes"
       }
     ],
+    "elo": 1516,
     "emoji": "☕",
     "fav": false,
     "id": "msu1xc32ec38",
     "lat": 37.33282,
     "lng": -121.90455,
+    "matches": 1,
     "name": "Kasama Cà Phê",
     "rating": 5,
     "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
@@ -2639,11 +2632,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1484,
     "emoji": "☕",
     "fav": false,
     "id": "msu21vly3a9b",
     "lat": 37.76538,
     "lng": -122.45015,
+    "matches": 1,
     "name": "Yardsale San Francisco",
     "rating": 4,
     "review": "Matcha was above average but the atmosphere is great and clothing too!",
@@ -2670,15 +2665,83 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1469,
     "emoji": "☕",
     "fav": false,
     "id": "msvag8ahm8ih",
     "lat": 37.33693,
     "lng": -122.04031,
+    "matches": 2,
     "name": "Shang Yu Lin-Cupertino上宇林",
     "rating": 3,
     "review": "First impression it was okay, the way the milk and the black tea combination, the milk over powers but the tea caffeine hits hard.",
-    "updated": "2026-08-16T04:12:15.325Z",
+    "updated": "2026-08-16T19:39:11.840Z",
     "wish": false
+  },
+  {
+    "area": "Downtown",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-16"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Corn Matcha",
+        "p": "8",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mswe32c5jlz9",
+    "lat": 37.56413,
+    "lng": -122.32295,
+    "matches": 2,
+    "name": "Odd One Out Tea San Mateo",
+    "rating": 5,
+    "review": "",
+    "tags": [
+      "cozy",
+      "specialty",
+      "matcha"
+    ],
+    "updated": "2026-08-17T03:25:22.073Z",
+    "wish": false
+  },
+  {
+    "area": "West San Jose",
+    "brand": "",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mswprxdxyg94",
+    "lat": 37.2928,
+    "lng": -121.99195,
+    "name": "Formosa Aroma 島嶼茶鄉 - San Jose, CA",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-08-17T04:08:46.532Z",
+    "wish": true
+  },
+  {
+    "area": "Winchester",
+    "brand": "",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mswvf0lujqg3",
+    "lat": 37.32913,
+    "lng": -121.8841,
+    "name": "Academic Coffee",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-08-17T06:46:55.793Z",
+    "wish": true
   }
 ]
