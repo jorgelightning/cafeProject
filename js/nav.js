@@ -13,7 +13,7 @@ function show(view,fav){ if(app.dataset.view==="form"&&view!=="form"&&typeof for
 document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
 document.querySelectorAll(".side-nav button").forEach(b=>b.classList.remove("on"));
 _mark(_TABS[view]); _mark(_NAVS[view]);
-if(view==="compare")newMatchup();
+if(view==="compare")renderBoard();
 if(view==="stats")renderStats();
 if(view==="list"||view==="map")renderList();
 if(gReady)setTimeout(()=>{ mapResize(); if(view==="map")focusNearest(); },60);
