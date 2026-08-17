@@ -1,7 +1,7 @@
 # Design notes
 
 Why the app is built the way it is, what the data actually supports, and what was
-deliberately **not** built. Written 16 Aug 2026. Figures are from `cafes.json` on that date
+deliberately **not** built. Last updated 16 Aug 2026. Figures are live values from that date
 and will drift — the reasoning is the durable part, the numbers are the evidence for it.
 
 Companion to `README.md`, which covers structure and deployment.
@@ -52,6 +52,14 @@ Companion to `README.md`, which covers structure and deployment.
 - **`.ph` tile contents are written from three places** (`renderList`, `verifyCardPhoto`,
   `applyCardPhoto`). They all route through `phInner()`; bypassing it means a resolving photo
   silently wipes the star pill and wish badge.
+- **`eloScoreNum()` returns exactly 5.0 for a never-compared cafe** — a real midpoint, not a
+  null. Sorting on it alone floats every untested cafe above everything that was compared and
+  lost. That shipped in List's "Top ranked" for months and put the most-compared cafe in the
+  corpus in last place. Any new ordering must branch on `matchCount(c) > 0` first.
+- **A button that names a destination has to be checked in both roles.** "See the board ›" and
+  the Stats handoff both called `openRank()`, which opened a matchup for admin and the
+  leaderboard only for viewers — so the owner could never reach the thing the button promised.
+  Two callers shipped before anyone noticed.
 
 ---
 
@@ -59,19 +67,23 @@ Companion to `README.md`, which covers structure and deployment.
 
 | | |
 |---|---|
-| Cafes | 92 total — 88 visited, 4 wishlist |
-| Drink rows | 116, of which **60 (52%) have a price** |
-| Recorded spend | $483.67 — computed over half the data |
-| Visits (distinct cafe-day) | 101, across 91 distinct days since Sep 2022 |
-| Return behaviour | **12 returned to, 56 visited once, 20 undated** |
-| Ratings | 74 rated, **60 of them 4 or 5 stars** |
-| Cafes ranked | 70 of 88, max 15 comparisons |
-| Drinks ranked | 27 of 116, max 6 comparisons |
+| Cafes | 94 total — 89 visited, 5 wishlist |
+| Drink rows | 113, of which **58 (51%) have a price** |
+| Recorded spend | $496.67 — computed over half the data |
+| Visits (distinct cafe-day) | 102, across 92 distinct days since Sep 2022 |
+| Return behaviour | **12 returned to, 57 visited once, 20 undated** |
+| Ratings | 75 rated, **61 of them 4 or 5 stars** |
+| Cafes ranked | 86 of 89, 195 head-to-heads, max 15 comparisons |
+| Drinks ranked | 27 of 113, max 6 — frozen; drinks are no longer ranked |
 
 Two consequences run through most decisions below: **prices are missing from half the
 drinks**, so any money figure is a floor and needs its coverage stated; and **ratings are
 squashed at the top**, so a star average cannot move and "which was better" needs a
 comparison, not a score.
+
+Cafe ranking coverage moved from 70 of 88 to 86 of 89 within a day of the post-save question
+shipping, which is the clearest evidence in the file that asking at the moment of logging
+works and asking on a separate screen did not.
 
 ---
 
@@ -104,8 +116,8 @@ to"** — the only actionable thing in the corpus, given 56 cafes visited once a
 to — and every metric tile states its own coverage. Result: 2,198px.
 
 ### Ranking comes to the save, and ranks cafes
-The Rank tab went unused. The question now appears as a sheet after saving. It ranks **cafes**,
-justified by the drink just logged ("Both do hojicha latte"), because:
+The Rank tab went unused. The question now appears as a bottom sheet after saving. It ranks
+**cafes**, justified by the drink just logged ("Both do hojicha latte"), because:
 
 - Replaying all 114 dated logs chronologically, a same-name **drink** opponent existed only
   **26%** of the time. 120 of the 140 possible drink pairs are hojicha-vs-hojicha.
@@ -115,7 +127,22 @@ justified by the drink just logged ("Both do hojicha latte"), because:
 
 The payoff shown is **rank position, not the score**: one vote moves the displayed decimal
 about 0.05 but moves rank a median of 4–5 slots. "Too close to call" is a real third answer —
-with 60 of 74 rated cafes at 4–5 stars, "both good" is the most frequent honest response.
+with 61 of 75 rated cafes at 4–5 stars, "both good" is the most frequent honest response.
+
+### The tab holds the standing, not the chore
+⚖️ Rank became 🏆 **Board**. The old tab opened a matchup and hid the leaderboard behind
+`if(!isAdmin)`, so the owner had cast 190 head-to-heads and never seen the ordering they
+produced. The slot now shows the full standing to both roles; ranking on demand is a button on
+it (`boardRank()`), which anchors on a never-compared cafe when one exists and reuses the same
+sheet the save flow uses rather than a second comparison UI.
+
+Positions come from `chaserRank()`, the same helper the sheet quotes, so "#2 → #1" in the popup
+and "#1" on the board can never disagree. It is **competition ranking**, so genuine ties share
+a position — ten tie groups today, three cafes at #14. Medals only for a unique top three. The
+score renders muted at 13px rather than bold green, because it cannot bear the emphasis: #1 and
+#2 both print 7.4, and six cafes print 5.4.
+
+Stats and Board now point at each other, so neither handoff is a dead end.
 
 ---
 
@@ -131,9 +158,10 @@ Recorded so they are not re-proposed. Each was considered and turned down on evi
 - **Fixing drink pairing by normalising names.** Stripping iced/hot/size/milk words moves the
   hit rate from 33.9% to 34.8%. Matching on the first two words reaches 46% but pairs "Matcha
   latte" with "Matcha Matcha". The corpus is genuinely long-tail.
-- **Merging `normDrink` keys.** Hojicha spans 11 keys across 13 spellings, but `normDrink` is
-  what pairs drinks in the Rank tab — merging would silently reshuffle existing Elo groups.
-  Stats and the ranking sheet sidestep it with family matching instead.
+- **Merging `normDrink` keys.** Hojicha spans 11 keys across 13 spellings. `normDrink` is what
+  the ranking sheet's exact-twin tier matches on and what `cleanupMilkNames` collapses on, so
+  merging changes which pairs get offered. Stats and the sheet's family tier sidestep it
+  instead, which is why the sheet can say "Both do hojicha" across spellings.
 - **An SVG icon sprite.** ~15 symbols and ~30 replacement sites to buy stroke consistency,
   with no effect on the logging loop and a real cost to the homemade character. The genuine
   problem it named — semantic drift between glyphs — was fixed with four glyph corrections.
@@ -156,6 +184,13 @@ Recorded so they are not re-proposed. Each was considered and turned down on evi
   ordering, and a first win still renders 5.1. Showing rank position is the actual fix.
 - **The liked-tally badge on cards.** The live distribution is all-yes or all-no in every
   non-zero case, so the denominator carried no information.
+- **A drinks leaderboard on the Board.** Deleted with the old tab. It contradicted itself in
+  public: Mashio Project's Hojica latte was the #2 drink in the app while Mashio Project the
+  cafe was #45 of 70, both numbers produced by the same screen.
+- **Deleting the ranking tab outright.** The raised ＋ would have shifted to 62.5% of the tab
+  bar — a permanent every-launch geometry change paid to remove a screen — and a ranked list of
+  94 cafes is the most shareable thing the app produces. Hiding it in the sort `<select>` next
+  to "Recently updated" is the wrong home for it.
 
 ---
 
@@ -165,15 +200,8 @@ Recorded so they are not re-proposed. Each was considered and turned down on evi
   the old "farthest travelled" section. On a trip it will keep suggesting Bay Area cafes.
   Preferring the map's live geolocation with `CA_HOME` as fallback is the fix.
 - **Drink Elo erased before 16 Aug 2026 is unrecoverable.** The leak is fixed, but every
-  `cafes.json` snapshot postdates the loss. 22 cafes kept their scores.
-- **Dead code in `js/rank.js`:** `startAnchorCompare`, `anchorOpponents`, `clearAnchor` have
-  zero call sites, and `newMatchup` never reads `cmpAnchorId`, so they would show an unrelated
-  pair even if wired up. Tempting and wrong to reuse for anchored comparison.
-- **The Rank tab's Drinks mode** feeds the ledger that only just stopped leaking, and 86% of
-  its available pairs are the same drink. Worth revisiting or retiring.
-- **`sharedTraitLabel` labels 71% of eligible cafe pairs "Coffee"**, because `typeTerms()`
-  appends the literal word for any cafe whose emoji is not boba or matcha. The ranking sheet's
-  five-family classifier is the better question; the Rank tab could adopt it.
+  `cafes.json` snapshot postdates the loss. 22 cafes kept their scores, and the detail page
+  still shows them; nothing writes new ones.
 - **`#map-sub`** ("N cafes · tap a pin") no longer renders anywhere, since both title bars are
   hidden on mobile. Map errors still surface through the full-pane `#map-msg`.
 - **Remaining scale drift:** 19 font sizes and 15 border radii across the stylesheet. Worth
