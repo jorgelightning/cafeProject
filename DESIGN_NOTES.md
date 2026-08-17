@@ -1,0 +1,180 @@
+# Design notes
+
+Why the app is built the way it is, what the data actually supports, and what was
+deliberately **not** built. Written 16 Aug 2026. Figures are from `cafes.json` on that date
+and will drift — the reasoning is the durable part, the numbers are the evidence for it.
+
+Companion to `README.md`, which covers structure and deployment.
+
+---
+
+## Conventions
+
+- **No build step, no framework, no dependencies.** `index.html` is markup; `styles.css` is
+  every style; `js/*.js` are classic scripts loaded in a fixed order (config → core → storage
+  → nav → map → photos → list → stats → rank → detail → form → boot). Functions are globals
+  because inline `onclick` handlers depend on them. This is a feature: nothing to install,
+  nothing to rot, deploy is `git push`.
+- **Bump `?v=` on every script and link tag in `index.html` when any `js/` or `css` file
+  changes.** That is what busts browser caches *and* trips the in-app "new version" banner,
+  which watches `index.html` only.
+- **State lives in attributes.** `#app[data-view]` switches all six panes and
+  `#app[data-mode]` drives the whole admin/viewer split through one rule
+  (`[data-mode="viewer"] .admin-only{display:none!important}`). `[data-theme]` and
+  `.adminbar[data-open]` follow the same pattern. Prefer extending it over adding JS
+  bookkeeping.
+- **Colours come from tokens**, defined in three blocks so the theme toggle can override the
+  system preference in both directions: bare `:root`, `@media (prefers-color-scheme:dark)
+  :root:not([data-theme="light"])`, and `:root[data-theme="dark"]`. Any new colour must be
+  added to all three. `--acc` is the identity orange; `--acc-strong` is the only one that may
+  sit under white text (`--acc` is 3.01:1 there, `--acc-strong` is 4.94:1).
+- Map pin colours (`ratingColor`, `cafeColor`) stay literal hex — the Google Maps API needs
+  real colour strings, not CSS variables.
+
+## Traps that have already caused bugs
+
+- **`saveForm()`'s edit branch does `Object.assign(c, data)`**, and `data.drinks` is rebuilt
+  from the form rows. Anything stored on a drink row that the form does not know about is
+  destroyed. This silently erased drink Elo for months. `elo`/`matches` are now explicitly
+  carried across; **anything else added to a drink row needs the same treatment.**
+  Cafe-level `c.elo` survives only because `data` has no `elo` key — do not add one.
+- **`mergeVisitInto()` is safe** by contrast: it mutates existing drink objects field by
+  field rather than replacing them.
+- **`subscribeCloud()` repaints a few hundred ms after every save** by calling
+  `openDetail(curId)`. Anything injected into the detail pane from *outside* `openDetail`
+  gets wiped. The ranking sheet is rendered from inside it for exactly this reason, and holds
+  cafe ids rather than object references so the echo cannot orphan a vote.
+- **Legacy `PhotoService.GetPhoto` URLs are session-bound** and, once stale, Google serves a
+  placeholder error image with HTTP 200 — so `onerror` probes cannot detect the breakage.
+  `isSessionPhotoUrl()` refuses them from persisted data. Never store one.
+- **The Maps key is referrer-locked** to the GitHub Pages origin, so photo fetching cannot be
+  tested from localhost. Only fallbacks and error handling can.
+- **`.ph` tile contents are written from three places** (`renderList`, `verifyCardPhoto`,
+  `applyCardPhoto`). They all route through `phInner()`; bypassing it means a resolving photo
+  silently wipes the star pill and wish badge.
+
+---
+
+## Measured baseline — 16 Aug 2026
+
+| | |
+|---|---|
+| Cafes | 92 total — 88 visited, 4 wishlist |
+| Drink rows | 116, of which **60 (52%) have a price** |
+| Recorded spend | $483.67 — computed over half the data |
+| Visits (distinct cafe-day) | 101, across 91 distinct days since Sep 2022 |
+| Return behaviour | **12 returned to, 56 visited once, 20 undated** |
+| Ratings | 74 rated, **60 of them 4 or 5 stars** |
+| Cafes ranked | 70 of 88, max 15 comparisons |
+| Drinks ranked | 27 of 116, max 6 comparisons |
+
+Two consequences run through most decisions below: **prices are missing from half the
+drinks**, so any money figure is a floor and needs its coverage stated; and **ratings are
+squashed at the top**, so a star average cannot move and "which was better" needs a
+comparison, not a score.
+
+---
+
+## Decisions
+
+### Photos are fetched, never trusted from storage
+Session-bound Places URLs were being persisted to Firebase and served broken to everyone.
+Fetching moved to the Places API (New) with the legacy service as fallback; stable URLs are
+persisted by the admin "Fetch all photos" action so viewers get thumbnails at zero API cost.
+Thumbnails load lazily — rendering the list costs no requests, and opening a cafe costs one.
+
+### Contrast was the real accessibility problem
+Measured on white before the design pass: stars **2.01:1**, `--faint` 2.50, green 3.41, red
+3.70, white-on-accent 3.01. All now clear AA (5.28–5.40). The rating renders as a same-glyph
+two-colour track — `★★★★` filled plus `★` unfilled — because `☆` is optically lighter and a
+different advance width, so a filled/hollow mix reads as decoration rather than a proportion.
+
+### The edit form defaults and protects
+101 of 116 drinks carry a date, so new rows default to today (timezone-corrected —
+`toISOString()` alone lands on the wrong day from Hawaii or Taipei). Rows rehydrated from
+saved drinks are untouched, so the dateless entries stay dateless. Existing drinks collapse to
+one-line summaries so a stray tap cannot edit an old visit, and any exit with unsaved changes
+asks first.
+
+### Stats answers a question instead of listing tables
+The old screen was 3,558px across 11 sections, of which ~1,400px was provably empty: six
+"drink rating" rows that all read exactly 100%, a "best value" metric that reduces to
+`1/price`, and eight cards repeating seven rows from 350px above. It now leads with **"Go back
+to"** — the only actionable thing in the corpus, given 56 cafes visited once and 12 returned
+to — and every metric tile states its own coverage. Result: 2,198px.
+
+### Ranking comes to the save, and ranks cafes
+The Rank tab went unused. The question now appears as a sheet after saving. It ranks **cafes**,
+justified by the drink just logged ("Both do hojicha latte"), because:
+
+- Replaying all 114 dated logs chronologically, a same-name **drink** opponent existed only
+  **26%** of the time. 120 of the 140 possible drink pairs are hojicha-vs-hojicha.
+- **Cafe** opponents exist 100% of the time, and cafe scores already spread 2.9–7.4.
+- Drink confidence is `m/(m+12)` and the maximum any drink has reached is 6, so drink scores
+  are pinned near 5.0 regardless of effort.
+
+The payoff shown is **rank position, not the score**: one vote moves the displayed decimal
+about 0.05 but moves rank a median of 4–5 slots. "Too close to call" is a real third answer —
+with 60 of 74 rated cafes at 4–5 stars, "both good" is the most frequent honest response.
+
+---
+
+## Rejected, and why
+
+Recorded so they are not re-proposed. Each was considered and turned down on evidence.
+
+- **Elo score on list cards.** 18 of 88 cafes have zero comparisons and confidence shrinks by
+  `m/(m+4)`, so a third of the grid would show a confident-looking number meaning nothing. The
+  fixed-corner geometry was kept and filled with the star track instead.
+- **Ranking drinks after a save.** See above — 26% pairing, scores that cannot move, and until
+  recently a ledger the save path erased.
+- **Fixing drink pairing by normalising names.** Stripping iced/hot/size/milk words moves the
+  hit rate from 33.9% to 34.8%. Matching on the first two words reaches 46% but pairs "Matcha
+  latte" with "Matcha Matcha". The corpus is genuinely long-tail.
+- **Merging `normDrink` keys.** Hojicha spans 11 keys across 13 spellings, but `normDrink` is
+  what pairs drinks in the Rank tab — merging would silently reshuffle existing Elo groups.
+  Stats and the ranking sheet sidestep it with family matching instead.
+- **An SVG icon sprite.** ~15 symbols and ~30 replacement sites to buy stroke consistency,
+  with no effect on the logging loop and a real cost to the homemade character. The genuine
+  problem it named — semantic drift between glyphs — was fixed with four glyph corrections.
+- **Colour-coding tiles by drink family.** 64 of 88 cafes are coffee, so three quarters of
+  every screen would collapse into four browns.
+- **A day-of-week chart.** Visits are Sun 15 / Mon 16 / Tue 16 / Wed 14 / Thu 20 / Fri 16 /
+  Sat 17 — a flat line.
+- **A stars-vs-Elo "disagreement" section.** Ranked by the naive gap, the top entries are all
+  5★ cafes with 3–6 comparisons whose Elo still sits near the default. It would rank "cafes I
+  haven't compared much" and call it disagreement.
+- **A segmented control on Stats.** 72px of permanent chrome to navigate 2,313px of content.
+  Navigation was the right answer at 3,558px and the wrong one after the cuts.
+- **A floating search bar over the map.** It repurposed `.sidebar` — simultaneously the
+  container for the header, admin bar, sort row and every pane — as a transparent overlay for
+  one view. Unshippable incrementally.
+- **Deleting the location dropdown.** Search only helps if you already know the name; this is
+  the one browse-by-place affordance across nine countries. Deferred for replacement, not
+  deletion.
+- **Retuning the Elo confidence divisors.** Cosmetic — widening a divisor rescales the same
+  ordering, and a first win still renders 5.1. Showing rank position is the actual fix.
+- **The liked-tally badge on cards.** The live distribution is all-yes or all-no in every
+  non-zero case, so the denominator carried no information.
+
+---
+
+## Open threads
+
+- **The "Go back to" hero uses a hardcoded San Francisco origin** (`CA_HOME`), inherited from
+  the old "farthest travelled" section. On a trip it will keep suggesting Bay Area cafes.
+  Preferring the map's live geolocation with `CA_HOME` as fallback is the fix.
+- **Drink Elo erased before 16 Aug 2026 is unrecoverable.** The leak is fixed, but every
+  `cafes.json` snapshot postdates the loss. 22 cafes kept their scores.
+- **Dead code in `js/rank.js`:** `startAnchorCompare`, `anchorOpponents`, `clearAnchor` have
+  zero call sites, and `newMatchup` never reads `cmpAnchorId`, so they would show an unrelated
+  pair even if wired up. Tempting and wrong to reuse for anchored comparison.
+- **The Rank tab's Drinks mode** feeds the ledger that only just stopped leaking, and 86% of
+  its available pairs are the same drink. Worth revisiting or retiring.
+- **`sharedTraitLabel` labels 71% of eligible cafe pairs "Coffee"**, because `typeTerms()`
+  appends the literal word for any cafe whose emoji is not boba or matcha. The ranking sheet's
+  five-family classifier is the better question; the Rank tab could adopt it.
+- **`#map-sub`** ("N cafes · tap a pin") no longer renders anywhere, since both title bars are
+  hidden on mobile. Map errors still surface through the full-pane `#map-msg`.
+- **Remaining scale drift:** 19 font sizes and 15 border radii across the stylesheet. Worth
+  folding in opportunistically, not worth a project.

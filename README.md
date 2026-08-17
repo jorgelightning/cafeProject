@@ -6,6 +6,10 @@ Live at **https://jorgelightning.github.io/cafeProject/**
 
 No build step, no framework — plain HTML/CSS/JS served straight from GitHub Pages.
 
+See [DESIGN_NOTES.md](DESIGN_NOTES.md) for why things are built the way they are, what the
+data actually supports, the traps that have already caused bugs, and what was deliberately
+not built.
+
 ## Project structure
 
 | File | What's in it |
