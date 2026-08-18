@@ -2022,13 +2022,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1485,
+    "elo": 1486,
     "emoji": "☕",
     "fav": false,
     "id": "mqm06fjnsrlj",
     "lat": 37.74313,
     "lng": -122.47803,
-    "matches": 2,
+    "matches": 3,
     "name": "Jandii Cafe",
     "rating": 4,
     "review": "I like the taste of hojicha and I like it! Great for study!",
@@ -2733,15 +2733,33 @@
     "area": "Winchester",
     "brand": "",
     "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-17"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Guava Matcha with CREAM",
+        "p": "9.50",
+        "size": "16 oz",
+        "sweet": "10%"
+      }
+    ],
+    "elo": 1499,
     "emoji": "☕",
     "fav": false,
     "id": "mswvf0lujqg3",
     "lat": 37.32913,
     "lng": -121.8841,
+    "matches": 1,
     "name": "Academic Coffee",
     "rating": 0,
     "review": "",
-    "updated": "2026-08-17T06:46:55.793Z",
-    "wish": true
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-08-17T19:33:28.562Z",
+    "wish": false
   }
 ]
