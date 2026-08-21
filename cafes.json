@@ -2529,13 +2529,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1516,
+    "elo": 1499,
     "emoji": "☕",
     "fav": false,
     "id": "msu1j50kxltv",
     "lat": 37.74058,
     "lng": -122.46647,
-    "matches": 1,
+    "matches": 2,
     "name": "Hardware Coffee Co.",
     "rating": 4,
     "review": "Great study spot! Hojicha is ok!",
@@ -2760,6 +2760,36 @@
       "cozy"
     ],
     "updated": "2026-08-17T19:33:28.562Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown Seattle",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-20"
+        ],
+        "ice": "Less ice",
+        "n": "PLUS84 Machiatto",
+        "p": "7",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "100%"
+      }
+    ],
+    "elo": 1517,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt1xfsx8x7a1",
+    "lat": 47.61544,
+    "lng": -122.34656,
+    "matches": 1,
+    "name": "PLUS84",
+    "rating": 5,
+    "review": "Plus84 signature sweetness is as is because of condense milk! Great study vibes and they let me bring my bike in!",
+    "updated": "2026-08-20T19:42:41.356Z",
     "wish": false
   }
 ]
