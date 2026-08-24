@@ -2791,5 +2791,35 @@
     "review": "Plus84 signature sweetness is as is because of condense milk! Great study vibes and they let me bring my bike in!",
     "updated": "2026-08-20T19:42:41.356Z",
     "wish": false
+  },
+  {
+    "area": "South Main",
+    "brand": "",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt6wmnvpdgvg",
+    "lat": 49.25985,
+    "lng": -123.10136,
+    "name": "emeri matcha bar",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-08-24T07:18:20.004Z",
+    "wish": true
+  },
+  {
+    "area": "Central Vancouver",
+    "brand": "",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt6wojizh8ca",
+    "lat": 49.28251,
+    "lng": -123.11126,
+    "name": "Saunter Coffee",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-08-24T07:19:47.675Z",
+    "wish": true
   }
 ]
