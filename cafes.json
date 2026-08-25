@@ -1061,13 +1061,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1470,
+    "elo": 1455,
     "emoji": "☕",
     "fav": false,
     "id": "mqf9w1vzajpl",
     "lat": 21.32908,
     "lng": -158.0914,
-    "matches": 6,
+    "matches": 7,
     "name": "Island Vintage Coffee and Wine Bar Kapolei",
     "rating": 3,
     "review": "Flat white are known for their micro foam and there was none here!",
@@ -2123,13 +2123,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1516,
+    "elo": 1531,
     "emoji": "☕",
     "fav": false,
     "id": "mr2l65dhmczg",
     "lat": 37.87214,
     "lng": -122.26962,
-    "matches": 1,
+    "matches": 2,
     "name": "ChaHalo 茶话弄 - Berkeley",
     "rating": 4,
     "review": "",
@@ -2249,7 +2249,7 @@
     "id": "mrr7zovlvqbp",
     "lat": 37.56299,
     "lng": -122.32553,
-    "matches": 1,
+    "matches": 2,
     "name": "Cafe Plaza",
     "rating": 5,
     "review": "Amazing vibes, the host were extremely the best, drinks tailored to your taste!",
@@ -2811,15 +2811,111 @@
     "area": "Central Vancouver",
     "brand": "",
     "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-24"
+        ],
+        "ice": "Warm",
+        "n": "Flat White",
+        "p": "4.17",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1515,
     "emoji": "☕",
     "fav": false,
     "id": "mt6wojizh8ca",
     "lat": 49.28251,
     "lng": -123.11126,
+    "matches": 1,
     "name": "Saunter Coffee",
+    "rating": 5,
+    "review": "Great atmosphere to work in the front and there is something on the back for more of a quiet experience. The flat white is so good, strong espresso and the matcha has a good strong matcha taste too!",
+    "updated": "2026-08-24T20:37:54.465Z",
+    "wish": false
+  },
+  {
+    "area": "Crossroads",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-24"
+        ],
+        "ice": "Less ice",
+        "n": "Jasmine Green Milk Tea",
+        "p": "5.25",
+        "reorder": "neutral",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1485,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt8cgxumld22",
+    "lat": 47.62301,
+    "lng": -122.13215,
+    "matches": 1,
+    "name": "Chayan 茶宴 Bellevue",
+    "rating": 3,
+    "review": "I thought it was okay, there just wasn’t enough tea flavor and a hint of water and tea mixture.",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-08-25T07:29:33.022Z",
+    "wish": false
+  },
+  {
+    "area": "Richmond",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-24"
+        ],
+        "ice": "Less ice",
+        "n": "Grapefruit and Peach Green Tea",
+        "p": "5.76",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt8cljabnbff",
+    "lat": 49.18438,
+    "lng": -123.13574,
+    "matches": 1,
+    "name": "Choo Tea",
+    "rating": 4,
+    "review": "The combination of tea and fruit were great! Felt fresh for the taste!",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-08-25T07:33:07.426Z",
+    "wish": false
+  },
+  {
+    "area": "Central Vancouver",
+    "brand": "",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt8cmelqa902",
+    "lat": 49.28522,
+    "lng": -123.11632,
+    "name": "Nīzu Cafe",
     "rating": 0,
     "review": "",
-    "updated": "2026-08-24T07:19:47.675Z",
+    "updated": "2026-08-25T07:33:48.014Z",
     "wish": true
   }
 ]
