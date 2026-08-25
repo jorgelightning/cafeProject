@@ -39,3 +39,30 @@ const OWNER_EMAIL="jorgemarco.portillo@gmail.com"; // only this Google account c
 const ADMIN_PASS="cafeAdmin";         // change this — only hides editing UI (not real security)
 const DEFAULT_CENTER=[21.300,-157.830]; // Honolulu [lat,lng]
 const ALL_TAGS=["cozy","good wifi","oat milk","outdoor","quiet","pastries","specialty","matcha","to-go"];
+/* ---------- currency ----------
+A cafe's currency is a fact about its country, so it is keyed on the ISO 3166-1 alpha-2
+code Google's Places result gives us (stored as c.cc when the cafe is picked). It is
+deliberately NOT derived from countryTerms(): that is a ladder of lat/lng rectangles whose
+contiguous-US box also contains Vancouver, Toronto and Montreal, so it would bill Canadian
+coffee in US dollars. Anything missing here falls back to USD. */
+const CCY_BY_CC={ US:"USD", CA:"CAD", MX:"MXN", GB:"GBP", CH:"CHF", SE:"SEK", NO:"NOK", DK:"DKK", CZ:"CZK", PL:"PLN", HU:"HUF", TR:"TRY",
+AT:"EUR", BE:"EUR", CY:"EUR", DE:"EUR", EE:"EUR", ES:"EUR", FI:"EUR", FR:"EUR", GR:"EUR", HR:"EUR", IE:"EUR", IT:"EUR", LT:"EUR", LU:"EUR", LV:"EUR", MT:"EUR", NL:"EUR", PT:"EUR", SI:"EUR", SK:"EUR",
+JP:"JPY", KR:"KRW", TW:"TWD", HK:"HKD", MO:"MOP", CN:"CNY", SG:"SGD", MY:"MYR", TH:"THB", VN:"VND", PH:"PHP", ID:"IDR", IN:"INR",
+AU:"AUD", NZ:"NZD", AE:"AED", IL:"ILS", ZA:"ZAR", BR:"BRL", AR:"ARS", CL:"CLP", CO:"COP", PE:"PEN" };
+/* sym = what goes in front of the amount. dec = how many decimals a price is *written* with
+   on a menu in that country, which is not always the ISO 4217 minor unit: bubble tea in
+   Taipei is NT$65, never NT$65.00. The USD side of every drink always keeps 2. */
+const CCY_META={ USD:{sym:"$",dec:2}, EUR:{sym:"€",dec:2}, GBP:{sym:"£",dec:2}, CAD:{sym:"CA$",dec:2}, AUD:{sym:"A$",dec:2}, NZD:{sym:"NZ$",dec:2},
+CHF:{sym:"CHF ",dec:2}, SEK:{sym:"kr",dec:2}, NOK:{sym:"kr",dec:2}, DKK:{sym:"kr",dec:2}, CZK:{sym:"Kč",dec:0}, PLN:{sym:"zł",dec:2}, HUF:{sym:"Ft",dec:0}, TRY:{sym:"₺",dec:2},
+JPY:{sym:"¥",dec:0}, KRW:{sym:"₩",dec:0}, TWD:{sym:"NT$",dec:0}, HKD:{sym:"HK$",dec:1}, MOP:{sym:"MOP$",dec:1}, CNY:{sym:"¥",dec:1}, SGD:{sym:"S$",dec:2}, MYR:{sym:"RM",dec:2},
+THB:{sym:"฿",dec:0}, VND:{sym:"₫",dec:0}, PHP:{sym:"₱",dec:0}, IDR:{sym:"Rp",dec:0}, INR:{sym:"₹",dec:0}, MXN:{sym:"MX$",dec:2}, AED:{sym:"AED ",dec:2}, ILS:{sym:"₪",dec:2},
+ZAR:{sym:"R",dec:2}, BRL:{sym:"R$",dec:2}, ARS:{sym:"AR$",dec:0}, CLP:{sym:"CLP$",dec:0}, COP:{sym:"COP$",dec:0}, PEN:{sym:"S/",dec:2} };
+/* Units of the local currency per 1 US dollar. HAND-MAINTAINED AND APPROXIMATE — spot-check
+   before trusting a total. This staleness is survivable by design: the rate is copied onto
+   each drink at the moment it is logged (drink.pr) and never consulted again, so refreshing
+   this table moves future entries only and can never rewrite a price already recorded.
+   To move to live rates, change fxRate() in core.js; nothing else reads this. */
+const FX_PER_USD={ USD:1, EUR:0.92, GBP:0.79, CAD:1.37, AUD:1.52, NZD:1.66, CHF:0.88, SEK:10.5, NOK:10.7, DKK:6.85, CZK:23.2, PLN:3.95, HUF:355, TRY:34.0,
+JPY:147, KRW:1330, TWD:31.5, HKD:7.8, MOP:8.03, CNY:7.15, SGD:1.34, MYR:4.45, THB:34.5, VND:25400, PHP:57.5, IDR:16000, INR:83.5,
+MXN:18.5, AED:3.67, ILS:3.70, ZAR:18.2, BRL:5.45, ARS:1010, CLP:945, COP:4100, PEN:3.75 };
+const FX_ASOF="2026-08-25";       // date stamped onto drinks logged against this table
