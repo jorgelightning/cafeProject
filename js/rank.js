@@ -37,7 +37,7 @@ function boardRow(c,pos,unique){
   const rank=(pos<=3&&unique)?["🥇","🥈","🥉"][pos-1]:("#"+pos);
   const ar=boardArea(c), m=matchCount(c);
   const sub=m+" comparison"+(m===1?"":"s")+(ar?" · "+esc(ar):"");
-  return '<div class="lbrow tap" onclick="openDetail(\''+c.id+'\',\'compare\')"><span class="lbrank">'+rank+'</span>'
+  return '<div class="lbrow tap" role="button" tabindex="0" onclick="openDetail(\''+c.id+'\',\'compare\')"><span class="lbrank">'+rank+'</span>'
     +'<span class="gotile" style="background:'+cafeColor(c.name)+'">'+esc(c.emoji||"☕")+'</span>'
     +'<div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+sub+'</div></div>'
     +'<span class="lbscore soft">'+eloScore(c)+'</span></div>';
@@ -47,7 +47,7 @@ function boardQueueRow(c){
   const sub=[ar?esc(ar):"",chaserWhen(lv)].filter(Boolean).join(" · ");
   const right=isAdmin?'<span class="rank-lnk">Rank ›</span>':'<span class="gostar">'+(c.rating||0)+'★</span>';
   const act=isAdmin?("boardRank('"+c.id+"')"):("openDetail('"+c.id+"','compare')");
-  return '<div class="gorow" onclick="'+act+'"><span class="gotile" style="background:'+cafeColor(c.name)+'">'+esc(c.emoji||"☕")+'</span>'
+  return '<div class="gorow" role="button" tabindex="0" onclick="'+act+'"><span class="gotile" style="background:'+cafeColor(c.name)+'">'+esc(c.emoji||"☕")+'</span>'
     +'<div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+sub+'</div></div>'+right+'</div>';
 }
 function renderBoard(){
@@ -59,7 +59,7 @@ function renderBoard(){
   const h2h=Math.round(vis.reduce(function(s,c){ return s+matchCount(c); },0)/2);
   let h='<div class="cmp-head left"><div class="ct">🏆 The board</div><div class="cs">'
     +board.length+' of '+vis.length+' cafes ranked'+(h2h?' · '+h2h+' head-to-head'+(h2h===1?"":"s"):"")+'</div></div>';
-  if(isAdmin&&vis.length>1)h+='<div class="handoff top" onclick="boardRank()">⚖️ Rank a pair'+(never.length?' <span>· '+never.length+' never compared</span>':'')+'</div>';
+  if(isAdmin&&vis.length>1)h+='<div class="handoff top" role="button" tabindex="0" onclick="boardRank()">⚖️ Rank a pair'+(never.length?' <span>· '+never.length+' never compared</span>':'')+'</div>';
   if(!board.length){
     h+='<div class="empty"><div class="big">🏆</div>Nothing ranked yet.'+(isAdmin?" Tap “Rank a pair”, or log a visit and answer the question that follows.":"")+'</div>';
   } else {
@@ -81,7 +81,7 @@ function renderBoard(){
     if(q.length>3)h+='<div class="foldbox">'+q.slice(3).join("")+'</div>'
       +'<button class="morebtn" data-lab="Show all '+q.length+'" onclick="statFold(this)">Show all '+q.length+' ▾</button>';
   }
-  h+='<div class="handoff" onclick="show(\'stats\')">📊 See the numbers behind this <span>›</span></div>';
+  h+='<div class="handoff" role="button" tabindex="0" onclick="show(\'stats\')">📊 See the numbers behind this <span>›</span></div>';
   host.innerHTML='<div class="boardwrap">'+h+'</div>';
 }
 /* On-demand ranking. Anchors on a never-compared cafe when there is one, so the button
@@ -181,7 +181,7 @@ function chaserApply(winId,loseId,draw){
   const delta=draw?Math.round(K*(0.5-Ea)):Math.max(1,Math.round(K*(1-Ea)));
   a.elo=Ra+delta; b.elo=Rb-delta;
   a.matches=matchCount(a)+1; b.matches=matchCount(b)+1;
-  save();
+  saveCafe(a.id); saveCafe(b.id);   /* a comparison moves exactly these two */
   const post=chaserBoard();
   return {a:a,b:b,draw:!!draw,preA:preA,preB:preB,postA:chaserRank(a,post),postB:chaserRank(b,post),postN:post.length};
 }

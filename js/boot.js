@@ -19,7 +19,7 @@ function migratePhotoCache(){
     if(fbReady&&fbAuth&&fbAuth.currentUser){
       const u=fbAuth.currentUser;
       if(u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()){
-        fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafes))).catch(()=>{});
+        fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafesById()))).then(function(){ _cloudKeyed=true; }).catch(()=>{});
       }
     }
   }
