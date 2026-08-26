@@ -7,11 +7,35 @@ let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gp
 let isAdmin=false;
 const $=id=>document.getElementById(id);
 let fbReady=false, fbDb=null, fbAuth=null;
+/* True once the cloud node is an object keyed by cafe id rather than a JSON array. Writing to
+   cafes/<id> while it is still an array would add a string key beside the numeric ones and
+   duplicate the cafe, so per-cafe writes wait for the first full write to reshape it. */
+let _cloudKeyed=false;
+function cafesById(){ const o={}; cafes.forEach(function(c){ if(c&&c.id)o[c.id]=c; }); return o; }
+function noteCloudShape(raw){ _cloudKeyed=!!raw&&!Array.isArray(raw); }
 function asArray(v){ return Array.isArray(v)?v:(v&&typeof v==="object"?Object.values(v):[]); }
 function initFirebase(){ try{ if(!window.firebase||!FIREBASE_CONFIG||!FIREBASE_CONFIG.databaseURL||/PASTE_/.test(FIREBASE_CONFIG.databaseURL))return false; firebase.initializeApp(FIREBASE_CONFIG); fbDb=firebase.database(); try{ fbAuth=firebase.auth(); }catch(e){} fbReady=true; return true; }catch(e){ console.warn("Firebase init failed",e); return false; } }
-function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ const val=asArray(snap.val()); if(!val.length)return; cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } else if(v==="stats")renderStats(); }); }
-async function loadCloud(){ if(!fbReady)return false; try{ const snap=await Promise.race([fbDb.ref("cafes").once("value"),new Promise((_,rej)=>setTimeout(()=>rej(new Error("cloud-timeout")),6000))]); const val=asArray(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){} if(dirty&&Array.isArray(local)&&local.length){ cafes=local; resyncDirty(); return true; } if(val.length){ cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load slow/failed — using cached data",e); let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(_e){} if(Array.isArray(local)&&local.length){ cafes=local; return true; } } return false; }
+function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ noteCloudShape(snap.val()); const val=asArray(snap.val()); if(!val.length)return; cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } else if(v==="stats")renderStats(); }); }
+async function loadCloud(){ if(!fbReady)return false; try{ const snap=await Promise.race([fbDb.ref("cafes").once("value"),new Promise((_,rej)=>setTimeout(()=>rej(new Error("cloud-timeout")),6000))]); noteCloudShape(snap.val()); const val=asArray(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){} if(dirty&&Array.isArray(local)&&local.length){ cafes=local; resyncDirty(); return true; } if(val.length){ cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load slow/failed — using cached data",e); let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(_e){} if(Array.isArray(local)&&local.length){ cafes=local; return true; } } return false; }
 const app=$("app");
+/* Keyboard access for the 17 elements that carry an onclick but are not buttons. They keep
+   their tags — a <button> cannot hold the card's block layout, and swapping the others would
+   mean re-checking every .chip and .locpill rule for the browser's own button styling — so
+   role="button" + tabindex="0" supplies the semantics and this supplies the behaviour a real
+   button would have given for free. One listener covers all of them, and any added later.
+   The comparison sheet's backdrop is deliberately NOT focusable: a scrim is not a control.
+   Escape closes that sheet, matching what the back button already does via chaserOpen(). */
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape"){
+    if(typeof chaserOpen==="function"&&chaserOpen()&&typeof chaserDismiss==="function")chaserDismiss();
+    return;
+  }
+  if(e.key!=="Enter"&&e.key!==" ")return;
+  const el=(e.target&&e.target.closest)?e.target.closest('[role="button"][tabindex="0"]'):null;
+  if(!el)return;
+  e.preventDefault();   /* Space would otherwise scroll the page */
+  el.click();
+});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
 function esc(s){ return (s||"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
