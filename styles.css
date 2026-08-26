@@ -354,6 +354,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .grid{ grid-template-columns:1fr 1fr 1fr; }
 }
 #app[data-mode="viewer"] .admin-only{ display:none !important; }
+/* Wishlist mode: a place you have not been has no visit to describe, so the visit fields
+   step aside. Hidden, not cleared — anything already typed survives unticking. */
+#pane-form[data-wish="1"] .visit-only{ display:none !important; }
 /* Collapsed to a single line; the bulk actions only unfold when asked for. */
 .adminbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:6px 16px; background:var(--surface2); border-bottom:1px solid var(--border); margin-bottom:10px; }
 .adminbar button{ padding:7px 11px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12px; font-weight:600; cursor:pointer; }

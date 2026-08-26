@@ -4,7 +4,7 @@
 /* ---------- form ---------- */
 function checkExisting(){ if(editId)return; const name=$("f-name").value.trim(); if(!name)return; const ex=findSameCafe(name,$("f-area").value.trim(),picked?picked.lat:null,picked?picked.lng:null); if(ex){ openForm(ex.id); toast("Found "+ex.name+" — loaded your notes to edit"); } }
 function fmtEdited(iso){ if(!iso)return ""; const d=new Date(iso); if(isNaN(d))return ""; return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+" · "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
-function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?(c.area||""):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; if(!formCC&&c&&c.lat!=null)resolveCC(c.lat,c.lng,c.id); picked=c&&c.lat!=null?{lat:c.lat,lng:c.lng}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
+function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?(c.area||""):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; syncWishMode(); formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; if(!formCC&&c&&c.lat!=null)resolveCC(c.lat,c.lng,c.id); picked=c&&c.lat!=null?{lat:c.lat,lng:c.lng}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
 /* Unsaved-changes guard: snapshot the form on open, compare on any exit path (close button, back button, tab/nav via show(), page unload). Saving clears the snapshot so it never prompts. Pin coords are normalized to 5 decimals because setPicked rounds them. */
 let _formSnap=null;
 function formSnapshot(){ const rows=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const g=cl=>{ const el=r.querySelector(cl); return el?el.value:""; }; const gs=cl=>{ const el=r.querySelector(cl); return el?(el.value+":"+((el.dataset&&el.dataset.set)||"")):""; }; return [g(".dn"),g(".dp"),g(".dd"),g(".dqt"),gs(".dsz"),gs(".dsw"),gs(".dic"),g(".dmk"),g(".dre"),g(".dpc")].join("|"); }).filter(s=>s.split("|")[0].trim()); return JSON.stringify([$("f-name").value,$("f-area").value,$("f-brand")?$("f-brand").value:"",$("f-review").value,$("f-fav").checked,$("f-wish")?$("f-wish").checked:false,$("f-custom")?$("f-custom").checked:false,formPhoto,formRating,formTags,picked?[+(+picked.lat).toFixed(5),+(+picked.lng).toFixed(5)]:null,rows]); }
@@ -115,6 +115,18 @@ function adoptCC(cc,cafeId){
   if(formCC||app.dataset.view!=="form")return;
   if(cafeId&&editId!==cafeId)return;
   formCC=cc; refreshRowCcy();
+}
+/* A wishlist entry is somewhere you have not been, so the fields describing a visit —
+   photo, drinks, rating, tags, favourite — have nothing to describe. They are hidden
+   rather than cleared, so anything already typed survives unticking the box. The notes
+   box stays either way: "heard the hojicha is good" is exactly what is worth keeping
+   about a place you are saving for later, which is why it stops being a "review". */
+function syncWishMode(){
+  const pane=$("pane-form"); if(!pane)return;
+  const w=$("f-wish"), on=!!(w&&w.checked);
+  pane.dataset.wish=on?"1":"";
+  const lab=$("f-review-label"); if(lab)lab.textContent=on?"Notes":"Review / thoughts";
+  const ta=$("f-review"); if(ta)ta.placeholder=on?"Why you want to go, what to order…":"Vibe, taste, service…";
 }
 function drinkRowLabel(dr){ const g=cls=>{ const el=dr.querySelector(cls); return el?el.value:""; }; const q=parseInt(g(".dqt"),10)||1; const parts=[((g(".dn")||"").trim()||"New drink")+(q>1?" ×"+q:"")]; const p=(g(".dp")||"").trim(); if(p)parts.push(rowPriceLabel(p,g(".dpc")||"USD")); const d=g(".dd"); if(d)parts.push(fmtDate(d)); return parts.join(" · "); }
 /* Quantity for ordering several of the same drink on one visit. Stored as the drink's
