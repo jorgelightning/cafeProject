@@ -252,6 +252,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drink.v-neutral{ border-left-color:var(--mid); }
 .drink.v-no{ border-left-color:var(--bad); }
 .drink .pr{ margin-left:auto; color:var(--text); font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; flex:none; }
+/* Two-line price: what was paid, then what it came to. The wrapper takes over the auto
+   margin so a drink with no local amount still renders as the single .pr it always was. */
+.drink .prwrap{ margin-left:auto; flex:none; text-align:right; }
+.drink .prwrap .pr{ display:block; margin-left:0; }
+.drink .prsub{ display:block; font-size:11.5px; color:var(--soft); font-variant-numeric:tabular-nums; margin-top:2px; }
+.drink .prsub.needs{ color:var(--mid); font-weight:600; }
 .drink .dmain{ display:flex; flex-direction:column; min-width:0; flex:1; }
 .drink .dtop{ font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .drink .cnt{ background:var(--acc-strong); color:var(--on-acc); border-radius:7px; padding:0 6px; font-size:11px; font-weight:800; margin-left:5px; }
@@ -275,6 +281,18 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .datepill .dd{ position:absolute; inset:0; width:100%; height:100%; opacity:0; border:0; padding:0; margin:0; font-size:16px; }
 .priceline{ display:flex; gap:8px; flex:1 1 100%; }
 .priceline input.dp{ flex:1 1 auto; height:44px; }
+.priceline select.dpc{ flex:0 0 auto; align-self:stretch; height:44px; max-width:106px; border:1px solid var(--border); border-radius:11px; background:var(--surface2); color:var(--text); font-family:inherit; font-size:14px; font-weight:700; padding:0 4px 0 10px; outline:none; cursor:pointer; }
+.priceline select.dpc:focus-visible{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); }
+.priceline select.dpc[hidden]{ display:none; }
+/* Sits on its own line under the price. Empty at a dollar cafe, and collapsed rather than
+   left as an 8px gap, so the common path gains no furniture. */
+.drinkrows .dr .convhint{ flex:1 1 100%; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; padding:0 2px; font-size:12px; color:var(--soft); }
+.drinkrows .dr .convhint:empty{ display:none; }
+.drinkrows .dr .convhint .usd{ font-size:14px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+/* NOT .rate — that name is already the 34px star widget below, and its letter-spacing:10px
+   leaks into anything reusing the class. */
+.drinkrows .dr .convhint .fxrate{ font-size:11px; color:var(--faint); font-variant-numeric:tabular-nums; }
+.drinkrows .dr .convhint .needs{ color:var(--mid); font-weight:600; }
 .field{ margin-bottom:15px; }
 .field label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; }
 .field input[type=text],.field input[type=number],.field input[type=date],.field textarea{ width:100%; border:1px solid var(--border); border-radius:11px; padding:11px 12px; font-size:16px; background:var(--surface); color:var(--text); outline:none; font-family:inherit; }
