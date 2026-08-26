@@ -39,33 +39,43 @@ function ccyOptions(sel){ sel=(sel||"USD").toUpperCase(); const seen={}, out=[];
 function ccyOptionsHTML(sel){ sel=(sel||"USD").toUpperCase(); return ccyOptions(sel).map(function(code){ const m=ccyMeta(code); return '<option value="'+esc(code)+'"'+(code===sel?" selected":"")+'>'+esc((m.sym||"").trim()||code)+" "+esc(code)+'</option>'; }).join(""); }
 function ccySelectHTML(sel,hidden){ return '<select class="dpc"'+(hidden?" hidden":"")+' onchange="syncCcy(this)" aria-label="Currency">'+ccyOptionsHTML(sel)+'</select>'; }
 function rowPriceLabel(amt,pc){ pc=(pc||"USD").toUpperCase(); return pc==="USD"?fmtPrice(amt):fmtLocal(amt,pc); }
-function convHintHTML(amt,pc,rate,date){
+function convHintHTML(amt,pc,rate,date,visit){
   pc=(pc||"USD").toUpperCase(); if(pc==="USD")return "";
   if(ccyNum(amt)==null)return "";
   const usd=toUSD(amt,pc,rate);
   if(usd==null)return '<span class="needs">No rate for '+esc(pc)+' — saves without a dollar figure</span>';
-  const r=(typeof rate==="number"&&rate>0)?rate:fxRate(pc);
-  return '<span class="usd">≈ $'+usd.toFixed(2)+'</span><span class="fxrate">'+esc((ccyMeta(pc).sym||"")+String(r))+' = $1'+(date?" · "+esc(fmtDate(date)):"")+'</span>';
+  const r=(typeof rate==="number"&&rate>0)?rate:fxRate(pc,visit);
+  let h='<span class="usd">≈ $'+usd.toFixed(2)+'</span><span class="fxrate">'+esc((ccyMeta(pc).sym||"")+String(r))+' = $1'+(date?" · "+esc(fmtDate(date)):"")+'</span>';
+  /* Typing up a trip months later is the normal case, so say plainly when the number is
+     today's rate standing in for the day you actually paid. */
+  if(visit&&date&&daysBetween(visit,date)>45)
+    h+='<span class="stale">no '+esc(fmtDate(visit))+' rate on file</span>';
+  return h;
 }
+function rowVisitDate(dr){ const d=dr&&dr.querySelector(".dd"); return (d&&d.value)||localToday(); }
 /* Typing an amount never re-rates a row that already carries a frozen rate — editing the
    notes on a drink bought in Taipei in 2024 must not re-price it at today's market. Only a
    row that has no rate yet picks one up. */
 function syncPrice(inp){
   const dr=inp.closest(".dr"); if(!dr)return;
   const sel=dr.querySelector(".dpc"), rt=dr.querySelector(".dpr"), dt=dr.querySelector(".dpd");
-  const pc=sel?sel.value:"USD";
-  if(rt&&!rt.value&&pc!=="USD"){ const r=fxRate(pc); if(r){ rt.value=String(r); if(dt)dt.value=FX_ASOF; } }
+  const pc=sel?sel.value:"USD", visit=rowVisitDate(dr);
+  /* A rate that came off a saved drink stays put — editing an old drink's notes must never
+     re-price it. Any other row follows its own visit date, so fixing the date on a
+     backdated visit also fixes the rate it converts at. */
+  if(rt&&rt.dataset.frozen!=="1"&&pc!=="USD"){
+    const q=fxRateAt(pc,visit);
+    rt.value=q.rate?String(q.rate):""; if(dt)dt.value=q.rate?q.asof:"";
+  }
   const hint=dr.querySelector(".convhint");
-  if(hint)hint.innerHTML=convHintHTML(inp.value,pc,rt?parseFloat(rt.value):0,dt?dt.value:"");
+  if(hint)hint.innerHTML=convHintHTML(inp.value,pc,rt?parseFloat(rt.value):0,dt?dt.value:"",visit);
   if(dr.classList.contains("collapsed")){ const t=dr.querySelector(".drtitle"); if(t)t.textContent=drinkRowLabel(dr); }
 }
 /* Choosing a currency by hand is an active re-declaration, so it does take today's rate. */
 function syncCcy(sel){
   const dr=sel.closest(".dr"); if(!dr)return;
   sel.dataset.user="1";
-  const rt=dr.querySelector(".dpr"), dt=dr.querySelector(".dpd"), r=fxRate(sel.value);
-  if(rt)rt.value=r?String(r):"";
-  if(dt)dt.value=r?FX_ASOF:"";
+  const rt=dr.querySelector(".dpr"); if(rt)rt.dataset.frozen="";   /* re-declaring the currency re-rates */
   const dp=dr.querySelector(".dp"); if(dp)syncPrice(dp);
 }
 /* Places resolves the country after the blank first row is already on screen. Adopt the
@@ -79,8 +89,7 @@ function refreshRowCcy(){
     if(String(dp.value||"").trim())return;
     sel.innerHTML=ccyOptionsHTML(ccy); sel.value=ccy;
     sel.hidden=(ccy==="USD"&&!!formCC);
-    const rt=dr.querySelector(".dpr"), dt=dr.querySelector(".dpd"), r=fxRate(ccy);
-    if(rt)rt.value=r?String(r):""; if(dt)dt.value=r?FX_ASOF:"";
+    const rt=dr.querySelector(".dpr"); if(rt)rt.dataset.frozen="";
     syncPrice(dp);
   });
 }
@@ -137,7 +146,7 @@ function drinkRowLabel(dr){ const g=cls=>{ const el=dr.querySelector(cls); retur
 /* The date input keeps its class, value and position in the DOM — only its presentation
    changes — so formSnapshot(), saveForm() and drinkRowLabel() are untouched. */
 function datePillLabel(v){ if(!v)return "Add date"; if(v===localToday())return "Today"; const y=new Date(Date.now()-86400000-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10); if(v===y)return "Yesterday"; return fmtDate(v); }
-function syncDatePill(inp){ const w=inp.closest(".datepill"); if(w)w.querySelector(".dpv").textContent=datePillLabel(inp.value); const dr=inp.closest(".dr"); if(dr&&dr.classList.contains("collapsed")){ const t=dr.querySelector(".drtitle"); if(t)t.textContent=drinkRowLabel(dr); } }
+function syncDatePill(inp){ const w=inp.closest(".datepill"); if(w)w.querySelector(".dpv").textContent=datePillLabel(inp.value); const dr=inp.closest(".dr"); if(dr){ const dp=dr.querySelector(".dp"); if(dp)syncPrice(dp); } if(dr&&dr.classList.contains("collapsed")){ const t=dr.querySelector(".drtitle"); if(t)t.textContent=drinkRowLabel(dr); } }
 /* closest() rather than parentNode: the trash sits inside .dr today, but parentNode would
    silently delete the wrong node the moment the row markup gains a wrapper. A named row is
    real logged data, so it asks first; a blank row has nothing to lose and just goes. */
@@ -163,9 +172,10 @@ const ICS=["Extra ice","Regular ice","Less ice","No ice","Warm","Hot"]; const iv
    inherits the cafe's money, which is what keeps the 60 existing USD drinks untouched. */
 fx=fx||{}; const pcode=(fx.pc?String(fx.pc):((p&&String(p).trim())?"USD":ccyFor({cc:formCC}))).toUpperCase();
 const amt=(pcode!=="USD"&&fx.pl!=null&&String(fx.pl)!=="")?String(fx.pl):(p==null?"":String(p));
-const prate=(typeof fx.pr==="number"&&fx.pr>0)?fx.pr:fxRate(pcode);
-const pdate=fx.pd||FX_ASOF;
-const showCcy=(pcode!=="USD")||(ccyFor({cc:formCC})!=="USD")||!formCC; const title=esc(((n||"").trim()||"New drink")+(qv>1?" ×"+qv:"")+(amt.trim()?" · "+rowPriceLabel(amt,pcode):"")+(date?" · "+fmtDate(date):"")); const div=document.createElement("div"); div.className="dr"+(collapsed?" collapsed":""); div.innerHTML='<button type="button" class="drhead" onclick="toggleDrinkRow(this)"><span class="drchev">'+(collapsed?"▸":"▾")+'</span><span class="drtitle">'+title+'</span><span class="dredit">✎</span></button><input class="dn" type="text" autocomplete="off" placeholder="Drink" value="'+esc(n||"")+'"><div class="priceline">'+ccySelectHTML(pcode,!showCcy)+'<input class="dp" type="text" autocomplete="off" placeholder="Price" value="'+esc(amt)+'" oninput="syncPrice(this)"><span class="datepill"><span class="dpv">'+esc(datePillLabel(date))+'</span><input class="dd" type="date" value="'+esc(date||"")+'" onchange="syncDatePill(this)"></span></div><input type="hidden" class="dpr" value="'+esc(prate?String(prate):"")+'"><input type="hidden" class="dpd" value="'+esc(pdate)+'"><div class="convhint">'+convHintHTML(amt,pcode,prate,pdate)+'</div><div class="qtywrap"><span class="swlabel">How many</span><button type="button" class="qbtn" onclick="bumpQty(this,-1)" aria-label="One fewer">−</button><span class="qval">×'+qv+'</span><button type="button" class="qbtn" onclick="bumpQty(this,1)" aria-label="One more">+</button><input type="hidden" class="dqt" value="'+qv+'"></div><div class="szwrap"><span class="swlabel">Cup size</span><input class="dsz" type="range" min="8" max="32" step="2" value="'+zval+'" data-set="'+(hasSize?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.szval\').textContent=this.value+\' oz\';"><span class="szval">'+(hasSize?zval+" oz":"—")+'</span></div><div class="swwrap"><span class="swlabel">Sweetness</span><input class="dsw" type="range" min="0" max="100" step="5" value="'+sval+'" data-set="'+(hasSweet?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.swval\').textContent=this.value+\'%\';"><span class="swval">'+(hasSweet?sval+"%":"—")+'</span></div><div class="icwrap"><span class="swlabel">Ice / Temp</span><input class="dic" type="range" min="0" max="5" step="1" value="'+ival+'" data-set="'+(hasIce?1:0)+'" data-labels="Extra ice|Regular ice|Less ice|No ice|Warm|Hot" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.icval\').textContent=this.dataset.labels.split(\'|\')[this.value];"><span class="icval">'+(hasIce?ICS[iv]:"—")+'</span></div><div class="mkwrap"><span class="swlabel">Milk</span>'+MILKS.map(function(mk){ return '<button type="button" class="mkbtn'+(mk===milk?" on":"")+'" data-milk="'+esc(mk)+'" onclick="setMilk(this)">'+esc(mk)+'</button>'; }).join("")+'<input type="hidden" class="dmk" value="'+esc(milk||"")+'"></div><div class="rowrap"><span class="swlabel">Rate it</span><button type="button" class="rbtn yes'+(re==="yes"?" on":"")+'" onclick="setReorder(this,\'yes\')">👍</button><button type="button" class="rbtn neutral'+(re==="neutral"?" on":"")+'" onclick="setReorder(this,\'neutral\')">😐</button><button type="button" class="rbtn no'+(re==="no"?" on":"")+'" onclick="setReorder(this,\'no\')">👎</button><input type="hidden" class="dre" value="'+re+'"></div><button class="delrow" onclick="delDrinkRow(this)">✕</button>'; if(old){ div.classList.add("dr-old"); div.style.display="none"; } const host=$("f-drinks"); const tog=host.querySelector(".dr-oldertoggle"); if(tog)host.insertBefore(div,tog); else host.appendChild(div); }
+const _q=fxRateAt(pcode,date);
+const prate=(typeof fx.pr==="number"&&fx.pr>0)?fx.pr:_q.rate;
+const pdate=fx.pd||_q.asof;
+const showCcy=(pcode!=="USD")||(ccyFor({cc:formCC})!=="USD")||!formCC; const title=esc(((n||"").trim()||"New drink")+(qv>1?" ×"+qv:"")+(amt.trim()?" · "+rowPriceLabel(amt,pcode):"")+(date?" · "+fmtDate(date):"")); const div=document.createElement("div"); div.className="dr"+(collapsed?" collapsed":""); div.innerHTML='<button type="button" class="drhead" onclick="toggleDrinkRow(this)"><span class="drchev">'+(collapsed?"▸":"▾")+'</span><span class="drtitle">'+title+'</span><span class="dredit">✎</span></button><input class="dn" type="text" autocomplete="off" placeholder="Drink" value="'+esc(n||"")+'"><div class="priceline">'+ccySelectHTML(pcode,!showCcy)+'<input class="dp" type="text" autocomplete="off" placeholder="Price" value="'+esc(amt)+'" oninput="syncPrice(this)"><span class="datepill"><span class="dpv">'+esc(datePillLabel(date))+'</span><input class="dd" type="date" value="'+esc(date||"")+'" onchange="syncDatePill(this)"></span></div><input type="hidden" class="dpr" data-frozen="'+(fx.pr?"1":"")+'" value="'+esc(prate?String(prate):"")+'"><input type="hidden" class="dpd" value="'+esc(pdate)+'"><div class="convhint">'+convHintHTML(amt,pcode,prate,pdate,date||localToday())+'</div><div class="qtywrap"><span class="swlabel">How many</span><button type="button" class="qbtn" onclick="bumpQty(this,-1)" aria-label="One fewer">−</button><span class="qval">×'+qv+'</span><button type="button" class="qbtn" onclick="bumpQty(this,1)" aria-label="One more">+</button><input type="hidden" class="dqt" value="'+qv+'"></div><div class="szwrap"><span class="swlabel">Cup size</span><input class="dsz" type="range" min="8" max="32" step="2" value="'+zval+'" data-set="'+(hasSize?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.szval\').textContent=this.value+\' oz\';"><span class="szval">'+(hasSize?zval+" oz":"—")+'</span></div><div class="swwrap"><span class="swlabel">Sweetness</span><input class="dsw" type="range" min="0" max="100" step="5" value="'+sval+'" data-set="'+(hasSweet?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.swval\').textContent=this.value+\'%\';"><span class="swval">'+(hasSweet?sval+"%":"—")+'</span></div><div class="icwrap"><span class="swlabel">Ice / Temp</span><input class="dic" type="range" min="0" max="5" step="1" value="'+ival+'" data-set="'+(hasIce?1:0)+'" data-labels="Extra ice|Regular ice|Less ice|No ice|Warm|Hot" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.icval\').textContent=this.dataset.labels.split(\'|\')[this.value];"><span class="icval">'+(hasIce?ICS[iv]:"—")+'</span></div><div class="mkwrap"><span class="swlabel">Milk</span>'+MILKS.map(function(mk){ return '<button type="button" class="mkbtn'+(mk===milk?" on":"")+'" data-milk="'+esc(mk)+'" onclick="setMilk(this)">'+esc(mk)+'</button>'; }).join("")+'<input type="hidden" class="dmk" value="'+esc(milk||"")+'"></div><div class="rowrap"><span class="swlabel">Rate it</span><button type="button" class="rbtn yes'+(re==="yes"?" on":"")+'" onclick="setReorder(this,\'yes\')">👍</button><button type="button" class="rbtn neutral'+(re==="neutral"?" on":"")+'" onclick="setReorder(this,\'neutral\')">😐</button><button type="button" class="rbtn no'+(re==="no"?" on":"")+'" onclick="setReorder(this,\'no\')">👎</button><input type="hidden" class="dre" value="'+re+'"></div><button class="delrow" onclick="delDrinkRow(this)">✕</button>'; if(old){ div.classList.add("dr-old"); div.style.display="none"; } const host=$("f-drinks"); const tog=host.querySelector(".dr-oldertoggle"); if(tog)host.insertBefore(div,tog); else host.appendChild(div); }
 function visitCount(d){ const ds=(d&&d.dates||[]).filter(Boolean); return Math.max((d&&d.count)||0, ds.length, 1); }
 function findSameCafe(name,area,lat,lng){ const nm=(name||"").trim().toLowerCase(); if(!nm)return null; return cafes.find(c=>{ if((c.name||"").trim().toLowerCase()!==nm)return false; if(lat!=null&&c.lat!=null)return Math.abs(lat-c.lat)<0.004&&Math.abs(lng-c.lng)<0.004; const a1=(area||"").trim().toLowerCase(), a2=(c.area||"").trim().toLowerCase(); if(a1&&a2)return a1===a2; return true; })||null; }
 function mergeVisitInto(c,data){ c.drinks=c.drinks||[]; (data.drinks||[]).forEach(nd=>{ const k=nd.n.toLowerCase(); const ex=c.drinks.find(d=>d.n.toLowerCase()===k); if(ex){ if(nd.p){ ex.p=nd.p; ["pl","pc","pr","pd"].forEach(function(k){ if(nd[k]!==undefined)ex[k]=nd[k]; else delete ex[k]; }); } if(nd.size)ex.size=nd.size; if(nd.sweet)ex.sweet=nd.sweet; if(nd.ice)ex.ice=nd.ice; if(nd.milk)ex.milk=nd.milk; if(nd.reorder)ex.reorder=nd.reorder; const dates=[...new Set([...(ex.dates||[]),...(nd.dates||[])])].filter(Boolean).sort(); const cnt=visitCount(ex)+visitCount(nd); if(dates.length)ex.dates=dates; if(cnt>1)ex.count=Math.max(cnt,dates.length); } else { c.drinks.push(nd); } }); c.tags=[...new Set([...(c.tags||[]),...(data.tags||[])])]; if(data.fav)c.fav=true; if(data.rating)c.rating=data.rating; if(data.photo&&!c.photo)c.photo=data.photo; if(!c.area&&data.area)c.area=data.area; if(!c.cc&&data.cc)c.cc=data.cc; if((c.drinks||[]).length)c.wish=false; if(c.lat==null&&data.lat!=null){ c.lat=data.lat; c.lng=data.lng; } if(data.review){ c.review=c.review?(c.review.indexOf(data.review)>=0?c.review:(c.review+"\n\n"+data.review)):data.review; } if(data.updated)c.updated=data.updated; }

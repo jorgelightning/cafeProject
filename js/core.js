@@ -35,7 +35,23 @@ function ccyMeta(code){ return CCY_META[(code||"USD").toUpperCase()]||{sym:"",de
 /* Units of `code` per 1 USD, or 0 when we have no rate — callers treat 0 as "can't convert
    yet" rather than as a number. Swap the body for a cached fetch to go live; the frozen
    drink.pr means everything already recorded is unaffected either way. */
-function fxRate(code){ code=(code||"USD").toUpperCase(); if(code==="USD")return 1; const r=FX_PER_USD[code]; return (typeof r==="number"&&r>0)?r:0; }
+/* The rate to use for a drink bought on `date`, and the date that rate is actually from.
+   Those two are reported separately on purpose: when there is no historical anchor we fall
+   back to the current table, and the drink must record the table's date, not the date we
+   wished we had. A stored drink.pr/.pd always wins over this — nothing re-rates on read. */
+function fxRateAt(code,date){
+  code=(code||"USD").toUpperCase();
+  if(code==="USD")return {rate:1,asof:date||FX_ASOF};
+  const key=String(date||"").slice(0,7);
+  if(key&&typeof FX_HISTORY==="object"&&FX_HISTORY){
+    const months=Object.keys(FX_HISTORY).filter(function(m){ return m<=key&&FX_HISTORY[m]&&FX_HISTORY[m][code]>0; }).sort();
+    if(months.length){ const m=months[months.length-1]; return {rate:FX_HISTORY[m][code],asof:m+"-01"}; }
+  }
+  const r=FX_PER_USD[code];
+  return {rate:(typeof r==="number"&&r>0)?r:0,asof:FX_ASOF};
+}
+function fxRate(code,date){ return fxRateAt(code,date).rate; }
+function daysBetween(a,b){ const x=Date.parse(a),y=Date.parse(b); return (isNaN(x)||isNaN(y))?0:Math.round(Math.abs(x-y)/86400000); }
 function ccyNum(v){ const n=parseFloat(String(v==null?"":v).replace(/[^0-9.]/g,"")); return isNaN(n)?null:n; }
 function fmtLocal(amt,code){ const n=ccyNum(amt); if(n==null)return ""; const m=ccyMeta(code); return m.sym+n.toFixed(m.dec); }
 /* The one place local money becomes dollars. Returns null when there is no usable amount or

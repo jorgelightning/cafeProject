@@ -66,3 +66,14 @@ const FX_PER_USD={ USD:1, EUR:0.92, GBP:0.79, CAD:1.37, AUD:1.52, NZD:1.66, CHF:
 JPY:147, KRW:1330, TWD:31.5, HKD:7.8, MOP:8.03, CNY:7.15, SGD:1.34, MYR:4.45, THB:34.5, VND:25400, PHP:57.5, IDR:16000, INR:83.5,
 MXN:18.5, AED:3.67, ILS:3.70, ZAR:18.2, BRL:5.45, ARS:1010, CLP:945, COP:4100, PEN:3.75 };
 const FX_ASOF="2026-08-25";       // date stamped onto drinks logged against this table
+/* Historical anchors, for drinks logged long after they were drunk — which is most of the
+   foreign ones, since a trip gets typed up after you are home. Sparse on purpose: add a
+   currency only for months where the rate had moved enough to matter, and the lookup takes
+   the newest anchor on or before the drink's date, falling back to the table above.
+   fxRateAt() reports which date it actually used, and that is what gets stored on the drink
+   and shown in the form — a rate is never labelled with a date it did not come from.
+   Add entries like:
+     "2025-01": { TWD:32.8, JPY:157 },
+   oldest first. Empty is a valid state: every drink then converts at the current table and
+   says so. */
+const FX_HISTORY={};
