@@ -3,9 +3,9 @@
    and [data-theme="dark"] = manually chosen dark. Keep any new colour in all three.
    --acc stays the identity orange for fills/pins/underlines; --acc-strong is the only
    one that may sit under white text (--acc is 3.01:1 there, --acc-strong is 4.94:1). */
-:root{ --acc:#d5803b; --acc-strong:#a8551a; --on-acc:#fff; --acc2:#c0374b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#7a726b; --faint:#726a63; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d9d3cc; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); --glass:rgba(255,255,255,.93); --glass-strong:rgba(248,246,244,.88); }
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#8b817a; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); } }
-:root[data-theme="dark"]{ --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#8b817a; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); }
+:root{ --acc:#d5803b; --acc-strong:#a8551a; --on-acc:#fff; --acc2:#c0374b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#706860; --faint:#726a63; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d9d3cc; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); --glass:rgba(255,255,255,.93); --glass-strong:rgba(248,246,244,.88); }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#968b83; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); } }
+:root[data-theme="dark"]{ --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#968b83; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); }
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 /* Everything reachable by keyboard has to show where the keyboard is. :focus-visible keeps
    this off mouse clicks, so it costs the pointer experience nothing. */
@@ -307,7 +307,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .rate{ font-size:34px; color:var(--star-off); letter-spacing:10px; cursor:pointer; user-select:none; }
 .rate .on{ color:var(--star); }
 .photodrop{ position:relative; height:150px; border:2px dashed var(--border); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--soft); font-size:13px; background-size:cover; background-position:center; overflow:hidden; }
-.pic-overlay{ position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 8px; border-radius:20px; }
 .drinkrows .dr{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
 .drinkrows .dr .drhead{ flex:1 1 100%; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; color:var(--text); text-align:left; }
 .drinkrows .dr .drhead .drchev{ color:var(--soft); flex:0 0 auto; }
@@ -334,7 +333,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .updatebar{ position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:var(--acc); color:#fff; padding:11px 18px; border-radius:30px; font-size:13px; font-weight:600; box-shadow:var(--shadow); cursor:pointer; opacity:0; transition:.25s; z-index:300; pointer-events:none; }
 .updatebar.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
 @media (min-width:900px){ .updatebar{ bottom:24px; } }
-.pacced{ z-index:9999 !important; }
 .gm-style-iw-c{ padding:9px 13px !important; }
 .gm-style-iw-d{ overflow:hidden !important; padding:0 !important; }
 .gm-style-iw-c button.gm-ui-hover-effect{ display:none !important; }
@@ -402,12 +400,3 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .rbtn.yes.on{ border-color:var(--good); background:rgba(46,158,91,.14); }
 .rbtn.no.on{ border-color:var(--bad); background:rgba(224,85,107,.14); }
 .rbtn.neutral.on{ border-color:var(--mid); background:rgba(240,169,59,.14); }
-.anchor-change{ background:none; border:none; color:var(--acc); font-weight:700; font-size:13px; cursor:pointer; font:inherit; }
-.anchor-pick{ display:flex; flex-direction:column; gap:8px; margin-top:6px; }
-.anchor-opt{ display:flex; align-items:center; gap:11px; width:100%; text-align:left; padding:11px 14px; border:1px solid var(--border); border-radius:14px; background:var(--surface); cursor:pointer; font:inherit; color:inherit; transition:border-color .12s, box-shadow .12s; }
-.anchor-opt:hover{ border-color:var(--acc); box-shadow:var(--shadow); }
-.anchor-opt:active{ transform:scale(.99); }
-.anchor-opt .ao-emoji{ font-size:22px; flex:0 0 auto; }
-.anchor-opt .ao-name{ flex:1; font-weight:700; font-size:15px; }
-.anchor-opt .ao-area{ color:var(--soft); font-weight:500; font-size:12px; }
-.anchor-opt .ao-score{ background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:2px 9px; font-size:12px; color:var(--soft); flex:0 0 auto; }
