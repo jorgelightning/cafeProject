@@ -39,9 +39,42 @@ function ccyMeta(code){ return CCY_META[(code||"USD").toUpperCase()]||{sym:"",de
    Those two are reported separately on purpose: when there is no historical anchor we fall
    back to the current table, and the drink must record the table's date, not the date we
    wished we had. A stored drink.pr/.pd always wins over this — nothing re-rates on read. */
+/* Fetched rates outrank both tables. A historical rate is a settled fact — it cannot change
+   after the fact — so once fetched it is cached permanently rather than expiring. */
+let _fxCache={}; try{ _fxCache=JSON.parse(localStorage.getItem("cafemap.fx"))||{}; }catch(e){}
+const _fxTried={};
+function _fxKey(code,date){ return (code||"")+"@"+String(date||"").slice(0,10); }
+function fxPut(code,date,rate,asof){
+  if(!(rate>0))return;
+  _fxCache[_fxKey(code,date)]={r:rate,d:asof||String(date).slice(0,10)};
+  try{ localStorage.setItem("cafemap.fx",JSON.stringify(_fxCache)); }catch(e){}
+}
+/* Asks the network for a rate we do not have, once per currency-and-date, and calls back
+   only when it actually learned something. Failure is silent and permanent for the session:
+   the caller already has a usable fallback and a save must never wait on this. */
+function fxEnsure(code,date,done){
+  code=(code||"USD").toUpperCase();
+  if(code==="USD"||!date||typeof FX_API!=="string"||!FX_API)return;
+  const k=_fxKey(code,date);
+  if(_fxCache[k]||_fxTried[k]||typeof fetch!=="function")return;
+  _fxTried[k]=1;
+  try{
+    fetch(FX_API+String(date).slice(0,10)+"?from=USD&to="+encodeURIComponent(code))
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(j){
+        const rate=j&&j.rates&&j.rates[code];
+        if(!(rate>0))return;
+        fxPut(code,date,rate,(j&&j.date)||String(date).slice(0,10));
+        if(done)done();
+      })
+      .catch(function(){});
+  }catch(e){}
+}
 function fxRateAt(code,date){
   code=(code||"USD").toUpperCase();
   if(code==="USD")return {rate:1,asof:date||FX_ASOF};
+  const hit=_fxCache[_fxKey(code,date)];
+  if(hit&&hit.r>0)return {rate:hit.r,asof:hit.d};
   const key=String(date||"").slice(0,7);
   if(key&&typeof FX_HISTORY==="object"&&FX_HISTORY){
     const months=Object.keys(FX_HISTORY).filter(function(m){ return m<=key&&FX_HISTORY[m]&&FX_HISTORY[m][code]>0; }).sort();

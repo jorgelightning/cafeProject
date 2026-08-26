@@ -66,6 +66,8 @@ function syncPrice(inp){
   if(rt&&rt.dataset.frozen!=="1"&&pc!=="USD"){
     const q=fxRateAt(pc,visit);
     rt.value=q.rate?String(q.rate):""; if(dt)dt.value=q.rate?q.asof:"";
+    /* and go ask for the real one for this date; it repaints the row if it arrives */
+    fxEnsure(pc,visit,function(){ if(document.body.contains(inp))syncPrice(inp); });
   }
   const hint=dr.querySelector(".convhint");
   if(hint)hint.innerHTML=convHintHTML(inp.value,pc,rt?parseFloat(rt.value):0,dt?dt.value:"",visit);
