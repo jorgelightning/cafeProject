@@ -1,0 +1,3 @@
+node_modules/
+# snapshot baselines are scratch, not source of truth
+tests/*.snapshot.json
