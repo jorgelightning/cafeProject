@@ -177,7 +177,90 @@ const amt=(pcode!=="USD"&&fx.pl!=null&&String(fx.pl)!=="")?String(fx.pl):(p==nul
 const _q=fxRateAt(pcode,date);
 const prate=(typeof fx.pr==="number"&&fx.pr>0)?fx.pr:_q.rate;
 const pdate=fx.pd||_q.asof;
-const showCcy=(pcode!=="USD")||(ccyFor({cc:formCC})!=="USD")||!formCC; const title=esc(((n||"").trim()||"New drink")+(qv>1?" ×"+qv:"")+(amt.trim()?" · "+rowPriceLabel(amt,pcode):"")+(date?" · "+fmtDate(date):"")); const div=document.createElement("div"); div.className="dr"+(collapsed?" collapsed":""); div.innerHTML='<button type="button" class="drhead" onclick="toggleDrinkRow(this)"><span class="drchev">'+(collapsed?"▸":"▾")+'</span><span class="drtitle">'+title+'</span><span class="dredit">✎</span></button><input class="dn" type="text" autocomplete="off" placeholder="Drink" value="'+esc(n||"")+'"><div class="priceline">'+ccySelectHTML(pcode,!showCcy)+'<input class="dp" type="text" autocomplete="off" placeholder="Price" value="'+esc(amt)+'" oninput="syncPrice(this)"><span class="datepill"><span class="dpv">'+esc(datePillLabel(date))+'</span><input class="dd" type="date" value="'+esc(date||"")+'" onchange="syncDatePill(this)"></span></div><input type="hidden" class="dpr" data-frozen="'+(fx.pr?"1":"")+'" value="'+esc(prate?String(prate):"")+'"><input type="hidden" class="dpd" value="'+esc(pdate)+'"><div class="convhint">'+convHintHTML(amt,pcode,prate,pdate,date||localToday())+'</div><div class="qtywrap"><span class="swlabel">How many</span><button type="button" class="qbtn" onclick="bumpQty(this,-1)" aria-label="One fewer">−</button><span class="qval">×'+qv+'</span><button type="button" class="qbtn" onclick="bumpQty(this,1)" aria-label="One more">+</button><input type="hidden" class="dqt" value="'+qv+'"></div><div class="szwrap"><span class="swlabel">Cup size</span><input class="dsz" type="range" min="8" max="32" step="2" value="'+zval+'" data-set="'+(hasSize?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.szval\').textContent=this.value+\' oz\';"><span class="szval">'+(hasSize?zval+" oz":"—")+'</span></div><div class="swwrap"><span class="swlabel">Sweetness</span><input class="dsw" type="range" min="0" max="100" step="5" value="'+sval+'" data-set="'+(hasSweet?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.swval\').textContent=this.value+\'%\';"><span class="swval">'+(hasSweet?sval+"%":"—")+'</span></div><div class="icwrap"><span class="swlabel">Ice / Temp</span><input class="dic" type="range" min="0" max="5" step="1" value="'+ival+'" data-set="'+(hasIce?1:0)+'" data-labels="Extra ice|Regular ice|Less ice|No ice|Warm|Hot" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.icval\').textContent=this.dataset.labels.split(\'|\')[this.value];"><span class="icval">'+(hasIce?ICS[iv]:"—")+'</span></div><div class="mkwrap"><span class="swlabel">Milk</span>'+MILKS.map(function(mk){ return '<button type="button" class="mkbtn'+(mk===milk?" on":"")+'" data-milk="'+esc(mk)+'" onclick="setMilk(this)">'+esc(mk)+'</button>'; }).join("")+'<input type="hidden" class="dmk" value="'+esc(milk||"")+'"></div><div class="rowrap"><span class="swlabel">Rate it</span><button type="button" class="rbtn yes'+(re==="yes"?" on":"")+'" onclick="setReorder(this,\'yes\')">👍</button><button type="button" class="rbtn neutral'+(re==="neutral"?" on":"")+'" onclick="setReorder(this,\'neutral\')">😐</button><button type="button" class="rbtn no'+(re==="no"?" on":"")+'" onclick="setReorder(this,\'no\')">👎</button><input type="hidden" class="dre" value="'+re+'"></div><button class="delrow" onclick="delDrinkRow(this)">✕</button>'; if(old){ div.classList.add("dr-old"); div.style.display="none"; } const host=$("f-drinks"); const tog=host.querySelector(".dr-oldertoggle"); if(tog)host.insertBefore(div,tog); else host.appendChild(div); }
+const showCcy=(pcode!=="USD")||(ccyFor({cc:formCC})!=="USD")||!formCC;
+const title=esc(((n||"").trim()||"New drink")
+  +(qv>1?" ×"+qv:"")
+  +(amt.trim()?" · "+rowPriceLabel(amt,pcode):"")
+  +(date?" · "+fmtDate(date):""));
+
+const div=document.createElement("div");
+div.className="dr"+(collapsed?" collapsed":"");
+
+/* Collapsed, the header is the whole row — drinkRowLabel() keeps its text in sync. */
+const head='<button type="button" class="drhead" onclick="toggleDrinkRow(this)">'
+  +'<span class="drchev">'+(collapsed?"▸":"▾")+'</span>'
+  +'<span class="drtitle">'+title+'</span>'
+  +'<span class="dredit">✎</span>'
++'</button>';
+
+/* The currency <select> IS this row's storage for .pc — it round-trips through the form the
+   way .dmk and .dre do, rather than needing saveForm()'s keep{} rescue. The two hidden
+   inputs carry the frozen rate and the date that rate is from. */
+const nameAndPrice='<input class="dn" type="text" autocomplete="off" placeholder="Drink" value="'+esc(n||"")+'">'
+  +'<div class="priceline">'
+    +ccySelectHTML(pcode,!showCcy)
+    +'<input class="dp" type="text" autocomplete="off" placeholder="Price" value="'+esc(amt)+'" oninput="syncPrice(this)">'
+    +'<span class="datepill">'
+      +'<span class="dpv">'+esc(datePillLabel(date))+'</span>'
+      +'<input class="dd" type="date" value="'+esc(date||"")+'" onchange="syncDatePill(this)">'
+    +'</span>'
+  +'</div>'
+  +'<input type="hidden" class="dpr" data-frozen="'+(fx.pr?"1":"")+'" value="'+esc(prate?String(prate):"")+'">'
+  +'<input type="hidden" class="dpd" value="'+esc(pdate)+'">'
+  +'<div class="convhint">'+convHintHTML(amt,pcode,prate,pdate,date||localToday())+'</div>';
+
+const qtyRow='<div class="qtywrap">'
+  +'<span class="swlabel">How many</span>'
+  +'<button type="button" class="qbtn" onclick="bumpQty(this,-1)" aria-label="One fewer">−</button>'
+  +'<span class="qval">×'+qv+'</span>'
+  +'<button type="button" class="qbtn" onclick="bumpQty(this,1)" aria-label="One more">+</button>'
+  +'<input type="hidden" class="dqt" value="'+qv+'">'
++'</div>';
+
+/* data-set distinguishes "never touched" from "deliberately set to the default", which is
+   why an untouched slider saves nothing rather than saving its midpoint. */
+const sizeRow='<div class="szwrap">'
+  +'<span class="swlabel">Cup size</span>'
+  +'<input class="dsz" type="range" min="8" max="32" step="2" value="'+zval+'" data-set="'+(hasSize?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.szval\').textContent=this.value+\' oz\';">'
+  +'<span class="szval">'+(hasSize?zval+" oz":"—")+'</span>'
++'</div>';
+
+const sweetRow='<div class="swwrap">'
+  +'<span class="swlabel">Sweetness</span>'
+  +'<input class="dsw" type="range" min="0" max="100" step="5" value="'+sval+'" data-set="'+(hasSweet?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.swval\').textContent=this.value+\'%\';">'
+  +'<span class="swval">'+(hasSweet?sval+"%":"—")+'</span>'
++'</div>';
+
+const iceRow='<div class="icwrap">'
+  +'<span class="swlabel">Ice / Temp</span>'
+  +'<input class="dic" type="range" min="0" max="5" step="1" value="'+ival+'" data-set="'+(hasIce?1:0)+'" data-labels="Extra ice|Regular ice|Less ice|No ice|Warm|Hot" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.icval\').textContent=this.dataset.labels.split(\'|\')[this.value];">'
+  +'<span class="icval">'+(hasIce?ICS[iv]:"—")+'</span>'
++'</div>';
+
+const milkRow='<div class="mkwrap">'
+  +'<span class="swlabel">Milk</span>'
+  +MILKS.map(function(mk){
+     return '<button type="button" class="mkbtn'+(mk===milk?" on":"")+'" data-milk="'+esc(mk)+'" onclick="setMilk(this)">'+esc(mk)+'</button>';
+   }).join("")
+  +'<input type="hidden" class="dmk" value="'+esc(milk||"")+'">'
++'</div>';
+
+const rateRow='<div class="rowrap">'
+  +'<span class="swlabel">Rate it</span>'
+  +'<button type="button" class="rbtn yes'+(re==="yes"?" on":"")+'" onclick="setReorder(this,\'yes\')">👍</button>'
+  +'<button type="button" class="rbtn neutral'+(re==="neutral"?" on":"")+'" onclick="setReorder(this,\'neutral\')">😐</button>'
+  +'<button type="button" class="rbtn no'+(re==="no"?" on":"")+'" onclick="setReorder(this,\'no\')">👎</button>'
+  +'<input type="hidden" class="dre" value="'+re+'">'
++'</div>';
+
+div.innerHTML=head+nameAndPrice+qtyRow+sizeRow+sweetRow+iceRow+milkRow+rateRow
+  +'<button class="delrow" onclick="delDrinkRow(this)">✕</button>';
+
+if(old){ div.classList.add("dr-old"); div.style.display="none"; }
+const host=$("f-drinks");
+const tog=host.querySelector(".dr-oldertoggle");
+if(tog)host.insertBefore(div,tog); else host.appendChild(div);
+}
 function visitCount(d){ const ds=(d&&d.dates||[]).filter(Boolean); return Math.max((d&&d.count)||0, ds.length, 1); }
 function findSameCafe(name,area,lat,lng){ const nm=(name||"").trim().toLowerCase(); if(!nm)return null; return cafes.find(c=>{ if((c.name||"").trim().toLowerCase()!==nm)return false; if(lat!=null&&c.lat!=null)return Math.abs(lat-c.lat)<0.004&&Math.abs(lng-c.lng)<0.004; const a1=(area||"").trim().toLowerCase(), a2=(c.area||"").trim().toLowerCase(); /* Same name, no pin, no area to compare: not enough to call it the same place. A visible
    duplicate you can merge on purpose beats a silent merge you never notice. */
