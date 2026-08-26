@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=24">
+<link rel="stylesheet" href="styles.css?v=25">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -96,7 +96,7 @@
 <button class="tab" id="t-stats" onclick="show('stats')"><span class="ti">📊</span>Stats</button>
 </nav>
 <div id="d-chaser"></div>
-<div class="updatebar" id="updatebar" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
+<div class="updatebar" id="updatebar" role="button" tabindex="0" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
 <div class="toast" id="toast"></div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -107,17 +107,17 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=24"></script>
-<script src="js/core.js?v=24"></script>
-<script src="js/storage.js?v=24"></script>
-<script src="js/nav.js?v=24"></script>
-<script src="js/map.js?v=24"></script>
-<script src="js/photos.js?v=24"></script>
-<script src="js/list.js?v=24"></script>
-<script src="js/stats.js?v=24"></script>
-<script src="js/rank.js?v=24"></script>
-<script src="js/detail.js?v=24"></script>
-<script src="js/form.js?v=24"></script>
-<script src="js/boot.js?v=24"></script>
+<script src="js/config.js?v=25"></script>
+<script src="js/core.js?v=25"></script>
+<script src="js/storage.js?v=25"></script>
+<script src="js/nav.js?v=25"></script>
+<script src="js/map.js?v=25"></script>
+<script src="js/photos.js?v=25"></script>
+<script src="js/list.js?v=25"></script>
+<script src="js/stats.js?v=25"></script>
+<script src="js/rank.js?v=25"></script>
+<script src="js/detail.js?v=25"></script>
+<script src="js/form.js?v=25"></script>
+<script src="js/boot.js?v=25"></script>
 </body>
 </html>
