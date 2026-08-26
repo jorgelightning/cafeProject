@@ -4,7 +4,7 @@
 /* ---------- form ---------- */
 function checkExisting(){ if(editId)return; const name=$("f-name").value.trim(); if(!name)return; const ex=findSameCafe(name,$("f-area").value.trim(),picked?picked.lat:null,picked?picked.lng:null); if(ex){ openForm(ex.id); toast("Found "+ex.name+" — loaded your notes to edit"); } }
 function fmtEdited(iso){ if(!iso)return ""; const d=new Date(iso); if(isNaN(d))return ""; return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+" · "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
-function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?(c.area||""):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; picked=c&&c.lat!=null?{lat:c.lat,lng:c.lng}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
+function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?(c.area||""):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; if(!formCC&&c&&c.lat!=null)resolveCC(c.lat,c.lng,c.id); picked=c&&c.lat!=null?{lat:c.lat,lng:c.lng}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
 /* Unsaved-changes guard: snapshot the form on open, compare on any exit path (close button, back button, tab/nav via show(), page unload). Saving clears the snapshot so it never prompts. Pin coords are normalized to 5 decimals because setPicked rounds them. */
 let _formSnap=null;
 function formSnapshot(){ const rows=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const g=cl=>{ const el=r.querySelector(cl); return el?el.value:""; }; const gs=cl=>{ const el=r.querySelector(cl); return el?(el.value+":"+((el.dataset&&el.dataset.set)||"")):""; }; return [g(".dn"),g(".dp"),g(".dd"),g(".dqt"),gs(".dsz"),gs(".dsw"),gs(".dic"),g(".dmk"),g(".dre"),g(".dpc")].join("|"); }).filter(s=>s.split("|")[0].trim()); return JSON.stringify([$("f-name").value,$("f-area").value,$("f-brand")?$("f-brand").value:"",$("f-review").value,$("f-fav").checked,$("f-wish")?$("f-wish").checked:false,$("f-custom")?$("f-custom").checked:false,formPhoto,formRating,formTags,picked?[+(+picked.lat).toFixed(5),+(+picked.lng).toFixed(5)]:null,rows]); }
@@ -17,7 +17,7 @@ function initFormMap(){ if(!gReady)return; const start=picked?{lat:picked.lat,ln
    the country component rides along on the same response. It is the authoritative answer
    to "which money is this", which no lat/lng rectangle can be. */
 if(p.address_components){ const co=p.address_components.find(x=>x.types.includes("country")); if(co&&co.short_name){ formCC=co.short_name.toUpperCase(); refreshRowCcy(); } if(!$("f-area").value){ const nb=p.address_components.find(x=>x.types.includes("neighborhood")||x.types.includes("sublocality")||x.types.includes("locality")); if(nb)$("f-area").value=nb.long_name; } } checkExisting(); }); }catch(e){} try{ const ac2=new google.maps.places.Autocomplete($("f-area"),{fields:["geometry","name"],types:["geocode"]}); ac2.addListener("place_changed",()=>{ const p=ac2.getPlace(); if(p.geometry&&p.geometry.location){ const loc=p.geometry.location; fgmap.setCenter(loc); fgmap.setZoom(15); if(!picked)setPicked(loc.lat(),loc.lng()); } if(p.name)$("f-area").value=p.name; }); }catch(e){} } google.maps.event.trigger(fgmap,"resize"); fgmap.setCenter(start); if(picked)setPicked(picked.lat,picked.lng); else if(fgmarker){ fgmarker.setMap(null); fgmarker=null; $("f-coords").textContent=""; } }
-function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; if(fgmarker)fgmarker.setMap(null); fgmarker=new google.maps.Marker({position:{lat:picked.lat,lng:picked.lng},map:fgmap}); $("f-coords").textContent=picked.lat+", "+picked.lng; }
+function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; if(fgmarker)fgmarker.setMap(null); fgmarker=new google.maps.Marker({position:{lat:picked.lat,lng:picked.lng},map:fgmap}); $("f-coords").textContent=picked.lat+", "+picked.lng; if(!formCC)resolveCC(picked.lat,picked.lng,editId||null); }
 function formLocate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ if(fgmap){ fgmap.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}); fgmap.setZoom(15); } setPicked(p.coords.latitude,p.coords.longitude); },()=>toast("Couldn't get location")); }
 function renderPhoto(){ const d=$("f-photodrop"); const icon=d.querySelector("div"); if(formPhoto){ d.style.backgroundImage='url("'+safeUrl(formPhoto)+'")'; if(icon)icon.style.display="none"; $("f-photolabel").textContent=""; } else { d.style.backgroundImage=""; if(icon)icon.style.display=""; $("f-photolabel").textContent="Paste an image link below to preview"; } }
 function onPhotoUrl(){ const v=$("f-photo-url").value.trim(); formPhoto=v||null; renderPhoto(); const s=$("f-photo-status"); if(!s)return; if(!v){ s.textContent=""; return; } s.textContent="Checking link…"; s.style.color="var(--soft)"; const t=new Image(); t.onload=()=>{ s.textContent="✓ Image loaded"; s.style.color="#3aa76d"; }; t.onerror=()=>{ s.textContent='⚠ Couldn\'t load this link — use the photo\'s "Copy image address" link, not the Share link.'; s.style.color="var(--acc2)"; }; t.src=v; }
@@ -81,6 +81,40 @@ function refreshRowCcy(){
     if(rt)rt.value=r?String(r):""; if(dt)dt.value=r?FX_ASOF:"";
     syncPrice(dp);
   });
+}
+/* Rung 3 of the currency ladder. A cafe saved before this existed has coordinates but no
+   country — every one of the 101 in the corpus — and a pin dropped on the map never goes
+   through Autocomplete either. Both cases get one reverse geocode, keyed on the rounded
+   position so the form-open and pin-drop paths collapse into a single request. The answer
+   is cached on the cafe and persisted the next time it is saved. Failure is not fatal: the
+   chip is already on screen whenever no country resolved, so currency stays hand-pickable. */
+let _ccInflight={};
+function whenMapsReady(fn,tries){ tries=tries||0; if(gReady&&window.google&&google.maps&&google.maps.Geocoder)return fn(); if(tries>20)return; setTimeout(function(){ whenMapsReady(fn,tries+1); },250); }
+function resolveCC(lat,lng,cafeId){
+  if(lat==null||lng==null)return;
+  const key=(+lat).toFixed(3)+","+(+lng).toFixed(3);
+  if(_ccInflight[key])return;
+  whenMapsReady(function(){
+    if(_ccInflight[key])return; _ccInflight[key]=1;
+    try{
+      new google.maps.Geocoder().geocode({location:{lat:+lat,lng:+lng}},function(res,status){
+        delete _ccInflight[key];
+        if(status!=="OK"||!res||!res.length)return;
+        let cc="";
+        res.some(function(r){ const co=(((r&&r.address_components)||[]).find(function(x){ return x.types&&x.types.indexOf("country")>=0; })); if(co&&co.short_name){ cc=co.short_name.toUpperCase(); return true; } return false; });
+        adoptCC(cc,cafeId);
+      });
+    }catch(e){ delete _ccInflight[key]; console.warn("reverse geocode failed",e); }
+  });
+}
+/* A late answer must not overwrite a better one, or steer a form that has moved on. */
+function adoptCC(cc,cafeId){
+  if(!cc)return;
+  const c=cafeId?cafes.find(function(x){ return x.id===cafeId; }):null;
+  if(c&&!c.cc)c.cc=cc;
+  if(formCC||app.dataset.view!=="form")return;
+  if(cafeId&&editId!==cafeId)return;
+  formCC=cc; refreshRowCcy();
 }
 function drinkRowLabel(dr){ const g=cls=>{ const el=dr.querySelector(cls); return el?el.value:""; }; const q=parseInt(g(".dqt"),10)||1; const parts=[((g(".dn")||"").trim()||"New drink")+(q>1?" ×"+q:"")]; const p=(g(".dp")||"").trim(); if(p)parts.push(rowPriceLabel(p,g(".dpc")||"USD")); const d=g(".dd"); if(d)parts.push(fmtDate(d)); return parts.join(" · "); }
 /* Quantity for ordering several of the same drink on one visit. Stored as the drink's
