@@ -17,8 +17,8 @@
    CACHE_V would keep serving the old scripts. Anything cross-origin (Maps, Firebase, the FX
    endpoint) is deliberately not intercepted; those must fail normally so their own fallbacks
    run. */
-const CACHE_V = "cafemap-v25";
-const ASSET_V = "?v=25";
+const CACHE_V = "cafemap-v26";
+const ASSET_V = "?v=26";
 
 const SHELL = [
   "./", "./index.html", "./manifest.json",
@@ -79,9 +79,12 @@ self.addEventListener("fetch", function(e){
     return;
   }
 
-  e.respondWith(
-    caches.match(req).then(function(hit){
-      return hit || fetch(req).then(function(r){ return keep(req, r); });
-    })
-  );
+  /* Stale-while-revalidate, not cache-first. Cache-first meant that if CACHE_V and the ?v=
+     on the script tags were ever forgotten together, the worker served that build forever and
+     no amount of reloading could dislodge it — which is exactly what happened. Now the cached
+     copy still answers instantly and still works offline, but every load quietly refreshes it,
+     so a missed bump costs one reload instead of being permanent. */
+  const net = fetch(req).then(function(r){ return keep(req, r); });
+  e.waitUntil(net.catch(function(){}));
+  e.respondWith(caches.match(req).then(function(hit){ return hit || net; }));
 });
