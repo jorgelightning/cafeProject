@@ -40,10 +40,88 @@ function setChip(v){ activeChip=(activeChip===v)?"":v; if(activeChip.slice(0,4)=
 function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderFilterChips(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
    comparisons, which floated every unranked cafe above the 36 that were compared and lost —
    putting the most-compared cafe in the app in last place. */
-if(sortMode==="ranked"){ const ra=matchCount(a)>0, rb=matchCount(b)>0; if(ra!==rb)return ra?-1:1; const ea=eloScoreNum(a),eb=eloScoreNum(b); if(ea!==eb)return eb-ea; const ma=matchCount(a),mb=matchCount(b); if(ma!==mb)return mb-ma; if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); return (a.name||"").localeCompare(b.name||""); } if(sortMode==="rating"){ if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); const sa=eloScoreNum(a),sb=eloScoreNum(b); if(sa!==sb)return sb-sa; return (a.name||"").localeCompare(b.name||""); } if(sortMode==="near"){ const da=(userLoc&&a.lat!=null)?distKm(userLoc.lat,userLoc.lng,a.lat,a.lng):Infinity; const db=(userLoc&&b.lat!=null)?distKm(userLoc.lat,userLoc.lng,b.lat,b.lng):Infinity; if(da!==db)return da-db; if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); return (a.name||"").localeCompare(b.name||""); } const ua=a.updated?(Date.parse(a.updated)||0):0, ub=b.updated?(Date.parse(b.updated)||0):0; if(ua!==ub)return ub-ua; if((b.rating||0)!==(a.rating||0))return (b.rating||0)-(a.rating||0); return (a.name||"").localeCompare(b.name||""); }); if($("count"))$("count").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s"); if(!items.length){ grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">'+(wishOnly?"🔖":"☕")+'</div>'+(wishOnly?"No wishlist cafes yet — tap the bookmark on a cafe to save it for later.":(favOnly?"No favorites yet — tap the heart on a cafe.":(q?"No matches.":"No cafes yet. Tap + to add your first visit!")))+'</div>'; return; } /* Card meta reads distance · area · time — shortest and most perishable token first, so
+  /* Ordering. Every branch ends on name so the list never jitters between equal items, and
+     "ranked" checks matchCount first: eloScoreNum() returns a real 5.0 for a never-compared
+     cafe, so sorting on it alone floats every untested cafe above everything that was
+     compared and lost. */
+  if(sortMode==="ranked"){
+    const ra=matchCount(a)>0, rb=matchCount(b)>0;
+    if(ra!==rb) return ra?-1:1;
+    const ea=eloScoreNum(a), eb=eloScoreNum(b);
+    if(ea!==eb) return eb-ea;
+    const ma=matchCount(a), mb=matchCount(b);
+    if(ma!==mb) return mb-ma;
+    if((b.rating||0)!==(a.rating||0)) return (b.rating||0)-(a.rating||0);
+    return (a.name||"").localeCompare(b.name||"");
+  }
+  if(sortMode==="rating"){
+    if((b.rating||0)!==(a.rating||0)) return (b.rating||0)-(a.rating||0);
+    const sa=eloScoreNum(a), sb=eloScoreNum(b);
+    if(sa!==sb) return sb-sa;
+    return (a.name||"").localeCompare(b.name||"");
+  }
+  if(sortMode==="near"){
+    const da=(userLoc&&a.lat!=null)?distKm(userLoc.lat,userLoc.lng,a.lat,a.lng):Infinity;
+    const db=(userLoc&&b.lat!=null)?distKm(userLoc.lat,userLoc.lng,b.lat,b.lng):Infinity;
+    if(da!==db) return da-db;
+    if((b.rating||0)!==(a.rating||0)) return (b.rating||0)-(a.rating||0);
+    return (a.name||"").localeCompare(b.name||"");
+  }
+  const ua=a.updated?(Date.parse(a.updated)||0):0, ub=b.updated?(Date.parse(b.updated)||0):0;
+  if(ua!==ub) return ub-ua;
+  if((b.rating||0)!==(a.rating||0)) return (b.rating||0)-(a.rating||0);
+  return (a.name||"").localeCompare(b.name||"");
+});
+
+if($("count"))$("count").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s");
+
+if(!items.length){
+  grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">'
+    +(wishOnly?"\u{1F516}":"\u2615")+'</div>'
+    +(wishOnly
+      ? "No wishlist cafes yet — tap the bookmark on a cafe to save it for later."
+      : (favOnly
+        ? "No favorites yet — tap the heart on a cafe."
+        : (q ? "No matches." : "No cafes yet. Tap + to add your first visit!")))
+    +'</div>';
+  return;
+}
+/* Card meta reads distance · area · time — shortest and most perishable token first, so
    only the time clips. The rating now lives in the tile pill, and the liked tally is gone:
    its denominator was degenerate (all-yes or all-no in every non-zero case). */
-grid.innerHTML=items.map(c=>{ const gp=gphotoFor(c); const dkm=(userLoc&&c.lat!=null)?distKm(userLoc.lat,userLoc.lng,c.lat,c.lng):null; const dstr=dkm!=null?((dkm*0.621371)<0.1?Math.round(dkm*0.621371*5280)+" ft":(dkm*0.621371).toFixed(1)+" mi"):""; let cls="ph", style=""; const hasPhoto=!!(gp && !_imgFail[c.id]); if(hasPhoto){ cls+=" loaded"; style=' style="background-image:url(\''+safeUrl(gp)+'\')"'; } else { cls+=" nophoto"; style=' style="background:'+nophotoBg(c.name)+'"'; } const M=[]; if(dstr)M.push(sortMode==="near"?'<span class="near">'+dstr+'</span>':dstr); if(c.area)M.push(esc(c.area)); const _lv=lastVisitedStr(c,true); if(_lv)M.push(_lv); return '<div class="card" data-id="'+c.id+'" role="button" tabindex="0" onclick="openDetail(\''+c.id+'\',\'list\')"><div class="'+cls+'"'+style+'>'+phInner(c,hasPhoto)+'</div><div class="b"><div class="n">'+esc(c.name)+'</div><div class="m">'+M.join(" · ")+'</div></div></div>'; }).join(""); items.forEach(function(c){ const gp=gphotoFor(c); if(gp && !_imgFail[c.id])verifyCardPhoto(c.id,gp); }); }
+grid.innerHTML=items.map(function(c){
+  const gp=gphotoFor(c);
+  const dkm=(userLoc&&c.lat!=null)?distKm(userLoc.lat,userLoc.lng,c.lat,c.lng):null;
+  const dstr=dkm!=null
+    ? ((dkm*0.621371)<0.1 ? Math.round(dkm*0.621371*5280)+" ft" : (dkm*0.621371).toFixed(1)+" mi")
+    : "";
+
+  /* A photo that has already failed once must not be re-offered, or the tile flashes a
+     broken image on every re-render. */
+  const hasPhoto=!!(gp && !_imgFail[c.id]);
+  let cls="ph", style="";
+  if(hasPhoto){ cls+=" loaded"; style=' style="background-image:url(\''+safeUrl(gp)+'\')"'; }
+  else        { cls+=" nophoto"; style=' style="background:'+nophotoBg(c.name)+'"'; }
+
+  const M=[];
+  if(dstr)M.push(sortMode==="near"?'<span class="near">'+dstr+'</span>':dstr);
+  if(c.area)M.push(esc(c.area));
+  const _lv=lastVisitedStr(c,true);
+  if(_lv)M.push(_lv);
+
+  return '<div class="card" data-id="'+c.id+'" role="button" tabindex="0" onclick="openDetail(\''+c.id+'\',\'list\')">'
+    +'<div class="'+cls+'"'+style+'>'+phInner(c,hasPhoto)+'</div>'
+    +'<div class="b">'
+      +'<div class="n">'+esc(c.name)+'</div>'
+      +'<div class="m">'+M.join(" · ")+'</div>'
+    +'</div>'
+  +'</div>';
+}).join("");
+
+/* Photos are verified after the markup lands, so a stale URL can swap the tile in place
+   rather than blocking the render. */
+items.forEach(function(c){ const gp=gphotoFor(c); if(gp && !_imgFail[c.id])verifyCardPhoto(c.id,gp); });
+}
 let sortMode="recent";
 function setSort(v){ sortMode=v; renderList(); if(v==="near"){ if(navigator.geolocation)showUserLocation(false); else toast("Location not available"); } }
 function showFilteredOnMap(){ const q=($('q').value||"").toLowerCase().trim(); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(q)items=items.filter(c=>matchSearch(c,q)); const pts=items.filter(c=>c.lat!=null); show("map"); if(!gmap||!pts.length)return; setTimeout(()=>{ if(pts.length===1){ gmap.setCenter({lat:pts[0].lat,lng:pts[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); pts.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); }},100); }
