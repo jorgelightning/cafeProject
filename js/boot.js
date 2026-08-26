@@ -32,7 +32,8 @@ function cycleTheme(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }ca
 (function(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){ warn("boot.js",e); } applyTheme(t); })();
 /* Registered after load so it never competes with the first paint. localhost is allowed so
    the offline path can actually be exercised in development; everywhere else needs https. */
-if("serviceWorker" in navigator && (location.protocol==="https:" || location.hostname==="localhost")){
+const _localHosts=["localhost","127.0.0.1","[::1]","::1"];
+if("serviceWorker" in navigator && (location.protocol==="https:" || _localHosts.indexOf(location.hostname)>=0)){
   window.addEventListener("load", function(){
     navigator.serviceWorker.register("sw.js").catch(function(e){ warn("sw register", e); });
   });

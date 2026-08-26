@@ -29,12 +29,20 @@ not built.
 | `js/form.js` | Add/edit visit form and quick-log sheet |
 | `js/boot.js` | Startup wiring, update checker, back-button handling |
 | `sw.js` | Service worker — caches the app shell so it opens with no network |
+| `tests/` | Browser tests driving the real app — see `tests/README.md` |
 
 Scripts are classic (non-module) files loaded in order — `config.js` first,
 `boot.js` last. Functions are globals so inline `onclick` handlers keep working.
 
+## Tests
+
+`npm install && npx playwright install chromium`, then `npm test`. They drive the real
+`index.html` in a real browser against the real `cafes.json` — see `tests/README.md`.
+None of it is needed to deploy; Pages ignores `package.json` and `node_modules/`.
+
 ## Deploying an update
 
+0. `npm test` — cheap, and it has caught things that looked safe.
 1. Commit and push to `main` — GitHub Pages redeploys automatically (~1 min).
 2. **If you changed any `js/` or `css` file, bump the `?v=` number on every
    script/link tag in `index.html` — and `CACHE_V` in `sw.js` to match.**
