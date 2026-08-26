@@ -3,9 +3,15 @@
    Loaded by index.html; script order matters (config first, boot last). */
 let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], formCC="", favOnly=false, wishOnly=false, lastMain="map";
 let gReady=false, gmap=null, fgmap=null, fgmarker=null, gmarkers=[], userMarker=null;
-let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gphotos"))||{}; }catch(e){}
+let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gphotos"))||{}; }catch(e){ warn("core.js",e); }
 let isAdmin=false;
 const $=id=>document.getElementById(id);
+/* Failures used to be invisible: 32 catch blocks discarded the error, so a photo that never
+   resolved, a cloud write that failed and correct behaviour all looked identical from the
+   outside. The error object carries its own stack, so the prefix only has to say where. */
+function warn(where,e){ try{ console.warn("[cafemap] "+where,e); }catch(_){ warn("core.js",_); } }
+/* Every localStorage write can throw on a full quota — only one of them used to survive it. */
+function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ warn("localStorage "+k,e); return false; } }
 let fbReady=false, fbDb=null, fbAuth=null;
 /* True once the cloud node is an object keyed by cafe id rather than a JSON array. Writing to
    cafes/<id> while it is still an array would add a string key beside the numeric ones and
@@ -14,9 +20,9 @@ let _cloudKeyed=false;
 function cafesById(){ const o={}; cafes.forEach(function(c){ if(c&&c.id)o[c.id]=c; }); return o; }
 function noteCloudShape(raw){ _cloudKeyed=!!raw&&!Array.isArray(raw); }
 function asArray(v){ return Array.isArray(v)?v:(v&&typeof v==="object"?Object.values(v):[]); }
-function initFirebase(){ try{ if(!window.firebase||!FIREBASE_CONFIG||!FIREBASE_CONFIG.databaseURL||/PASTE_/.test(FIREBASE_CONFIG.databaseURL))return false; firebase.initializeApp(FIREBASE_CONFIG); fbDb=firebase.database(); try{ fbAuth=firebase.auth(); }catch(e){} fbReady=true; return true; }catch(e){ console.warn("Firebase init failed",e); return false; } }
-function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ noteCloudShape(snap.val()); const val=asArray(snap.val()); if(!val.length)return; cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } else if(v==="stats")renderStats(); }); }
-async function loadCloud(){ if(!fbReady)return false; try{ const snap=await Promise.race([fbDb.ref("cafes").once("value"),new Promise((_,rej)=>setTimeout(()=>rej(new Error("cloud-timeout")),6000))]); noteCloudShape(snap.val()); const val=asArray(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){} if(dirty&&Array.isArray(local)&&local.length){ cafes=local; resyncDirty(); return true; } if(val.length){ cafes=val; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load slow/failed — using cached data",e); let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(_e){} if(Array.isArray(local)&&local.length){ cafes=local; return true; } } return false; }
+function initFirebase(){ try{ if(!window.firebase||!FIREBASE_CONFIG||!FIREBASE_CONFIG.databaseURL||/PASTE_/.test(FIREBASE_CONFIG.databaseURL))return false; firebase.initializeApp(FIREBASE_CONFIG); fbDb=firebase.database(); try{ fbAuth=firebase.auth(); }catch(e){ warn("core.js",e); } fbReady=true; return true; }catch(e){ console.warn("Firebase init failed",e); return false; } }
+function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ noteCloudShape(snap.val()); const val=asArray(snap.val()); if(!val.length)return; cafes=val; try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("core.js",e); } if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } else if(v==="stats")renderStats(); }); }
+async function loadCloud(){ if(!fbReady)return false; try{ const snap=await Promise.race([fbDb.ref("cafes").once("value"),new Promise((_,rej)=>setTimeout(()=>rej(new Error("cloud-timeout")),6000))]); noteCloudShape(snap.val()); const val=asArray(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ warn("core.js",e); } if(dirty&&Array.isArray(local)&&local.length){ cafes=local; resyncDirty(); return true; } if(val.length){ cafes=val; try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("core.js",e); } localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load slow/failed — using cached data",e); let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(_e){ warn("core.js",_e); } if(Array.isArray(local)&&local.length){ cafes=local; return true; } } return false; }
 const app=$("app");
 /* Keyboard access for the 17 elements that carry an onclick but are not buttons. They keep
    their tags — a <button> cannot hold the card's block layout, and swapping the others would
@@ -38,7 +44,9 @@ document.addEventListener("keydown",function(e){
 });
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
-function esc(s){ return (s||"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+/* The apostrophe matters: 17 inline handlers pass arguments inside single-quoted JS
+   strings, so a cafe called Joe's would otherwise break out of one. */
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
 function safeUrl(u){ u=(u==null?"":String(u)).trim(); if(!u)return ""; if(!/^(https?:|data:image\/)/i.test(u))return ""; return u.replace(/["'()<>\s\\]/g,encodeURIComponent); }
 const _imgFail={}; let _photoRetried={};
 function initials(c){ const n=((c&&c.name)||"").trim(); if(!n)return "?"; const w=n.split(/\s+/).filter(Boolean); let s=(w[0]&&w[0][0])||""; if(w.length>1&&w[1][0])s+=w[1][0]; return s.toUpperCase(); }
@@ -47,6 +55,9 @@ function nophotoBg(name){ return 'linear-gradient(140deg,rgba(255,255,255,.18),r
 function nophotoHTML(c){ return '<span class="em">'+esc((c&&c.emoji)||"☕")+'</span><span>'+initials(c)+'</span>'; }
 /* Local calendar date. Plain toISOString() would hand back yesterday (or tomorrow) when
    logging from Hawaii or Taipei, so shift by the timezone offset before slicing. */
+/* prices[len/2] is the upper-middle value, which reads high on every even-length set. */
+function median(a){ if(!a||!a.length)return 0; const s=a.slice().sort(function(x,y){ return x-y; }); const m=s.length>>1;
+  return (s.length%2)?s[m]:(s[m-1]+s[m])/2; }
 function localToday(){ return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10); }
 /* ---------- currency ----------
    A price is stored twice: drink.p is always US dollars (every reader downstream — Stats
@@ -65,13 +76,13 @@ function ccyMeta(code){ return CCY_META[(code||"USD").toUpperCase()]||{sym:"",de
    wished we had. A stored drink.pr/.pd always wins over this — nothing re-rates on read. */
 /* Fetched rates outrank both tables. A historical rate is a settled fact — it cannot change
    after the fact — so once fetched it is cached permanently rather than expiring. */
-let _fxCache={}; try{ _fxCache=JSON.parse(localStorage.getItem("cafemap.fx"))||{}; }catch(e){}
+let _fxCache={}; try{ _fxCache=JSON.parse(localStorage.getItem("cafemap.fx"))||{}; }catch(e){ warn("core.js",e); }
 const _fxTried={};
 function _fxKey(code,date){ return (code||"")+"@"+String(date||"").slice(0,10); }
 function fxPut(code,date,rate,asof){
   if(!(rate>0))return;
   _fxCache[_fxKey(code,date)]={r:rate,d:asof||String(date).slice(0,10)};
-  try{ localStorage.setItem("cafemap.fx",JSON.stringify(_fxCache)); }catch(e){}
+  try{ lsSet("cafemap.fx",JSON.stringify(_fxCache)); }catch(e){ warn("core.js",e); }
 }
 /* Asks the network for a rate we do not have, once per currency-and-date, and calls back
    only when it actually learned something. Failure is silent and permanent for the session:
@@ -92,7 +103,7 @@ function fxEnsure(code,date,done){
         if(done)done();
       })
       .catch(function(){});
-  }catch(e){}
+  }catch(e){ warn("core.js",e); }
 }
 function fxRateAt(code,date){
   code=(code||"USD").toUpperCase();

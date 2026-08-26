@@ -212,14 +212,14 @@ function chaserDismiss(){
   const wasBoard=!!(_chaser&&_chaser.board);
   _chaser=null;
   const host=$("d-chaser"); if(host)host.innerHTML="";
-  if(wasBoard){ try{ renderBoard(); }catch(e){} return; }
+  if(wasBoard){ try{ renderBoard(); }catch(e){ warn("rank.js",e); } return; }
   const c=cafes.find(function(x){ return x.id===curId; }); if(c)renderChaser(c);
-  try{ renderList(); }catch(e){}
+  try{ renderList(); }catch(e){ warn("rank.js",e); }
 }
 function chaserRepaint(){
-  if(_chaser&&_chaser.board){ chaserPaint(); try{ renderBoard(); }catch(e){} return; }
+  if(_chaser&&_chaser.board){ chaserPaint(); try{ renderBoard(); }catch(e){ warn("rank.js",e); } return; }
   const c=cafes.find(function(x){ return x.id===curId; }); if(c)renderChaser(c);
-  try{ renderList(); }catch(e){}
+  try{ renderList(); }catch(e){ warn("rank.js",e); }
 }
 function chaserOpt(c,drink,side){
   const gp=(typeof gphotoFor==="function")?gphotoFor(c):null;

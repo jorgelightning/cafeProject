@@ -18,7 +18,7 @@ function closeForm(){ if(formDirty()&&!confirm("Discard unsaved changes to this 
 function initFormMap(){ if(!gReady)return; const start=picked?{lat:picked.lat,lng:picked.lng}:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]}; if(!fgmap){ fgmap=new google.maps.Map($("form-map"),{center:start,zoom:13,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); fgmap.addListener("click",e=>setPicked(e.latLng.lat(),e.latLng.lng())); try{ const ac=new google.maps.places.Autocomplete($("f-name"),{fields:["name","geometry","address_components"]}); ac.addListener("place_changed",()=>{ const p=ac.getPlace(); if(p.geometry&&p.geometry.location){ const loc=p.geometry.location; setPicked(loc.lat(),loc.lng()); fgmap.setCenter(loc); fgmap.setZoom(16); } if(p.name)$("f-name").value=p.name; /* address_components was already being requested and already being walked for the area;
    the country component rides along on the same response. It is the authoritative answer
    to "which money is this", which no lat/lng rectangle can be. */
-if(p.address_components){ const co=p.address_components.find(x=>x.types.includes("country")); if(co&&co.short_name){ formCC=co.short_name.toUpperCase(); refreshRowCcy(); } if(!$("f-area").value){ const nb=p.address_components.find(x=>x.types.includes("neighborhood")||x.types.includes("sublocality")||x.types.includes("locality")); if(nb)$("f-area").value=nb.long_name; } } checkExisting(); }); }catch(e){} try{ const ac2=new google.maps.places.Autocomplete($("f-area"),{fields:["geometry","name"],types:["geocode"]}); ac2.addListener("place_changed",()=>{ const p=ac2.getPlace(); if(p.geometry&&p.geometry.location){ const loc=p.geometry.location; fgmap.setCenter(loc); fgmap.setZoom(15); if(!picked)setPicked(loc.lat(),loc.lng()); } if(p.name)$("f-area").value=p.name; }); }catch(e){} } google.maps.event.trigger(fgmap,"resize"); fgmap.setCenter(start); if(picked)setPicked(picked.lat,picked.lng); else if(fgmarker){ fgmarker.setMap(null); fgmarker=null; $("f-coords").textContent=""; } }
+if(p.address_components){ const co=p.address_components.find(x=>x.types.includes("country")); if(co&&co.short_name){ formCC=co.short_name.toUpperCase(); refreshRowCcy(); } if(!$("f-area").value){ const nb=p.address_components.find(x=>x.types.includes("neighborhood")||x.types.includes("sublocality")||x.types.includes("locality")); if(nb)$("f-area").value=nb.long_name; } } checkExisting(); }); }catch(e){ warn("form.js",e); } try{ const ac2=new google.maps.places.Autocomplete($("f-area"),{fields:["geometry","name"],types:["geocode"]}); ac2.addListener("place_changed",()=>{ const p=ac2.getPlace(); if(p.geometry&&p.geometry.location){ const loc=p.geometry.location; fgmap.setCenter(loc); fgmap.setZoom(15); if(!picked)setPicked(loc.lat(),loc.lng()); } if(p.name)$("f-area").value=p.name; }); }catch(e){ warn("form.js",e); } } google.maps.event.trigger(fgmap,"resize"); fgmap.setCenter(start); if(picked)setPicked(picked.lat,picked.lng); else if(fgmarker){ fgmarker.setMap(null); fgmarker=null; $("f-coords").textContent=""; } }
 function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; if(fgmarker)fgmarker.setMap(null); fgmarker=new google.maps.Marker({position:{lat:picked.lat,lng:picked.lng},map:fgmap}); $("f-coords").textContent=picked.lat+", "+picked.lng; if(!formCC)resolveCC(picked.lat,picked.lng,editId||null); }
 function formLocate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ if(fgmap){ fgmap.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}); fgmap.setZoom(15); } setPicked(p.coords.latitude,p.coords.longitude); },()=>toast("Couldn't get location")); }
 function renderPhoto(){ const d=$("f-photodrop"); const icon=d.querySelector("div"); if(formPhoto){ d.style.backgroundImage='url("'+safeUrl(formPhoto)+'")'; if(icon)icon.style.display="none"; $("f-photolabel").textContent=""; } else { d.style.backgroundImage=""; if(icon)icon.style.display=""; $("f-photolabel").textContent="Paste an image link below to preview"; } }
@@ -164,7 +164,7 @@ const MILK_IN_NAME=[[/\s*\/w\s*oak\s*milk\b/i,"Oat"],[/\s*[+]\s*oak\s*milk\b/i,"
 function milkFromName(n){ for(let i=0;i<MILK_IN_NAME.length;i++){ const re=MILK_IN_NAME[i][0]; if(re.test(n))return {milk:MILK_IN_NAME[i][1],name:n.replace(re,"").replace(/\s{2,}/g," ").replace(/[\s+/-]+$/,"").trim()}; } return null; }
 function milkCleanupPlan(){ const out=[]; cafes.forEach(c=>{ const t={}; (c.drinks||[]).forEach(d=>{ if(!d||!d.n)return; const m=milkFromName(d.n); const k=((m&&m.name)?m.name:d.n).trim().toLowerCase(); t[k]=(t[k]||0)+1; }); (c.drinks||[]).forEach(d=>{ if(!d||!d.n)return; const m=milkFromName(d.n); if(!m)return; const rename=(m.name&&t[m.name.toLowerCase()]===1)?m.name:null; if(d.milk&&!rename)return; out.push({d:d,milk:m.milk,newName:rename}); }); }); return out; }
 function updateMilkBtn(){ const b=$("ab-milk"); if(!b)return; const n=isAdmin?milkCleanupPlan().length:0; b.style.display=n?"":"none"; if(n)b.textContent="🥛 Fix milk in "+n+" name"+(n===1?"":"s"); }
-function cleanupMilkNames(){ if(!isAdmin){ toast("Sign in to edit first"); return; } const plan=milkCleanupPlan(); if(!plan.length){ toast("Nothing to clean ✓"); updateMilkBtn(); return; } const ren=plan.filter(x=>x.newName).length; if(!confirm("Set the milk field on "+plan.length+" drink"+(plan.length===1?"":"s")+" that mention milk in their name?\n\n• "+ren+" also get the milk trimmed out of the name\n• "+(plan.length-ren)+" keep their name so separate visits stay separate\n\nNo drinks or dates are removed. This updates your saved data."))return; plan.forEach(x=>{ if(!x.d.milk)x.d.milk=x.milk; if(x.newName)x.d.n=x.newName; }); save(); try{ renderList(); }catch(e){} if(app.dataset.view==="detail"&&curId)openDetail(curId); toast("Updated "+plan.length+" drinks ✓"); updateMilkBtn(); }
+function cleanupMilkNames(){ if(!isAdmin){ toast("Sign in to edit first"); return; } const plan=milkCleanupPlan(); if(!plan.length){ toast("Nothing to clean ✓"); updateMilkBtn(); return; } const ren=plan.filter(x=>x.newName).length; if(!confirm("Set the milk field on "+plan.length+" drink"+(plan.length===1?"":"s")+" that mention milk in their name?\n\n• "+ren+" also get the milk trimmed out of the name\n• "+(plan.length-ren)+" keep their name so separate visits stay separate\n\nNo drinks or dates are removed. This updates your saved data."))return; plan.forEach(x=>{ if(!x.d.milk)x.d.milk=x.milk; if(x.newName)x.d.n=x.newName; }); save(); try{ renderList(); }catch(e){ warn("form.js",e); } if(app.dataset.view==="detail"&&curId)openDetail(curId); toast("Updated "+plan.length+" drinks ✓"); updateMilkBtn(); }
 function toggleDrinkRow(btn){ const dr=btn.closest(".dr"); const c=dr.classList.toggle("collapsed"); btn.querySelector(".drchev").textContent=c?"▸":"▾"; if(c)btn.querySelector(".drtitle").textContent=drinkRowLabel(dr); }
 function addDrinkRow(n,p,date,sweet,ice,size,reorder,old,milk,qty,fx){ const re=(reorder==="yes"||reorder===true)?"yes":((reorder==="no"||reorder===false)?"no":(reorder==="neutral"?"neutral":"")); const sv=parseInt(String(sweet||"").replace(/[^0-9]/g,""),10); const hasSweet=!isNaN(sv); const sval=hasSweet?sv:50; /* Ice/Temp runs coldest (left) to hottest (right). Stored values are the labels themselves, so reordering the scale doesn't touch saved data. */
 const ICS=["Extra ice","Regular ice","Less ice","No ice","Warm","Hot"]; const iv=ICS.indexOf(ice||""); const hasIce=iv>=0; const ival=hasIce?iv:3; const zoz=parseInt(String(size||"").replace(/[^0-9]/g,""),10); const hasSize=!isNaN(zoz); const zval=hasSize?Math.max(8,Math.min(32,Math.round(zoz/2)*2)):16; const qv=Math.max(1,Math.min(99,parseInt(qty,10)||1)); const collapsed=!!(n&&String(n).trim());
@@ -179,10 +179,137 @@ const prate=(typeof fx.pr==="number"&&fx.pr>0)?fx.pr:_q.rate;
 const pdate=fx.pd||_q.asof;
 const showCcy=(pcode!=="USD")||(ccyFor({cc:formCC})!=="USD")||!formCC; const title=esc(((n||"").trim()||"New drink")+(qv>1?" ×"+qv:"")+(amt.trim()?" · "+rowPriceLabel(amt,pcode):"")+(date?" · "+fmtDate(date):"")); const div=document.createElement("div"); div.className="dr"+(collapsed?" collapsed":""); div.innerHTML='<button type="button" class="drhead" onclick="toggleDrinkRow(this)"><span class="drchev">'+(collapsed?"▸":"▾")+'</span><span class="drtitle">'+title+'</span><span class="dredit">✎</span></button><input class="dn" type="text" autocomplete="off" placeholder="Drink" value="'+esc(n||"")+'"><div class="priceline">'+ccySelectHTML(pcode,!showCcy)+'<input class="dp" type="text" autocomplete="off" placeholder="Price" value="'+esc(amt)+'" oninput="syncPrice(this)"><span class="datepill"><span class="dpv">'+esc(datePillLabel(date))+'</span><input class="dd" type="date" value="'+esc(date||"")+'" onchange="syncDatePill(this)"></span></div><input type="hidden" class="dpr" data-frozen="'+(fx.pr?"1":"")+'" value="'+esc(prate?String(prate):"")+'"><input type="hidden" class="dpd" value="'+esc(pdate)+'"><div class="convhint">'+convHintHTML(amt,pcode,prate,pdate,date||localToday())+'</div><div class="qtywrap"><span class="swlabel">How many</span><button type="button" class="qbtn" onclick="bumpQty(this,-1)" aria-label="One fewer">−</button><span class="qval">×'+qv+'</span><button type="button" class="qbtn" onclick="bumpQty(this,1)" aria-label="One more">+</button><input type="hidden" class="dqt" value="'+qv+'"></div><div class="szwrap"><span class="swlabel">Cup size</span><input class="dsz" type="range" min="8" max="32" step="2" value="'+zval+'" data-set="'+(hasSize?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.szval\').textContent=this.value+\' oz\';"><span class="szval">'+(hasSize?zval+" oz":"—")+'</span></div><div class="swwrap"><span class="swlabel">Sweetness</span><input class="dsw" type="range" min="0" max="100" step="5" value="'+sval+'" data-set="'+(hasSweet?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.swval\').textContent=this.value+\'%\';"><span class="swval">'+(hasSweet?sval+"%":"—")+'</span></div><div class="icwrap"><span class="swlabel">Ice / Temp</span><input class="dic" type="range" min="0" max="5" step="1" value="'+ival+'" data-set="'+(hasIce?1:0)+'" data-labels="Extra ice|Regular ice|Less ice|No ice|Warm|Hot" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.icval\').textContent=this.dataset.labels.split(\'|\')[this.value];"><span class="icval">'+(hasIce?ICS[iv]:"—")+'</span></div><div class="mkwrap"><span class="swlabel">Milk</span>'+MILKS.map(function(mk){ return '<button type="button" class="mkbtn'+(mk===milk?" on":"")+'" data-milk="'+esc(mk)+'" onclick="setMilk(this)">'+esc(mk)+'</button>'; }).join("")+'<input type="hidden" class="dmk" value="'+esc(milk||"")+'"></div><div class="rowrap"><span class="swlabel">Rate it</span><button type="button" class="rbtn yes'+(re==="yes"?" on":"")+'" onclick="setReorder(this,\'yes\')">👍</button><button type="button" class="rbtn neutral'+(re==="neutral"?" on":"")+'" onclick="setReorder(this,\'neutral\')">😐</button><button type="button" class="rbtn no'+(re==="no"?" on":"")+'" onclick="setReorder(this,\'no\')">👎</button><input type="hidden" class="dre" value="'+re+'"></div><button class="delrow" onclick="delDrinkRow(this)">✕</button>'; if(old){ div.classList.add("dr-old"); div.style.display="none"; } const host=$("f-drinks"); const tog=host.querySelector(".dr-oldertoggle"); if(tog)host.insertBefore(div,tog); else host.appendChild(div); }
 function visitCount(d){ const ds=(d&&d.dates||[]).filter(Boolean); return Math.max((d&&d.count)||0, ds.length, 1); }
-function findSameCafe(name,area,lat,lng){ const nm=(name||"").trim().toLowerCase(); if(!nm)return null; return cafes.find(c=>{ if((c.name||"").trim().toLowerCase()!==nm)return false; if(lat!=null&&c.lat!=null)return Math.abs(lat-c.lat)<0.004&&Math.abs(lng-c.lng)<0.004; const a1=(area||"").trim().toLowerCase(), a2=(c.area||"").trim().toLowerCase(); if(a1&&a2)return a1===a2; return true; })||null; }
-function mergeVisitInto(c,data){ c.drinks=c.drinks||[]; (data.drinks||[]).forEach(nd=>{ const k=nd.n.toLowerCase(); const ex=c.drinks.find(d=>d.n.toLowerCase()===k); if(ex){ if(nd.p){ ex.p=nd.p; ["pl","pc","pr","pd"].forEach(function(k){ if(nd[k]!==undefined)ex[k]=nd[k]; else delete ex[k]; }); } if(nd.size)ex.size=nd.size; if(nd.sweet)ex.sweet=nd.sweet; if(nd.ice)ex.ice=nd.ice; if(nd.milk)ex.milk=nd.milk; if(nd.reorder)ex.reorder=nd.reorder; const dates=[...new Set([...(ex.dates||[]),...(nd.dates||[])])].filter(Boolean).sort(); const cnt=visitCount(ex)+visitCount(nd); if(dates.length)ex.dates=dates; if(cnt>1)ex.count=Math.max(cnt,dates.length); } else { c.drinks.push(nd); } }); c.tags=[...new Set([...(c.tags||[]),...(data.tags||[])])]; if(data.fav)c.fav=true; if(data.rating)c.rating=data.rating; if(data.photo&&!c.photo)c.photo=data.photo; if(!c.area&&data.area)c.area=data.area; if(!c.cc&&data.cc)c.cc=data.cc; if((c.drinks||[]).length)c.wish=false; if(c.lat==null&&data.lat!=null){ c.lat=data.lat; c.lng=data.lng; } if(data.review){ c.review=c.review?(c.review.indexOf(data.review)>=0?c.review:(c.review+"\n\n"+data.review)):data.review; } if(data.updated)c.updated=data.updated; }
-function saveForm(){ try{ const name=$("f-name").value.trim(); if(!name){ toast("Please add a cafe name"); return; } const raw=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const dn=r.querySelector(".dn"),dp=r.querySelector(".dp"),dsz=r.querySelector(".dsz"),dd=r.querySelector(".dd"),dsw=r.querySelector(".dsw"),dic=r.querySelector(".dic"),dre=r.querySelector(".dre"),dmk=r.querySelector(".dmk"),dqt=r.querySelector(".dqt"),dpc=r.querySelector(".dpc"),dprt=r.querySelector(".dpr"),dpdt=r.querySelector(".dpd"); return {qty:Math.max(1,Math.min(99,(dqt?parseInt(dqt.value,10):1)||1)),n:dn?dn.value.trim():"",p:dp?dp.value.trim():"",size:(dsz&&dsz.dataset.set==="1")?(dsz.value+" oz"):"",date:dd?dd.value:"",sweet:(dsw&&dsw.dataset.set==="1")?(dsw.value+"%"):"",ice:(dic&&dic.dataset.set==="1")?(dic.dataset.labels.split("|")[dic.value]):"",milk:dmk?dmk.value:"",reorder:dre?dre.value:"",pc:dpc?dpc.value:"USD",pr:dprt?(parseFloat(dprt.value)||0):0,pd:dpdt?dpdt.value:""}; }).filter(d=>d.n); const dmap=new Map(); raw.forEach(d=>{ const k=d.n.toLowerCase(); if(!dmap.has(k))dmap.set(k,{n:d.n,p:d.p,pc:d.pc,pr:d.pr,pd:d.pd,dates:[],count:0}); const e=dmap.get(k); /* amount, currency, rate and rate-date move together or not at all */
-if(d.p&&!e.p){ e.p=d.p; e.pc=d.pc; e.pr=d.pr; e.pd=d.pd; } if(d.size)e.size=d.size; if(d.sweet)e.sweet=d.sweet; if(d.ice)e.ice=d.ice; if(d.milk)e.milk=d.milk; if(d.reorder)e.reorder=d.reorder; e.count+=d.qty; if(d.date&&!e.dates.includes(d.date))e.dates.push(d.date); }); const drinks=[...dmap.values()].map(d=>{ d.dates.sort(); const o=Object.assign({n:d.n},priceFields(d.p,d.pc,d.pr,d.pd)); if(d.size)o.size=d.size; if(d.sweet)o.sweet=d.sweet; if(d.ice)o.ice=d.ice; if(d.milk)o.milk=d.milk; if(d.reorder)o.reorder=d.reorder; if(d.dates.length)o.dates=d.dates; const cnt=Math.max(d.count,d.dates.length); if(cnt>1)o.count=cnt; return o; }); const data={name,area:$("f-area").value.trim(),brand:$("f-brand")?$("f-brand").value.trim():"",lat:picked?picked.lat:null,lng:picked?picked.lng:null,photo:formPhoto,rating:formRating,fav:$("f-fav").checked,wish:$("f-wish")?$("f-wish").checked:false,custom:$("f-custom")?$("f-custom").checked:false,tags:formTags.slice(),review:$("f-review").value.trim(),cc:formCC||"",drinks,updated:new Date().toISOString()}; /* an unresolved country must not blank a country we already knew */ if(!data.cc)delete data.cc; let savedId=editId, msg="Saved ✓"; const c=editId?cafes.find(x=>x.id===editId):null;
+function findSameCafe(name,area,lat,lng){ const nm=(name||"").trim().toLowerCase(); if(!nm)return null; return cafes.find(c=>{ if((c.name||"").trim().toLowerCase()!==nm)return false; if(lat!=null&&c.lat!=null)return Math.abs(lat-c.lat)<0.004&&Math.abs(lng-c.lng)<0.004; const a1=(area||"").trim().toLowerCase(), a2=(c.area||"").trim().toLowerCase(); /* Same name, no pin, no area to compare: not enough to call it the same place. A visible
+   duplicate you can merge on purpose beats a silent merge you never notice. */
+if(a1&&a2)return a1===a2; return false; })||null; }
+/* Merges a fresh visit into a cafe that already exists. Unlike saveForm()'s edit branch this
+   mutates field by field instead of replacing c.drinks wholesale, which is why it has never
+   destroyed anything — but it only stays safe if every field added to a drink is handled here
+   deliberately. Laid out one statement per line for that reason. */
+function mergeVisitInto(c,data){
+  c.drinks = c.drinks || [];
+  (data.drinks||[]).forEach(function(nd){
+    const key = nd.n.toLowerCase();
+    const ex  = c.drinks.find(function(d){ return d.n.toLowerCase()===key; });
+    if(!ex){ c.drinks.push(nd); return; }
+    /* amount, currency, rate and rate-date move as one unit, or a price ends up beside
+       another row's currency */
+    if(nd.p){
+      ex.p = nd.p;
+      ["pl","pc","pr","pd"].forEach(function(f){
+        if(nd[f]!==undefined) ex[f] = nd[f]; else delete ex[f];
+      });
+    }
+    if(nd.size)    ex.size    = nd.size;
+    if(nd.sweet)   ex.sweet   = nd.sweet;
+    if(nd.ice)     ex.ice     = nd.ice;
+    if(nd.milk)    ex.milk    = nd.milk;
+    if(nd.reorder) ex.reorder = nd.reorder;
+    const dates = [...new Set([...(ex.dates||[]), ...(nd.dates||[])])].filter(Boolean).sort();
+    const cnt   = visitCount(ex) + visitCount(nd);
+    if(dates.length) ex.dates = dates;
+    if(cnt>1)        ex.count = Math.max(cnt, dates.length);
+  });
+  c.tags = [...new Set([...(c.tags||[]), ...(data.tags||[])])];
+  if(data.fav)               c.fav    = true;
+  if(data.rating)            c.rating = data.rating;
+  if(data.photo && !c.photo) c.photo  = data.photo;
+  if(!c.area && data.area)   c.area   = data.area;
+  if(!c.cc && data.cc)       c.cc     = data.cc;
+  if((c.drinks||[]).length)  c.wish   = false;   /* a drink on the record means you went */
+  if(c.lat==null && data.lat!=null){ c.lat = data.lat; c.lng = data.lng; }
+  if(data.review){
+    c.review = c.review
+      ? (c.review.indexOf(data.review)>=0 ? c.review : c.review + "\n\n" + data.review)
+      : data.review;
+  }
+  if(data.updated) c.updated = data.updated;
+}
+function saveForm(){
+ try{
+  const name=$("f-name").value.trim();
+  if(!name){ toast("Please add a cafe name"); return; }
+
+  /* One entry per visible drink row, read straight back out of the form. Every field the form
+     owns has to be listed here: anything missing is silently dropped on the next edit, which
+     is the trap DESIGN_NOTES opens with. */
+  const raw=[...document.querySelectorAll("#f-drinks .dr")].map(function(r){
+    const q=function(sel){ return r.querySelector(sel); };
+    const dn=q(".dn"), dp=q(".dp"), dsz=q(".dsz"), dd=q(".dd"), dsw=q(".dsw"), dic=q(".dic"),
+          dre=q(".dre"), dmk=q(".dmk"), dqt=q(".dqt"),
+          dpc=q(".dpc"), dprt=q(".dpr"), dpdt=q(".dpd");
+    return {
+      qty:     Math.max(1,Math.min(99,(dqt?parseInt(dqt.value,10):1)||1)),
+      n:       dn?dn.value.trim():"",
+      p:       dp?dp.value.trim():"",
+      size:    (dsz&&dsz.dataset.set==="1")?(dsz.value+" oz"):"",
+      date:    dd?dd.value:"",
+      sweet:   (dsw&&dsw.dataset.set==="1")?(dsw.value+"%"):"",
+      ice:     (dic&&dic.dataset.set==="1")?(dic.dataset.labels.split("|")[dic.value]):"",
+      milk:    dmk?dmk.value:"",
+      reorder: dre?dre.value:"",
+      pc:      dpc?dpc.value:"USD",
+      pr:      dprt?(parseFloat(dprt.value)||0):0,
+      pd:      dpdt?dpdt.value:""
+    };
+  }).filter(function(d){ return d.n; });
+
+  /* Rows collapse by lowercased drink name, so several visits to the same drink become one
+     record carrying a list of dates. */
+  const dmap=new Map();
+  raw.forEach(function(d){
+    const k=d.n.toLowerCase();
+    if(!dmap.has(k))dmap.set(k,{n:d.n,p:d.p,pc:d.pc,pr:d.pr,pd:d.pd,dates:[],count:0});
+    const e=dmap.get(k);
+    /* amount, currency, rate and rate-date move together or not at all, or a price ends up
+       beside another row's currency */
+    if(d.p&&!e.p){ e.p=d.p; e.pc=d.pc; e.pr=d.pr; e.pd=d.pd; }
+    if(d.size)    e.size    = d.size;
+    if(d.sweet)   e.sweet   = d.sweet;
+    if(d.ice)     e.ice     = d.ice;
+    if(d.milk)    e.milk    = d.milk;
+    if(d.reorder) e.reorder = d.reorder;
+    e.count += d.qty;
+    if(d.date && !e.dates.includes(d.date)) e.dates.push(d.date);
+  });
+
+  const drinks=[...dmap.values()].map(function(d){
+    d.dates.sort();
+    /* priceFields() is the single place local money becomes dollars */
+    const o=Object.assign({n:d.n}, priceFields(d.p,d.pc,d.pr,d.pd));
+    if(d.size)         o.size    = d.size;
+    if(d.sweet)        o.sweet   = d.sweet;
+    if(d.ice)          o.ice     = d.ice;
+    if(d.milk)         o.milk    = d.milk;
+    if(d.reorder)      o.reorder = d.reorder;
+    if(d.dates.length) o.dates   = d.dates;
+    const cnt=Math.max(d.count,d.dates.length);
+    if(cnt>1) o.count = cnt;
+    return o;
+  });
+
+  const data={
+    name,
+    area:    $("f-area").value.trim(),
+    brand:   $("f-brand")?$("f-brand").value.trim():"",
+    lat:     picked?picked.lat:null,
+    lng:     picked?picked.lng:null,
+    photo:   formPhoto,
+    rating:  formRating,
+    fav:     $("f-fav").checked,
+    wish:    $("f-wish")?$("f-wish").checked:false,
+    custom:  $("f-custom")?$("f-custom").checked:false,
+    tags:    formTags.slice(),
+    review:  $("f-review").value.trim(),
+    cc:      formCC||"",
+    drinks,
+    updated: new Date().toISOString()
+  };
+  /* an unresolved country must not blank a country we already knew */
+  if(!data.cc)delete data.cc;
+
+  let savedId=editId, msg="Saved ✓";
+  const c=editId?cafes.find(x=>x.id===editId):null;
 /* A wishlist entry is a place you have not been, so it saves no visit. The visit fields were
    hidden while the box was ticked; anything typed before it was ticked goes with them rather
    than being filed as a visit that never happened. Tags survive — "matcha" is a fine reason
@@ -211,4 +338,37 @@ if((data.drinks||[]).length)data.wish=false; if(c){ const moved=(c.lat!==data.la
 const keep={}; (c.drinks||[]).forEach(function(d){ if(!d||!d.n)return; if(d.elo===undefined&&d.matches===undefined)return; const k=d.n.trim().toLowerCase(); if(!keep[k]||(d.matches||0)>(keep[k].matches||0))keep[k]={elo:d.elo,matches:d.matches}; });
 Object.assign(c,data);
 (c.drinks||[]).forEach(function(d){ const p=keep[(d.n||"").trim().toLowerCase()]; if(!p)return; if(p.elo!==undefined)d.elo=p.elo; if(p.matches!==undefined)d.matches=p.matches; });
-if(moved){ delete gphotoCache[c.id]; if(c.gphoto)delete c.gphoto; saveGphotoCache(); } if(c.custom){ if(c.emoji==="☕")c.emoji="🏠"; if(c.gphoto){ delete c.gphoto; delete gphotoCache[c.id]; saveGphotoCache(); } } else if(c.emoji==="🏠")c.emoji="☕"; } else { const ex=findSameCafe(data.name,data.area,data.lat,data.lng); if(ex){ mergeVisitInto(ex,data); savedId=ex.id; msg="Added another visit to "+ex.name+" ✓"; } else { data.id=uid(); data.emoji=data.custom?"🏠":"☕"; savedId=data.id; cafes.push(data); } } saveCafe(savedId); _formSnap=null; try{ renderMarkers(); }catch(e){ console.warn("renderMarkers failed",e); } try{ renderList(); }catch(e){} toast(msg); try{ chaserArm(savedId); }catch(e){ _chaser=null; console.warn("chaserArm failed",e); } savedId?openDetail(savedId):show(lastMain); }catch(err){ console.error("saveForm failed",err); toast("Couldn't save — "+(err&&err.message?err.message:"unexpected error")); } }
+  if(moved){ delete gphotoCache[c.id]; if(c.gphoto)delete c.gphoto; saveGphotoCache(); }
+  if(c.custom){
+    if(c.emoji==="☕")c.emoji="🏠";
+    if(c.gphoto){ delete c.gphoto; delete gphotoCache[c.id]; saveGphotoCache(); }
+  } else if(c.emoji==="🏠") c.emoji="☕";
+
+ } else {
+  /* Not an edit: either this is another visit to a cafe already on record, or a new one. */
+  const ex=findSameCafe(data.name,data.area,data.lat,data.lng);
+  if(ex){
+    mergeVisitInto(ex,data);
+    savedId=ex.id;
+    msg="Added another visit to "+ex.name+" ✓";
+  } else {
+    data.id=uid();
+    data.emoji=data.custom?"🏠":"☕";
+    savedId=data.id;
+    cafes.push(data);
+  }
+ }
+
+ saveCafe(savedId);
+ _formSnap=null;
+ try{ renderMarkers(); }catch(e){ warn("form.js renderMarkers",e); }
+ try{ renderList();    }catch(e){ warn("form.js renderList",e); }
+ toast(msg);
+ try{ chaserArm(savedId); }catch(e){ _chaser=null; warn("form.js chaserArm",e); }
+ savedId?openDetail(savedId):show(lastMain);
+
+ }catch(err){
+  console.error("saveForm failed",err);
+  toast("Couldn't save — "+(err&&err.message?err.message:"unexpected error"));
+ }
+}

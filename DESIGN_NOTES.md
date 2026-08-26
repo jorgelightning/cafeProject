@@ -61,6 +61,24 @@ Companion to `README.md`, which covers structure and deployment.
   leaderboard only for viewers — so the owner could never reach the thing the button promised.
   Two callers shipped before anyone noticed.
 
+- **The cloud node is an object keyed by cafe id, not a JSON array.** It began life as an
+  array, and `save()` reshaped it the first time it ran after per-cafe writes landed. Writing
+  `cafes/<id>` while it is array-shaped adds a string key beside the numeric ones and
+  **duplicates the cafe**, so `saveCafe()`/`removeCafe()` refuse to touch a path until
+  `_cloudKeyed` is true and fall back to a full write instead. `asArray()` reads either shape
+  and the backup workflow's `jq` already collapses the object back to an array, so nothing
+  else has to care — but anything new that writes to the cloud does.
+- **`save()` means *all 101 cafes*.** Use `saveCafe(id)` for one and `removeCafe(id)` for a
+  deletion. The full write is correct for genuinely bulk operations (`cleanupMilkNames`,
+  `fetchAllPhotos`) and wrong everywhere else: two devices each writing everything means the
+  second silently erases whatever the first added.
+- **`sw.js`'s `CACHE_V` and the `?v=` on every script tag are the same version.** Bump one
+  without the other and the service worker keeps serving the previous build's scripts from
+  cache, which looks exactly like a change that did not deploy.
+- **`esc()` escapes the apostrophe, and 17 inline handlers depend on that.** They pass
+  arguments inside single-quoted JS strings (`onclick="openDetail('…')"`), so a cafe named
+  `Joe's` would otherwise break out of one.
+
 ---
 
 ## Measured baseline — 16 Aug 2026

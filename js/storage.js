@@ -6,15 +6,15 @@ async function load(){
 isAdmin = localStorage.getItem(ADMIN_FLAG)==="1";
 if(await loadCloud())return;
 let published=null;
-try{ const ctrl=new AbortController(); const _to=setTimeout(()=>ctrl.abort(),8000); const r=await fetch(DATA_URL+"?t="+Date.now(),{signal:ctrl.signal}); clearTimeout(_to); if(r.ok)published=await r.json(); }catch(e){}
+try{ const ctrl=new AbortController(); const _to=setTimeout(()=>ctrl.abort(),8000); const r=await fetch(DATA_URL+"?t="+Date.now(),{signal:ctrl.signal}); clearTimeout(_to); if(r.ok)published=await r.json(); }catch(e){ warn("storage.js",e); }
 if(isAdmin){
 const dirty = localStorage.getItem(DIRTY_FLAG)==="1";
-let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)); }catch(e){ warn("storage.js",e); }
 if(dirty && local && local.length){ cafes=local; }
 else if(published && published.length){ cafes=published; localStorage.removeItem(KEY); }
 else { cafes=(local&&local.length)?local:seed(); }
 } else {
-let _lc=null; try{ _lc=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){} cafes=(published&&published.length)?published:((Array.isArray(_lc)&&_lc.length)?_lc:seed());
+let _lc=null; try{ _lc=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ warn("storage.js",e); } cafes=(published&&published.length)?published:((Array.isArray(_lc)&&_lc.length)?_lc:seed());
 }
 }
 /* Writes used to be one shape: the entire array, every time, from every caller. Two devices
@@ -24,15 +24,15 @@ let _lc=null; try{ _lc=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){
    colliding and the common save drops from ~61 KB to about 1 KB. */
 function _localSave(){ try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){ toast("Storage full — try a smaller photo"); } }
 function _cloudReady(){
-  if(!fbReady){ try{ localStorage.setItem(DIRTY_FLAG,"1"); }catch(e){} return false; }
+  if(!fbReady){ try{ lsSet(DIRTY_FLAG,"1"); }catch(e){ warn("storage.js",e); } return false; }
   const u=fbAuth&&fbAuth.currentUser;
   if(!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase())){
-    localStorage.setItem(DIRTY_FLAG,"1"); toast("Saved on this device — tap 🔓 to sign in so it syncs"); return false;
+    lsSet(DIRTY_FLAG,"1"); toast("Saved on this device — tap 🔓 to sign in so it syncs"); return false;
   }
   return true;
 }
 function _cloudDone(p){ return p.then(function(){ localStorage.removeItem(DIRTY_FLAG); }).catch(function(){
-  localStorage.setItem(DIRTY_FLAG,"1"); toast("Cloud save failed — kept on this device, tap 🔓 to re-sign in"); }); }
+  lsSet(DIRTY_FLAG,"1"); toast("Cloud save failed — kept on this device, tap 🔓 to re-sign in"); }); }
 /* Everything. Also the migration: this is what reshapes the node from array to keyed. */
 function save(){
   if(!isAdmin)return;
@@ -61,9 +61,9 @@ function applyMode(){ app.dataset.mode=isAdmin?"admin":"viewer"; document.queryS
 function authMsg(code){ if(code==="auth/operation-not-allowed"||code==="auth/configuration-not-found")return "Turn on Google sign-in: Firebase Console → Authentication → Sign-in method → Google → Enable."; if(code==="auth/unauthorized-domain")return "This site's domain isn't allowed. Add it in Firebase → Authentication → Settings → Authorized domains."; if(code==="auth/popup-blocked"||code==="auth/cancelled-popup-request")return "Your browser blocked the popup — allow popups for this site and try again."; if(code==="auth/popup-closed-by-user")return "Sign-in window closed."; return "Sign-in failed ("+code+")"; }
 function adminSignIn(){ if(!fbAuth){ toast("Cloud not connected"); return; } const prov=new firebase.auth.GoogleAuthProvider(); fbAuth.signInWithPopup(prov).catch(e=>{ const code=(e&&e.code)||""; console.error("Sign-in error",e); if(code==="auth/popup-blocked"||code==="auth/operation-not-supported-in-this-environment"){ fbAuth.signInWithRedirect(prov).catch(er=>toast(authMsg((er&&er.code)||""))); return; } toast(authMsg(code)); }); }
 function resyncDirty(){ if(!fbReady||!fbAuth)return; const u=fbAuth.currentUser; if(!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()))return; const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; fbDb.ref("cafes").once("value").then(s=>{ const cloudEmpty=!asArray(s.val()).length; if((dirty||cloudEmpty)&&cafes.length){ fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafesById()))).then(()=>{ _cloudKeyed=true; localStorage.removeItem(DIRTY_FLAG); if(dirty)toast("Synced your edits to the cloud ✓"); }).catch(()=>{}); } }).catch(()=>{}); }
-function initAuth(){ if(!fbAuth)return; fbAuth.onAuthStateChanged(u=>{ const ok=!!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()); if(u&&!ok){ toast("That account can't edit this map"); fbAuth.signOut(); return; } if(ok){ if(!isAdmin){ isAdmin=true; localStorage.setItem(ADMIN_FLAG,"1"); applyMode(); toast("Admin mode - signed in"); } load().then(()=>{ if(gReady)renderMarkers(); renderList(); resyncDirty(); }); } else if(!ok&&isAdmin){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); }); toast("Viewer mode"); } }); }
-function toggleAdmin(){ if(fbAuth){ if(isAdmin){ if(confirm("Sign out of editing mode?"))fbAuth.signOut().then(()=>toast("Viewer mode")); } else { adminSignIn(); } return; } if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; localStorage.setItem(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
-function importPublished(){ if(!isAdmin){ toast("Sign in to edit first"); return; } if(!fbReady){ toast("Cloud not connected"); return; } if(!confirm("Replace the cloud data with cafes.json from the site? This overwrites what's currently in the cloud."))return; fetch(DATA_URL+"?t="+Date.now()).then(r=>r.json()).then(d=>{ if(!Array.isArray(d)||!d.length){ toast("cafes.json looks empty"); return; } return fbDb.ref("cafes").set(d.reduce(function(o,c){ if(c&&c.id)o[c.id]=c; return o; },{})).then(()=>{ _cloudKeyed=true; cafes=d; try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){} localStorage.removeItem(DIRTY_FLAG); if(gReady)renderMarkers(); renderList(); toast("Imported "+d.length+" cafes \u2713"); }); }).catch(()=>toast("Couldn't load cafes.json")); }
+function initAuth(){ if(!fbAuth)return; fbAuth.onAuthStateChanged(u=>{ const ok=!!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()); if(u&&!ok){ toast("That account can't edit this map"); fbAuth.signOut(); return; } if(ok){ if(!isAdmin){ isAdmin=true; lsSet(ADMIN_FLAG,"1"); applyMode(); toast("Admin mode - signed in"); } load().then(()=>{ if(gReady)renderMarkers(); renderList(); resyncDirty(); }); } else if(!ok&&isAdmin){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); }); toast("Viewer mode"); } }); }
+function toggleAdmin(){ if(fbAuth){ if(isAdmin){ if(confirm("Sign out of editing mode?"))fbAuth.signOut().then(()=>toast("Viewer mode")); } else { adminSignIn(); } return; } if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; lsSet(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
+function importPublished(){ if(!isAdmin){ toast("Sign in to edit first"); return; } if(!fbReady){ toast("Cloud not connected"); return; } if(!confirm("Replace the cloud data with cafes.json from the site? This overwrites what's currently in the cloud."))return; fetch(DATA_URL+"?t="+Date.now()).then(r=>r.json()).then(d=>{ if(!Array.isArray(d)||!d.length){ toast("cafes.json looks empty"); return; } return fbDb.ref("cafes").set(d.reduce(function(o,c){ if(c&&c.id)o[c.id]=c; return o; },{})).then(()=>{ _cloudKeyed=true; cafes=d; try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("storage.js",e); } localStorage.removeItem(DIRTY_FLAG); if(gReady)renderMarkers(); renderList(); toast("Imported "+d.length+" cafes \u2713"); }); }).catch(()=>toast("Couldn't load cafes.json")); }
 function exportJSON(){ const blob=new Blob([JSON.stringify(cafes,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="cafes.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); localStorage.removeItem(DIRTY_FLAG); toast("Backup downloaded ✓"); }
 function revertPublished(){ if(!confirm("Reload the latest saved data and discard unsynced local edits?"))return; localStorage.removeItem(KEY); localStorage.removeItem(DIRTY_FLAG); load().then(()=>{ renderMarkers(); show("list"); toast("Reloaded latest data"); }); }
 function seed(){ return [
