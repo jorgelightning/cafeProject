@@ -60,6 +60,7 @@
 <div class="form-top"><button class="iconbtn" onclick="closeForm()" aria-label="Back">‹</button><h1 id="form-title" style="flex:1; font-size:18px; margin:0">Add a visit</h1></div>
 <div class="scroll"><div class="form">
 <div class="field"><label>Cafe name *</label><input type="text" id="f-name" placeholder="Search a place or type a name…" autocomplete="off" onblur="checkExisting()"></div>
+<div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-wish"> Add to wishlist 🔖 <span style="font-size:11px;color:var(--soft);font-weight:400">(haven’t visited yet)</span></label></div>
 <div class="field"><label>Location — tap map to drop a pin</label><div id="form-map"></div><button class="hintbtn" onclick="formLocate()">📍 Use my current location</button> <span id="f-coords" style="font-size:12px; color:var(--soft)"></span></div>
 <div class="field"><label>Area / neighborhood</label><input type="text" id="f-area" placeholder="e.g. Manoa" autocomplete="off"></div>
 <div class="field"><label>Brand / chain (optional)</label><input type="text" id="f-brand" placeholder="e.g. Tadaima — groups locations together" autocomplete="off"></div>
@@ -70,7 +71,6 @@
 <div class="field"><label>Review / thoughts</label><textarea id="f-review" placeholder="Vibe, taste, service…"></textarea></div>
 <div class="field"><label>Tags</label><div class="tagpick" id="f-tags"></div></div>
 <div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-fav"> Mark as favorite ❤️</label></div>
-<div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-wish"> Add to wishlist 🔖 <span style="font-size:11px;color:var(--soft);font-weight:400">(haven’t visited yet)</span></label></div>
 <div class="savebar"><button class="btn" onclick="saveForm()">Save visit</button></div>
 </div></div>
 </section>
