@@ -75,6 +75,13 @@ Companion to `README.md`, which covers structure and deployment.
 - **`sw.js`'s `CACHE_V` and the `?v=` on every script tag are the same version.** Bump one
   without the other and the service worker keeps serving the previous build's scripts from
   cache, which looks exactly like a change that did not deploy.
+- **Currency is never looked up from coordinates.** `new google.maps.Geocoder` bills against
+  the Geocoding API — a separate metered API from the Maps JavaScript and Places ones this app
+  uses — so there is no reverse geocode anywhere. The country arrives free from
+  `address_components` for a cafe picked through Autocomplete; anything else shows the
+  currency chip, and the choice is stored as `c.ccy`, which outranks `c.cc` and is only ever
+  asked once per cafe. Do not reintroduce a lat/lng country guess: `countryTerms()` exists for
+  search terms and puts Vancouver in the United States.
 - **`esc()` escapes the apostrophe, and 17 inline handlers depend on that.** They pass
   arguments inside single-quoted JS strings (`onclick="openDetail('…')"`), so a cafe named
   `Joe's` would otherwise break out of one.

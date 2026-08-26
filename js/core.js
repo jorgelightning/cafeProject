@@ -1,7 +1,7 @@
 "use strict";
 /* core.js — App state, DOM/format helpers, Firebase init and cloud sync.
    Loaded by index.html; script order matters (config first, boot last). */
-let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], formCC="", favOnly=false, wishOnly=false, lastMain="map";
+let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], formCC="", formCcy="", favOnly=false, wishOnly=false, lastMain="map";
 let gReady=false, gmap=null, fgmap=null, fgmarker=null, gmarkers=[], userMarker=null;
 let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gphotos"))||{}; }catch(e){ warn("core.js",e); }
 let isAdmin=false;
@@ -65,7 +65,14 @@ function localToday(){ return new Date(Date.now()-new Date().getTimezoneOffset()
    drink.pl/.pc carry the amount as it appeared on the board. drink.pr/.pd record the rate
    used and the day it was taken, so a drink logged in Taipei in 2024 keeps the 2024 number
    instead of drifting every time the markets move. Nothing re-converts on read. */
-function ccyFor(c){ const cc=((c&&c.cc)||"").trim().toUpperCase(); return (cc&&CCY_BY_CC[cc])||"USD"; }
+/* An explicit choice wins over the country lookup: c.ccy is what you picked by hand, and
+   it is why a cafe with no resolvable country only ever has to be told once. */
+function ccyFor(c){
+  const own=((c&&c.ccy)||"").trim().toUpperCase();
+  if(own&&CCY_META[own])return own;
+  const cc=((c&&c.cc)||"").trim().toUpperCase();
+  return (cc&&CCY_BY_CC[cc])||"USD";
+}
 function ccyMeta(code){ return CCY_META[(code||"USD").toUpperCase()]||{sym:"",dec:2}; }
 /* Units of `code` per 1 USD, or 0 when we have no rate — callers treat 0 as "can't convert
    yet" rather than as a number. Swap the body for a cached fetch to go live; the frozen
