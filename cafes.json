@@ -678,13 +678,13 @@
         "p": ""
       }
     ],
-    "elo": 1582,
+    "elo": 1580,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 11,
+    "matches": 12,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.",
@@ -1459,6 +1459,7 @@
   {
     "area": "Ximen",
     "brand": "",
+    "cc": "TW",
     "drinks": [
       {
         "dates": [
@@ -1796,6 +1797,7 @@
   {
     "area": "Ximen",
     "brand": "",
+    "cc": "TW",
     "drinks": [
       {
         "dates": [
@@ -2308,13 +2310,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1500,
+    "elo": 1484,
     "emoji": "☕",
     "fav": false,
     "id": "mrsr6rvphhm7",
     "lat": 37.36752,
     "lng": -122.03358,
-    "matches": 1,
+    "matches": 2,
     "name": "TANING - Sunnyvale",
     "rating": 4,
     "review": "Great lemon taste but the drink are very hot and it'll take a while before drinking it and the cups leaks a lot.",
@@ -2779,13 +2781,13 @@
         "sweet": "100%"
       }
     ],
-    "elo": 1517,
+    "elo": 1500,
     "emoji": "☕",
     "fav": false,
     "id": "mt1xfsx8x7a1",
     "lat": 47.61544,
     "lng": -122.34656,
-    "matches": 1,
+    "matches": 2,
     "name": "PLUS84",
     "rating": 5,
     "review": "Plus84 signature sweetness is as is because of condense milk! Great study vibes and they let me bring my bike in!",
@@ -2906,16 +2908,90 @@
   {
     "area": "Central Vancouver",
     "brand": "",
+    "cc": "CA",
     "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-25"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Matcha Latte",
+        "p": "5.11",
+        "pc": "CAD",
+        "pd": "2026-08-25",
+        "pl": "7",
+        "pr": 1.37,
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1519,
     "emoji": "☕",
     "fav": false,
     "id": "mt8cmelqa902",
     "lat": 49.28522,
     "lng": -123.11632,
+    "matches": 2,
     "name": "Nīzu Cafe",
+    "rating": 4,
+    "review": "Pretty good matcha! Great atmosphere! The egg sando was good too!",
+    "tags": [
+      "matcha"
+    ],
+    "updated": "2026-08-26T01:55:52.439Z",
+    "wish": false
+  },
+  {
+    "area": "Kitsilano",
+    "brand": "",
+    "cc": "CA",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt9gzpkx777r",
+    "lat": 49.26823,
+    "lng": -123.14862,
+    "name": "cowdog",
     "rating": 0,
     "review": "",
-    "updated": "2026-08-25T07:33:48.014Z",
+    "updated": "2026-08-26T02:23:53.409Z",
     "wish": true
+  },
+  {
+    "area": "Central Vancouver",
+    "brand": "",
+    "cc": "CA",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-25"
+        ],
+        "ice": "Regular ice",
+        "n": "Mango Pamelo Smoothie",
+        "p": "6.32",
+        "pc": "CAD",
+        "pd": "2026-08-25",
+        "pl": "8.66",
+        "pr": 1.37,
+        "reorder": "yes",
+        "size": "16 oz"
+      }
+    ],
+    "elo": 1516,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt9me8ytssjp",
+    "lat": 49.28744,
+    "lng": -123.12887,
+    "matches": 1,
+    "name": "Alfa Tea Concept",
+    "rating": 5,
+    "review": "Amazing mango taste!",
+    "updated": "2026-08-26T04:55:09.796Z",
+    "wish": false
   }
 ]
