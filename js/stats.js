@@ -146,10 +146,10 @@ function renderStats(){
   const hojCafes=nonWish.filter(function(c){ return (c.drinks||[]).some(function(d){ return /hoji/i.test(d.n||""); }); }).length;
   if(hojA.length>=3){
     const hmx=hojA[hojA.length-1].p;
-    const med=hojA[Math.floor(hojA.length/2)].p;
+    const med=median(hojA.map(function(x){ return x.p; }));
     const prices=[]; nonWish.forEach(function(c){ (c.drinks||[]).forEach(function(d){ const p=dpr(d); if(p>0)prices.push(p); }); });
     prices.sort(function(a,b){ return a-b; });
-    const pmed=prices.length?prices[Math.floor(prices.length/2)]:0;
+    const pmed=median(prices);
     h+='<div class="statsec">🍵 Hojicha latte, priced around town</div>';
     hojA.slice(0,4).forEach(function(x){ h+=magRow("🍵",x.c.name,x.c.area,money(x.p),x.p/hmx*100,"openDetail('"+x.c.id+"','stats')"); });
     if(hojA.length>4){
