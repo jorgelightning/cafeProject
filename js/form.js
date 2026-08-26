@@ -112,7 +112,11 @@ function resolveCC(lat,lng,cafeId){
     try{
       new google.maps.Geocoder().geocode({location:{lat:+lat,lng:+lng}},function(res,status){
         delete _ccInflight[key];
-        if(status!=="OK"||!res||!res.length)return;
+        /* A denied or throttled lookup is the likeliest reason a currency never
+           auto-picks, and it is not an exception — so say so rather than returning
+           silently. ZERO_RESULTS is ordinary (open sea, unnamed spots) and stays quiet. */
+        if(status!=="OK"){ if(status!=="ZERO_RESULTS")warn("reverse geocode "+status,null); return; }
+        if(!res||!res.length)return;
         let cc="";
         res.some(function(r){ const co=(((r&&r.address_components)||[]).find(function(x){ return x.types&&x.types.indexOf("country")>=0; })); if(co&&co.short_name){ cc=co.short_name.toUpperCase(); return true; } return false; });
         adoptCC(cc,cafeId);
