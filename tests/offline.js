@@ -1,4 +1,5 @@
 const { serve, launch, checker, ROOT } = require("./harness");
+const fs = require("fs");
 const { eq, done } = checker();
 (async()=>{
  const srv=await serve();
@@ -31,7 +32,11 @@ const { eq, done } = checker();
            css:keys.some(k=>k.includes('styles.css')),
            chk:keys.some(k=>k.includes('_chk'))};
  });
- eq(cached.cache,'cafemap-v25','cache is versioned with the asset string');
+ /* read the expected name out of sw.js — hardcoding it means every legitimate version
+    bump breaks this test, which trains people to edit tests instead of reading them */
+ const swv=(fs.readFileSync(require('path').join(ROOT,'sw.js'),'utf8')
+   .match(/CACHE_V\s*=\s*"([^"]+)"/)||[])[1];
+ eq(cached.cache,swv,'cache is named by sw.js CACHE_V ('+swv+')');
  eq({h:cached.html,c:cached.core,s:cached.css},{h:true,c:true,s:true},'shell precached ('+cached.n+' entries)');
  eq(cached.chk,false,'the update-check request is never cached');
 

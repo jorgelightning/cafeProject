@@ -73,8 +73,11 @@ Companion to `README.md`, which covers structure and deployment.
   `fetchAllPhotos`) and wrong everywhere else: two devices each writing everything means the
   second silently erases whatever the first added.
 - **`sw.js`'s `CACHE_V` and the `?v=` on every script tag are the same version.** Bump one
-  without the other and the service worker keeps serving the previous build's scripts from
-  cache, which looks exactly like a change that did not deploy.
+  without the other — or neither — and the service worker keeps serving the previous build,
+  which looks exactly like a change that did not deploy. This has already happened once:
+  five commits changed `js/` while both sat at 25, and the fixes never reached the browser.
+  `tests/cache-version.js` now fails when they disagree, and the worker revalidates in the
+  background so a missed bump costs one reload rather than being permanent.
 - **The photo lookup is a text search, so correcting a pin used to change nothing.**
   `fetchPlacePhoto()` queries Places with `name + area` and passed the pin only as
   `locationBias` — a hint Places may ignore. Moving a cafe to its real location therefore
