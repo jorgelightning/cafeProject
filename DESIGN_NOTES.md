@@ -75,6 +75,15 @@ Companion to `README.md`, which covers structure and deployment.
 - **`sw.js`'s `CACHE_V` and the `?v=` on every script tag are the same version.** Bump one
   without the other and the service worker keeps serving the previous build's scripts from
   cache, which looks exactly like a change that did not deploy.
+- **The photo lookup is a text search, so correcting a pin used to change nothing.**
+  `fetchPlacePhoto()` queries Places with `name + area` and passed the pin only as
+  `locationBias` — a hint Places may ignore. Moving a cafe to its real location therefore
+  returned the same wrong photo, however thoroughly `saveForm()` cleared `c.gphoto` and the
+  cache. The pin is a `locationRestriction` now, and picking a different place from
+  Autocomplete updates `f-area` as well, since a stale area silently keeps the query the same.
+- **`verifyCardPhoto()` deletes a cached photo whose URL will not load.** That is correct —
+  stale Google URLs answer 200 with a placeholder — but it means any test using a fake photo
+  URL will watch its cache empty itself. Use a real `data:image/...` URI.
 - **Currency is never looked up from coordinates.** `new google.maps.Geocoder` bills against
   the Geocoding API — a separate metered API from the Maps JavaScript and Places ones this app
   uses — so there is no reverse geocode anywhere. The country arrives free from
