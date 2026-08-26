@@ -48,7 +48,7 @@ function renderStats(){
   const firstDay=Object.keys(allDays).sort()[0]||"";
   const top=function(m){ const k=Object.keys(m).sort(function(a,b){ return m[b]-m[a]; }); return k.length?[k[0],m[k[0]]]:null; };
   const magRow=function(rank,name,sub,val,pct,onclick){
-    return '<div class="lbrow one mag'+(onclick?" tap":"")+'" style="--mag:'+Math.max(2,Math.round(pct))+'"'+(onclick?' onclick="'+onclick+'"':'')+'>'
+    return '<div class="lbrow one mag'+(onclick?" tap":"")+'" style="--mag:'+Math.max(2,Math.round(pct))+'"'+(onclick?' role="button" tabindex="0" onclick="'+onclick+'"':'')+'>'
       +(rank!==null?'<span class="lbrank">'+rank+'</span>':'')
       +'<div class="lbmain"><div class="lbname">'+esc(name)+(sub?' <i>· '+esc(sub)+'</i>':'')+'</div></div>'
       +'<span class="lbscore">'+val+'</span></div>';
@@ -81,7 +81,7 @@ function renderStats(){
       +'<button class="btn ghost" onclick="heroNext()">↻ Show another</button></div></div>';
     const goRow=function(x){ const cc=x.c, dd=Math.floor((now-new Date(x.last).getTime())/DAY);
       const t=dd>=365?(Math.floor(dd/365)+"y ago"):(dd>=60?(Math.floor(dd/30)+"mo ago"):(dd+"d ago"));
-      return '<div class="gorow" onclick="openDetail(\''+cc.id+'\',\'stats\')"><span class="gotile" style="background:'+cafeColor(cc.name)+'">'+esc(cc.emoji||"☕")+'</span>'
+      return '<div class="gorow" role="button" tabindex="0" onclick="openDetail(\''+cc.id+'\',\'stats\')"><span class="gotile" style="background:'+cafeColor(cc.name)+'">'+esc(cc.emoji||"☕")+'</span>'
         +'<div class="lbmain"><div class="lbname">'+esc(cc.name)+'</div><div class="lbsub">'+t+(cc.area?" · "+esc(cc.area):"")+'</div></div>'
         +'<span class="gostar">'+(cc.rating||0)+'★</span></div>'; };
     h+=goRow(at(1));
@@ -208,7 +208,7 @@ function renderStats(){
   /* ---------- 9. keep ranking ---------- */
   /* Cafe coverage, not the drink count — drinks are no longer what ranking moves. */
   const rankedN=nonWish.filter(function(c){ return matchCount(c)>0; }).length;
-  h+='<div class="handoff" onclick="openRank()">⚖️ '+rankedN+' of '+nonWish.length+' cafes ranked'+((nonWish.length-rankedN)?' <span>· '+(nonWish.length-rankedN)+' to go</span>':'')+'</div>';
+  h+='<div class="handoff" role="button" tabindex="0" onclick="openRank()">⚖️ '+rankedN+' of '+nonWish.length+' cafes ranked'+((nonWish.length-rankedN)?' <span>· '+(nonWish.length-rankedN)+' to go</span>':'')+'</div>';
 
   host.innerHTML=h;
 }
