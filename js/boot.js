@@ -15,7 +15,7 @@ function migratePhotoCache(){
   let cafeDirty=false;
   cafes.forEach(c=>{ if(c.gphoto&&isSessionPhotoUrl(c.gphoto)){ delete c.gphoto; cafeDirty=true; } });
   if(cafeDirty){
-    try{ localStorage.setItem(KEY,JSON.stringify(cafes)); }catch(e){}
+    try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("boot.js",e); }
     if(fbReady&&fbAuth&&fbAuth.currentUser){
       const u=fbAuth.currentUser;
       if(u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()){
@@ -28,8 +28,15 @@ function migratePhotoCache(){
    the other two set [data-theme], which both token blocks are written to honour. */
 const THEME_KEY="cafemap.theme";
 function applyTheme(t){ const r=document.documentElement; if(t==="light"||t==="dark")r.dataset.theme=t; else delete r.dataset.theme; const lab=$("n-theme-lab"); if(lab)lab.textContent="Theme: "+(t||"auto"); /* the two media-scoped meta tags follow the SYSTEM preference, so a manual choice needs an explicit override tag to keep the browser chrome in step */ let m=document.getElementById("tc-override"); if(t){ if(!m){ m=document.createElement("meta"); m.id="tc-override"; m.name="theme-color"; document.head.appendChild(m); } m.content=(t==="dark")?"#15110e":"#f6f5f3"; } else if(m)m.remove(); }
-function cycleTheme(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){} const next=t==="light"?"dark":(t==="dark"?"":"light"); try{ next?localStorage.setItem(THEME_KEY,next):localStorage.removeItem(THEME_KEY); }catch(e){} applyTheme(next); toast("Theme: "+(next||"auto")); }
-(function(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){} applyTheme(t); })();
+function cycleTheme(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){ warn("boot.js",e); } const next=t==="light"?"dark":(t==="dark"?"":"light"); try{ next?lsSet(THEME_KEY,next):localStorage.removeItem(THEME_KEY); }catch(e){ warn("boot.js",e); } applyTheme(next); toast("Theme: "+(next||"auto")); }
+(function(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){ warn("boot.js",e); } applyTheme(t); })();
+/* Registered after load so it never competes with the first paint. localhost is allowed so
+   the offline path can actually be exercised in development; everywhere else needs https. */
+if("serviceWorker" in navigator && (location.protocol==="https:" || location.hostname==="localhost")){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(e){ warn("sw register", e); });
+  });
+}
 function reloadLatest(){ location.replace(location.pathname+"?v="+Date.now()); }
 let _bootSrc=null, _updateShown=false;
 function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{ if(t==null)return; if(_bootSrc===null){ _bootSrc=t; return; } if(t!==_bootSrc && !_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); } }).catch(()=>{}); }
@@ -42,7 +49,7 @@ checkForUpdate();
 setInterval(checkForUpdate,45000);
 /* ---------- hardware/browser back button ---------- */
 let _exitArmed=false,_exitT=null;
-function _rearmBack(){ try{ history.pushState({cafeapp:1},""); }catch(e){} }
+function _rearmBack(){ try{ history.pushState({cafeapp:1},""); }catch(e){ warn("boot.js",e); } }
 _rearmBack();
 window.addEventListener("popstate",()=>{ if(typeof chaserOpen==="function"&&chaserOpen()){ chaserDismiss(); _rearmBack(); return; } const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden)checkForUpdate(); });
