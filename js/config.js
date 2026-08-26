@@ -77,3 +77,11 @@ const FX_ASOF="2026-08-25";       // date stamped onto drinks logged against thi
    oldest first. Empty is a valid state: every drink then converts at the current table and
    says so. */
 const FX_HISTORY={};
+/* Where real rates come from. Frankfurter serves ECB reference rates, needs no key, and
+   answers a dated path — /2025-01-10?from=USD&to=TWD — with the rate for that day, or the
+   working day before it if that date was a weekend. It reports the date it actually used,
+   which is what gets stored, so a Sunday coffee is never labelled with a Sunday rate that
+   does not exist. This runs in the browser, not here, so it is the one part of the currency
+   work that could not be exercised before shipping — if it is ever unreachable the tables
+   above still answer and nothing blocks. Set to "" to switch it off entirely. */
+const FX_API="https://api.frankfurter.app/";
