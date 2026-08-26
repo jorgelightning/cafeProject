@@ -64,6 +64,10 @@ Scripts are classic (non-module) files loaded in order — `config.js` first,
   amount as it appeared on the board, with `pr`/`pd` recording the rate used
   and the day it came from. The rate is frozen when the drink is logged and
   never recalculated, so past spending cannot drift.
+- A cafe's currency comes from the country in the Places result when you add
+  it by searching. For anything else the currency chip on the price row lets
+  you pick, and the choice is saved on the cafe (`ccy`) — once per cafe, not
+  once per drink. Nothing calls a paid geocoding API to guess it.
 
 ## Offline
 
