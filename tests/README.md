@@ -15,6 +15,14 @@ npm test                         # the whole suite
 node tests/keyboard.js           # or one file
 ```
 
+If Chromium is already on the machine — a CI image that ships one, or a Playwright whose
+pinned build has drifted from what is installed — point at it instead of downloading a
+second copy:
+
+```bash
+CHROMIUM_PATH=/path/to/chromium npm test
+```
+
 Nothing here is needed to *deploy*. GitHub Pages serves the static files and ignores
 `package.json` and `node_modules/` entirely.
 
@@ -31,6 +39,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `wishlist-save.js` | A wishlist entry saves no visit, and ticking it on a cafe with real history asks first. |
 | `wishlist-drinks.js` | A cafe with drinks logged comes off the wishlist. |
 | `cloud-writes.js` | Per-cafe writes, deletion, and **the lost update they prevent** — reproduced against the old whole-array write, then shown gone. |
+| `place-id.js` | A cafe's photo is fetched by its Google place id, not by searching its name. The wrong-photo bug. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `offline.js` | The app boots with the network pulled. |
 | `regression.js` | Every drink **without** a local currency renders byte-identically to the pre-currency code, and a form round-trip changes nothing. |
@@ -61,6 +70,8 @@ They are not decoration. In the session that produced them they caught, among ot
   failed while appearing to succeed
 - `syncWishMode()` deleted by a removal whose range was one function too wide
 - an update bar in `index.html` left keyboard-inaccessible because a grep only scanned `js/`
+- two location-based fixes for a wrong cafe photo that could not have worked, because the
+  photo was never looked up by location — it was looked up by name
 
 Every one of those looked safe when written.
 
