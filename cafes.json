@@ -83,897 +83,6 @@
     ]
   },
   {
-    "area": "Sunnyvale, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2024-11-03"
-        ],
-        "elo": 1557,
-        "matches": 4,
-        "n": "Osmanthus milk tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-10-20"
-        ],
-        "elo": 1516,
-        "matches": 1,
-        "n": "Premium jasmine milk tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-11-03"
-        ],
-        "n": "Snowy jasmine",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-10-20"
-        ],
-        "n": "White champaca oolong milk tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2026-02-17"
-        ],
-        "elo": 1516,
-        "matches": 1,
-        "n": "Camellia oolong milk tea",
-        "p": ""
-      }
-    ],
-    "elo": 1541,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-molly",
-    "lat": 37.36179,
-    "lng": -122.02442,
-    "matches": 5,
-    "name": "Molly Tea",
-    "rating": 4,
-    "review": "A favorite — the osmanthus and jasmine milk teas are consistently excellent."
-  },
-  {
-    "area": "Millbrae, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-03-01"
-        ],
-        "n": "Plum green tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-11-16"
-        ],
-        "n": "Tieguanyin tea latte",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-11-16"
-        ],
-        "elo": 1484,
-        "matches": 1,
-        "n": "Ginger milk tea",
-        "p": ""
-      }
-    ],
-    "elo": 1398,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-wanpo",
-    "lat": 37.60619,
-    "lng": -122.398,
-    "matches": 7,
-    "name": "Wanpo Tea",
-    "rating": 4,
-    "review": "Plum green tea was a 5/5 standout. Ginger milk tea was less exciting."
-  },
-  {
-    "area": "Millbrae, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2024-11-02"
-        ],
-        "n": "Golden osmanthus fresh milk tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-11-02"
-        ],
-        "n": "Four season osmanthus ice tea",
-        "p": ""
-      }
-    ],
-    "elo": 1446,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-tp",
-    "lat": 37.60186,
-    "lng": -122.39258,
-    "matches": 6,
-    "name": "TP Tea",
-    "rating": 4,
-    "review": "The osmanthus drinks are the move here."
-  },
-  {
-    "area": "San Francisco, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2024-10-17"
-        ],
-        "n": "Sunrise passion",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-10-17"
-        ],
-        "n": "Green thai tea",
-        "p": ""
-      }
-    ],
-    "elo": 1471,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-7leaves",
-    "lat": 37.71089,
-    "lng": -122.46684,
-    "matches": 6,
-    "name": "7Leaves Cafe",
-    "rating": 4,
-    "review": "Solid Vietnamese-style chain. Sunrise passion and green Thai tea were both decent."
-  },
-  {
-    "area": "San Francisco, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2024-10-18"
-        ],
-        "n": "HK milk tea",
-        "p": ""
-      }
-    ],
-    "elo": 1512,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-asha",
-    "lat": 37.78813,
-    "lng": -122.40374,
-    "matches": 5,
-    "name": "Asha Tea House",
-    "rating": 4,
-    "review": "Classic HK milk tea, nicely balanced."
-  },
-  {
-    "area": "San Francisco, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2024-10-29"
-        ],
-        "elo": 1428,
-        "matches": 5,
-        "n": "Osmanthus oolong tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-10-23"
-        ],
-        "elo": 1443,
-        "matches": 4,
-        "n": "Osmanthus milk tea",
-        "p": ""
-      }
-    ],
-    "elo": 1418,
-    "emoji": "☕",
-    "fav": false,
-    "id": "tea-zero",
-    "lat": 37.77663,
-    "lng": -122.42363,
-    "matches": 6,
-    "name": "ZERO& SF Hayes Store",
-    "rating": 4,
-    "review": "Osmanthus teas were good and not too sweet."
-  },
-  {
-    "area": "Fremont, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-03-29"
-        ],
-        "n": "Roasted oolong tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-11-12"
-        ],
-        "elo": 1524,
-        "matches": 4,
-        "n": "Oolong milk tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-11-04"
-        ],
-        "elo": 1540,
-        "matches": 5,
-        "n": "Osmanthus oolong tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2024-10-24"
-        ],
-        "n": "Kumquat lemon green tea",
-        "p": ""
-      }
-    ],
-    "elo": 1484,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-yokee",
-    "lat": 37.49373,
-    "lng": -121.9302,
-    "matches": 5,
-    "name": "Yokee Milk Tea",
-    "rating": 4,
-    "review": "Reliable — the oolong-based teas are the best picks."
-  },
-  {
-    "area": "Cupertino, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-02-16"
-        ],
-        "elo": 1516,
-        "matches": 3,
-        "n": "Osmanthus milk tea",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2026-02-16"
-        ],
-        "n": "Cassia milk tea",
-        "p": ""
-      }
-    ],
-    "elo": 1550,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-chicha",
-    "lat": 37.32211,
-    "lng": -122.03576,
-    "matches": 6,
-    "name": "CHICHA San Chen",
-    "rating": 3,
-    "review": "Osmanthus milk tea was great; the cassia milk tea less so."
-  },
-  {
-    "area": "Cupertino, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-02-25"
-        ],
-        "n": "Ceylon milk tea",
-        "p": ""
-      }
-    ],
-    "elo": 1578,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-moon",
-    "lat": 37.32257,
-    "lng": -122.01654,
-    "matches": 6,
-    "name": "Moon Tea",
-    "rating": 4,
-    "review": "Ceylon milk tea was tasty."
-  },
-  {
-    "area": "Burlingame, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-02-26"
-        ],
-        "elo": 1476,
-        "matches": 4,
-        "n": "Oolong milk tea",
-        "p": ""
-      }
-    ],
-    "elo": 1542,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-sunright",
-    "lat": 37.58002,
-    "lng": -122.34689,
-    "matches": 5,
-    "name": "Sunright Tea Studio",
-    "rating": 4,
-    "review": "Sugar-free oolong milk tea hit the spot."
-  },
-  {
-    "area": "San Francisco, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2024-11-18"
-        ],
-        "n": "Mulberry lemon tea",
-        "p": ""
-      }
-    ],
-    "elo": 1404,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-yy",
-    "lat": 37.73206,
-    "lng": -122.47348,
-    "matches": 7,
-    "name": "YY Coffee & Tea",
-    "rating": 4,
-    "review": "Mulberry lemon tea was refreshing."
-  },
-  {
-    "area": "San Francisco, CA",
-    "brand": "Yifang",
-    "drinks": [
-      {
-        "dates": [
-          "2024-11-01"
-        ],
-        "n": "Grape fruit tea",
-        "p": ""
-      }
-    ],
-    "elo": 1448,
-    "emoji": "☕",
-    "fav": false,
-    "id": "tea-yifang",
-    "lat": 37.78517,
-    "lng": -122.43055,
-    "matches": 6,
-    "name": "Yifang Taiwan Fruit Tea",
-    "rating": 4,
-    "review": "Grape fruit tea was fine, a bit on the sweet side.",
-    "updated": "2026-06-15T21:26:57.683Z"
-  },
-  {
-    "area": "Honolulu, HI",
-    "brand": "Coffee or Tea?",
-    "drinks": [
-      {
-        "dates": [
-          "2024-08-12"
-        ],
-        "n": "Black milk tea",
-        "p": "",
-        "sweet": "25%"
-      },
-      {
-        "dates": [
-          "2026-06-09"
-        ],
-        "elo": 1574,
-        "matches": 6,
-        "n": "Pudding milk tea",
-        "p": "8",
-        "sweet": "5%"
-      }
-    ],
-    "elo": 1381,
-    "emoji": "☕",
-    "fav": false,
-    "id": "tea-coffee-or-tea",
-    "lat": 21.29006,
-    "lng": -157.83269,
-    "matches": 15,
-    "name": "Coffee or Tea?",
-    "rating": 4,
-    "review": "Honolulu spot — reliable black milk tea.\n\nThe local classic is: pudding milk tea - it's def on the sweet side so count on reducing the sweetest level",
-    "updated": "2026-06-17T05:16:59.212Z"
-  },
-  {
-    "area": "Las Vegas, NV",
-    "drinks": [
-      {
-        "dates": [
-          "2026-03-07"
-        ],
-        "n": "Phoenix oolong tea",
-        "p": ""
-      }
-    ],
-    "elo": 1579,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-brew-tea-bar",
-    "lat": 36.1148,
-    "lng": -115.20128,
-    "matches": 6,
-    "name": "Brew Tea Bar",
-    "rating": 4,
-    "review": "Vegas stop — phoenix oolong tea was good."
-  },
-  {
-    "area": "Daly City, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-04-14"
-        ],
-        "n": "Yingde cheese milk tea",
-        "p": ""
-      }
-    ],
-    "elo": 1436,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-heytea",
-    "lat": 37.69957,
-    "lng": -122.48261,
-    "matches": 7,
-    "name": "HEYTEA",
-    "rating": 1,
-    "review": "Yingde cheese milk tea was way too sweet — not for me."
-  },
-  {
-    "area": "Berkeley, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-02-14"
-        ],
-        "n": "House milk tea",
-        "p": ""
-      }
-    ],
-    "elo": 1414,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-purple-kow",
-    "lat": 37.87026,
-    "lng": -122.26618,
-    "matches": 6,
-    "name": "Purple Kow",
-    "rating": 1,
-    "review": "Low-quality tea and an awkwardly huge cup. Skip."
-  },
-  {
-    "area": "San Francisco, CA",
-    "brand": "",
-    "drinks": [
-      {
-        "dates": [
-          "2026-03-26"
-        ],
-        "elo": 1449,
-        "matches": 4,
-        "n": "Pudding milk tea",
-        "p": "",
-        "reorder": "no"
-      }
-    ],
-    "elo": 1419,
-    "emoji": "🧋",
-    "fav": false,
-    "id": "tea-wonderful",
-    "lat": 37.76318,
-    "lng": -122.47999,
-    "matches": 6,
-    "name": "Wonderful Desserts & Cafe",
-    "rating": 1,
-    "review": "Pudding milk tea was too sugary — not great.",
-    "updated": "2026-06-20T08:42:56.814Z",
-    "wish": false
-  },
-  {
-    "area": "San Francisco, CA",
-    "drinks": [
-      {
-        "count": 5,
-        "dates": [
-          "2026-02-11",
-          "2026-02-12",
-          "2026-02-20",
-          "2026-02-23"
-        ],
-        "elo": 1512,
-        "matches": 5,
-        "n": "Hojicha latte",
-        "p": ""
-      }
-    ],
-    "elo": 1516,
-    "emoji": "☕",
-    "fav": false,
-    "id": "tea-q-specialty",
-    "lat": 37.78683,
-    "lng": -122.45162,
-    "matches": 15,
-    "name": "Q Specialty Coffee",
-    "rating": 4,
-    "review": "My regular for a reliable hojicha latte.",
-    "tags": [
-      "specialty"
-    ]
-  },
-  {
-    "area": "San Francisco, CA",
-    "brand": "",
-    "custom": false,
-    "drinks": [
-      {
-        "count": 7,
-        "dates": [
-          "2026-03-22",
-          "2026-03-25",
-          "2026-04-09",
-          "2026-07-31",
-          "2026-08-05",
-          "2026-08-07",
-          "2026-08-11"
-        ],
-        "ice": "Warm",
-        "milk": "Oat",
-        "n": "Hojicha Latte",
-        "p": "7.25",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
-      },
-      {
-        "dates": [
-          "2026-07-28"
-        ],
-        "ice": "Less ice",
-        "milk": "Oat",
-        "n": "Matcha Matcha",
-        "p": "7.75",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
-      },
-      {
-        "count": 3,
-        "dates": [
-          "2026-03-24",
-          "2026-07-09",
-          "2026-07-27"
-        ],
-        "ice": "Warm",
-        "milk": "Oat",
-        "n": "Flat White",
-        "p": "5",
-        "reorder": "yes",
-        "size": "8 oz",
-        "sweet": "0%"
-      },
-      {
-        "dates": [
-          "2026-03-23"
-        ],
-        "n": "Matcha latte",
-        "p": ""
-      }
-    ],
-    "elo": 1580,
-    "emoji": "☕",
-    "fav": true,
-    "id": "tea-kissaten",
-    "lat": 37.7852,
-    "lng": -122.46477,
-    "matches": 12,
-    "name": "Kissaten HiFi",
-    "rating": 4,
-    "review": "Go-to for hojicha lattes and flat white — consistent and cozy.",
-    "tags": [
-      "specialty"
-    ],
-    "updated": "2026-08-16T20:35:57.717Z",
-    "wish": false
-  },
-  {
-    "area": "San Francisco, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-02-17"
-        ],
-        "elo": 1435,
-        "matches": 5,
-        "n": "Hojicha latte",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2026-03-24"
-        ],
-        "n": "Hojicha tea",
-        "p": ""
-      }
-    ],
-    "elo": 1487,
-    "emoji": "🍵",
-    "fav": false,
-    "id": "tea-kiss-of-matcha",
-    "lat": 37.78296,
-    "lng": -122.46745,
-    "matches": 7,
-    "name": "Kiss of Matcha",
-    "rating": 4,
-    "review": "Good hojicha — low sugar and earthy.",
-    "tags": [
-      "matcha"
-    ]
-  },
-  {
-    "area": "Santa Clara, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-02-15"
-        ],
-        "n": "Hojicha",
-        "p": ""
-      }
-    ],
-    "elo": 1444,
-    "emoji": "🍵",
-    "fav": false,
-    "id": "tea-matsu-matcha",
-    "lat": 37.35155,
-    "lng": -121.98143,
-    "matches": 6,
-    "name": "Matsu Matcha",
-    "rating": 4,
-    "review": "Smooth hojicha, drinkable and not too sweet.",
-    "tags": [
-      "matcha"
-    ]
-  },
-  {
-    "area": "San Francisco, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-02-19"
-        ],
-        "elo": 1427,
-        "matches": 5,
-        "n": "Hojicha latte",
-        "p": ""
-      }
-    ],
-    "elo": 1431,
-    "emoji": "🍵",
-    "fav": false,
-    "id": "tea-maruwu-seicha",
-    "lat": 37.78517,
-    "lng": -122.43055,
-    "matches": 7,
-    "name": "Maruwu Seicha",
-    "rating": 3,
-    "review": "Decent hojicha latte, a touch sweet.",
-    "tags": [
-      "matcha"
-    ]
-  },
-  {
-    "area": "San Francisco, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-05-05"
-        ],
-        "elo": 1423,
-        "matches": 6,
-        "n": "Hojicha latte",
-        "p": ""
-      }
-    ],
-    "elo": 1422,
-    "emoji": "🍵",
-    "fav": false,
-    "id": "tea-tokyo-cream",
-    "lat": 37.76378,
-    "lng": -122.47778,
-    "matches": 6,
-    "name": "Tokyo Cream",
-    "rating": 3,
-    "review": "Nice hojicha aftertaste, but the tea was too diluted.",
-    "tags": [
-      "matcha"
-    ]
-  },
-  {
-    "area": "San Diego, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-05-30"
-        ],
-        "n": "Matcha latte w/ banana cream",
-        "p": ""
-      }
-    ],
-    "elo": 1557,
-    "emoji": "🍵",
-    "fav": false,
-    "id": "tea-tori-coffee",
-    "lat": 32.71377,
-    "lng": -117.15453,
-    "matches": 6,
-    "name": "Tori Coffee",
-    "rating": 4,
-    "review": "San Diego stop — matcha latte with banana cream, a little light on matcha.",
-    "tags": [
-      "specialty",
-      "matcha"
-    ]
-  },
-  {
-    "area": "San Jose, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-05-29"
-        ],
-        "n": "Corn latte",
-        "p": ""
-      },
-      {
-        "dates": [
-          "2026-05-29"
-        ],
-        "n": "Matcha guava cream top",
-        "p": ""
-      }
-    ],
-    "elo": 1554,
-    "emoji": "🍵",
-    "fav": false,
-    "id": "tea-haiku",
-    "lat": 37.37026,
-    "lng": -121.87977,
-    "matches": 6,
-    "name": "Haiku Teahouse",
-    "rating": 4,
-    "review": "Corn latte is a fun, creamy surprise. The matcha guava cream top is worth recreating at home.",
-    "tags": [
-      "matcha"
-    ]
-  },
-  {
-    "area": "San Francisco, CA",
-    "brand": "",
-    "custom": false,
-    "drinks": [
-      {
-        "dates": [
-          "2026-02-13"
-        ],
-        "ice": "Warm",
-        "n": "Hojicha latte",
-        "p": "6.75",
-        "sweet": "0%"
-      },
-      {
-        "dates": [
-          "2026-07-29"
-        ],
-        "ice": "Less ice",
-        "n": "Jasmine Yuzu Tea Aiyu Jelly",
-        "p": "7",
-        "reorder": "yes",
-        "size": "16 oz",
-        "sweet": "25%"
-      },
-      {
-        "dates": [
-          "2026-07-29"
-        ],
-        "ice": "Less ice",
-        "n": "Iced Hojicha Latte w/ Salted Cheese Foam",
-        "p": "8.50",
-        "reorder": "yes",
-        "size": "16 oz",
-        "sweet": "0%"
-      }
-    ],
-    "elo": 1587,
-    "emoji": "☕",
-    "fav": true,
-    "id": "tea-komeya",
-    "lat": 37.80007,
-    "lng": -122.43134,
-    "matches": 6,
-    "name": "Komeya No Bento",
-    "rating": 4,
-    "review": "Surprisingly good hojicha latte alongside the bento.",
-    "tags": [
-      "matcha",
-      "to-go"
-    ],
-    "updated": "2026-07-29T22:00:31.183Z",
-    "wish": false
-  },
-  {
-    "area": "San Francisco, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-03-30"
-        ],
-        "elo": 1543,
-        "matches": 5,
-        "n": "Hojicha latte",
-        "p": ""
-      }
-    ],
-    "elo": 1580,
-    "emoji": "🍵",
-    "fav": true,
-    "id": "tea-shoji",
-    "lat": 37.78661,
-    "lng": -122.4,
-    "matches": 6,
-    "name": "Shoji",
-    "rating": 4,
-    "review": "Nice hojicha latte, well made.",
-    "tags": [
-      "matcha"
-    ]
-  },
-  {
-    "area": "San Jose, CA",
-    "drinks": [
-      {
-        "dates": [
-          "2026-03-02"
-        ],
-        "elo": 1434,
-        "matches": 5,
-        "n": "Egg coffee",
-        "p": ""
-      }
-    ],
-    "elo": 1569,
-    "emoji": "☕",
-    "fav": false,
-    "id": "tea-trung-nguyen",
-    "lat": 37.3308,
-    "lng": -121.8576,
-    "matches": 5,
-    "name": "Trung Nguyen Legend",
-    "rating": 4,
-    "review": "Vietnamese egg coffee done right.",
-    "tags": [
-      "specialty"
-    ]
-  },
-  {
     "area": "Downtown",
     "drinks": [
       {
@@ -1358,13 +467,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1560,
+    "elo": 1574,
     "emoji": "☕",
     "fav": false,
     "id": "mqftiiclt8ut",
     "lat": -33.91433,
     "lng": 151.20589,
-    "matches": 4,
+    "matches": 5,
     "name": "Moon & Back Cafe • Lifestyle",
     "rating": 5,
     "review": "Everything about it a high quality, they grow their own teas in a farm in Japan, interior design is top notch. As this is my first impression! I would def check them out!",
@@ -1985,13 +1094,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1542,
+    "elo": 1543,
     "emoji": "☕",
     "fav": true,
     "id": "mqlipq5e1fwo",
     "lat": 37.77591,
     "lng": -122.49649,
-    "matches": 3,
+    "matches": 4,
     "name": "Constance Tea & Matcha",
     "rating": 5,
     "review": "Freshly milled! Great information from the staff!",
@@ -2993,5 +2102,936 @@
     "review": "Amazing mango taste!",
     "updated": "2026-08-26T04:55:09.796Z",
     "wish": false
+  },
+  {
+    "area": "Riley Park–Little Mountain",
+    "brand": "",
+    "cc": "CA",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-26"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha Latte",
+        "p": "5.18",
+        "pc": "CAD",
+        "pd": "2026-08-25",
+        "pl": "7.10",
+        "pr": 1.37,
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1556,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtahs8di77kg",
+    "lat": 49.28382,
+    "lng": -123.11698,
+    "matches": 4,
+    "name": "Paragon Tea Room",
+    "pid": "ChIJ77z93GVxhlQR1a2IlKwlhqU",
+    "rating": 5,
+    "review": "They had two variation of Hojicha which were Amber (traditional) and Obsidian! Amber was classic and strong!",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-08-27T07:32:28.997Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-10-17"
+        ],
+        "n": "Sunrise passion",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-10-17"
+        ],
+        "n": "Green thai tea",
+        "p": ""
+      }
+    ],
+    "elo": 1471,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-7leaves",
+    "lat": 37.71089,
+    "lng": -122.46684,
+    "matches": 6,
+    "name": "7Leaves Cafe",
+    "rating": 4,
+    "review": "Solid Vietnamese-style chain. Sunrise passion and green Thai tea were both decent."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-10-18"
+        ],
+        "n": "HK milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1512,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-asha",
+    "lat": 37.78813,
+    "lng": -122.40374,
+    "matches": 5,
+    "name": "Asha Tea House",
+    "rating": 4,
+    "review": "Classic HK milk tea, nicely balanced."
+  },
+  {
+    "area": "Las Vegas, NV",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-07"
+        ],
+        "n": "Phoenix oolong tea",
+        "p": ""
+      }
+    ],
+    "elo": 1579,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-brew-tea-bar",
+    "lat": 36.1148,
+    "lng": -115.20128,
+    "matches": 6,
+    "name": "Brew Tea Bar",
+    "rating": 4,
+    "review": "Vegas stop — phoenix oolong tea was good."
+  },
+  {
+    "area": "Cupertino, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-16"
+        ],
+        "elo": 1516,
+        "matches": 3,
+        "n": "Osmanthus milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2026-02-16"
+        ],
+        "n": "Cassia milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1550,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-chicha",
+    "lat": 37.32211,
+    "lng": -122.03576,
+    "matches": 6,
+    "name": "CHICHA San Chen",
+    "rating": 3,
+    "review": "Osmanthus milk tea was great; the cassia milk tea less so."
+  },
+  {
+    "area": "Honolulu, HI",
+    "brand": "Coffee or Tea?",
+    "drinks": [
+      {
+        "dates": [
+          "2024-08-12"
+        ],
+        "n": "Black milk tea",
+        "p": "",
+        "sweet": "25%"
+      },
+      {
+        "dates": [
+          "2026-06-09"
+        ],
+        "elo": 1574,
+        "matches": 6,
+        "n": "Pudding milk tea",
+        "p": "8",
+        "sweet": "5%"
+      }
+    ],
+    "elo": 1381,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-coffee-or-tea",
+    "lat": 21.29006,
+    "lng": -157.83269,
+    "matches": 15,
+    "name": "Coffee or Tea?",
+    "rating": 4,
+    "review": "Honolulu spot — reliable black milk tea.\n\nThe local classic is: pudding milk tea - it's def on the sweet side so count on reducing the sweetest level",
+    "updated": "2026-06-17T05:16:59.212Z"
+  },
+  {
+    "area": "San Jose, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-29"
+        ],
+        "n": "Corn latte",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2026-05-29"
+        ],
+        "n": "Matcha guava cream top",
+        "p": ""
+      }
+    ],
+    "elo": 1554,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-haiku",
+    "lat": 37.37026,
+    "lng": -121.87977,
+    "matches": 6,
+    "name": "Haiku Teahouse",
+    "rating": 4,
+    "review": "Corn latte is a fun, creamy surprise. The matcha guava cream top is worth recreating at home.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "Daly City, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-04-14"
+        ],
+        "n": "Yingde cheese milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1436,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-heytea",
+    "lat": 37.69957,
+    "lng": -122.48261,
+    "matches": 7,
+    "name": "HEYTEA",
+    "rating": 1,
+    "review": "Yingde cheese milk tea was way too sweet — not for me."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-17"
+        ],
+        "elo": 1435,
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2026-03-24"
+        ],
+        "n": "Hojicha tea",
+        "p": ""
+      }
+    ],
+    "elo": 1487,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-kiss-of-matcha",
+    "lat": 37.78296,
+    "lng": -122.46745,
+    "matches": 7,
+    "name": "Kiss of Matcha",
+    "rating": 4,
+    "review": "Good hojicha — low sugar and earthy.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "San Francisco, CA",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "count": 7,
+        "dates": [
+          "2026-03-22",
+          "2026-03-25",
+          "2026-04-09",
+          "2026-07-31",
+          "2026-08-05",
+          "2026-08-07",
+          "2026-08-11"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha Latte",
+        "p": "7.25",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-07-28"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Matcha Matcha",
+        "p": "7.75",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "count": 3,
+        "dates": [
+          "2026-03-24",
+          "2026-07-09",
+          "2026-07-27"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Flat White",
+        "p": "5",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-03-23"
+        ],
+        "n": "Matcha latte",
+        "p": ""
+      }
+    ],
+    "elo": 1580,
+    "emoji": "☕",
+    "fav": true,
+    "id": "tea-kissaten",
+    "lat": 37.7852,
+    "lng": -122.46477,
+    "matches": 12,
+    "name": "Kissaten HiFi",
+    "rating": 4,
+    "review": "Go-to for hojicha lattes and flat white — consistent and cozy.",
+    "tags": [
+      "specialty"
+    ],
+    "updated": "2026-08-16T20:35:57.717Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-13"
+        ],
+        "ice": "Warm",
+        "n": "Hojicha latte",
+        "p": "6.75",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-07-29"
+        ],
+        "ice": "Less ice",
+        "n": "Jasmine Yuzu Tea Aiyu Jelly",
+        "p": "7",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "25%"
+      },
+      {
+        "dates": [
+          "2026-07-29"
+        ],
+        "ice": "Less ice",
+        "n": "Iced Hojicha Latte w/ Salted Cheese Foam",
+        "p": "8.50",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1587,
+    "emoji": "☕",
+    "fav": true,
+    "id": "tea-komeya",
+    "lat": 37.80007,
+    "lng": -122.43134,
+    "matches": 6,
+    "name": "Komeya No Bento",
+    "rating": 4,
+    "review": "Surprisingly good hojicha latte alongside the bento.",
+    "tags": [
+      "matcha",
+      "to-go"
+    ],
+    "updated": "2026-07-29T22:00:31.183Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-19"
+        ],
+        "elo": 1427,
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": ""
+      }
+    ],
+    "elo": 1431,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-maruwu-seicha",
+    "lat": 37.78517,
+    "lng": -122.43055,
+    "matches": 7,
+    "name": "Maruwu Seicha",
+    "rating": 3,
+    "review": "Decent hojicha latte, a touch sweet.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "Santa Clara, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-15"
+        ],
+        "n": "Hojicha",
+        "p": ""
+      }
+    ],
+    "elo": 1444,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-matsu-matcha",
+    "lat": 37.35155,
+    "lng": -121.98143,
+    "matches": 6,
+    "name": "Matsu Matcha",
+    "rating": 4,
+    "review": "Smooth hojicha, drinkable and not too sweet.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "Sunnyvale, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-11-03"
+        ],
+        "elo": 1557,
+        "matches": 4,
+        "n": "Osmanthus milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-10-20"
+        ],
+        "elo": 1516,
+        "matches": 1,
+        "n": "Premium jasmine milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-03"
+        ],
+        "n": "Snowy jasmine",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-10-20"
+        ],
+        "n": "White champaca oolong milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2026-02-17"
+        ],
+        "elo": 1516,
+        "matches": 1,
+        "n": "Camellia oolong milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1541,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-molly",
+    "lat": 37.36179,
+    "lng": -122.02442,
+    "matches": 5,
+    "name": "Molly Tea",
+    "rating": 4,
+    "review": "A favorite — the osmanthus and jasmine milk teas are consistently excellent."
+  },
+  {
+    "area": "Cupertino, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-25"
+        ],
+        "n": "Ceylon milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1578,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-moon",
+    "lat": 37.32257,
+    "lng": -122.01654,
+    "matches": 6,
+    "name": "Moon Tea",
+    "rating": 4,
+    "review": "Ceylon milk tea was tasty."
+  },
+  {
+    "area": "Berkeley, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-14"
+        ],
+        "n": "House milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1414,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-purple-kow",
+    "lat": 37.87026,
+    "lng": -122.26618,
+    "matches": 6,
+    "name": "Purple Kow",
+    "rating": 1,
+    "review": "Low-quality tea and an awkwardly huge cup. Skip."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "count": 5,
+        "dates": [
+          "2026-02-11",
+          "2026-02-12",
+          "2026-02-20",
+          "2026-02-23"
+        ],
+        "elo": 1512,
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": ""
+      }
+    ],
+    "elo": 1516,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-q-specialty",
+    "lat": 37.78683,
+    "lng": -122.45162,
+    "matches": 15,
+    "name": "Q Specialty Coffee",
+    "rating": 4,
+    "review": "My regular for a reliable hojicha latte.",
+    "tags": [
+      "specialty"
+    ]
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-30"
+        ],
+        "elo": 1543,
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": ""
+      }
+    ],
+    "elo": 1580,
+    "emoji": "🍵",
+    "fav": true,
+    "id": "tea-shoji",
+    "lat": 37.78661,
+    "lng": -122.4,
+    "matches": 6,
+    "name": "Shoji",
+    "rating": 4,
+    "review": "Nice hojicha latte, well made.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "Burlingame, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-26"
+        ],
+        "elo": 1476,
+        "matches": 4,
+        "n": "Oolong milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1542,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-sunright",
+    "lat": 37.58002,
+    "lng": -122.34689,
+    "matches": 5,
+    "name": "Sunright Tea Studio",
+    "rating": 4,
+    "review": "Sugar-free oolong milk tea hit the spot."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-05"
+        ],
+        "elo": 1423,
+        "matches": 6,
+        "n": "Hojicha latte",
+        "p": ""
+      }
+    ],
+    "elo": 1422,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-tokyo-cream",
+    "lat": 37.76378,
+    "lng": -122.47778,
+    "matches": 6,
+    "name": "Tokyo Cream",
+    "rating": 3,
+    "review": "Nice hojicha aftertaste, but the tea was too diluted.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "San Diego, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-30"
+        ],
+        "n": "Matcha latte w/ banana cream",
+        "p": ""
+      }
+    ],
+    "elo": 1557,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-tori-coffee",
+    "lat": 32.71377,
+    "lng": -117.15453,
+    "matches": 6,
+    "name": "Tori Coffee",
+    "rating": 4,
+    "review": "San Diego stop — matcha latte with banana cream, a little light on matcha.",
+    "tags": [
+      "specialty",
+      "matcha"
+    ]
+  },
+  {
+    "area": "Millbrae, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-11-02"
+        ],
+        "n": "Golden osmanthus fresh milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-02"
+        ],
+        "n": "Four season osmanthus ice tea",
+        "p": ""
+      }
+    ],
+    "elo": 1446,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-tp",
+    "lat": 37.60186,
+    "lng": -122.39258,
+    "matches": 6,
+    "name": "TP Tea",
+    "rating": 4,
+    "review": "The osmanthus drinks are the move here."
+  },
+  {
+    "area": "San Jose, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-02"
+        ],
+        "elo": 1434,
+        "matches": 5,
+        "n": "Egg coffee",
+        "p": ""
+      }
+    ],
+    "elo": 1569,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-trung-nguyen",
+    "lat": 37.3308,
+    "lng": -121.8576,
+    "matches": 5,
+    "name": "Trung Nguyen Legend",
+    "rating": 4,
+    "review": "Vietnamese egg coffee done right.",
+    "tags": [
+      "specialty"
+    ]
+  },
+  {
+    "area": "Millbrae, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-01"
+        ],
+        "n": "Plum green tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-16"
+        ],
+        "n": "Tieguanyin tea latte",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-16"
+        ],
+        "elo": 1484,
+        "matches": 1,
+        "n": "Ginger milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1398,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-wanpo",
+    "lat": 37.60619,
+    "lng": -122.398,
+    "matches": 7,
+    "name": "Wanpo Tea",
+    "rating": 4,
+    "review": "Plum green tea was a 5/5 standout. Ginger milk tea was less exciting."
+  },
+  {
+    "area": "San Francisco, CA",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-26"
+        ],
+        "elo": 1449,
+        "matches": 4,
+        "n": "Pudding milk tea",
+        "p": "",
+        "reorder": "no"
+      }
+    ],
+    "elo": 1419,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-wonderful",
+    "lat": 37.76318,
+    "lng": -122.47999,
+    "matches": 6,
+    "name": "Wonderful Desserts & Cafe",
+    "rating": 1,
+    "review": "Pudding milk tea was too sugary — not great.",
+    "updated": "2026-06-20T08:42:56.814Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "brand": "Yifang",
+    "drinks": [
+      {
+        "dates": [
+          "2024-11-01"
+        ],
+        "n": "Grape fruit tea",
+        "p": ""
+      }
+    ],
+    "elo": 1448,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-yifang",
+    "lat": 37.78517,
+    "lng": -122.43055,
+    "matches": 6,
+    "name": "Yifang Taiwan Fruit Tea",
+    "rating": 4,
+    "review": "Grape fruit tea was fine, a bit on the sweet side.",
+    "updated": "2026-06-15T21:26:57.683Z"
+  },
+  {
+    "area": "Fremont, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-29"
+        ],
+        "n": "Roasted oolong tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-12"
+        ],
+        "elo": 1524,
+        "matches": 4,
+        "n": "Oolong milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-04"
+        ],
+        "elo": 1540,
+        "matches": 5,
+        "n": "Osmanthus oolong tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-10-24"
+        ],
+        "n": "Kumquat lemon green tea",
+        "p": ""
+      }
+    ],
+    "elo": 1484,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-yokee",
+    "lat": 37.49373,
+    "lng": -121.9302,
+    "matches": 5,
+    "name": "Yokee Milk Tea",
+    "rating": 4,
+    "review": "Reliable — the oolong-based teas are the best picks."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-11-18"
+        ],
+        "n": "Mulberry lemon tea",
+        "p": ""
+      }
+    ],
+    "elo": 1404,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-yy",
+    "lat": 37.73206,
+    "lng": -122.47348,
+    "matches": 7,
+    "name": "YY Coffee & Tea",
+    "rating": 4,
+    "review": "Mulberry lemon tea was refreshing."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-10-29"
+        ],
+        "elo": 1428,
+        "matches": 5,
+        "n": "Osmanthus oolong tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-10-23"
+        ],
+        "elo": 1443,
+        "matches": 4,
+        "n": "Osmanthus milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1418,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-zero",
+    "lat": 37.77663,
+    "lng": -122.42363,
+    "matches": 6,
+    "name": "ZERO& SF Hayes Store",
+    "rating": 4,
+    "review": "Osmanthus teas were good and not too sweet."
   }
 ]
