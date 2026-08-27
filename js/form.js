@@ -4,10 +4,10 @@
 /* ---------- form ---------- */
 function checkExisting(){ if(editId)return; const name=$("f-name").value.trim(); if(!name)return; const ex=findSameCafe(name,$("f-area").value.trim(),picked?picked.lat:null,picked?picked.lng:null); if(ex){ openForm(ex.id); toast("Found "+ex.name+" — loaded your notes to edit"); } }
 function fmtEdited(iso){ if(!iso)return ""; const d=new Date(iso); if(isNaN(d))return ""; return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+" · "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
-function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?(c.area||""):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; syncWishMode(); formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; formCcy=c?(c.ccy||""):""; picked=c&&c.lat!=null?{lat:c.lat,lng:c.lng}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
+function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?(c.area||""):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; syncWishMode(); formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; formCcy=c?(c.ccy||""):""; formPid=c?(c.pid||""):""; picked=c&&c.lat!=null?{lat:c.lat,lng:c.lng}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
 /* Unsaved-changes guard: snapshot the form on open, compare on any exit path (close button, back button, tab/nav via show(), page unload). Saving clears the snapshot so it never prompts. Pin coords are normalized to 5 decimals because setPicked rounds them. */
 let _formSnap=null;
-function formSnapshot(){ const rows=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const g=cl=>{ const el=r.querySelector(cl); return el?el.value:""; }; const gs=cl=>{ const el=r.querySelector(cl); return el?(el.value+":"+((el.dataset&&el.dataset.set)||"")):""; }; return [g(".dn"),g(".dp"),g(".dd"),g(".dqt"),gs(".dsz"),gs(".dsw"),gs(".dic"),g(".dmk"),g(".dre"),g(".dpc")].join("|"); }).filter(s=>s.split("|")[0].trim()); return JSON.stringify([$("f-name").value,$("f-area").value,$("f-brand")?$("f-brand").value:"",$("f-review").value,$("f-fav").checked,$("f-wish")?$("f-wish").checked:false,$("f-custom")?$("f-custom").checked:false,formPhoto,formRating,formTags,picked?[+(+picked.lat).toFixed(5),+(+picked.lng).toFixed(5)]:null,rows]); }
+function formSnapshot(){ const rows=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const g=cl=>{ const el=r.querySelector(cl); return el?el.value:""; }; const gs=cl=>{ const el=r.querySelector(cl); return el?(el.value+":"+((el.dataset&&el.dataset.set)||"")):""; }; return [g(".dn"),g(".dp"),g(".dd"),g(".dqt"),gs(".dsz"),gs(".dsw"),gs(".dic"),g(".dmk"),g(".dre"),g(".dpc")].join("|"); }).filter(s=>s.split("|")[0].trim()); return JSON.stringify([formPid,$("f-name").value,$("f-area").value,$("f-brand")?$("f-brand").value:"",$("f-review").value,$("f-fav").checked,$("f-wish")?$("f-wish").checked:false,$("f-custom")?$("f-custom").checked:false,formPhoto,formRating,formTags,picked?[+(+picked.lat).toFixed(5),+(+picked.lng).toFixed(5)]:null,rows]); }
 function formDirty(){ return _formSnap!==null && app.dataset.view==="form" && formSnapshot()!==_formSnap; }
 /* Straight from a cafe page into a dated, expanded, focused drink row. The snapshot is
    retaken after the row is appended, so backing out of an untouched row does not prompt. */
@@ -15,19 +15,24 @@ function logDrinkHere(){ if(!curId)return; openForm(curId); /* logging a drink I
     this the drinks field focused just below is still hidden. */
  if($("f-wish")&&$("f-wish").checked){ $("f-wish").checked=false; syncWishMode(); } setTimeout(function(){ addDrinkRow("","",localToday()); const rows=document.querySelectorAll("#f-drinks .dr"); const last=rows[rows.length-1]; if(last){ last.classList.remove("collapsed"); const n=last.querySelector(".dn"); if(n){ try{ n.focus({preventScroll:true}); }catch(e){ n.focus(); } } last.scrollIntoView({block:"center"}); } _formSnap=formSnapshot(); },140); }
 function closeForm(){ if(formDirty()&&!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; if(editId)show("detail"); else if(wishOnly)show("wish"); else if(favOnly)show("list",true); else show(lastMain); }
-function initFormMap(){ if(!gReady)return; const start=picked?{lat:picked.lat,lng:picked.lng}:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]}; if(!fgmap){ fgmap=new google.maps.Map($("form-map"),{center:start,zoom:13,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); fgmap.addListener("click",e=>setPicked(e.latLng.lat(),e.latLng.lng())); try{ const ac=new google.maps.places.Autocomplete($("f-name"),{fields:["name","geometry","address_components"]}); ac.addListener("place_changed",()=>{ const p=ac.getPlace();
+function initFormMap(){ if(!gReady)return; const start=picked?{lat:picked.lat,lng:picked.lng}:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]}; if(!fgmap){ fgmap=new google.maps.Map($("form-map"),{center:start,zoom:13,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); fgmap.addListener("click",e=>{ formPid=""; setPicked(e.latLng.lat(),e.latLng.lng()); }); try{ const ac=new google.maps.places.Autocomplete($("f-name"),{fields:["name","geometry","address_components","place_id"]}); ac.addListener("place_changed",()=>{ const p=ac.getPlace();
  /* Picking a different place is a relocation, so the area has to follow it. Keeping the
     old one left the cafe reading as its previous neighbourhood, and left the photo query
     (name + area) unchanged, so the wrong photo came straight back. */
  const _wasAt=picked?{lat:picked.lat,lng:picked.lng}:null;
  let _moved=false;
  if(p.geometry&&p.geometry.location){ const loc=p.geometry.location; setPicked(loc.lat(),loc.lng()); fgmap.setCenter(loc); fgmap.setZoom(16);
-   _moved=!_wasAt||Math.abs(_wasAt.lat-picked.lat)>0.0004||Math.abs(_wasAt.lng-picked.lng)>0.0004; } if(p.name)$("f-name").value=p.name; /* address_components was already being requested and already being walked for the area;
+   _moved=!_wasAt||Math.abs(_wasAt.lat-picked.lat)>0.0004||Math.abs(_wasAt.lng-picked.lng)>0.0004; } if(p.name)$("f-name").value=p.name;
+ /* The one piece of the answer that is not a guess. Every Places record has a unique id,
+    and this response already contains it — the app used to throw it away and then go
+    looking for the place again by name, which is how a cafe ends up wearing another
+    cafe's photo. Keep it and the photo lookup stops searching entirely. */
+ if(p.place_id)formPid=String(p.place_id); /* address_components was already being requested and already being walked for the area;
    the country component rides along on the same response. It is the authoritative answer
    to "which money is this", which no lat/lng rectangle can be. */
 if(p.address_components){ const co=p.address_components.find(x=>x.types.includes("country")); if(co&&co.short_name){ formCC=co.short_name.toUpperCase(); refreshRowCcy(); } if(!$("f-area").value||_moved){ const nb=p.address_components.find(x=>x.types.includes("neighborhood")||x.types.includes("sublocality")||x.types.includes("locality")); if(nb)$("f-area").value=nb.long_name; } } checkExisting(); }); }catch(e){ warn("form.js",e); } try{ const ac2=new google.maps.places.Autocomplete($("f-area"),{fields:["geometry","name"],types:["geocode"]}); ac2.addListener("place_changed",()=>{ const p=ac2.getPlace(); if(p.geometry&&p.geometry.location){ const loc=p.geometry.location; fgmap.setCenter(loc); fgmap.setZoom(15); if(!picked)setPicked(loc.lat(),loc.lng()); } if(p.name)$("f-area").value=p.name; }); }catch(e){ warn("form.js",e); } } google.maps.event.trigger(fgmap,"resize"); fgmap.setCenter(start); if(picked)setPicked(picked.lat,picked.lng); else if(fgmarker){ fgmarker.setMap(null); fgmarker=null; $("f-coords").textContent=""; } }
 function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; if(fgmarker)fgmarker.setMap(null); fgmarker=new google.maps.Marker({position:{lat:picked.lat,lng:picked.lng},map:fgmap}); $("f-coords").textContent=picked.lat+", "+picked.lng; }
-function formLocate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ if(fgmap){ fgmap.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}); fgmap.setZoom(15); } setPicked(p.coords.latitude,p.coords.longitude); },()=>toast("Couldn't get location")); }
+function formLocate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ formPid=""; if(fgmap){ fgmap.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}); fgmap.setZoom(15); } setPicked(p.coords.latitude,p.coords.longitude); },()=>toast("Couldn't get location")); }
 function renderPhoto(){ const d=$("f-photodrop"); const icon=d.querySelector("div"); if(formPhoto){ d.style.backgroundImage='url("'+safeUrl(formPhoto)+'")'; if(icon)icon.style.display="none"; $("f-photolabel").textContent=""; } else { d.style.backgroundImage=""; if(icon)icon.style.display=""; $("f-photolabel").textContent="Paste an image link below to preview"; } }
 function onPhotoUrl(){ const v=$("f-photo-url").value.trim(); formPhoto=v||null; renderPhoto(); const s=$("f-photo-status"); if(!s)return; if(!v){ s.textContent=""; return; } s.textContent="Checking link…"; s.style.color="var(--soft)"; const t=new Image(); t.onload=()=>{ s.textContent="✓ Image loaded"; s.style.color="#3aa76d"; }; t.onerror=()=>{ s.textContent='⚠ Couldn\'t load this link — use the photo\'s "Copy image address" link, not the Share link.'; s.style.color="var(--acc2)"; }; t.src=v; }
 function renderRate(){ $("f-rate").innerHTML=[1,2,3,4,5].map(n=>'<span class="'+(n<=formRating?"on":"")+'" role="button" tabindex="0" onclick="formRating='+n+';renderRate()">★</span>').join(""); }
@@ -279,6 +284,7 @@ function mergeVisitInto(c,data){
   if(data.photo && !c.photo) c.photo  = data.photo;
   if(!c.area && data.area)   c.area   = data.area;
   if(!c.cc && data.cc)       c.cc     = data.cc;
+  if(!c.pid && data.pid)     c.pid    = data.pid;
   if(data.ccy)               c.ccy    = data.ccy;
   if((c.drinks||[]).length)  c.wish   = false;   /* a drink on the record means you went */
   if(c.lat==null && data.lat!=null){ c.lat = data.lat; c.lng = data.lng; }
@@ -367,12 +373,14 @@ function saveForm(){
     review:  $("f-review").value.trim(),
     cc:      formCC||"",
     ccy:     formCcy||"",
+    pid:     formPid||"",
     drinks,
     updated: new Date().toISOString()
   };
   /* an unresolved country must not blank a country we already knew */
   if(!data.cc)delete data.cc;
   if(!data.ccy)delete data.ccy;
+  if(!data.pid)delete data.pid;
 
   let savedId=editId, msg="Saved ✓";
   const c=editId?cafes.find(x=>x.id===editId):null;
@@ -395,6 +403,10 @@ if(data.wish){
 /* ...and the same rule the other way round: a drink on the record means you went, so the
    cafe cannot still be somewhere you mean to go. */
 if((data.drinks||[]).length)data.wish=false; if(c){ const moved=(c.lat!==data.lat||c.lng!==data.lng);
+/* Re-picking the cafe from the dropdown to correct a wrong photo often lands on the same
+   coordinates, so "moved" alone would not have invalidated anything and the wrong picture
+   would have stayed cached. A changed place id means the lookup itself changed. */
+const pidChanged=((c.pid||"")!==(data.pid||""));
 /* data.drinks is rebuilt from the form rows and carries no elo/matches, so Object.assign
    below replaces c.drinks wholesale and destroys every head-to-head ever recorded at this
    cafe — which is exactly what happened to every cafe edited since ranking shipped. Carry
@@ -404,7 +416,12 @@ if((data.drinks||[]).length)data.wish=false; if(c){ const moved=(c.lat!==data.la
 const keep={}; (c.drinks||[]).forEach(function(d){ if(!d||!d.n)return; if(d.elo===undefined&&d.matches===undefined)return; const k=d.n.trim().toLowerCase(); if(!keep[k]||(d.matches||0)>(keep[k].matches||0))keep[k]={elo:d.elo,matches:d.matches}; });
 Object.assign(c,data);
 (c.drinks||[]).forEach(function(d){ const p=keep[(d.n||"").trim().toLowerCase()]; if(!p)return; if(p.elo!==undefined)d.elo=p.elo; if(p.matches!==undefined)d.matches=p.matches; });
-  if(moved){ delete gphotoCache[c.id]; if(c.gphoto)delete c.gphoto; saveGphotoCache(); }
+  if(moved||pidChanged){ delete gphotoCache[c.id]; if(c.gphoto)delete c.gphoto; saveGphotoCache();
+    /* The pin moved somewhere we could not tie to a Places record (data.pid is gone), so the
+       stored id now describes a different place. Deleting data.pid above only stops it being
+       overwritten — the stale one has to go, or the photo lookup keeps fetching the old
+       place's picture with total confidence. */
+    if(moved&&!data.pid&&c.pid)delete c.pid; }
   if(c.custom){
     if(c.emoji==="☕")c.emoji="🏠";
     if(c.gphoto){ delete c.gphoto; delete gphotoCache[c.id]; saveGphotoCache(); }
