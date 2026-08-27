@@ -44,9 +44,13 @@ function serve() {
   });
 }
 
-/* Uses whatever Chromium `npx playwright install chromium` put on this machine. */
+/* Uses whatever Chromium `npx playwright install chromium` put on this machine. Set
+   CHROMIUM_PATH to point at one that is already installed instead — a CI image that ships a
+   browser, or a machine where Playwright's pinned build and the installed one have drifted
+   apart. */
 function launch() {
-  return chromium.launch();
+  const exe = process.env.CHROMIUM_PATH;
+  return chromium.launch(exe ? { executablePath: exe } : {});
 }
 
 /* Keeps a tally and prints one line per failure with both sides, so a red run says what
