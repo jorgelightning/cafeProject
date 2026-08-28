@@ -2144,6 +2144,39 @@
     "wish": false
   },
   {
+    "area": "Central District",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-28"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha Einspanner",
+        "p": "9.21",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1516,
+    "emoji": "☕",
+    "fav": true,
+    "id": "mtdcqterwyid",
+    "lat": 47.61176,
+    "lng": -122.28955,
+    "matches": 1,
+    "name": "Yoka Tea",
+    "pid": "ChIJqTPr5FxrkFQRIgTFZDo3zfQ",
+    "rating": 5,
+    "review": "They are Korean Filipino cafe, wow the Hojicha is super good and the turon Matcha as well!",
+    "updated": "2026-08-28T19:36:04.706Z",
+    "wish": false
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
