@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=29">
+<link rel="stylesheet" href="styles.css?v=30">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -61,7 +61,7 @@
 <div class="scroll"><div class="form">
 <div class="field"><label>Cafe name *</label><input type="text" id="f-name" placeholder="Search a place or type a name…" autocomplete="off" onblur="checkExisting()"></div>
 <div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-wish" onchange="syncWishMode()"> Add to wishlist 🔖 <span style="font-size:11px;color:var(--soft);font-weight:400">(haven’t visited yet)</span></label></div>
-<div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-custom"> Private spot 🏠 <span style="font-size:11px;color:var(--soft);font-weight:400">(friend's place, pop-up, event — skips Google photos and place matching)</span></label></div>
+<div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-custom"> Private spot 🏠 <span style="font-size:11px;color:var(--soft);font-weight:400">(friend's place, pop-up, event — the saved pin is rounded to about a kilometre and a street address is dropped, so this never publishes someone's door)</span></label></div>
 <div class="field"><label>Location — tap map to drop a pin</label><div id="form-map"></div><button class="hintbtn" onclick="formLocate()">📍 Use my current location</button> <span id="f-coords" style="font-size:12px; color:var(--soft)"></span></div>
 <div class="field"><label>Area / neighborhood</label><input type="text" id="f-area" placeholder="e.g. Manoa" autocomplete="off"></div>
 <div class="field"><label>Brand / chain (optional)</label><input type="text" id="f-brand" placeholder="e.g. Tadaima — groups locations together" autocomplete="off"></div>
@@ -108,17 +108,17 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=29"></script>
-<script src="js/core.js?v=29"></script>
-<script src="js/storage.js?v=29"></script>
-<script src="js/nav.js?v=29"></script>
-<script src="js/map.js?v=29"></script>
-<script src="js/photos.js?v=29"></script>
-<script src="js/list.js?v=29"></script>
-<script src="js/stats.js?v=29"></script>
-<script src="js/rank.js?v=29"></script>
-<script src="js/detail.js?v=29"></script>
-<script src="js/form.js?v=29"></script>
-<script src="js/boot.js?v=29"></script>
+<script src="js/config.js?v=30"></script>
+<script src="js/core.js?v=30"></script>
+<script src="js/storage.js?v=30"></script>
+<script src="js/nav.js?v=30"></script>
+<script src="js/map.js?v=30"></script>
+<script src="js/photos.js?v=30"></script>
+<script src="js/list.js?v=30"></script>
+<script src="js/stats.js?v=30"></script>
+<script src="js/rank.js?v=30"></script>
+<script src="js/detail.js?v=30"></script>
+<script src="js/form.js?v=30"></script>
+<script src="js/boot.js?v=30"></script>
 </body>
 </html>

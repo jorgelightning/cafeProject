@@ -20,10 +20,24 @@ jobs:
 
       - name: Fetch data from Firebase
         run: |
+          # Private spots are redacted on the way out, mirroring redactPrivate() in js/core.js.
+          # The app already blurs them before writing, so this is the second line: a precise
+          # value that reached Firebase before that existed — or by any other route — still
+          # never lands in the published file. Coordinates round to ~1km; an area field with
+          # digits in it is a street address, not a locality, and is dropped.
           curl -fsS "https://cafeproject-b604f-default-rtdb.firebaseio.com/cafes.json" \
-            | jq 'if type=="object" then [.[]] else . end' > cafes.json
+            | jq 'if type=="object" then [.[]] else . end
+                  | map(if .custom == true then
+                          .lat   = (if .lat == null then null else ((.lat * 100) | round) / 100 end)
+                        | .lng   = (if .lng == null then null else ((.lng * 100) | round) / 100 end)
+                        | .area  = (if ((.area // "") | test("[0-9]")) then "" else (.area // "") end)
+                        else . end)' > cafes.json
           # Safety: never commit an empty/invalid snapshot over a good backup
           jq -e 'type=="array" and length>0' cafes.json > /dev/null
+          # ...and never commit one that still carries a private address
+          jq -e 'all(.[] | select(.custom == true);
+                      ((.lat == null) or (.lat == ((.lat * 100 | round) / 100)))
+                      and ((.area // "") | test("[0-9]") | not))' cafes.json > /dev/null
 
       - name: Commit if changed
         run: |

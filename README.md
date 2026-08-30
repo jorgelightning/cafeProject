@@ -21,6 +21,15 @@ not built.
 | `js/storage.js` | Load/save data, admin sign-in, import/export, seed data |
 | `js/nav.js` | View switching (map / list / detail / form / rank / stats) |
 | `js/map.js` | Google Maps, markers, location dropdown, geolocation, the locate button |
+
+### Private spots
+
+`cafes.json` is served from this repo and the Firebase node is read without auth, so
+**everything the app stores is public.** A cafe ticked "Private spot 🏠" therefore has its
+coordinates rounded to about a kilometre and a numbered area field dropped *before it is
+saved* — hiding it in the interface would hide nothing, since anyone can open the JSON. The
+daily backup applies the same redaction in jq, so a precise value already sitting in Firebase
+still never reaches the published file.
 | `js/photos.js` | Cafe photo fetching via Places API with cache and fallbacks |
 | `js/list.js` | Search, sorting, and the cafe card grid |
 | `js/stats.js` | Stats / leaderboard pane |
