@@ -4,18 +4,20 @@
 /* ---------- storage ---------- */
 async function load(){
 isAdmin = localStorage.getItem(ADMIN_FLAG)==="1";
-if(await loadCloud())return;
+if(await loadCloud()){ await loadPrivateDetail(); healPrivateSpots(); return; }
 let published=null;
 try{ const ctrl=new AbortController(); const _to=setTimeout(()=>ctrl.abort(),8000); const r=await fetch(DATA_URL+"?t="+Date.now(),{signal:ctrl.signal}); clearTimeout(_to); if(r.ok)published=await r.json(); }catch(e){ warn("storage.js",e); }
 if(isAdmin){
 const dirty = localStorage.getItem(DIRTY_FLAG)==="1";
 let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)); }catch(e){ warn("storage.js",e); }
-if(dirty && local && local.length){ cafes=local; }
-else if(published && published.length){ cafes=published; localStorage.removeItem(KEY); }
-else { cafes=(local&&local.length)?local:seed(); }
+if(dirty && local && local.length){ cafes=adoptCafes(local); }
+else if(published && published.length){ cafes=adoptCafes(published); localStorage.removeItem(KEY); }
+else { cafes=adoptCafes((local&&local.length)?local:seed()); }
 } else {
-let _lc=null; try{ _lc=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ warn("storage.js",e); } cafes=(published&&published.length)?published:((Array.isArray(_lc)&&_lc.length)?_lc:seed());
+let _lc=null; try{ _lc=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ warn("storage.js",e); } cafes=adoptCafes((published&&published.length)?published:((Array.isArray(_lc)&&_lc.length)?_lc:seed()));
 }
+await loadPrivateDetail();
+healPrivateSpots();
 }
 /* Writes used to be one shape: the entire array, every time, from every caller. Two devices
    each writing everything meant the second silently erased whatever the first had added,
@@ -55,15 +57,64 @@ function removeCafe(id){
   if(!isAdmin)return;
   _localSave(); if(!_cloudReady())return;
   if(!_cloudKeyed)return save();
+  removePrivateDetail(id,true);
   _cloudDone(fbDb.ref("cafes/"+id).remove());
 }
 function applyMode(){ app.dataset.mode=isAdmin?"admin":"viewer"; document.querySelectorAll(".lockbtn").forEach(b=>{ b.textContent=b.classList.contains("mobonly")?(isAdmin?"🔓":"🔒"):(isAdmin?"🔓 Editing":"🔒 Viewer"); b.removeAttribute("title"); }); if(!isAdmin&&(app.dataset.view==="form"||app.dataset.view==="compare")){ if(wishOnly)show("wish"); else if(favOnly)show("list",true); else show(lastMain); } if(app.dataset.view==="stats")renderStats(); }
 function authMsg(code){ if(code==="auth/operation-not-allowed"||code==="auth/configuration-not-found")return "Turn on Google sign-in: Firebase Console → Authentication → Sign-in method → Google → Enable."; if(code==="auth/unauthorized-domain")return "This site's domain isn't allowed. Add it in Firebase → Authentication → Settings → Authorized domains."; if(code==="auth/popup-blocked"||code==="auth/cancelled-popup-request")return "Your browser blocked the popup — allow popups for this site and try again."; if(code==="auth/popup-closed-by-user")return "Sign-in window closed."; return "Sign-in failed ("+code+")"; }
 function adminSignIn(){ if(!fbAuth){ toast("Cloud not connected"); return; } const prov=new firebase.auth.GoogleAuthProvider(); fbAuth.signInWithPopup(prov).catch(e=>{ const code=(e&&e.code)||""; console.error("Sign-in error",e); if(code==="auth/popup-blocked"||code==="auth/operation-not-supported-in-this-environment"){ fbAuth.signInWithRedirect(prov).catch(er=>toast(authMsg((er&&er.code)||""))); return; } toast(authMsg(code)); }); }
+/* ---------- private spots: the owner-only half ----------
+   A private spot is stored twice. The public "cafes" node keeps the blurred pin and no street
+   address, exactly as everyone sees it. The exact address lives under PRIVATE_PATH, behind a
+   database rule that only the owner's account can read (the rule text is in the README —
+   without it this node is as public as the other one, so it is not optional). */
+function loadPrivateDetail(){
+  if(!fbReady||!ownerSignedIn()){ privDetail={}; return Promise.resolve(); }
+  return fbDb.ref(PRIVATE_PATH).once("value").then(function(s){
+    privDetail=s.val()||{};
+  }).catch(function(e){ warn("storage.js",e); privDetail={}; });
+}
+function savePrivateDetail(id,exact){
+  privDetail[id]=exact;
+  if(!fbReady||!ownerSignedIn())return;
+  fbDb.ref(PRIVATE_PATH+"/"+id).set(exact).catch(function(e){ warn("storage.js",e); });
+}
+/* `force` spends a write even when we hold no local record of one. Deleting a cafe passes it,
+   because an address left behind for a cafe that no longer exists is exactly the leak this is
+   for — better a redundant no-op remove than an orphan. An ordinary save does not, so saving
+   any of a hundred normal cafes costs nothing. */
+function removePrivateDetail(id,force){
+  const had=Object.prototype.hasOwnProperty.call(privDetail,id);
+  delete privDetail[id];
+  if(!had&&!force)return;
+  if(!fbReady||!ownerSignedIn())return;
+  fbDb.ref(PRIVATE_PATH+"/"+id).remove().catch(function(e){ warn("storage.js",e); });
+}
+/* A private spot saved before any of this still has its exact address sitting in the public
+   node. Move it. The precise copy is written first and the public record overwritten second,
+   so a failure between the two duplicates the address rather than losing it. Only the owner
+   can run this, because only the owner can write. */
+function healPrivateSpots(){
+  const ids=Object.keys(_needsHeal);
+  if(!ids.length)return;
+  if(!fbReady||!ownerSignedIn())return;
+  ids.forEach(function(id){
+    const exact=_needsHeal[id];
+    delete _needsHeal[id];
+    const c=cafes.find(function(x){ return x.id===id; });
+    if(!c)return;
+    privDetail[id]=exact;
+    fbDb.ref(PRIVATE_PATH+"/"+id).set(exact).then(function(){
+      return fbDb.ref("cafes/"+id).set(JSON.parse(JSON.stringify(c)));
+    }).then(function(){
+      toast("Moved "+c.name+"'s address somewhere only you can read \u2713");
+    }).catch(function(e){ warn("storage.js",e); });
+  });
+}
 function resyncDirty(){ if(!fbReady||!fbAuth)return; const u=fbAuth.currentUser; if(!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()))return; const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; fbDb.ref("cafes").once("value").then(s=>{ const cloudEmpty=!asArray(s.val()).length; if((dirty||cloudEmpty)&&cafes.length){ fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafesById()))).then(()=>{ _cloudKeyed=true; localStorage.removeItem(DIRTY_FLAG); if(dirty)toast("Synced your edits to the cloud ✓"); }).catch(()=>{}); } }).catch(()=>{}); }
 function initAuth(){ if(!fbAuth)return; fbAuth.onAuthStateChanged(u=>{ const ok=!!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()); if(u&&!ok){ toast("That account can't edit this map"); fbAuth.signOut(); return; } if(ok){ if(!isAdmin){ isAdmin=true; lsSet(ADMIN_FLAG,"1"); applyMode(); toast("Admin mode - signed in"); } load().then(()=>{ if(gReady)renderMarkers(); renderList(); resyncDirty(); }); } else if(!ok&&isAdmin){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); }); toast("Viewer mode"); } }); }
 function toggleAdmin(){ if(fbAuth){ if(isAdmin){ if(confirm("Sign out of editing mode?"))fbAuth.signOut().then(()=>toast("Viewer mode")); } else { adminSignIn(); } return; } if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; lsSet(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
-function importPublished(){ if(!isAdmin){ toast("Sign in to edit first"); return; } if(!fbReady){ toast("Cloud not connected"); return; } if(!confirm("Replace the cloud data with cafes.json from the site? This overwrites what's currently in the cloud."))return; fetch(DATA_URL+"?t="+Date.now()).then(r=>r.json()).then(d=>{ if(!Array.isArray(d)||!d.length){ toast("cafes.json looks empty"); return; } return fbDb.ref("cafes").set(d.reduce(function(o,c){ if(c&&c.id)o[c.id]=c; return o; },{})).then(()=>{ _cloudKeyed=true; cafes=d; try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("storage.js",e); } localStorage.removeItem(DIRTY_FLAG); if(gReady)renderMarkers(); renderList(); toast("Imported "+d.length+" cafes \u2713"); }); }).catch(()=>toast("Couldn't load cafes.json")); }
+function importPublished(){ if(!isAdmin){ toast("Sign in to edit first"); return; } if(!fbReady){ toast("Cloud not connected"); return; } if(!confirm("Replace the cloud data with cafes.json from the site? This overwrites what's currently in the cloud."))return; fetch(DATA_URL+"?t="+Date.now()).then(r=>r.json()).then(d=>{ if(!Array.isArray(d)||!d.length){ toast("cafes.json looks empty"); return; } return fbDb.ref("cafes").set(d.reduce(function(o,c){ if(c&&c.id)o[c.id]=c; return o; },{})).then(()=>{ _cloudKeyed=true; cafes=adoptCafes(d); try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("storage.js",e); } localStorage.removeItem(DIRTY_FLAG); if(gReady)renderMarkers(); renderList(); toast("Imported "+d.length+" cafes \u2713"); }); }).catch(()=>toast("Couldn't load cafes.json")); }
 function exportJSON(){ const blob=new Blob([JSON.stringify(cafes,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="cafes.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); localStorage.removeItem(DIRTY_FLAG); toast("Backup downloaded ✓"); }
 function revertPublished(){ if(!confirm("Reload the latest saved data and discard unsynced local edits?"))return; localStorage.removeItem(KEY); localStorage.removeItem(DIRTY_FLAG); load().then(()=>{ renderMarkers(); show("list"); toast("Reloaded latest data"); }); }
 function seed(){ return [

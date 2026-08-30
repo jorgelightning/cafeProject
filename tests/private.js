@@ -141,6 +141,76 @@ const fs = require("fs"), path = require("path");
   eq(wf.indexOf("jq -e") !== wf.lastIndexOf("jq -e"), true,
      "…behind a guard that refuses to commit a snapshot that still carries one");
 
+  /* --- 9. the owner-only copy ---
+     The exact address is stored twice over: blurred in the public "cafes" node, exact under
+     PRIVATE_PATH behind a read rule only the owner's account satisfies. The property that
+     matters is that `cafes` — the array save() writes wholesale to the public node — never
+     holds the precise value, no matter who is looking. */
+  await pg.evaluate(() => {
+    window.__signedIn = false;
+    /* `let fbAuth` at the top of core.js lives in script scope, not on window — assigning
+       window.fbAuth would be silently ignored. */
+    fbAuth = { get currentUser(){ return window.__signedIn ? { email: OWNER_EMAIL } : null; } };
+    privDetail = {}; _needsHeal = {};
+  });
+
+  r = await pg.evaluate(() => {
+    /* what the public node holds after redaction */
+    cafes = adoptCafes([{ id: "p", name: "Viv & Iv's", custom: true,
+                          area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298,
+                          tags: [], drinks: [] }]);
+    privDetail = { p: { area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298 } };
+    const c = cafes[0];
+    const asViewer = { area: areaOf(c), lat: latOf(c) };
+    window.__signedIn = true;
+    const asOwner = { area: areaOf(c), lat: latOf(c) };
+    return { asViewer, asOwner, stored: { area: c.area, lat: c.lat, lng: c.lng } };
+  });
+  eq(r.asViewer, { area: "", lat: 37.79 }, "a viewer sees the blurred pin and no address");
+  eq(r.asOwner, { area: "1800 Washington St #611", lat: 37.79306 },
+     "the owner, signed in, sees the real address — the whole point of the gated node");
+  eq(r.stored, { area: "", lat: 37.79, lng: -122.42 },
+     "…while the record in `cafes` stays blurred, because save() publishes that array");
+
+  /* Signing out must take it away again — the accessors key off auth, not off a flag that
+     could be flipped in a console. (The real barrier is the database rule; this is the UI
+     half of it.) */
+  r = await pg.evaluate(() => { window.__signedIn = false; const c = cafes[0]; return areaOf(c); });
+  eq(r, "", "signing out hides it again");
+
+  /* --- 10. the heal moves a record that predates all this --- */
+  r = await pg.evaluate(() => {
+    _needsHeal = {}; privDetail = {};
+    cafes = adoptCafes([{ id: "old", name: "Old", custom: true,
+                          area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298 }]);
+    return { flagged: Object.keys(_needsHeal), remembered: _needsHeal.old };
+  });
+  eq(r.flagged, ["old"], "a precise record found in the public node is flagged to be moved");
+  eq(r.remembered, { area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298 },
+     "…with its exact values kept so nothing is lost in the move");
+
+  r = await pg.evaluate(() => {
+    _needsHeal = {};
+    cafes = adoptCafes([{ id: "ok", name: "Fine", custom: true, area: "San Mateo", lat: 37.56, lng: -122.33 }]);
+    return Object.keys(_needsHeal);
+  });
+  eq(r, [], "an already-blurred record is not flagged, so the heal runs once and stops");
+
+  /* --- 11. sharing never leaks it, even for the owner --- */
+  r = await pg.evaluate(() => {
+    window.__signedIn = true;
+    cafes = [{ id: "s", name: "Viv & Iv's", custom: true, area: "", lat: 37.79, lng: -122.42, drinks: [], tags: [] }];
+    privDetail = { s: { area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298 } };
+    curId = "s";
+    let shared = null;
+    navigator.share = (d) => { shared = d; return Promise.resolve(); };
+    shareCafe();
+    window.__signedIn = false;
+    return shared;
+  });
+  eq(/Washington|37\.79306/.test(JSON.stringify(r)), false,
+     "sharing carries the public value even when the owner taps it — it goes to someone else");
+
   eq(errs, [], "no page errors");
   const ok = done();
   await b.close(); srv.close(); process.exit(ok ? 0 : 1);

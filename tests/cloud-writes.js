@@ -108,7 +108,13 @@ const { eq, done } = checker();
    removeCafe('a1');
    return {log:db.__log, keys:Object.keys(db.__store.v)};
  });
- eq(r.log,[{path:'cafes/a1',kind:'remove'}],'delete removes one path');
+ /* Two paths, not one: deleting a cafe also drops any exact address stored for it under
+    PRIVATE_PATH. An address left behind for a cafe that no longer exists is precisely the leak
+    the private node exists to prevent, so this write is deliberate — it fires unconditionally
+    on delete rather than only when we happen to hold a local copy. The point this assertion
+    still guards is that it is a per-cafe path, never a whole-array write. */
+ eq(r.log,[{path:'private/a1',kind:'remove'},{path:'cafes/a1',kind:'remove'}],
+    'delete removes the cafe and its private address, by path');
  eq(r.keys,['b1'],'and only that one');
 
  // ---- guards still hold --------------------------------------------------

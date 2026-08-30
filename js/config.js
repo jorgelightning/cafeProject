@@ -33,6 +33,7 @@ appId: "1:846570702792:web:5899133d9032437e14e2fd"
 };
 const KEY="cafemap.v1";
 const DATA_URL="cafes.json";          // published data committed to your GitHub repo
+const PRIVATE_PATH="private";         // Firebase node holding private spots' exact addresses — owner-read only (see README)
 const ADMIN_FLAG="cafemap.admin";     // remembers admin mode in this browser
 const DIRTY_FLAG="cafemap.dirty";     // set on local edits, cleared on Export
 const OWNER_EMAIL="jorgemarco.portillo@gmail.com"; // only this Google account can edit (real security)
