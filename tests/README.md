@@ -40,6 +40,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `wishlist-drinks.js` | A cafe with drinks logged comes off the wishlist. |
 | `cloud-writes.js` | Per-cafe writes, deletion, and **the lost update they prevent** — reproduced against the old whole-array write, then shown gone. |
 | `place-id.js` | A cafe's photo is fetched by its Google place id, not by searching its name. The wrong-photo bug. |
+| `private.js` | A private spot never publishes an exact location or a street address — at save, in `cafes.json`, and in the daily backup. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `locate.js` | The locate button, its three states, the user dot — which was never being drawn — and that **nothing but the button raises the permission prompt**. |
 | `offline.js` | The app boots with the network pulled. |
