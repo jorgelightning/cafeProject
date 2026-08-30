@@ -1358,8 +1358,8 @@
     "emoji": "🏠",
     "fav": true,
     "id": "mrr7zovlvqbp",
-    "lat": 37.56299,
-    "lng": -122.32553,
+    "lat": 37.56,
+    "lng": -122.33,
     "matches": 2,
     "name": "Cafe Plaza",
     "rating": 5,
@@ -1523,7 +1523,7 @@
     "wish": false
   },
   {
-    "area": "1800 Washington St #611",
+    "area": "",
     "brand": "",
     "custom": true,
     "drinks": [
@@ -1544,8 +1544,8 @@
     "emoji": "🏠",
     "fav": true,
     "id": "mscep73jjytf",
-    "lat": 37.79306,
-    "lng": -122.42298,
+    "lat": 37.79,
+    "lng": -122.42,
     "matches": 2,
     "name": "Viv & Iv's Cafe",
     "rating": 5,
