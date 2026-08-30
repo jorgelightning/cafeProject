@@ -158,6 +158,14 @@ Fetching moved to the Places API (New) with the legacy service as fallback; stab
 persisted by the admin "Fetch all photos" action so viewers get thumbnails at zero API cost.
 Thumbnails load lazily — rendering the list costs no requests, and opening a cafe costs one.
 
+### The precise copy lives outside `cafes`
+`save()` writes the whole `cafes` array to the public node, so anything in that array is
+published by definition. A private spot's exact address therefore lives in `privDetail`, a
+separate map loaded from an owner-only Firebase node, and is read through `areaOf()` /
+`latOf()` / `lngOf()`. **Never merge it into `cafes` to make a screen easier to write** — one
+`save()` afterwards publishes it. `shareCafe()` deliberately uses `c.area` and not `areaOf(c)`
+for the same reason: it sends the value to someone else.
+
 ### A private spot is blurred, not hidden
 "Private spot 🏠" used to mean only "skip Google photos", while still publishing an exact pin
 and a free-text area — one real record read `1800 Washington St #611`. Coordinates now round
