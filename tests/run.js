@@ -16,6 +16,7 @@ const SUITE = [
   ["wishlist-drinks",  "a cafe with drinks logged comes off the wishlist"],
   ["cloud-writes",     "per-cafe writes, deletion, and the lost update they prevent"],
   ["keyboard",         "every control is reachable and activatable without a pointer"],
+  ["locate",           "the locate button, its states, and the user dot it draws"],
   ["relocate",         "correcting a cafe location moves its area and its photo with it"],
   ["place-id",         "a cafe's photo is fetched by place id, not by searching its name"],
   ["offline",          "the app boots with the network pulled"],

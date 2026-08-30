@@ -246,6 +246,22 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .maplegend i{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; }
 .maplegend i.wl{ width:5px; height:5px; background:transparent; border:2px solid #5b9bd5; }
 @media (min-width:900px){ .maplegend{ bottom:26px; } }
+/* Locate button — bottom-right, stacked above the legend. That corner is the one a thumb
+   reaches without regripping, which is the posture you are in when you are standing on a
+   street asking the app what is near you. Same glass treatment as the lock button in
+   .mapsearch so it reads as part of the map chrome rather than bolted on. 44px because it is
+   a primary control and that is the honest touch target; the 40px .iconbtn size is for
+   controls that sit in a row with something else. */
+.locbtn{ position:absolute; z-index:6; right:12px; bottom:calc(114px + env(safe-area-inset-bottom)); width:44px; height:44px; padding:0; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text); background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--border); box-shadow:var(--shadow); transition:transform .13s ease, background .13s ease; }
+.locbtn svg{ width:22px; height:22px; display:block; }
+.locbtn:active{ transform:scale(.94); }
+/* Found: filled with the identity orange. --acc is a fill here, not text, so its 3.01:1 on
+   white does not apply — the glyph on top is #fff on --acc at 4.06:1. */
+.locbtn[data-state="on"]{ background:var(--acc); border-color:transparent; color:#fff; box-shadow:0 6px 18px rgba(213,128,59,.45); }
+.locbtn[data-state="busy"] svg{ animation:locspin 1s linear infinite; }
+@keyframes locspin{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce){ .locbtn[data-state="busy"] svg{ animation:none; opacity:.55; } }
+@media (min-width:900px){ .locbtn{ bottom:62px; } }
 .locpills{ display:none; flex-wrap:wrap; gap:7px; margin:2px 0 12px; }
 .locpill{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; font-weight:600; color:var(--soft); cursor:pointer; white-space:nowrap; }
 .locpill.on{ background:var(--acc); color:#fff; border-color:var(--acc); cursor:default; }
