@@ -67,6 +67,32 @@ function localToday(){ return new Date(Date.now()-new Date().getTimezoneOffset()
    instead of drifting every time the markets move. Nothing re-converts on read. */
 /* An explicit choice wins over the country lookup: c.ccy is what you picked by hand, and
    it is why a cafe with no resolvable country only ever has to be told once. */
+/* ---------- private spots ---------- */
+/* "Private spot" used to mean nothing but "skip Google photos". It now means the exact
+   location is never written anywhere public — and everything this app writes is public:
+   cafes.json is served from the repo, and the Firebase node is read without auth.
+
+   Rounding to a fixed grid rather than adding random jitter. A grid cell is stable, so
+   re-saving the same spot lands on the same point; jitter would move on every save, and
+   averaging a handful of saves would recover the true location it was meant to hide. */
+const PRIVATE_DP=2;   /* 0.01° — about 1.1km of latitude, ~0.9km of longitude at mid-latitudes */
+function blurCoord(v){ return (v==null||isNaN(v))?null:+(+v).toFixed(PRIVATE_DP); }
+
+/* The area field is where a street address ends up — one of these really did read
+   "1800 Washington St #611". A locality never needs digits and a street address effectively
+   always has them, so digits are the test: "San Mateo" survives, anything numbered does not. */
+function privateArea(a){ return /\d/.test(a||"") ? "" : (a||""); }
+
+/* The single place a record is made safe to publish. Called on save, and mirrored in
+   .github/workflows/backup.yml so a precise value already sitting in Firebase still cannot
+   reach the published file. */
+function redactPrivate(c){
+  if(!c||!c.custom)return c;
+  c.lat=blurCoord(c.lat);
+  c.lng=blurCoord(c.lng);
+  c.area=privateArea(c.area);
+  return c;
+}
 function ccyFor(c){
   const own=((c&&c.ccy)||"").trim().toUpperCase();
   if(own&&CCY_META[own])return own;

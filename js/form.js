@@ -381,6 +381,11 @@ function saveForm(){
   if(!data.cc)delete data.cc;
   if(!data.ccy)delete data.ccy;
   if(!data.pid)delete data.pid;
+  /* Everything this app writes is world-readable — cafes.json is served from the repo and the
+     Firebase node is read without auth — so a private spot has to be blurred here, before the
+     value leaves the form. Hiding it in the UI instead would be theatre: anyone can open the
+     JSON. Re-saving an old private spot that predates this heals it. */
+  redactPrivate(data);
 
   let savedId=editId, msg="Saved ✓";
   const c=editId?cafes.find(x=>x.id===editId):null;

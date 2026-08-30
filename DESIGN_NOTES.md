@@ -94,6 +94,13 @@ Companion to `README.md`, which covers structure and deployment.
   currency chip, and the choice is stored as `c.ccy`, which outranks `c.cc` and is only ever
   asked once per cafe. Do not reintroduce a lat/lng country guess: `countryTerms()` exists for
   search terms and puts Vancouver in the United States.
+- **Everything this app writes is public.** `cafes.json` is served from the repo and the
+  Firebase node is read without auth, so *hiding something in the UI hides nothing.* A value
+  that must not be public cannot be written. `redactPrivate()` in `core.js` is the one place
+  a record is made safe, it runs in `saveForm()` before the write, and
+  `.github/workflows/backup.yml` repeats it in jq — because the backup pulls straight from
+  Firebase daily and would otherwise republish a precise value the app no longer writes.
+  **Change one and you must change the other.**
 - **Only `locate()` may raise the browser's location prompt.** `autoLocate()` and
   `focusNearest()` both used to ask on their own — the second on *every* switch to the map
   tab. They now go through `ifLocationAlreadyAllowed()`, which fires only on a `granted`
@@ -150,6 +157,15 @@ Session-bound Places URLs were being persisted to Firebase and served broken to 
 Fetching moved to the Places API (New) with the legacy service as fallback; stable URLs are
 persisted by the admin "Fetch all photos" action so viewers get thumbnails at zero API cost.
 Thumbnails load lazily — rendering the list costs no requests, and opening a cafe costs one.
+
+### A private spot is blurred, not hidden
+"Private spot 🏠" used to mean only "skip Google photos", while still publishing an exact pin
+and a free-text area — one real record read `1800 Washington St #611`. Coordinates now round
+to a 0.01° grid (~1km) and a numbered area field is dropped, at save time. Rounding rather
+than random jitter is deliberate: a grid cell is stable, so re-saving lands on the same point,
+where jitter moves every save and averaging a few of them recovers the location it was meant
+to hide. Digits are the test for an address because a locality never needs them — "San Mateo"
+survives, "Apt 4B" does not.
 
 ### You are a filled dot, wishlist is a hollow ring
 The map already spent blue on wishlist pins, so the location dot is separated from them on
