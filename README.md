@@ -20,7 +20,7 @@ not built.
 | `js/core.js` | App state, DOM/format helpers, Firebase init and cloud sync |
 | `js/storage.js` | Load/save data, admin sign-in, import/export, seed data |
 | `js/nav.js` | View switching (map / list / detail / form / rank / stats) |
-| `js/map.js` | Google Maps, markers, location dropdown, geolocation |
+| `js/map.js` | Google Maps, markers, location dropdown, geolocation, the locate button |
 | `js/photos.js` | Cafe photo fetching via Places API with cache and fallbacks |
 | `js/list.js` | Search, sorting, and the cafe card grid |
 | `js/stats.js` | Stats / leaderboard pane |
