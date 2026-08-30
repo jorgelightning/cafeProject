@@ -94,6 +94,13 @@ Companion to `README.md`, which covers structure and deployment.
   currency chip, and the choice is stored as `c.ccy`, which outranks `c.cc` and is only ever
   asked once per cafe. Do not reintroduce a lat/lng country guess: `countryTerms()` exists for
   search terms and puts Vancouver in the United States.
+- **Only `locate()` may raise the browser's location prompt.** `autoLocate()` and
+  `focusNearest()` both used to ask on their own — the second on *every* switch to the map
+  tab. They now go through `ifLocationAlreadyAllowed()`, which fires only on a `granted`
+  permission, where reading the position raises no prompt. **"Can't tell" resolves to no:** an
+  older Safari with no Permissions API, or a query that throws, must not ask. Any new caller
+  of `showUserLocation()` needs the same gate, and must not toast — the button owns the
+  failure message because the button is the only path the user started.
 - **`userMarker` is created in `drawUserLocation()` and nowhere else.** For a long time it was
   declared in `core.js`, read by `refitMap()`, and cleared by `showUserLocation()` — but never
   assigned, so the map never showed you. The dot is deliberately not in `gmarkers`: that array
