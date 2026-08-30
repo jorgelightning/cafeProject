@@ -2,7 +2,7 @@
 /* core.js — App state, DOM/format helpers, Firebase init and cloud sync.
    Loaded by index.html; script order matters (config first, boot last). */
 let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], formCC="", formCcy="", formPid="", favOnly=false, wishOnly=false, lastMain="map";
-let gReady=false, gmap=null, fgmap=null, fgmarker=null, gmarkers=[], userMarker=null;
+let gReady=false, gmap=null, fgmap=null, fgmarker=null, gmarkers=[], userMarker=null, userAccuracy=null;
 let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gphotos"))||{}; }catch(e){ warn("core.js",e); }
 let isAdmin=false;
 const $=id=>document.getElementById(id);

@@ -94,6 +94,10 @@ Companion to `README.md`, which covers structure and deployment.
   currency chip, and the choice is stored as `c.ccy`, which outranks `c.cc` and is only ever
   asked once per cafe. Do not reintroduce a lat/lng country guess: `countryTerms()` exists for
   search terms and puts Vancouver in the United States.
+- **`userMarker` is created in `drawUserLocation()` and nowhere else.** For a long time it was
+  declared in `core.js`, read by `refitMap()`, and cleared by `showUserLocation()` — but never
+  assigned, so the map never showed you. The dot is deliberately not in `gmarkers`: that array
+  is handed to the clusterer and wiped on every `renderMarkers()`, which would swallow it.
 - **A cafe's photo is found by its Google place id (`c.pid`), not by its name.** The lookup
   used to be a text search — name plus area — which is why correcting Paragon Tea Room's
   location never corrected its photo: the query was the same and it kept matching the same
@@ -139,6 +143,13 @@ Session-bound Places URLs were being persisted to Firebase and served broken to 
 Fetching moved to the Places API (New) with the legacy service as fallback; stable URLs are
 persisted by the admin "Fetch all photos" action so viewers get thumbnails at zero API cost.
 Thumbnails load lazily — rendering the list costs no requests, and opening a cafe costs one.
+
+### You are a filled dot, wishlist is a hollow ring
+The map already spent blue on wishlist pins, so the location dot is separated from them on
+three axes rather than by hue: filled against hollow, saturated against pale, and carrying an
+accuracy halo that nothing else has. The halo is the radius the device actually reported and
+is only drawn past 25m — a 5m circle at street zoom is a smudge under the marker, and drawing
+a tight ring around a vague fix would be a lie about precision.
 
 ### Which place it is, is not a search result
 Every Places response carries a permanent `place_id`, and the form was discarding it and then
