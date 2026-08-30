@@ -39,8 +39,14 @@ const { eq, done } = checker();
     } };
     google.maps.Marker.MAX_ZINDEX = 1000;
 
-    window.__geo = null;
-    navigator.geolocation.getCurrentPosition = (ok, fail) => { window.__geo = { ok, fail }; };
+    window.__geo = null; window.__asks = 0;
+    navigator.geolocation.getCurrentPosition = (ok, fail) => { window.__asks++; window.__geo = { ok, fail }; };
+    /* Permission state is the whole point of these tests, so it is driven by hand. */
+    window.__perm = "prompt";
+    Object.defineProperty(navigator, "permissions", { configurable: true, value: {
+      query: () => window.__perm === "THROW" ? Promise.reject(new Error("nope"))
+                 : Promise.resolve({ state: window.__perm })
+    } });
     gReady = true;
     cafes = [{ id: "a", name: "Near Cafe", area: "X", lat: 37.7750, lng: -122.4190, tags: [], drinks: [] }];
     gmap = null; userMarker = null; userAccuracy = null; mapJumped = false;
@@ -146,6 +152,55 @@ const { eq, done } = checker();
   await pg.evaluate(() => { window.__geo = null; locate(); });
   r = await pg.evaluate(() => { const before = window.__geo; locate(); return window.__geo === before; });
   eq(r, true, "tapping while busy does not fire a second geolocation request");
+
+  /* --- 9. nothing but the button may raise the browser's permission prompt ---
+     Two paths used to ask on their own: autoLocate() on launch, and focusNearest() on every
+     single switch to the map tab. Both now run only on a grant you already gave. */
+  const asksAfter = (fn) => pg.evaluate((src) => {
+    window.__asks = 0; window.__geo = null;
+    setLocateState("idle");   /* block 8 deliberately left it busy, and busy refuses taps */
+    eval(src);
+    return new Promise(res => setTimeout(() => res(window.__asks), 80));
+  }, fn);
+
+  await pg.evaluate(() => { window.__perm = "prompt"; });
+  eq(await asksAfter("autoLocate()"), 0, "launch does not ask when permission is unresolved");
+  eq(await asksAfter("focusNearest()"), 0, "switching to the map tab does not ask either");
+
+  await pg.evaluate(() => { window.__perm = "denied"; });
+  eq(await asksAfter("autoLocate()"), 0, "…nor when it was refused");
+
+  await pg.evaluate(() => { window.__perm = "granted"; });
+  eq(await asksAfter("autoLocate()"), 1, "a grant you already gave is still used silently");
+  eq(await asksAfter("focusNearest()"), 1, "…on the map tab too, so distance sorting keeps working");
+
+  /* An unknowable state must fall to "do not ask" — older iOS Safari has no Permissions API,
+     and guessing wrong there is exactly the prompt we are removing. */
+  await pg.evaluate(() => { window.__perm = "THROW"; });
+  eq(await asksAfter("autoLocate()"), 0, "a permissions query that throws is treated as no");
+  await pg.evaluate(() => { delete navigator.permissions; });
+  eq(await asksAfter("autoLocate()"), 0, "no Permissions API at all is treated as no");
+
+  // …and the button still asks, unconditionally, because you pressed it
+  eq(await asksAfter("locate()"), 1, "the button asks regardless — that is the one path you started");
+
+  /* --- 10. a failure you did not start stays quiet --- */
+  r = await pg.evaluate(() => {
+    document.getElementById("toast").textContent = "";
+    Object.defineProperty(navigator, "permissions", { configurable: true,
+      value: { query: () => Promise.resolve({ state: "granted" }) } });
+    window.__geo = null; autoLocate();
+    return new Promise(res => setTimeout(() => {
+      if (window.__geo) window.__geo.fail({ code: 2 });
+      setTimeout(() => res(document.getElementById("toast").textContent), 40);
+    }, 60));
+  });
+  eq(r, "", "a silent launch fix that fails says nothing — you did not ask for it");
+
+  await pg.evaluate(() => { setLocateState("idle"); window.__geo = null; locate(); window.__geo.fail({ code: 2 }); });
+  await pg.waitForTimeout(60);
+  eq(await pg.evaluate(() => document.getElementById("toast").textContent), "Couldn't get your location",
+     "…but a failure you started does explain itself");
 
   eq(errs, [], "no page errors");
   const ok = done();
