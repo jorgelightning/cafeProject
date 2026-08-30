@@ -66,7 +66,7 @@ function openDetail(id,from){
   $("d-name").textContent=c.name;
   $("d-stars").innerHTML=(c.rating?'<b>'+"★".repeat(c.rating)+"</b>":"")+"★".repeat(5-(c.rating||0));
   $("d-meta").innerHTML=[
-    c.area?esc(c.area):"",
+    areaOf(c)?esc(areaOf(c)):"",
     c.matches?('<span class="scorebadge">⚖️ '+eloScore(c)+' · '+c.matches+(c.matches===1?" compare":" compares")+'</span>'):"",
     (isAdmin&&c.updated)?("edited "+esc(fmtEdited(c.updated))):""
   ].filter(Boolean).join("  ·  ");
@@ -129,6 +129,8 @@ function toggleFav(){ const c=cafes.find(x=>x.id===curId); if(!c)return; c.fav=!
 function toggleWish(){ const c=cafes.find(x=>x.id===curId); if(!c)return; c.wish=!c.wish; saveCafe(c.id); $("d-wish").style.opacity=c.wish?"1":".45"; renderMarkers(); toast(c.wish?"Added to wishlist 🔖":"Removed from wishlist"); }
 function deleteCurrent(){ if(!confirm("Delete this cafe?"))return; const _gone=curId; cafes=cafes.filter(x=>x.id!==curId); removeCafe(_gone); renderMarkers(); toast("Deleted"); goBack(); }
 function cafeShareUrl(id){ const base=location.origin+location.pathname; return base+'?cafe='+encodeURIComponent(id); }
+/* Deliberately c.area and not areaOf(c): sharing sends this to someone else, so it must carry
+   the public value even when the owner is the one tapping share. */
 function shareCafe(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const url=cafeShareUrl(c.id); const title=c.name+(c.area?' ('+c.area+')':''); const text='Check out '+c.name+(c.area?' in '+c.area:'')+' '+'★'.repeat(c.rating||0); if(navigator.share){ navigator.share({title:title,text:text,url:url}).catch(e=>{ if(e&&e.name!=='AbortError'){ navigator.clipboard&&navigator.clipboard.writeText(url); toast('Link copied!'); } }); } else { navigator.clipboard&&navigator.clipboard.writeText(url); toast('Link copied! Share it to open this cafe on the map.'); } }
-function navigateTo(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const dest=(c.lat!=null&&c.lng!=null)?(c.lat+","+c.lng):encodeURIComponent(c.name+(c.area?" "+c.area:"")); const url="https://www.google.com/maps/dir/?api=1&destination="+dest; if(window.innerWidth>=900){ window.open(url,"_blank"); } else { window.location.href=url; } }
+function navigateTo(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const _la=latOf(c),_ln=lngOf(c); const dest=(_la!=null&&_ln!=null)?(_la+","+_ln):encodeURIComponent(c.name+(areaOf(c)?" "+areaOf(c):"")); const url="https://www.google.com/maps/dir/?api=1&destination="+dest; if(window.innerWidth>=900){ window.open(url,"_blank"); } else { window.location.href=url; } }
 function editCurrent(){ openForm(curId); }

@@ -21,8 +21,8 @@ function cafesById(){ const o={}; cafes.forEach(function(c){ if(c&&c.id)o[c.id]=
 function noteCloudShape(raw){ _cloudKeyed=!!raw&&!Array.isArray(raw); }
 function asArray(v){ return Array.isArray(v)?v:(v&&typeof v==="object"?Object.values(v):[]); }
 function initFirebase(){ try{ if(!window.firebase||!FIREBASE_CONFIG||!FIREBASE_CONFIG.databaseURL||/PASTE_/.test(FIREBASE_CONFIG.databaseURL))return false; firebase.initializeApp(FIREBASE_CONFIG); fbDb=firebase.database(); try{ fbAuth=firebase.auth(); }catch(e){ warn("core.js",e); } fbReady=true; return true; }catch(e){ console.warn("Firebase init failed",e); return false; } }
-function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ noteCloudShape(snap.val()); const val=asArray(snap.val()); if(!val.length)return; cafes=val; try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("core.js",e); } if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } else if(v==="stats")renderStats(); }); }
-async function loadCloud(){ if(!fbReady)return false; try{ const snap=await Promise.race([fbDb.ref("cafes").once("value"),new Promise((_,rej)=>setTimeout(()=>rej(new Error("cloud-timeout")),6000))]); noteCloudShape(snap.val()); const val=asArray(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ warn("core.js",e); } if(dirty&&Array.isArray(local)&&local.length){ cafes=local; resyncDirty(); return true; } if(val.length){ cafes=val; try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("core.js",e); } localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load slow/failed — using cached data",e); let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(_e){ warn("core.js",_e); } if(Array.isArray(local)&&local.length){ cafes=local; return true; } } return false; }
+function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ noteCloudShape(snap.val()); const val=asArray(snap.val()); if(!val.length)return; cafes=adoptCafes(val); healPrivateSpots(); try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("core.js",e); } if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } else if(v==="stats")renderStats(); }); }
+async function loadCloud(){ if(!fbReady)return false; try{ const snap=await Promise.race([fbDb.ref("cafes").once("value"),new Promise((_,rej)=>setTimeout(()=>rej(new Error("cloud-timeout")),6000))]); noteCloudShape(snap.val()); const val=asArray(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ warn("core.js",e); } if(dirty&&Array.isArray(local)&&local.length){ cafes=adoptCafes(local); resyncDirty(); return true; } if(val.length){ cafes=adoptCafes(val); try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("core.js",e); } localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load slow/failed — using cached data",e); let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(_e){ warn("core.js",_e); } if(Array.isArray(local)&&local.length){ cafes=adoptCafes(local); return true; } } return false; }
 const app=$("app");
 /* Keyboard access for the 17 elements that carry an onclick but are not buttons. They keep
    their tags — a <button> cannot hold the card's block layout, and swapping the others would
@@ -92,6 +92,37 @@ function redactPrivate(c){
   c.lng=blurCoord(c.lng);
   c.area=privateArea(c.area);
   return c;
+}
+/* The exact address of a private spot, keyed by cafe id. Deliberately NOT merged into
+   `cafes` — save() writes that entire array to the public node, so anything living in it is
+   published by definition. Keeping the precise copy to one side is what lets the owner see a
+   real address while everyone else sees a blurred pin. Populated only when the owner is
+   signed in; for anyone else it stays empty and every accessor below falls back to the
+   public value. */
+let privDetail={}, _needsHeal={};
+function ownerSignedIn(){
+  const u=(typeof fbAuth!=="undefined"&&fbAuth)?fbAuth.currentUser:null;
+  return !!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase());
+}
+function privFor(c){ return (c&&c.custom&&ownerSignedIn())?(privDetail[c.id]||null):null; }
+/* Read a private spot's location through these, never off the record directly, or the screen
+   shows a blurred pin to the one person entitled to the real one. */
+function areaOf(c){ const p=privFor(c); return (p&&p.area)||((c&&c.area)||""); }
+function latOf(c){ const p=privFor(c); return (p&&p.lat!=null)?p.lat:(c?c.lat:null); }
+function lngOf(c){ const p=privFor(c); return (p&&p.lng!=null)?p.lng:(c?c.lng:null); }
+
+/* The one door stored data walks through to become `cafes`. Two jobs: nothing precise about a
+   private spot may enter the array, and a precise record found in the public node is
+   remembered so healPrivateSpots() can move it somewhere only the owner can read. */
+function adoptCafes(list){
+  const out=Array.isArray(list)?list:[];
+  out.forEach(function(c){
+    if(!c||!c.custom)return;
+    const exact={area:c.area||"",lat:c.lat,lng:c.lng};
+    redactPrivate(c);
+    if(exact.area!==(c.area||"")||exact.lat!==c.lat||exact.lng!==c.lng)_needsHeal[c.id]=exact;
+  });
+  return out;
 }
 function ccyFor(c){
   const own=((c&&c.ccy)||"").trim().toUpperCase();

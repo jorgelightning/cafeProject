@@ -24,6 +24,50 @@ not built.
 
 ### Private spots
 
+A cafe ticked "Private spot 🏠" is stored **twice**:
+
+| Node | Holds | Who can read |
+|---|---|---|
+| `cafes/<id>` | blurred pin (~1km), no street address | anyone |
+| `private/<id>` | the exact address and coordinates | only the owner account |
+
+`cafes.json` is served from this repo and mirrors the public node only, so **everything the
+app publishes is blurred.** The app reads `private/` when you are signed in and shows you the
+real address; signed out, the accessors (`areaOf` / `latOf` / `lngOf` in `core.js`) fall back
+to the public value. The precise copy is never merged into the `cafes` array, because `save()`
+writes that array wholesale to the public node.
+
+> **The database rule below is not optional.** Without it, `private/` is exactly as readable as
+> `cafes/`, and this whole arrangement is decoration. Paste it into
+> **Firebase console → Realtime Database → Rules → Publish**, replacing the address with the
+> one in `OWNER_EMAIL` (`js/config.js`):
+
+```json
+{
+  "rules": {
+    "cafes": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified == true && auth.token.email == 'YOUR_OWNER_EMAIL'"
+    },
+    "private": {
+      ".read":  "auth != null && auth.token.email_verified == true && auth.token.email == 'YOUR_OWNER_EMAIL'",
+      ".write": "auth != null && auth.token.email_verified == true && auth.token.email == 'YOUR_OWNER_EMAIL'"
+    }
+  }
+}
+```
+
+If your rules currently read `".read": true, ".write": true` at the top level, they are the
+test-mode defaults: **anyone can overwrite your whole map.** The block above fixes that too.
+
+Once the rule is live, open the app signed in. Any private spot whose exact address is still
+sitting in the public node is moved automatically — the precise copy is written to `private/`
+first, then the public record is overwritten with the blurred one, so a failure between the
+two duplicates rather than loses it. You will see a toast naming each spot it moved.
+
+#### How the blurring works
+
+
 `cafes.json` is served from this repo and the Firebase node is read without auth, so
 **everything the app stores is public.** A cafe ticked "Private spot 🏠" therefore has its
 coordinates rounded to about a kilometre and a numbered area field dropped *before it is
