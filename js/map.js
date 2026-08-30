@@ -10,7 +10,7 @@ function mapResize(){ if(gmap)google.maps.event.trigger(gmap,"resize"); if(fgmap
 function fitPad(){ const w=window.innerWidth||0; if(w>=1400)return {top:60,right:60,bottom:60,left:480}; if(w>=900)return {top:60,right:60,bottom:60,left:440}; return 60; }
 function refitMap(){ if(!gmap)return; const pts=gmarkers.map(m=>m.getPosition()).filter(Boolean); if(userMarker)pts.push(userMarker.getPosition()); if(!pts.length)return; if(pts.length===1){ gmap.setCenter(pts[0]); } else { const b=new google.maps.LatLngBounds(); pts.forEach(p=>b.extend(p)); gmap.fitBounds(b,fitPad()); } }
 /* ---------- main map ---------- */
-function initMap(){ gmap=new google.maps.Map($("map"),{center:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); renderMarkers(); autoLocate(); gmap.addListener("click",()=>{ pendingMarkerId=null; if(gInfo)gInfo.close(); }); }
+function initMap(){ gmap=new google.maps.Map($("map"),{center:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); renderMarkers(); autoLocate(); gmap.addListener("click",()=>{ pendingMarkerId=null; if(gInfo)gInfo.close(); }); gmap.addListener("dragstart",()=>{ if($("btn-locate")&&$("btn-locate").dataset.state==="on")setLocateState("idle"); }); }
 function ratingColor(r){ r=r||0; return r>=5?"#2e9e5b":r>=4?"#7cb342":r>=3?"#f0a93b":r>=2?"#ef7c2b":r>=1?"#e0556b":"#9aa0a6"; }
 let gclusterer=null;
 const _clusterRenderer={ render:function(cluster){ const n=cluster.count; return new google.maps.Marker({ position:cluster.position, icon:{ path:google.maps.SymbolPath.CIRCLE, scale:14+Math.min(12,n), fillColor:"#d5803b", fillOpacity:.92, strokeColor:"#ffffff", strokeWeight:3 }, label:{ text:String(n), color:"#ffffff", fontSize:"12px", fontWeight:"700" }, zIndex:google.maps.Marker.MAX_ZINDEX+n }); } };
@@ -28,6 +28,70 @@ function mapInfo(){ if(!gInfo)gInfo=new google.maps.InfoWindow(); return gInfo; 
 function onMarkerClick(c,m){ if(gInfo)gInfo.close(); openDetail(c.id,"map"); }
 function nearestCafe(pos){ let best=null,bd=Infinity; cafes.forEach(c=>{ if(c.lat==null)return; const d=distKm(pos.lat,pos.lng,c.lat,c.lng); if(d<bd){bd=d;best=c;} }); return best; }
 function focusNearest(){ if(!gmap)return; showUserLocation(true); }
-function showUserLocation(center){ if(!navigator.geolocation)return; navigator.geolocation.getCurrentPosition(p=>{ const pos={lat:p.coords.latitude,lng:p.coords.longitude}; userLoc=pos; if(app.dataset.view==="list")renderList(); if(!gmap)return; if(userMarker){ userMarker.setMap(null); userMarker=null; } if(center&&!mapJumped){ const near=nearestCafe(pos); if(near){ const b=new google.maps.LatLngBounds(); b.extend(pos); b.extend({lat:near.lat,lng:near.lng}); gmap.fitBounds(b,fitPad()); google.maps.event.addListenerOnce(gmap,"idle",()=>{ if(gmap.getZoom()>16)gmap.setZoom(16); }); } else { gmap.setCenter(pos); gmap.setZoom(13); } } },()=>{ if(center)toast("Couldn't get your location"); },{enableHighAccuracy:true,timeout:8000,maximumAge:0}); }
-function locate(){ if(!navigator.geolocation){ toast("Location not available"); return; } showUserLocation(true); }
-function autoLocate(){ if(!navigator.geolocation)return; if(navigator.permissions&&navigator.permissions.query){ navigator.permissions.query({name:"geolocation"}).then(r=>{ if(r.state!=="denied")showUserLocation(true); }).catch(()=>showUserLocation(true)); } else { showUserLocation(true); } }
+
+/* The button. `locate()` and the geolocation plumbing existed from the start, but nothing
+   called them and nothing drew the result: showUserLocation() cleared userMarker and never
+   built a new one, so the app has always known where you are — the list sorts by distance
+   from you — without ever showing you. Both halves are here now. */
+function setLocateState(s){ const b=$("btn-locate"); if(b)b.dataset.state=s; }
+
+/* Blue, filled and above everything. Wishlist pins are also blue (#5b9bd5), so this is
+   separated from them by more than hue: they are hollow rings at 25% fill, this is solid and
+   saturated, and it carries an accuracy halo they never have. The halo is the real radius the
+   device reported, so a vague fix looks vague instead of pretending to be a doorstep. */
+function drawUserLocation(pos,acc){
+  if(!gmap)return;
+  if(userMarker){ userMarker.setMap(null); userMarker=null; }
+  if(userAccuracy){ userAccuracy.setMap(null); userAccuracy=null; }
+  userMarker=new google.maps.Marker({
+    position:pos, map:gmap, clickable:false, title:"You are here",
+    icon:{ path:google.maps.SymbolPath.CIRCLE, scale:7,
+           fillColor:"#1a73e8", fillOpacity:1, strokeColor:"#ffffff", strokeWeight:3 },
+    zIndex:google.maps.Marker.MAX_ZINDEX+1000
+  });
+  /* Below the dot but above the pins, and only when the fix is loose enough to be worth
+     drawing — a 5m circle at street zoom is a smudge under the marker. */
+  if(acc>25){
+    userAccuracy=new google.maps.Circle({
+      map:gmap, center:pos, radius:acc, clickable:false,
+      fillColor:"#1a73e8", fillOpacity:.10, strokeColor:"#1a73e8", strokeOpacity:.30, strokeWeight:1,
+      zIndex:google.maps.Marker.MAX_ZINDEX+999
+    });
+  }
+}
+
+function showUserLocation(center,done){
+  if(!navigator.geolocation){ done&&done(false); return; }
+  navigator.geolocation.getCurrentPosition(p=>{
+    const pos={lat:p.coords.latitude,lng:p.coords.longitude};
+    userLoc=pos;
+    if(app.dataset.view==="list")renderList();
+    if(!gmap){ done&&done(true); return; }
+    drawUserLocation(pos,p.coords.accuracy||0);
+    if(center&&!mapJumped){
+      const near=nearestCafe(pos);
+      if(near){
+        const b=new google.maps.LatLngBounds();
+        b.extend(pos); b.extend({lat:near.lat,lng:near.lng});
+        gmap.fitBounds(b,fitPad());
+        google.maps.event.addListenerOnce(gmap,"idle",()=>{ if(gmap.getZoom()>16)gmap.setZoom(16); });
+      } else { gmap.setCenter(pos); gmap.setZoom(13); }
+    }
+    done&&done(true);
+  },()=>{
+    if(center)toast("Couldn't get your location");
+    done&&done(false);
+  },{enableHighAccuracy:true,timeout:8000,maximumAge:0});
+}
+
+/* A fix can take the full 8s, so the button has to say it is working or the tap reads as
+   dead. Refused or failed goes back to idle and lets the existing toast do the talking. */
+function locate(){
+  if(!navigator.geolocation){ toast("Location not available"); return; }
+  if($("btn-locate")&&$("btn-locate").dataset.state==="busy")return;
+  setLocateState("busy");
+  showUserLocation(true,function(ok){ setLocateState(ok?"on":"idle"); });
+}
+/* The launch fix is silent and always has been. It now reports to the button as well, so a
+   dot on the map and a hollow button can never disagree. */
+function autoLocate(){ if(!navigator.geolocation)return; const go=()=>showUserLocation(true,function(ok){ if(ok)setLocateState("on"); }); if(navigator.permissions&&navigator.permissions.query){ navigator.permissions.query({name:"geolocation"}).then(r=>{ if(r.state!=="denied")go(); }).catch(go); } else { go(); } }

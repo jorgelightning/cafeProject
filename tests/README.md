@@ -41,6 +41,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `cloud-writes.js` | Per-cafe writes, deletion, and **the lost update they prevent** — reproduced against the old whole-array write, then shown gone. |
 | `place-id.js` | A cafe's photo is fetched by its Google place id, not by searching its name. The wrong-photo bug. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
+| `locate.js` | The locate button, its three states, and the user dot — which was never being drawn. |
 | `offline.js` | The app boots with the network pulled. |
 | `regression.js` | Every drink **without** a local currency renders byte-identically to the pre-currency code, and a form round-trip changes nothing. |
 
@@ -70,6 +71,7 @@ They are not decoration. In the session that produced them they caught, among ot
   failed while appearing to succeed
 - `syncWishMode()` deleted by a removal whose range was one function too wide
 - an update bar in `index.html` left keyboard-inaccessible because a grep only scanned `js/`
+- a `userMarker` that every part of the app referred to and nothing ever created
 - two location-based fixes for a wrong cafe photo that could not have worked, because the
   photo was never looked up by location — it was looked up by name
 
