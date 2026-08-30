@@ -27,7 +27,10 @@ let gInfo=null, pendingMarkerId=null;
 function mapInfo(){ if(!gInfo)gInfo=new google.maps.InfoWindow(); return gInfo; }
 function onMarkerClick(c,m){ if(gInfo)gInfo.close(); openDetail(c.id,"map"); }
 function nearestCafe(pos){ let best=null,bd=Infinity; cafes.forEach(c=>{ if(c.lat==null)return; const d=distKm(pos.lat,pos.lng,c.lat,c.lng); if(d<bd){bd=d;best=c;} }); return best; }
-function focusNearest(){ if(!gmap)return; showUserLocation(true); }
+/* Switching to the map tab used to ask for your location, every single time. Now it only
+   uses a permission you have already given; if you have not, the map just sits where it is
+   until you press the button. */
+function focusNearest(){ if(!gmap)return; ifLocationAlreadyAllowed(function(){ showUserLocation(true); }); }
 
 /* The button. `locate()` and the geolocation plumbing existed from the start, but nothing
    called them and nothing drew the result: showUserLocation() cleared userMarker and never
@@ -79,7 +82,9 @@ function showUserLocation(center,done){
     }
     done&&done(true);
   },()=>{
-    if(center)toast("Couldn't get your location");
+    /* No toast here. This runs for the launch fix and the map-tab fix too, and a failure you
+       did not ask for must not talk to you. The button owns the message, because the button
+       is the only path you started. */
     done&&done(false);
   },{enableHighAccuracy:true,timeout:8000,maximumAge:0});
 }
@@ -90,8 +95,33 @@ function locate(){
   if(!navigator.geolocation){ toast("Location not available"); return; }
   if($("btn-locate")&&$("btn-locate").dataset.state==="busy")return;
   setLocateState("busy");
-  showUserLocation(true,function(ok){ setLocateState(ok?"on":"idle"); });
+  showUserLocation(true,function(ok){
+    setLocateState(ok?"on":"idle");
+    if(!ok)toast("Couldn't get your location");
+  });
 }
 /* The launch fix is silent and always has been. It now reports to the button as well, so a
    dot on the map and a hollow button can never disagree. */
-function autoLocate(){ if(!navigator.geolocation)return; const go=()=>showUserLocation(true,function(ok){ if(ok)setLocateState("on"); }); if(navigator.permissions&&navigator.permissions.query){ navigator.permissions.query({name:"geolocation"}).then(r=>{ if(r.state!=="denied")go(); }).catch(go); } else { go(); } }
+/* Nothing in the app may raise the browser's location prompt on its own — only the button
+   does, because you pressed it. This runs the callback only when permission is ALREADY
+   granted, where reading the position raises no prompt at all.
+
+   "Can't tell" counts as no. If the Permissions API is missing (older iOS Safari is the one
+   that matters) or the query throws, we do not know whether asking would prompt, so we do
+   not ask. The cost is that distance sorting in the list stays idle until you press the
+   button once — the whole point is that the choice is yours to make. */
+function ifLocationAlreadyAllowed(cb){
+  if(!navigator.geolocation)return;
+  if(!(navigator.permissions&&navigator.permissions.query))return;
+  let q;
+  try{ q=navigator.permissions.query({name:"geolocation"}); }catch(e){ warn("map.js",e); return; }
+  if(!q||!q.then)return;
+  q.then(function(r){ if(r&&r.state==="granted")cb(); }).catch(function(e){ warn("map.js",e); });
+}
+
+/* Silent on launch, and silent about failing — no toast, because you did not ask for this. */
+function autoLocate(){
+  ifLocationAlreadyAllowed(function(){
+    showUserLocation(true,function(ok){ if(ok)setLocateState("on"); });
+  });
+}
