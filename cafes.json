@@ -2177,6 +2177,40 @@
     "wish": false
   },
   {
+    "area": "Inner Richmond",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-31"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Cortado Coffee",
+        "p": "6",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "mthlqaxscg4f",
+    "lat": 37.78287,
+    "lng": -122.47021,
+    "name": "Diamond Coffee n' Pastry",
+    "pid": "ChIJb6xMEteHhYARs1pgqASF0Uk",
+    "rating": 4,
+    "review": "Strong coffee taste on the Cortado, even if it's half oak and half espresso! Nice atmosphere and dog friendly!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-08-31T18:58:42.016Z",
+    "wish": false
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
@@ -2333,13 +2367,13 @@
         "p": ""
       }
     ],
-    "elo": 1554,
+    "elo": 1565,
     "emoji": "🍵",
     "fav": false,
     "id": "tea-haiku",
     "lat": 37.37026,
     "lng": -121.87977,
-    "matches": 6,
+    "matches": 7,
     "name": "Haiku Teahouse",
     "rating": 4,
     "review": "Corn latte is a fun, creamy surprise. The matcha guava cream top is worth recreating at home.",
