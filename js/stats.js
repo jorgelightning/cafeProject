@@ -13,6 +13,9 @@ function visitDates(c){ const s={}; ((c&&c.drinks)||[]).forEach(function(d){ (d.
 function statFold(btn){ const box=btn.previousElementSibling; if(!box)return; const open=box.hasAttribute("data-open"); if(open)box.removeAttribute("data-open"); else box.setAttribute("data-open",""); btn.textContent=(btn.dataset.lab||"Show more")+(open?" ▾":" ▴"); }
 let _heroI=0;
 function heroNext(){ _heroI++; renderStats(); }
+let _rhythmMetric="spend", _rhythmMonth="";
+function setRhythmMetric(metric){ if(metric!=="visits"&&metric!=="spend")return; _rhythmMetric=metric; renderStats(); }
+function setRhythmMonth(month){ if(!/^\d{4}-\d{2}$/.test(month))return; _rhythmMonth=month; renderStats(); }
 
 function renderStats(){
   const host=$("stats-body"); if(!host)return;
@@ -24,7 +27,7 @@ function renderStats(){
 
   /* ---------- one pass over the corpus ---------- */
   let nDrinkRows=0, nPriced=0, spend=0, nVisits=0;
-  const allDays={}, monthVisit={}, monthRows={}, monthPriced={}, monthSpend={};
+  const allDays={}, monthVisit={}, monthUnits={}, monthPriced={}, monthSpend={};
   const sweetC={}, iceC={}, milkC={}, sizeC={}, tagC={}, drinkFam={};
   const bump=function(m,k){ if(k)m[k]=(m[k]||0)+1; };
   nonWish.forEach(function(c){
@@ -37,7 +40,17 @@ function renderStats(){
       bump(sweetC,d.sweet); bump(iceC,d.ice); bump(milkC,d.milk); bump(sizeC,d.size);
       const fam=/hoji/i.test(d.n||"")?"Hojicha latte":(d.n||"").trim();
       if(fam)drinkFam[fam]=(drinkFam[fam]||0)+visitCount(d);
-      (d.dates||[]).filter(Boolean).forEach(function(dt){ const k=dt.slice(0,7); bump(monthRows,k); if(p>0){ bump(monthPriced,k); monthSpend[k]=(monthSpend[k]||0)+p; } });
+      const dates=(d.dates||[]).filter(Boolean).sort();
+      dates.forEach(function(dt){ const k=dt.slice(0,7); bump(monthUnits,k); if(p>0){ bump(monthPriced,k); monthSpend[k]=(monthSpend[k]||0)+p; } });
+      /* Quantity is stored once for the drink, not per date. The edit form assigns any
+         quantity beyond the known dates to the newest visit, so monthly spend follows
+         the same rule instead of dropping those extra cups. */
+      const extra=Math.max(0,visitCount(d)-dates.length);
+      if(extra&&dates.length){
+        const k=dates[dates.length-1].slice(0,7);
+        monthUnits[k]=(monthUnits[k]||0)+extra;
+        if(p>0){ monthPriced[k]=(monthPriced[k]||0)+extra; monthSpend[k]=(monthSpend[k]||0)+p*extra; }
+      }
     });
   });
   const datedN=nonWish.filter(function(c){ return visitDates(c).length>0; }).length;
@@ -109,20 +122,38 @@ function renderStats(){
   for(let i=11;i>=0;i--){ const d=new Date(d0.getFullYear(),d0.getMonth()-i,1); mk.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")); }
   const inWindow=mk.reduce(function(s,k){ return s+(monthVisit[k]||0); },0);
   const earlier=nVisits-inWindow;
-  const maxV=Math.max(1,Math.max.apply(null,mk.map(function(k){ return monthVisit[k]||0; })));
-  const lastK=mk[11], lastV=monthVisit[lastK]||0, lastS=monthSpend[lastK]||0;
+  const latestK=mk.slice().reverse().find(function(k){ return (monthVisit[k]||0)||(monthUnits[k]||0); })||mk[11];
+  const selectedK=mk.indexOf(_rhythmMonth)>=0?_rhythmMonth:latestK;
+  const metric=(isAdmin&&_rhythmMetric==="spend")?"spend":"visits";
+  const selectedVisits=monthVisit[selectedK]||0, selectedUnits=monthUnits[selectedK]||0;
+  const selectedPriced=monthPriced[selectedK]||0, selectedSpend=monthSpend[selectedK]||0;
+  const selectedCoverage=selectedUnits?Math.round(selectedPriced/selectedUnits*100):0;
+  const values=mk.map(function(k){ return metric==="spend"?(monthSpend[k]||0):(monthVisit[k]||0); });
+  const maxValue=Math.max(1,Math.max.apply(null,values));
+  const MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const monthNameFor=function(k){ return MONTH_NAMES[+k.slice(5,7)-1]; };
+  const monthName=monthNameFor(selectedK);
+  let rhythmHeadline="", rhythmSub="";
+  if(metric==="spend"){
+    rhythmHeadline=selectedUnits?(selectedPriced?money(selectedSpend)+" recorded":"No prices recorded"):"No visits logged";
+    rhythmSub=selectedUnits?(selectedPriced+" of "+selectedUnits+" drink"+(selectedUnits===1?"":"s")+" priced · "+selectedCoverage+"% coverage"):"Tap an earlier month to see its total";
+  }else{
+    rhythmHeadline=selectedVisits+" visit"+(selectedVisits===1?"":"s");
+    rhythmSub=selectedVisits?"Distinct cafe-days logged":"Tap an earlier month to see its visits";
+  }
   const MOL=["J","F","M","A","M","J","J","A","S","O","N","D"];
-  h+='<div class="statsec">📈 Your rhythm · last 12 months</div><div class="statcard rhythm">'
-    +'<div class="rhead"><b>'+lastV+' visit'+(lastV===1?"":"s")+'</b> in '+["January","February","March","April","May","June","July","August","September","October","November","December"][+lastK.slice(5,7)-1]
-    +(isAdmin&&lastS?" · "+money(lastS)+(lastV?" · "+money(lastS/lastV)+" a visit":""):"")+'</div>'
+  h+='<div class="statsec">📈 Monthly activity · last 12 months</div><div class="statcard rhythm">'
+    +(isAdmin?'<div class="rseg" aria-label="Monthly metric"><button type="button" class="'+(metric==="visits"?"on":"")+'" aria-pressed="'+(metric==="visits")+'" onclick="setRhythmMetric(\'visits\')">Visits</button><button type="button" class="'+(metric==="spend"?"on":"")+'" aria-pressed="'+(metric==="spend")+'" onclick="setRhythmMetric(\'spend\')">Spending</button></div>':'')
+    +'<div class="rhead"><b>'+rhythmHeadline+'</b> in '+monthName+'<span>'+rhythmSub+'</span></div>'
     +'<div class="rchart">'+mk.map(function(k){
-        const v=monthVisit[k]||0, rows=monthRows[k]||0, pr=monthPriced[k]||0;
-        const hgt=v?Math.max(6,Math.round(v/maxV*72)):3;
-        const fill=(isAdmin&&rows)?Math.round(pr/rows*100):(v?100:0);
-        return '<span class="rcol"><span class="rbar" style="height:'+hgt+'px"><i style="height:'+fill+'%"></i></span></span>';
+        const v=monthVisit[k]||0, units=monthUnits[k]||0, pr=monthPriced[k]||0;
+        const amount=metric==="spend"?(monthSpend[k]||0):v;
+        const hgt=amount?Math.max(6,Math.round(amount/maxValue*72)):3;
+        const coverage=units?Math.round(pr/units*100):0;
+        const aria=(isAdmin?[monthNameFor(k)+" "+k.slice(0,4),money(monthSpend[k]||0)+" recorded",v+" visit"+(v===1?"":"s"),coverage+"% price coverage"]:[monthNameFor(k)+" "+k.slice(0,4),v+" visit"+(v===1?"":"s")]).join(", ");
+        return '<button type="button" class="rcol'+(k===selectedK?' on':'')+'" aria-pressed="'+(k===selectedK)+'" onclick="setRhythmMonth(\''+k+'\')" aria-label="'+aria+'"><span class="rbar'+(amount?' has':'')+'" style="height:'+hgt+'px"></span>'+(isAdmin?'<span class="rcov"><i style="width:'+coverage+'%"></i></span>':'')+'<span class="rlab">'+MOL[+k.slice(5,7)-1]+'</span></button>';
       }).join("")+'</div>'
-    +'<div class="rax">'+mk.map(function(k,i){ return '<span'+(i===11?' class="on"':'')+'>'+MOL[+k.slice(5,7)-1]+'</span>'; }).join("")+'</div>'
-    +'<div class="statnote">'+(isAdmin?"Solid = a price was recorded. ":"")+(earlier>0?"Earlier: "+earlier+" visits before this window.":"")+'</div>'
+    +'<div class="statnote">'+(isAdmin?(metric==="spend"?"Bar = recorded spend · green line = price coverage. Missing prices are not estimated. ":"Bar = cafe visits · green line = price coverage. "):"Tap a month for its visit count. ")+(earlier>0?"Earlier: "+earlier+" visits before this window.":"")+'</div>'
     +'</div>';
 
   /* ---------- 4. top spending (admin) ---------- */
