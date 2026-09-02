@@ -6,7 +6,7 @@
    three drinks in one sitting read as three visits and single-visit cafes topped the
    "most revisited" board. The hero, the rhythm chart and the "went back" tile all read
    through here so the three finally agree on what a visit is. */
-function visitDates(c){ const s={}; ((c&&c.drinks)||[]).forEach(function(d){ (d.dates||[]).filter(Boolean).forEach(function(dt){ s[dt]=1; }); }); return Object.keys(s).sort(); }
+function visitDates(c){ const s={}; ((c&&c.drinks)||[]).forEach(function(d){ drinkOrders(d).forEach(function(o){ if(o.date)s[o.date]=1; }); }); return Object.keys(s).sort(); }
 /* One re-collapsible fold for both lists, operating on the block right before the button —
    replaces two ad-hoc show-more buttons that minted class names off a global counter and
    removed themselves so they could never close again. */
@@ -29,28 +29,23 @@ function renderStats(){
   let nDrinkRows=0, nPriced=0, spend=0, nVisits=0;
   const allDays={}, monthVisit={}, monthUnits={}, monthPriced={}, monthSpend={};
   const sweetC={}, iceC={}, milkC={}, sizeC={}, tagC={}, drinkFam={};
-  const bump=function(m,k){ if(k)m[k]=(m[k]||0)+1; };
+  const bump=function(m,k,n){ if(k)m[k]=(m[k]||0)+(n||1); };
   nonWish.forEach(function(c){
     visitDates(c).forEach(function(dt){ nVisits++; allDays[dt]=1; bump(monthVisit,dt.slice(0,7)); });
     (c.tags||[]).forEach(function(t){ bump(tagC,t); });
     (c.drinks||[]).forEach(function(d){
-      nDrinkRows++;
-      const p=dpr(d); if(p>0)nPriced++;
-      spend+=p*visitCount(d);
-      bump(sweetC,d.sweet); bump(iceC,d.ice); bump(milkC,d.milk); bump(sizeC,d.size);
       const fam=/hoji/i.test(d.n||"")?"Hojicha latte":(d.n||"").trim();
-      if(fam)drinkFam[fam]=(drinkFam[fam]||0)+visitCount(d);
-      const dates=(d.dates||[]).filter(Boolean).sort();
-      dates.forEach(function(dt){ const k=dt.slice(0,7); bump(monthUnits,k); if(p>0){ bump(monthPriced,k); monthSpend[k]=(monthSpend[k]||0)+p; } });
-      /* Quantity is stored once for the drink, not per date. The edit form assigns any
-         quantity beyond the known dates to the newest visit, so monthly spend follows
-         the same rule instead of dropping those extra cups. */
-      const extra=Math.max(0,visitCount(d)-dates.length);
-      if(extra&&dates.length){
-        const k=dates[dates.length-1].slice(0,7);
-        monthUnits[k]=(monthUnits[k]||0)+extra;
-        if(p>0){ monthPriced[k]=(monthPriced[k]||0)+extra; monthSpend[k]=(monthSpend[k]||0)+p*extra; }
-      }
+      drinkOrders(d).forEach(function(o){
+        const q=orderQty(o), p=dpr(o);
+        nDrinkRows+=q; if(p>0)nPriced+=q;
+        spend+=p*q;
+        bump(sweetC,o.sweet,q); bump(iceC,o.ice,q); bump(milkC,o.milk,q); bump(sizeC,o.size,q);
+        if(fam)drinkFam[fam]=(drinkFam[fam]||0)+q;
+        if(o.date){
+          const k=o.date.slice(0,7); bump(monthUnits,k,q);
+          if(p>0){ bump(monthPriced,k,q); monthSpend[k]=(monthSpend[k]||0)+p*q; }
+        }
+      });
     });
   });
   const datedN=nonWish.filter(function(c){ return visitDates(c).length>0; }).length;
@@ -158,7 +153,7 @@ function renderStats(){
 
   /* ---------- 4. top spending (admin) ---------- */
   if(isAdmin){
-    const byCafe=nonWish.map(function(c){ return {c:c,amt:(c.drinks||[]).reduce(function(t,d){ return t+dpr(d)*visitCount(d); },0)}; })
+    const byCafe=nonWish.map(function(c){ return {c:c,amt:(c.drinks||[]).reduce(function(t,d){ return t+drinkOrders(d).reduce(function(s,o){ return s+dpr(o)*orderQty(o); },0); },0)}; })
       .filter(function(x){ return x.amt>0; }).sort(function(a,b){ return b.amt-a.amt; });
     if(byCafe.length){
       const mx=byCafe[0].amt, tp=byCafe.slice(0,4);
@@ -172,13 +167,19 @@ function renderStats(){
   /* Matched on the name family rather than normDrink, which splits hojicha into eleven
      keys across thirteen spellings and hides the corpus's most-ordered drink entirely. */
   const hoj={};
-  nonWish.forEach(function(c){ (c.drinks||[]).forEach(function(d){ if(!/hoji/i.test(d.n||""))return; const p=dpr(d); if(p<=0)return; if(!hoj[c.id]||p<hoj[c.id].p)hoj[c.id]={c:c,p:p,n:d.n}; }); });
+  nonWish.forEach(function(c){ (c.drinks||[]).forEach(function(d){
+    if(!/hoji/i.test(d.n||""))return;
+    const priced=drinkOrders(d).filter(function(o){ return dpr(o)>0; }).sort(function(a,b){ return (a.date||"").localeCompare(b.date||""); });
+    if(!priced.length)return;
+    const o=priced[priced.length-1], p=dpr(o);
+    if(!hoj[c.id]||(o.date||"")>=(hoj[c.id].date||""))hoj[c.id]={c:c,p:p,n:d.n,date:o.date||""};
+  }); });
   const hojA=Object.keys(hoj).map(function(k){ return hoj[k]; }).sort(function(a,b){ return a.p-b.p; });
   const hojCafes=nonWish.filter(function(c){ return (c.drinks||[]).some(function(d){ return /hoji/i.test(d.n||""); }); }).length;
   if(hojA.length>=3){
     const hmx=hojA[hojA.length-1].p;
     const med=median(hojA.map(function(x){ return x.p; }));
-    const prices=[]; nonWish.forEach(function(c){ (c.drinks||[]).forEach(function(d){ const p=dpr(d); if(p>0)prices.push(p); }); });
+    const prices=[]; nonWish.forEach(function(c){ (c.drinks||[]).forEach(function(d){ drinkOrders(d).forEach(function(o){ const p=dpr(o); if(p>0){ for(let i=0;i<orderQty(o);i++)prices.push(p); } }); }); });
     prices.sort(function(a,b){ return a-b; });
     const pmed=median(prices);
     h+='<div class="statsec">🍵 Hojicha latte, priced around town</div>';

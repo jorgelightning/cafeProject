@@ -38,9 +38,42 @@ function onPhotoUrl(){ const v=$("f-photo-url").value.trim(); formPhoto=v||null;
 function renderRate(){ $("f-rate").innerHTML=[1,2,3,4,5].map(n=>'<span class="'+(n<=formRating?"on":"")+'" role="button" tabindex="0" onclick="formRating='+n+';renderRate()">★</span>').join(""); }
 function renderTags(){ $("f-tags").innerHTML=ALL_TAGS.map(t=>'<span class="chip '+(formTags.includes(t)?"on":"")+'" role="button" tabindex="0" onclick="toggleTag(\''+t+'\')">'+t+'</span>').join(""); }
 function toggleTag(t){ formTags.includes(t)?formTags=formTags.filter(x=>x!==t):formTags.push(t); renderTags(); }
-function renderDrinkRows(drinks){ $("f-drinks").innerHTML=""; const rows=[]; /* One row per dated visit; any count beyond the known dates becomes quantity on the
-   last row (or a single undated row), instead of trailing blank-date rows. */
-(drinks&&drinks.length?drinks:[{n:"",p:""}]).forEach(d=>{ const ds=(d.dates||[]).filter(Boolean); const cnt=Math.max(d.count||0,ds.length,1); const base={n:d.n,p:d.p,pl:d.pl,pc:d.pc,pr:d.pr,pd:d.pd,sweet:d.sweet,ice:d.ice,size:d.size,milk:d.milk,reorder:d.reorder}; if(ds.length){ ds.forEach(dt=>rows.push(Object.assign({},base,{date:dt,qty:1}))); const extra=cnt-ds.length; if(extra>0)rows[rows.length-1].qty+=extra; } else { rows.push(Object.assign({},base,{date:(drinks&&drinks.length)?"":localToday(),qty:cnt})); } }); rows.sort((a,b)=>(b.date||"").localeCompare(a.date||"")); const KEEP=3; const hideFrom=(rows.length>KEEP+1)?KEEP:rows.length; rows.forEach((r,i)=>addDrinkRow(r.n,r.p,r.date,r.sweet,r.ice,r.size,r.reorder,i>=hideFrom,r.milk,r.qty,{pl:r.pl,pc:r.pc,pr:r.pr,pd:r.pd})); const hidden=rows.length-hideFrom; if(hidden>0){ const b=document.createElement("button"); b.type="button"; b.className="hintbtn dr-oldertoggle"; b.textContent="⌛ Show "+hidden+" older visit"+(hidden===1?"":"s")+" ▾"; b.onclick=function(){ document.querySelectorAll("#f-drinks .dr-old").forEach(e=>{ e.style.display=""; }); this.remove(); }; $("f-drinks").appendChild(b); } }
+function drinkGroupPriceText(d){
+  const r=drinkPriceRange(d); if(!r)return "No price";
+  const f=function(n){ return r.code==="USD"?fmtPrice(n):fmtLocal(n,r.code); };
+  return Math.abs(r.max-r.min)<0.0001?f(r.max):(f(r.min)+"–"+f(r.max));
+}
+function toggleDrinkGroup(btn){ const g=btn.closest(".drgroup"); if(!g)return; const open=g.classList.toggle("open"); btn.setAttribute("aria-expanded",open?"true":"false"); const ch=btn.querySelector(".drgchev"); if(ch)ch.textContent=open?"▾":"▸"; }
+function syncDrinkGroupName(inp){ const g=inp.closest(".drgroup"); if(!g)return; const n=inp.value.trim(); g.dataset.name=n; g.querySelectorAll(".dn").forEach(function(x){ x.value=n; }); const b=g.querySelector(".drgmain b"); if(b)b.textContent=n||"Drink"; const add=g.querySelector(".drgadd"); if(add)add.textContent="＋ Add another "+(n||"order"); }
+function addOrderToGroup(btn){
+  const g=btn.closest(".drgroup"), body=g&&g.querySelector(".drgorders"); if(!g||!body)return;
+  const src=body.querySelector(".dr"), val=function(sel){ const e=src&&src.querySelector(sel); return e?e.value:""; };
+  const set=function(sel){ const e=src&&src.querySelector(sel); return e&&e.dataset&&e.dataset.set==="1"?e.value:""; };
+  const pc=val(".dpc")||ccyFor({cc:formCC,ccy:formCcy});
+  const ice=src&&src.querySelector(".dic"), iceVal=(ice&&ice.dataset.set==="1")?ice.dataset.labels.split("|")[ice.value]:"";
+  const row=addDrinkRow(g.dataset.name,"",localToday(),set(".dsw"),iceVal,set(".dsz"),"",false,val(".dmk"),1,{pc:pc},body,true);
+  g.classList.add("open"); const h=g.querySelector(".drghead"); if(h){ h.setAttribute("aria-expanded","true"); const ch=h.querySelector(".drgchev"); if(ch)ch.textContent="▾"; }
+  row.classList.remove("collapsed"); const p=row.querySelector(".dp"); if(p){ try{ p.focus({preventScroll:true}); }catch(e){ p.focus(); } }
+  row.scrollIntoView({block:"center"});
+}
+/* One compact group per drink, then one independently editable row per purchase. This is
+   what prevents a price typed for September from rewriting the same drink bought in June. */
+function renderDrinkRows(drinks){
+  const host=$("f-drinks"); host.innerHTML="";
+  if(!drinks||!drinks.length){ addDrinkRow("","",localToday()); return; }
+  drinks.slice().sort(function(a,b){ const ad=(latestDrinkOrder(a)||{}).date||"", bd=(latestDrinkOrder(b)||{}).date||""; return bd.localeCompare(ad); }).forEach(function(d){
+    const orders=drinkOrders(d).sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+    const qty=orders.reduce(function(t,o){ return t+orderQty(o); },0), latest=latestDrinkOrder(d)||{};
+    const g=document.createElement("div"); g.className="drgroup"; g.dataset.name=d.n||"";
+    g.innerHTML='<button type="button" class="drghead" aria-expanded="false" onclick="toggleDrinkGroup(this)">'
+      +'<span class="drgchev">▸</span><span class="drgmain"><b>'+esc(d.n||"Drink")+'</b><small>'+qty+' order'+(qty===1?'':'s')+' · latest '+esc(latest.date?fmtDate(latest.date):'undated')+'</small></span>'
+      +'<span class="drgprice">'+esc(drinkGroupPriceText(d))+'</span></button><div class="drgbody"><label class="drgname">Drink name<input type="text" value="'+esc(d.n||'')+'" oninput="syncDrinkGroupName(this)"></label><div class="drgorders"></div></div>'
+      +'<button type="button" class="drgadd" onclick="addOrderToGroup(this)">＋ Add another '+esc(d.n||'order')+'</button>';
+    host.appendChild(g);
+    const body=g.querySelector(".drgorders");
+    orders.forEach(function(o){ addDrinkRow(d.n,o.p,o.date,o.sweet,o.ice,o.size,o.reorder,false,o.milk,orderQty(o),{pl:o.pl,pc:o.pc,pr:o.pr,pd:o.pd},body,true); });
+  });
+}
 /* The currency control doubles as the row's storage for .pc — it is a real <select>, so it
    round-trips through the form the way .dmk and .dre already do rather than needing the
    keep{} rescue that saveForm() uses for Elo. Hidden when the cafe is a resolved USD one,
@@ -126,7 +159,7 @@ function syncWishMode(){
   const lab=$("f-review-label"); if(lab)lab.textContent=on?"Notes":"Review / thoughts";
   const ta=$("f-review"); if(ta)ta.placeholder=on?"Why you want to go, what to order…":"Vibe, taste, service…";
 }
-function drinkRowLabel(dr){ const g=cls=>{ const el=dr.querySelector(cls); return el?el.value:""; }; const q=parseInt(g(".dqt"),10)||1; const parts=[((g(".dn")||"").trim()||"New drink")+(q>1?" ×"+q:"")]; const p=(g(".dp")||"").trim(); if(p)parts.push(rowPriceLabel(p,g(".dpc")||"USD")); const d=g(".dd"); if(d)parts.push(fmtDate(d)); return parts.join(" · "); }
+function drinkRowLabel(dr){ const g=cls=>{ const el=dr.querySelector(cls); return el?el.value:""; }; const q=parseInt(g(".dqt"),10)||1; const grouped=!!dr.closest(".drgroup"); const d=g(".dd"); const parts=[grouped?(d?fmtDate(d):"Undated order"):((g(".dn")||"").trim()||"New drink")]; const p=(g(".dp")||"").trim(); if(p)parts.push(rowPriceLabel(p,g(".dpc")||"USD")); if(q>1)parts.push("×"+q); if(!grouped&&d)parts.push(fmtDate(d)); return parts.join(" · "); }
 /* Quantity for ordering several of the same drink on one visit. Stored as the drink's
    count, which is also what repeat visits increment, so N here and N separate visits
    are the same thing to the rest of the app. */
@@ -137,8 +170,8 @@ function syncDatePill(inp){ const w=inp.closest(".datepill"); if(w)w.querySelect
 /* closest() rather than parentNode: the trash sits inside .dr today, but parentNode would
    silently delete the wrong node the moment the row markup gains a wrapper. A named row is
    real logged data, so it asks first; a blank row has nothing to lose and just goes. */
-function delDrinkRow(btn){ const row=btn.closest(".dr"); if(!row)return; const el=row.querySelector(".dn"); const n=el?el.value.trim():""; const q=parseInt((row.querySelector(".dqt")||{}).value,10)||1; if(n&&!confirm("Remove "+n+(q>1?" ×"+q:"")+" from this visit?"))return; row.remove(); }
-function bumpQty(btn,delta){ const w=btn.closest(".qtywrap"); const hid=w.querySelector(".dqt"); const v=Math.max(1,Math.min(99,(parseInt(hid.value,10)||1)+delta)); hid.value=v; w.querySelector(".qval").textContent="×"+v; }
+function delDrinkRow(btn){ const row=btn.closest(".dr"); if(!row)return; const el=row.querySelector(".dn"); const n=el?el.value.trim():""; const q=parseInt((row.querySelector(".dqt")||{}).value,10)||1; const dt=(row.querySelector(".dd")||{}).value||""; if(n&&!confirm("Remove "+n+(q>1?" ×"+q:"")+(dt?" from "+fmtDate(dt):" from this visit")+"?"))return; const g=row.closest(".drgroup"); row.remove(); if(g&&!g.querySelector(".dr"))g.remove(); }
+function bumpQty(btn,delta){ const w=btn.closest(".qtywrap"); const hid=w.querySelector(".dqt"); const v=Math.max(1,Math.min(99,(parseInt(hid.value,10)||1)+delta)); hid.value=v; w.querySelector(".qval").textContent="×"+v; const dr=btn.closest(".dr"); if(dr&&dr.classList.contains("collapsed")){ const t=dr.querySelector(".drtitle"); if(t)t.textContent=drinkRowLabel(dr); } }
 const MILKS=["Whole","2%","Skim","Oat","Almond","Soy","Coconut","Macadamia","Lactose-free","Half & half","None"];
 function setMilk(btn){ const wrap=btn.closest(".mkwrap"); const hid=wrap.querySelector(".dmk"); const v=btn.dataset.milk; hid.value=(hid.value===v)?"":v; wrap.querySelectorAll(".mkbtn").forEach(b=>b.classList.toggle("on",!!hid.value&&b.dataset.milk===hid.value)); }
 /* Milk used to be typed into drink names ("Hojicha latte w/ oak milk"), which also split
@@ -149,9 +182,9 @@ const MILK_IN_NAME=[[/\s*\/w\s*oak\s*milk\b/i,"Oat"],[/\s*[+]\s*oak\s*milk\b/i,"
 function milkFromName(n){ for(let i=0;i<MILK_IN_NAME.length;i++){ const re=MILK_IN_NAME[i][0]; if(re.test(n))return {milk:MILK_IN_NAME[i][1],name:n.replace(re,"").replace(/\s{2,}/g," ").replace(/[\s+/-]+$/,"").trim()}; } return null; }
 function milkCleanupPlan(){ const out=[]; cafes.forEach(c=>{ const t={}; (c.drinks||[]).forEach(d=>{ if(!d||!d.n)return; const m=milkFromName(d.n); const k=((m&&m.name)?m.name:d.n).trim().toLowerCase(); t[k]=(t[k]||0)+1; }); (c.drinks||[]).forEach(d=>{ if(!d||!d.n)return; const m=milkFromName(d.n); if(!m)return; const rename=(m.name&&t[m.name.toLowerCase()]===1)?m.name:null; if(d.milk&&!rename)return; out.push({d:d,milk:m.milk,newName:rename}); }); }); return out; }
 function updateMilkBtn(){ const b=$("ab-milk"); if(!b)return; const n=isAdmin?milkCleanupPlan().length:0; b.style.display=n?"":"none"; if(n)b.textContent="🥛 Fix milk in "+n+" name"+(n===1?"":"s"); }
-function cleanupMilkNames(){ if(!isAdmin){ toast("Sign in to edit first"); return; } const plan=milkCleanupPlan(); if(!plan.length){ toast("Nothing to clean ✓"); updateMilkBtn(); return; } const ren=plan.filter(x=>x.newName).length; if(!confirm("Set the milk field on "+plan.length+" drink"+(plan.length===1?"":"s")+" that mention milk in their name?\n\n• "+ren+" also get the milk trimmed out of the name\n• "+(plan.length-ren)+" keep their name so separate visits stay separate\n\nNo drinks or dates are removed. This updates your saved data."))return; plan.forEach(x=>{ if(!x.d.milk)x.d.milk=x.milk; if(x.newName)x.d.n=x.newName; }); save(); try{ renderList(); }catch(e){ warn("form.js",e); } if(app.dataset.view==="detail"&&curId)openDetail(curId); toast("Updated "+plan.length+" drinks ✓"); updateMilkBtn(); }
+function cleanupMilkNames(){ if(!isAdmin){ toast("Sign in to edit first"); return; } const plan=milkCleanupPlan(); if(!plan.length){ toast("Nothing to clean ✓"); updateMilkBtn(); return; } const ren=plan.filter(x=>x.newName).length; if(!confirm("Set the milk field on "+plan.length+" drink"+(plan.length===1?"":"s")+" that mention milk in their name?\n\n• "+ren+" also get the milk trimmed out of the name\n• "+(plan.length-ren)+" keep their name so separate visits stay separate\n\nNo drinks or dates are removed. This updates your saved data."))return; plan.forEach(x=>{ const orders=drinkOrders(x.d); orders.forEach(function(o){ if(!o.milk)o.milk=x.milk; }); x.d.orders=orders; if(x.newName)x.d.n=x.newName; syncDrinkSummary(x.d); }); save(); try{ renderList(); }catch(e){ warn("form.js",e); } if(app.dataset.view==="detail"&&curId)openDetail(curId); toast("Updated "+plan.length+" drinks ✓"); updateMilkBtn(); }
 function toggleDrinkRow(btn){ const dr=btn.closest(".dr"); const c=dr.classList.toggle("collapsed"); btn.querySelector(".drchev").textContent=c?"▸":"▾"; if(c)btn.querySelector(".drtitle").textContent=drinkRowLabel(dr); }
-function addDrinkRow(n,p,date,sweet,ice,size,reorder,old,milk,qty,fx){ const re=(reorder==="yes"||reorder===true)?"yes":((reorder==="no"||reorder===false)?"no":(reorder==="neutral"?"neutral":"")); const sv=parseInt(String(sweet||"").replace(/[^0-9]/g,""),10); const hasSweet=!isNaN(sv); const sval=hasSweet?sv:50; /* Ice/Temp runs coldest (left) to hottest (right). Stored values are the labels themselves, so reordering the scale doesn't touch saved data. */
+function addDrinkRow(n,p,date,sweet,ice,size,reorder,old,milk,qty,fx,target,orderRow){ const re=(reorder==="yes"||reorder===true)?"yes":((reorder==="no"||reorder===false)?"no":(reorder==="neutral"?"neutral":"")); const sv=parseInt(String(sweet||"").replace(/[^0-9]/g,""),10); const hasSweet=!isNaN(sv); const sval=hasSweet?sv:50; /* Ice/Temp runs coldest (left) to hottest (right). Stored values are the labels themselves, so reordering the scale doesn't touch saved data. */
 const ICS=["Extra ice","Regular ice","Less ice","No ice","Warm","Hot"]; const iv=ICS.indexOf(ice||""); const hasIce=iv>=0; const ival=hasIce?iv:3; const zoz=parseInt(String(size||"").replace(/[^0-9]/g,""),10); const hasSize=!isNaN(zoz); const zval=hasSize?Math.max(8,Math.min(32,Math.round(zoz/2)*2)):16; const qv=Math.max(1,Math.min(99,parseInt(qty,10)||1)); const collapsed=!!(n&&String(n).trim());
 /* The visible price field holds whatever was actually paid, so for a non-USD drink it shows
    the local amount and .p is derived at save. A drink that has a price but no recorded
@@ -169,7 +202,7 @@ const title=esc(((n||"").trim()||"New drink")
   +(date?" · "+fmtDate(date):""));
 
 const div=document.createElement("div");
-div.className="dr"+(collapsed?" collapsed":"");
+div.className="dr"+(collapsed?" collapsed":"")+(orderRow?" orderrow":"");
 
 /* Collapsed, the header is the whole row — drinkRowLabel() keeps its text in sync. */
 const head='<button type="button" class="drhead" onclick="toggleDrinkRow(this)">'
@@ -242,11 +275,11 @@ div.innerHTML=head+nameAndPrice+qtyRow+sizeRow+sweetRow+iceRow+milkRow+rateRow
   +'<button class="delrow" onclick="delDrinkRow(this)">✕</button>';
 
 if(old){ div.classList.add("dr-old"); div.style.display="none"; }
-const host=$("f-drinks");
-const tog=host.querySelector(".dr-oldertoggle");
-if(tog)host.insertBefore(div,tog); else host.appendChild(div);
+const host=target||$("f-drinks");
+host.appendChild(div);
+return div;
 }
-function visitCount(d){ const ds=(d&&d.dates||[]).filter(Boolean); return Math.max((d&&d.count)||0, ds.length, 1); }
+function visitCount(d){ const a=drinkOrders(d); return a.length?a.reduce(function(t,o){ return t+orderQty(o); },0):1; }
 function findSameCafe(name,area,lat,lng){ const nm=(name||"").trim().toLowerCase(); if(!nm)return null; return cafes.find(c=>{ if((c.name||"").trim().toLowerCase()!==nm)return false; if(lat!=null&&c.lat!=null)return Math.abs(lat-c.lat)<0.004&&Math.abs(lng-c.lng)<0.004; const a1=(area||"").trim().toLowerCase(), a2=(c.area||"").trim().toLowerCase(); /* Same name, no pin, no area to compare: not enough to call it the same place. A visible
    duplicate you can merge on purpose beats a silent merge you never notice. */
 if(a1&&a2)return a1===a2; return false; })||null; }
@@ -259,24 +292,15 @@ function mergeVisitInto(c,data){
   (data.drinks||[]).forEach(function(nd){
     const key = nd.n.toLowerCase();
     const ex  = c.drinks.find(function(d){ return d.n.toLowerCase()===key; });
-    if(!ex){ c.drinks.push(nd); return; }
-    /* amount, currency, rate and rate-date move as one unit, or a price ends up beside
-       another row's currency */
-    if(nd.p){
-      ex.p = nd.p;
-      ["pl","pc","pr","pd"].forEach(function(f){
-        if(nd[f]!==undefined) ex[f] = nd[f]; else delete ex[f];
-      });
-    }
-    if(nd.size)    ex.size    = nd.size;
-    if(nd.sweet)   ex.sweet   = nd.sweet;
-    if(nd.ice)     ex.ice     = nd.ice;
-    if(nd.milk)    ex.milk    = nd.milk;
-    if(nd.reorder) ex.reorder = nd.reorder;
-    const dates = [...new Set([...(ex.dates||[]), ...(nd.dates||[])])].filter(Boolean).sort();
-    const cnt   = visitCount(ex) + visitCount(nd);
-    if(dates.length) ex.dates = dates;
-    if(cnt>1)        ex.count = Math.max(cnt, dates.length);
+    if(!ex){ c.drinks.push(syncDrinkSummary(nd)); return; }
+    /* Append purchases; never replace the old drink's price with the newest one. The
+       compatibility fields are rebuilt from the latest dated order after the append. */
+    const ledger={n:ex.n,orders:drinkOrders(ex).concat(drinkOrders(nd))};
+    if(ex.elo!==undefined)ledger.elo=ex.elo;
+    if(ex.matches!==undefined)ledger.matches=ex.matches;
+    syncDrinkSummary(ledger);
+    Object.keys(ex).forEach(function(k){ delete ex[k]; });
+    Object.assign(ex,ledger);
   });
   c.tags = [...new Set([...(c.tags||[]), ...(data.tags||[])])];
   if(data.fav)               c.fav    = true;
@@ -324,39 +348,25 @@ function saveForm(){
     };
   }).filter(function(d){ return d.n; });
 
-  /* Rows collapse by lowercased drink name, so several visits to the same drink become one
-     record carrying a list of dates. */
+  /* Rows still group by lowercased drink name, but every row remains an independent order.
+     This is the key distinction: dates, prices, quantities and options travel together. */
   const dmap=new Map();
   raw.forEach(function(d){
     const k=d.n.toLowerCase();
-    if(!dmap.has(k))dmap.set(k,{n:d.n,p:d.p,pc:d.pc,pr:d.pr,pd:d.pd,dates:[],count:0});
+    if(!dmap.has(k))dmap.set(k,{n:d.n,orders:[]});
     const e=dmap.get(k);
-    /* amount, currency, rate and rate-date move together or not at all, or a price ends up
-       beside another row's currency */
-    if(d.p&&!e.p){ e.p=d.p; e.pc=d.pc; e.pr=d.pr; e.pd=d.pd; }
-    if(d.size)    e.size    = d.size;
-    if(d.sweet)   e.sweet   = d.sweet;
-    if(d.ice)     e.ice     = d.ice;
-    if(d.milk)    e.milk    = d.milk;
-    if(d.reorder) e.reorder = d.reorder;
-    e.count += d.qty;
-    if(d.date && !e.dates.includes(d.date)) e.dates.push(d.date);
+    const o=priceFields(d.p,d.pc,d.pr,d.pd);
+    if(d.date)    o.date    = d.date;
+    if(d.qty>1)   o.qty     = d.qty;
+    if(d.size)    o.size    = d.size;
+    if(d.sweet)   o.sweet   = d.sweet;
+    if(d.ice)     o.ice     = d.ice;
+    if(d.milk)    o.milk    = d.milk;
+    if(d.reorder) o.reorder = d.reorder;
+    e.orders.push(o);
   });
 
-  const drinks=[...dmap.values()].map(function(d){
-    d.dates.sort();
-    /* priceFields() is the single place local money becomes dollars */
-    const o=Object.assign({n:d.n}, priceFields(d.p,d.pc,d.pr,d.pd));
-    if(d.size)         o.size    = d.size;
-    if(d.sweet)        o.sweet   = d.sweet;
-    if(d.ice)          o.ice     = d.ice;
-    if(d.milk)         o.milk    = d.milk;
-    if(d.reorder)      o.reorder = d.reorder;
-    if(d.dates.length) o.dates   = d.dates;
-    const cnt=Math.max(d.count,d.dates.length);
-    if(cnt>1) o.count = cnt;
-    return o;
-  });
+  const drinks=[...dmap.values()].map(syncDrinkSummary);
 
   const data={
     name,

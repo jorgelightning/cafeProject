@@ -31,21 +31,25 @@ const { serve, launch, checker, ROOT } = require("./harness");
    for(const fn of [['list',()=>renderList()],['stats',()=>renderStats()],['markers-skipped',()=>{}]]){
      try{ fn[1](); views.push(fn[0]+':ok'); }catch(e){ views.push(fn[0]+':ERR '+e.message); }
    }
-   // opening the form over a real cafe and saving it back must not alter it
+   // Opening the form over a legacy cafe migrates order history, but every pre-existing
+   // summary field must remain byte-identical.
    const c0=real.find(c=>(c.drinks||[]).some(d=>d.p));
    const norm=a=>JSON.stringify((a||[]).map(d=>Object.keys(d).sort().map(k=>k+'='+JSON.stringify(d[k])).join(',')));
    const before=norm(c0.drinks);
    editId=c0.id; picked={lat:c0.lat,lng:c0.lng};
    openForm(c0.id); saveForm();
-   const after=norm(cafes.find(c=>c.id===c0.id).drinks);
-   return {drinks,priced,local,changed,views,roundtrip:before===after,cafe:c0.name,before,after};
+   const saved=cafes.find(c=>c.id===c0.id).drinks;
+   const after=norm(saved.map(d=>{ const x=Object.assign({},d); delete x.orders; return x; }));
+   const history=saved.every(d=>Array.isArray(d.orders)&&d.orders.length>0);
+   return {drinks,priced,local,changed,views,roundtrip:before===after,history,cafe:c0.name,before,after};
  });
  console.log('drink rows rendered :',out.drinks,'| priced:',out.priced,'| in local currency:',out.local);
  console.log('detail HTML changed :',out.changed.length===0?'none (identical to before)':out.changed);
  console.log('views               :',out.views.join('  '));
- console.log('form round-trip on "'+out.cafe+'":',out.roundtrip?'byte-identical':'CHANGED');
+ console.log('form round-trip on "'+out.cafe+'":',out.roundtrip?'summary identical':'CHANGED');
+ console.log('order history created:',out.history?'yes':'NO');
  if(!out.roundtrip){console.log(' before',out.before);console.log(' after ',out.after);}
  console.log('page errors         :',errs.length?errs:'none');
  await b.close();srv.close();
- process.exit((out.changed.length||!out.roundtrip||errs.length)?1:0);
+ process.exit((out.changed.length||!out.roundtrip||!out.history||errs.length)?1:0);
 })().catch(e=>{console.error(e);process.exit(1);});

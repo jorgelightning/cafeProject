@@ -8,6 +8,7 @@ const SUITE = [
   ["cache-version",     "the deploy versions agree and a stale build cannot pin itself"],
   ["currency-units",   "conversion, rounding and the country->currency table (no browser)"],
   ["currency-form",    "logging a drink in local money, end to end"],
+  ["order-prices",     "same drink keeps separate dated prices"],
   ["currency-source",  "where a cafe's currency comes from, and that nothing is metered"],
   ["rates-dated",      "the rate for the day a drink was ordered"],
   ["rates-network",    "fetching a real rate, caching it, and every way it can fail"],

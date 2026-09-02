@@ -330,6 +330,20 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .rate .on{ color:var(--star); }
 .photodrop{ position:relative; height:150px; border:2px dashed var(--border); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--soft); font-size:13px; background-size:cover; background-position:center; overflow:hidden; }
 .drinkrows .dr{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.drinkrows .drgroup{ margin-bottom:10px; border:1px solid var(--border); border-radius:14px; background:var(--surface); overflow:hidden; }
+.drinkrows .drghead{ width:100%; min-height:60px; display:flex; align-items:center; gap:10px; padding:10px 12px; border:0; background:var(--surface2); color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+.drinkrows .drgchev{ flex:0 0 auto; color:var(--soft); }
+.drinkrows .drgmain{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.drinkrows .drgmain b{ font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.drinkrows .drgmain small{ font-size:11px; color:var(--soft); font-weight:500; }
+.drinkrows .drgprice{ flex:0 0 auto; max-width:42%; font-size:13px; font-weight:700; color:var(--acc-strong); font-variant-numeric:tabular-nums; text-align:right; }
+.drinkrows .drgbody, .drinkrows .drgadd{ display:none; }
+.drinkrows .drgroup.open .drgbody{ display:block; padding:10px 10px 0; border-top:1px solid var(--border); }
+.drinkrows .drgname{ display:flex; flex-direction:column; gap:5px; margin-bottom:10px; font-size:11px; font-weight:700; color:var(--soft); }
+.drinkrows .drgname input{ width:100%; font-size:16px; }
+.drinkrows .drgroup.open .drgadd{ display:block; width:100%; border:0; border-top:1px solid var(--border); padding:11px 12px; background:transparent; color:var(--acc-strong); font:600 13px/1.2 inherit; text-align:left; cursor:pointer; }
+.drinkrows .drgroup .dr:last-child{ margin-bottom:0; }
+.drinkrows .drgroup .orderrow .dn{ display:none; }
 .drinkrows .dr .drhead{ flex:1 1 100%; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; color:var(--text); text-align:left; }
 .drinkrows .dr .drhead .drchev{ color:var(--soft); flex:0 0 auto; }
 .drinkrows .dr .drhead .drtitle{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
