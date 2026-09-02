@@ -203,6 +203,59 @@ function priceFields(amt,code,rate,date){
   if(r){ o.pr=r; o.pd=date||FX_ASOF; }
   return o;
 }
+/* A drink is the thing ordered; orders are the individual dated purchases. Older records
+   only have one set of price/options beside dates + count, so this adapter expands them
+   without changing the stored object. Once a cafe is saved, syncDrinkSummary() keeps the
+   old top-level shape as a compatibility summary while `orders` becomes the source of truth. */
+const DRINK_ORDER_FIELDS=["p","pl","pc","pr","pd","size","sweet","ice","milk","reorder"];
+function orderQty(o){ return Math.max(1,Math.min(99,parseInt(o&&o.qty,10)||1)); }
+function drinkOrders(d){
+  if(!d)return [];
+  if(Array.isArray(d.orders)&&d.orders.length){
+    return d.orders.map(function(src){
+      const o={};
+      DRINK_ORDER_FIELDS.forEach(function(k){ if(src[k]!==undefined&&src[k]!=="")o[k]=src[k]; });
+      if(src.date)o.date=src.date;
+      const q=orderQty(src); if(q>1)o.qty=q;
+      return o;
+    });
+  }
+  const base={};
+  DRINK_ORDER_FIELDS.forEach(function(k){ if(d[k]!==undefined&&d[k]!=="")base[k]=d[k]; });
+  const dates=[...new Set((d.dates||[]).filter(Boolean))].sort();
+  const cnt=Math.max(parseInt(d.count,10)||0,dates.length,1);
+  const out=dates.length?dates.map(function(dt){ return Object.assign({},base,{date:dt}); }):[Object.assign({},base)];
+  const extra=cnt-out.length;
+  if(extra>0)out[out.length-1].qty=1+extra;
+  return out;
+}
+function latestDrinkOrder(d){
+  const a=drinkOrders(d);
+  if(!a.length)return null;
+  return a.slice().sort(function(x,y){ return (x.date||"0000-00-00").localeCompare(y.date||"0000-00-00"); }).slice(-1)[0];
+}
+function syncDrinkSummary(d){
+  if(!d)return d;
+  const orders=drinkOrders(d).sort(function(x,y){ return (x.date||"0000-00-00").localeCompare(y.date||"0000-00-00"); });
+  d.orders=orders;
+  const dates=[...new Set(orders.map(function(o){ return o.date||""; }).filter(Boolean))].sort();
+  if(dates.length)d.dates=dates; else delete d.dates;
+  const cnt=orders.reduce(function(t,o){ return t+orderQty(o); },0);
+  if(cnt>1)d.count=cnt; else delete d.count;
+  DRINK_ORDER_FIELDS.forEach(function(k){ delete d[k]; });
+  const latest=latestDrinkOrder(d)||{};
+  DRINK_ORDER_FIELDS.forEach(function(k){ if(latest[k]!==undefined&&latest[k]!=="")d[k]=latest[k]; });
+  return d;
+}
+function drinkPriceRange(d){
+  const a=drinkOrders(d).filter(function(o){ return ccyNum(o.p)!=null||ccyNum(o.pl)!=null; });
+  if(!a.length)return null;
+  const localCodes=[...new Set(a.map(function(o){ return (o.pc||"USD").toUpperCase(); }))];
+  const useLocal=localCodes.length===1&&localCodes[0]!=="USD"&&a.every(function(o){ return ccyNum(o.pl)!=null; });
+  const vals=a.map(function(o){ return ccyNum(useLocal?o.pl:o.p); }).filter(function(n){ return n!=null; });
+  if(!vals.length)return null;
+  return {min:Math.min.apply(null,vals),max:Math.max.apply(null,vals),code:useLocal?localCodes[0]:"USD"};
+}
 /* Same glyph for both halves — ☆ is optically lighter and a different advance width, so a
    filled/hollow mix reads as decoration rather than a proportion. */
 function starsHTML(r){ r=Math.max(0,Math.min(5,Math.round(r||0))); if(!r)return ""; return '<span class="cstars"><b>'+"★".repeat(r)+"</b>"+"★".repeat(5-r)+"</span>"; }

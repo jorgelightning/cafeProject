@@ -126,6 +126,9 @@ None of it is needed to deploy; Pages ignores `package.json` and `node_modules/`
   amount as it appeared on the board, with `pr`/`pd` recording the rate used
   and the day it came from. The rate is frozen when the drink is logged and
   never recalculated, so past spending cannot drift.
+- A same-named drink is one group with an `orders` array. Each order owns its
+  date, price, currency, quantity and drink options; the drink's top-level
+  fields mirror its latest order for compatibility with older cached clients.
 - A cafe's currency comes from the country in the Places result when you add
   it by searching. For anything else the currency chip on the price row lets
   you pick, and the choice is saved on the cafe (`ccy`) — once per cafe, not

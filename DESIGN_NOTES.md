@@ -202,6 +202,19 @@ saved drinks are untouched, so the dateless entries stay dateless. Existing drin
 one-line summaries so a stray tap cannot edit an old visit, and any exit with unsaved changes
 asks first.
 
+### A drink groups orders; it does not flatten their prices
+The same drink can cost $6.50 in June and $7.25 in September. It remains one named drink for
+search and ranking, but now carries an `orders` ledger whose rows each own their date, price,
+currency, quantity, size, sweetness, ice, milk and reorder verdict. The old top-level fields
+remain as a latest-order summary so older cached clients keep working.
+
+Editing uses one collapsed card per drink and one independently editable row per order. Its
+header shows order count, latest date and the observed price range; **Add another** appends a
+fresh dated order instead of changing the previous one. Detail shows the latest order plus a
+price range, while monthly and total spending sum the individual orders. Legacy records are
+expanded on their next edit using the only historical price they retained; prices overwritten
+before this ledger existed cannot be reconstructed.
+
 ### Stats answers a question instead of listing tables
 The old screen was 3,558px across 11 sections, of which ~1,400px was provably empty: six
 "drink rating" rows that all read exactly 100%, a "best value" metric that reduces to

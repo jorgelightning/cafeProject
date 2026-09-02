@@ -32,6 +32,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 |---|---|
 | `currency-units.js` | Conversion, rounding, the country→currency table. No browser — it lifts the currency block out of `core.js` and runs the arithmetic directly. |
 | `currency-form.js` | Logging a drink in local money, end to end, including the `saveForm()` traps. |
+| `order-prices.js` | Same-named drinks keep independent date, price and quantity history through form edits and Stats. |
 | `currency-source.js` | Where a cafe's currency comes from, and that **nothing calls a metered API**. |
 | `rates-dated.js` | A drink converts at the rate for the day it was ordered, and a saved rate is never recalculated. |
 | `rates-network.js` | Fetching a real rate, caching it permanently, and all three ways it can fail (offline, HTTP error, switched off). |
@@ -44,7 +45,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `locate.js` | The locate button, its three states, the user dot — which was never being drawn — and that **nothing but the button raises the permission prompt**. |
 | `offline.js` | The app boots with the network pulled. |
-| `regression.js` | Every drink **without** a local currency renders byte-identically to the pre-currency code, and a form round-trip changes nothing. |
+| `regression.js` | Legacy drink prices render identically; a form round-trip adds order history without changing existing summary fields. |
 
 `regression.js` is the one that encodes a promise rather than a behaviour: the currency work
 shipped without migrating the ~60 dollar prices already on record, and that is only safe for

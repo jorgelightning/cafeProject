@@ -17,7 +17,7 @@ function priceHTML(d){
   return '<span class="prwrap"><span class="pr">'+esc(loc)+'</span><span class="prsub'+(usd?"":" needs")+'">'+sub+'</span></span>';
 }
 function reorderVal(d){ if(!d)return ""; const v=d.reorder; if(v==="yes"||v===true)return "yes"; if(v==="no"||v===false)return "no"; if(v==="neutral")return "neutral"; return ""; }
-function reorderTally(c){ let yes=0,no=0,neutral=0; ((c&&c.drinks)||[]).forEach(d=>{ const v=reorderVal(d); if(v==="yes")yes++; else if(v==="no")no++; else if(v==="neutral")neutral++; }); return {yes:yes,no:no,neutral:neutral,total:yes+no+neutral}; }
+function reorderTally(c){ let yes=0,no=0,neutral=0; ((c&&c.drinks)||[]).forEach(function(d){ drinkOrders(d).forEach(function(o){ const v=reorderVal(o), q=orderQty(o); if(v==="yes")yes+=q; else if(v==="no")no+=q; else if(v==="neutral")neutral+=q; }); }); return {yes:yes,no:no,neutral:neutral,total:yes+no+neutral}; }
 function renderReorderRollup(c){ const re=$("d-reorder"); if(!re)return; const t=reorderTally(c); if(!t.total){ re.style.display="none"; re.innerHTML=""; return; } re.style.display="flex"; const pct=Math.round(t.yes/t.total*100); re.innerHTML='<span class="ro-badge '+(t.yes>=t.no?"yes":"no")+'">👍 Liked '+t.yes+' of '+t.total+'</span><span class="ro-bar"><i style="width:'+pct+'%"></i></span>'; }
 /* Compact form for the detail line — the rail already carries the colour, so the chip
    only needs the glyph. The full-text badge is still used elsewhere. */
@@ -90,20 +90,24 @@ function openDetail(id,from){
     _le.innerHTML="";
   }
 
-  const _lastDate=d=>((d.dates||[]).filter(Boolean).sort().slice(-1)[0])||"";
+  const _lastDate=d=>((latestDrinkOrder(d)||{}).date)||"";
   const _dsorted=(c.drinks||[]).slice().sort((a,b)=>_lastDate(b).localeCompare(_lastDate(a)));
 /* Two lines, not four: verdict + options + latest date share line 2, and the extra-dates
    line only appears for the handful of drinks with more than one visit date. */
 $("d-drinks").innerHTML=_dsorted.length ? _dsorted.map(function(d){
-    const ds=(d.dates||[]).filter(Boolean).slice().sort();
-    const cnt=Math.max(d.count||0, ds.length, 1);
-    const v=reorderVal(d);
-    const opts=[d.size, d.sweet?d.sweet+" sweet":"", d.ice, d.milk?"🥛 "+d.milk:""].filter(Boolean);
+    const orders=drinkOrders(d), latest=latestDrinkOrder(d)||{};
+    const ds=[...new Set(orders.map(function(o){ return o.date||""; }).filter(Boolean))].sort();
+    const cnt=orders.reduce(function(t,o){ return t+orderQty(o); },0);
+    const v=reorderVal(latest);
+    const opts=[latest.size, latest.sweet?latest.sweet+" sweet":"", latest.ice, latest.milk?"🥛 "+latest.milk:""].filter(Boolean);
     const last=ds.length?fmtDate(ds[ds.length-1]):"";
-    const line2=reorderChip(d)+esc(opts.join(" \u00B7 "))+((opts.length&&last)?" \u00B7 ":"")+esc(last);
-    const also=ds.length>1
-      ? '<div class="dalso">Also '+ds.slice(0,-1).map(fmtDate).join(" \u00B7 ")+'</div>'
-      : '';
+    const line2=reorderChip(latest)+esc(opts.join(" \u00B7 "))+((opts.length&&last)?" \u00B7 ":"")+esc(last);
+    const range=drinkPriceRange(d), rangeText=range&&Math.abs(range.max-range.min)>=0.0001
+      ? ((range.code==="USD"?fmtPrice(range.min):fmtLocal(range.min,range.code))+"–"+(range.code==="USD"?fmtPrice(range.max):fmtLocal(range.max,range.code))) : "";
+    const notes=[];
+    if(rangeText)notes.push("Prices "+rangeText+" across "+cnt+" orders");
+    if(ds.length>1)notes.push("Also "+ds.slice(0,-1).map(fmtDate).join(" \u00B7 "));
+    const also=notes.length?'<div class="dalso">'+esc(notes.join(" · "))+'</div>':'';
     return '<div class="drink'+(v?" v-"+v:"")+'">'
       +'<div class="dmain">'
         +'<div class="dtop">'+esc(d.n)
@@ -113,7 +117,7 @@ $("d-drinks").innerHTML=_dsorted.length ? _dsorted.map(function(d){
         +(line2.trim()?'<div class="dsub">'+line2+'</div>':'')
         +also
       +'</div>'
-      +priceHTML(d)
+      +priceHTML(latest)
     +'</div>';
   }).join("")
   : '<div class="row" style="color:var(--faint);font-style:italic">'
