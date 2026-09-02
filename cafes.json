@@ -1114,6 +1114,7 @@
   {
     "area": "Parkside",
     "brand": "",
+    "custom": false,
     "drinks": [
       {
         "dates": [
@@ -1133,20 +1134,20 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1486,
+    "elo": 1487,
     "emoji": "☕",
     "fav": false,
     "id": "mqm06fjnsrlj",
     "lat": 37.74313,
     "lng": -122.47803,
-    "matches": 3,
+    "matches": 4,
     "name": "Jandii Cafe",
     "rating": 4,
     "review": "I like the taste of hojicha and I like it! Great for study!",
     "tags": [
       "cozy"
     ],
-    "updated": "2026-07-05T21:38:39.366Z",
+    "updated": "2026-09-02T04:23:32.235Z",
     "wish": false
   },
   {
@@ -1709,13 +1710,13 @@
         "reorder": "yes"
       }
     ],
-    "elo": 1516,
+    "elo": 1531,
     "emoji": "☕",
     "fav": false,
     "id": "msu1xc32ec38",
     "lat": 37.33282,
     "lng": -121.90455,
-    "matches": 1,
+    "matches": 2,
     "name": "Kasama Cà Phê",
     "rating": 5,
     "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
@@ -2209,6 +2210,40 @@
     ],
     "updated": "2026-08-31T18:58:42.016Z",
     "wish": false
+  },
+  {
+    "area": "Stonestown",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtjapri20t98",
+    "lat": 37.72773,
+    "lng": -122.47697,
+    "name": "heytea (Stonestown Galleria)",
+    "pid": "ChIJ0YtwyBR9j4ARvkOcmtK324I",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-09-01T23:25:53.402Z",
+    "wish": false
+  },
+  {
+    "area": "Lower Pacific Heights",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtjuzy3u4cd5",
+    "lat": 37.786,
+    "lng": -122.43549,
+    "name": "Song Tea & Ceramics",
+    "pid": "ChIJhdFZ_7eAhYARPwcETfqzaxM",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-09-02T08:53:40.842Z",
+    "wish": true
   },
   {
     "area": "San Francisco, CA",
