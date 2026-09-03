@@ -210,10 +210,11 @@ remain as a latest-order summary so older cached clients keep working.
 
 Editing uses one collapsed card per drink and one independently editable row per order. Its
 header shows order count, latest date and the observed price range; **Add another** appends a
-fresh dated order instead of changing the previous one. Detail shows the latest order plus a
-price range, while monthly and total spending sum the individual orders. Legacy records are
-expanded on their next edit using the only historical price they retained; prices overwritten
-before this ledger existed cannot be reconstructed.
+fresh dated order instead of changing the previous one. Detail uses the same grouped card:
+the compact view shows count, latest date and price range, then a tap reveals every dated order,
+price, quantity, verdict and option as a timeline. Monthly and total spending sum the individual
+orders. Legacy records are expanded on their next edit using the only historical price they
+retained; prices overwritten before this ledger existed cannot be reconstructed.
 
 ### Stats answers a question instead of listing tables
 The old screen was 3,558px across 11 sections, of which ~1,400px was provably empty: six

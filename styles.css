@@ -272,25 +272,52 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .locpill{ background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; font-weight:600; color:var(--soft); cursor:pointer; white-space:nowrap; }
 .locpill.on{ background:var(--acc); color:#fff; border-color:var(--acc); cursor:default; }
 .lab{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--soft); margin:18px 0 8px; }
-/* The old 34px 🥤 tile was identical on every drink. The left rail replaces it and
-   carries the verdict instead, so the row costs less height and says more. */
-.drink{ display:flex; align-items:flex-start; gap:10px; padding:9px 0 9px 12px; border-bottom:1px solid var(--border); border-left:4px solid var(--border); font-size:14px; }
-.drink.v-yes{ border-left-color:var(--good); }
-.drink.v-neutral{ border-left-color:var(--mid); }
-.drink.v-no{ border-left-color:var(--bad); }
-.drink .pr{ margin-left:auto; color:var(--text); font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; flex:none; }
-/* Two-line price: what was paid, then what it came to. The wrapper takes over the auto
-   margin so a drink with no local amount still renders as the single .pr it always was. */
-.drink .prwrap{ margin-left:auto; flex:none; text-align:right; }
-.drink .prwrap .pr{ display:block; margin-left:0; }
-.drink .prsub{ display:block; font-size:11.5px; color:var(--soft); font-variant-numeric:tabular-nums; margin-top:2px; }
-.drink .prsub.needs{ color:var(--mid); font-weight:600; }
-.drink .dmain{ display:flex; flex-direction:column; min-width:0; flex:1; }
-.drink .dtop{ font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.drink .cnt{ background:var(--acc-strong); color:var(--on-acc); border-radius:7px; padding:0 6px; font-size:11px; font-weight:800; margin-left:5px; }
-.drink .dsub{ font-size:12px; color:var(--soft); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.drink .dalso{ font-size:12px; color:var(--faint); margin-top:2px; }
-.drink .reorder{ margin-top:0; margin-right:2px; vertical-align:-1px; }
+.drinklab{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.drinklab small{ font-size:11px; font-weight:600; text-transform:none; letter-spacing:0; color:var(--faint); }
+/* Detail mirrors the editor's grouped mental model without exposing editable controls:
+   scan one card per drink, then open only the order history you want to inspect. */
+.drinkcard{ margin-bottom:9px; border:1px solid var(--border); border-left:4px solid var(--border); border-radius:14px; background:var(--surface); overflow:hidden; }
+.drinkcard.v-yes{ border-left-color:var(--good); }
+.drinkcard.v-neutral{ border-left-color:var(--mid); }
+.drinkcard.v-no{ border-left-color:var(--bad); }
+.drinksum{ width:100%; min-height:68px; display:grid; grid-template-columns:38px minmax(0,1fr) auto auto; align-items:center; gap:10px; padding:10px 11px; border:0; background:transparent; color:var(--text); font-family:inherit; text-align:left; cursor:pointer; }
+.drinksum:focus-visible{ outline:3px solid color-mix(in srgb,var(--acc) 35%,transparent); outline-offset:-3px; }
+.drinkicon{ width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:11px; background:var(--surface2); font-size:20px; }
+.drinkcopy{ display:flex; flex-direction:column; min-width:0; }
+.drinkcopy .dtop{ display:block; font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.drinkcopy .dsub{ display:block; margin-top:3px; font-size:12px; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.drinkprice{ min-width:0; text-align:right; white-space:nowrap; }
+.drinkprice .pr{ color:var(--text); font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; }
+.drinkprice .pr.range{ color:var(--acc-strong); }
+.drinkprice .prwrap{ display:block; text-align:right; }
+.drinkprice .prwrap .pr{ display:block; }
+.drinkprice .prsub{ display:block; margin-top:2px; color:var(--soft); font-size:11.5px; font-variant-numeric:tabular-nums; }
+.drinkprice .prsub.needs{ color:var(--mid); font-weight:600; }
+.drinkchev{ width:18px; color:var(--faint); font-size:17px; text-align:center; }
+.drinkhistory{ display:none; padding:0 11px 3px 58px; border-top:1px solid var(--border); }
+.drinkcard.open .drinkhistory{ display:block; }
+.dorder{ position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; padding:11px 0; border-bottom:1px solid var(--border); }
+.dorder:last-child{ border-bottom:0; }
+.dorder:before{ content:""; position:absolute; left:-22px; top:16px; width:8px; height:8px; border-radius:50%; background:var(--faint); box-shadow:0 0 0 4px var(--surface); }
+.dorder.v-yes:before{ background:var(--good); }
+.dorder.v-neutral:before{ background:var(--mid); }
+.dorder.v-no:before{ background:var(--bad); }
+.dorderdate{ min-width:0; color:var(--text); font-size:13px; font-weight:700; }
+.dorderdate span{ color:var(--soft); font-size:11px; font-weight:600; }
+.dorderdate b{ display:inline-block; margin-left:4px; padding:1px 5px; border-radius:6px; background:var(--surface2); color:var(--acc-strong); font-size:11px; font-weight:800; }
+.dorderprice{ text-align:right; white-space:nowrap; }
+.dorderprice .pr{ color:var(--text); font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; }
+.dorderprice .prwrap{ display:block; }
+.dorderprice .prsub{ display:block; margin-top:2px; color:var(--soft); font-size:11px; font-variant-numeric:tabular-nums; }
+.dorderprice .prsub.needs{ color:var(--mid); font-weight:600; }
+.dordermeta{ grid-column:1/-1; min-width:0; color:var(--soft); font-size:12px; }
+.dordermeta .reorder{ margin-right:2px; vertical-align:-1px; }
+@media (max-width:380px){
+  .drinksum{ grid-template-columns:38px minmax(0,1fr) auto; }
+  .drinkprice{ grid-column:2; text-align:left; }
+  .drinkchev{ grid-column:3; grid-row:1/span 2; }
+  .drinkhistory{ padding-left:54px; }
+}
 .review{ background:var(--surface2); border-radius:13px; padding:14px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
 .form-top{ display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); }
 .form{ padding:14px 16px 0; }
