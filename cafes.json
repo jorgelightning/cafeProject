@@ -1118,36 +1118,40 @@
     "drinks": [
       {
         "dates": [
+          "2026-09-02"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Triple hojicha latte",
+        "p": "7.50",
+        "reorder": "yes",
+        "size": "10 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
           "2026-07-03"
         ],
         "milk": "Oat",
         "n": "Matcha Einspaner",
         "p": "",
         "reorder": "yes"
-      },
-      {
-        "ice": "Warm",
-        "n": "Triple hojicha latte",
-        "p": "8",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
       }
     ],
-    "elo": 1487,
+    "elo": 1501,
     "emoji": "☕",
     "fav": false,
     "id": "mqm06fjnsrlj",
     "lat": 37.74313,
     "lng": -122.47803,
-    "matches": 4,
+    "matches": 5,
     "name": "Jandii Cafe",
     "rating": 4,
     "review": "I like the taste of hojicha and I like it! Great for study!",
     "tags": [
       "cozy"
     ],
-    "updated": "2026-09-02T04:23:32.235Z",
+    "updated": "2026-09-02T19:43:51.657Z",
     "wish": false
   },
   {
@@ -1574,13 +1578,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1516,
+    "elo": 1531,
     "emoji": "☕",
     "fav": false,
     "id": "msgmmvs974rs",
     "lat": 37.56659,
     "lng": -122.32329,
-    "matches": 1,
+    "matches": 2,
     "name": "Molly Tea (San Mateo)",
     "rating": 5,
     "review": "Solid Jasmine tea taste",
@@ -2163,13 +2167,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1516,
+    "elo": 1531,
     "emoji": "☕",
     "fav": true,
     "id": "mtdcqterwyid",
     "lat": 47.61176,
     "lng": -122.28955,
-    "matches": 1,
+    "matches": 2,
     "name": "Yoka Tea",
     "pid": "ChIJqTPr5FxrkFQRIgTFZDo3zfQ",
     "rating": 5,
@@ -2216,6 +2220,19 @@
     "brand": "",
     "cc": "US",
     "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-02"
+        ],
+        "ice": "Warm",
+        "n": "Longjung Milk Tea",
+        "p": "6.50",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "25%"
+      }
+    ],
     "emoji": "☕",
     "fav": false,
     "id": "mtjapri20t98",
@@ -2223,9 +2240,9 @@
     "lng": -122.47697,
     "name": "heytea (Stonestown Galleria)",
     "pid": "ChIJ0YtwyBR9j4ARvkOcmtK324I",
-    "rating": 0,
-    "review": "",
-    "updated": "2026-09-01T23:25:53.402Z",
+    "rating": 4,
+    "review": "The service was pretty weak but the drink was good but a little sweet for me even with minimal sweetness.",
+    "updated": "2026-09-02T16:34:04.240Z",
     "wish": false
   },
   {
@@ -2244,6 +2261,48 @@
     "review": "",
     "updated": "2026-09-02T08:53:40.842Z",
     "wish": true
+  },
+  {
+    "area": "New Tacoma",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-02"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Houjicha Latte",
+        "orders": [
+          {
+            "date": "2026-09-02",
+            "ice": "Warm",
+            "milk": "Oat",
+            "p": "7",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtl3m4gs7el5",
+    "lat": 47.25377,
+    "lng": -122.43843,
+    "name": "Jin Jin Matcha",
+    "pid": "ChIJ83tHO_pVkFQRp5biyGbC0bo",
+    "rating": 4,
+    "review": "Atmosphere is great, good stop on the way south from Seattle! Host is nice as well!",
+    "updated": "2026-09-03T05:42:38.620Z",
+    "wish": false
   },
   {
     "area": "San Francisco, CA",
