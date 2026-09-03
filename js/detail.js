@@ -23,6 +23,28 @@ function renderReorderRollup(c){ const re=$("d-reorder"); if(!re)return; const t
    only needs the glyph. The full-text badge is still used elsewhere. */
 function reorderChip(d){ const v=reorderVal(d); if(!v)return ""; const e=v==="yes"?"👍":(v==="no"?"👎":"😐"); return '<span class="reorder '+v+'">'+e+'</span> '; }
 function setReorder(btn,v){ const wrap=btn.parentNode; const hid=wrap.querySelector(".dre"); hid.value=(hid.value===v)?"": v; wrap.querySelectorAll(".rbtn").forEach(b=>b.classList.remove("on")); if(hid.value)wrap.querySelector(".rbtn."+hid.value).classList.add("on"); }
+function drinkGlyph(n){
+  n=(n||"").toLowerCase();
+  if(/matcha|hojicha|green tea/.test(n))return "🍵";
+  if(/boba|milk tea|oolong|\btea\b/.test(n))return "🧋";
+  if(/coffee|espresso|americano|latte|mocha|cappuccino|cold brew/.test(n))return "☕";
+  return "🥤";
+}
+function drinkHistoryPrice(d,latest){
+  const range=drinkPriceRange(d);
+  if(range&&Math.abs(range.max-range.min)>=.0001){
+    const lo=range.code==="USD"?fmtPrice(range.min):fmtLocal(range.min,range.code);
+    const hi=range.code==="USD"?fmtPrice(range.max):fmtLocal(range.max,range.code);
+    return '<span class="pr range">'+esc(lo+"–"+hi)+'</span>';
+  }
+  return priceHTML(latest);
+}
+function toggleDrinkHistory(btn){
+  const card=btn.closest(".drinkcard"); if(!card)return;
+  const open=card.classList.toggle("open");
+  btn.setAttribute("aria-expanded",open?"true":"false");
+  const chev=btn.querySelector(".drinkchev"); if(chev)chev.textContent=open?"▾":"▸";
+}
 function openDetail(id,from){
   const c=cafes.find(x=>x.id===id);
   if(!c)return;
@@ -92,32 +114,34 @@ function openDetail(id,from){
 
   const _lastDate=d=>((latestDrinkOrder(d)||{}).date)||"";
   const _dsorted=(c.drinks||[]).slice().sort((a,b)=>_lastDate(b).localeCompare(_lastDate(a)));
-/* Two lines, not four: verdict + options + latest date share line 2, and the extra-dates
-   line only appears for the handful of drinks with more than one visit date. */
-$("d-drinks").innerHTML=_dsorted.length ? _dsorted.map(function(d){
-    const orders=drinkOrders(d), latest=latestDrinkOrder(d)||{};
-    const ds=[...new Set(orders.map(function(o){ return o.date||""; }).filter(Boolean))].sort();
+/* One compact card per drink. The newest drink opens by default; every order stays available
+   in the timeline without making the normal detail page feel like an edit form. */
+$("d-drinks").innerHTML=_dsorted.length ? _dsorted.map(function(d,di){
+    const orders=drinkOrders(d).slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+    const latest=orders[0]||latestDrinkOrder(d)||{};
     const cnt=orders.reduce(function(t,o){ return t+orderQty(o); },0);
-    const v=reorderVal(latest);
-    const opts=[latest.size, latest.sweet?latest.sweet+" sweet":"", latest.ice, latest.milk?"🥛 "+latest.milk:""].filter(Boolean);
-    const last=ds.length?fmtDate(ds[ds.length-1]):"";
-    const line2=reorderChip(latest)+esc(opts.join(" \u00B7 "))+((opts.length&&last)?" \u00B7 ":"")+esc(last);
-    const range=drinkPriceRange(d), rangeText=range&&Math.abs(range.max-range.min)>=0.0001
-      ? ((range.code==="USD"?fmtPrice(range.min):fmtLocal(range.min,range.code))+"–"+(range.code==="USD"?fmtPrice(range.max):fmtLocal(range.max,range.code))) : "";
-    const notes=[];
-    if(rangeText)notes.push("Prices "+rangeText+" across "+cnt+" orders");
-    if(ds.length>1)notes.push("Also "+ds.slice(0,-1).map(fmtDate).join(" \u00B7 "));
-    const also=notes.length?'<div class="dalso">'+esc(notes.join(" · "))+'</div>':'';
-    return '<div class="drink'+(v?" v-"+v:"")+'">'
-      +'<div class="dmain">'
-        +'<div class="dtop">'+esc(d.n)
-          +(cnt>1?' <span class="cnt">\u00D7'+cnt+'</span>':'')
-          +(drinkMatches(d)?' <span class="dscore">'+drinkScore(d)+'</span>':'')
-        +'</div>'
-        +(line2.trim()?'<div class="dsub">'+line2+'</div>':'')
-        +also
-      +'</div>'
-      +priceHTML(latest)
+    const v=reorderVal(latest), open=di===0, hid="drink-history-"+di;
+    const last=latest.date?fmtDate(latest.date):"Undated";
+    const rows=orders.map(function(o,oi){
+      const ov=reorderVal(o), qty=orderQty(o);
+      const opts=[o.size, o.sweet?o.sweet+" sweet":"", o.ice, o.milk?"🥛 "+o.milk:""].filter(Boolean);
+      return '<div class="dorder'+(ov?" v-"+ov:"")+'">'
+        +'<div class="dorderdate">'+esc(o.date?fmtDate(o.date):"Undated")
+          +(oi===0?' <span>· Latest</span>':'')+(qty>1?' <b>×'+qty+'</b>':'')+'</div>'
+        +'<div class="dorderprice">'+priceHTML(o)+'</div>'
+        +(ov||opts.length?'<div class="dordermeta">'+reorderChip(o)+esc(opts.join(" · "))+'</div>':'')
+      +'</div>';
+    }).join("");
+    return '<div class="drinkcard'+(open?' open':'')+(v?" v-"+v:"")+'">'
+      +'<button type="button" class="drinksum" aria-expanded="'+(open?'true':'false')+'" aria-controls="'+hid+'" onclick="toggleDrinkHistory(this)">'
+        +'<span class="drinkicon" aria-hidden="true">'+drinkGlyph(d.n)+'</span>'
+        +'<span class="drinkcopy"><span class="dtop">'+esc(d.n)
+          +(drinkMatches(d)?' <span class="dscore">'+drinkScore(d)+'</span>':'')+'</span>'
+          +'<span class="dsub">'+cnt+' ordered · latest '+esc(last)+'</span></span>'
+        +'<span class="drinkprice">'+drinkHistoryPrice(d,latest)+'</span>'
+        +'<span class="drinkchev" aria-hidden="true">'+(open?'▾':'▸')+'</span>'
+      +'</button>'
+      +'<div class="drinkhistory" id="'+hid+'">'+rows+'</div>'
     +'</div>';
   }).join("")
   : '<div class="row" style="color:var(--faint);font-style:italic">'

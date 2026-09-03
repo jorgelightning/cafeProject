@@ -57,14 +57,29 @@ const { eq, done } = checker();
  // Detail and monthly Stats both read the order ledger, including quantity.
  r=await pg.evaluate(()=>{
    openDetail(cafes[0].id);
-   const detail=$("d-drinks").innerText;
+   const card=document.querySelector('.drinkcard');
+   const summary=card.querySelector('.drinksum').innerText;
+   const rows=[...card.querySelectorAll('.dorder')].map(x=>x.innerText);
+   const fits=card.scrollWidth<=card.clientWidth+1;
+   const startsOpen=card.classList.contains('open')&&card.querySelector('.drinksum').getAttribute('aria-expanded')==='true';
+   toggleDrinkHistory(card.querySelector('.drinksum'));
+   const closes=(!card.classList.contains('open'))&&getComputedStyle(card.querySelector('.drinkhistory')).display==='none'
+     &&card.querySelector('.drinksum').getAttribute('aria-expanded')==='false';
    isAdmin=true; setRhythmMetric('spend'); setRhythmMonth('2026-06');
    const june=$("stats-body").innerText;
    setRhythmMonth('2026-09');
    const sep=$("stats-body").innerText;
-   return {detail,june,sep};
+   return {summary,rows,fits,startsOpen,closes,june,sep};
  });
- eq(/Prices \$6\.75–\$7\.25 across 3 orders/.test(r.detail),true,'detail shows the historical price range');
+ eq(/Hojicha Latte/.test(r.summary)&&/3 ordered/.test(r.summary)&&/\$6\.75–\$7\.25/.test(r.summary),true,
+    'detail summary shows drink, order count and historical price range');
+ eq(r.rows.length,2,'detail expands to one row per dated order');
+ eq(/Sep 2, 2026/.test(r.rows[0])&&/Latest/.test(r.rows[0])&&/×2/.test(r.rows[0])&&/\$7\.25/.test(r.rows[0]),true,
+    'newest order row shows date, latest marker, quantity and its own price');
+ eq(/Jun 11, 2026/.test(r.rows[1])&&/\$6\.75/.test(r.rows[1]),true,
+    'older order row keeps its historical date and price');
+ eq(r.fits,true,'detail card and timeline fit a 360px phone without horizontal overflow');
+ eq(r.startsOpen&&r.closes,true,'newest drink starts open and its button collapses accessibly');
  eq(/\$6\.75 recorded in June/.test(r.june),true,'June Stats uses the June price');
  eq(/\$14\.50 recorded in September/.test(r.sep),true,'September Stats uses September price × quantity');
 
