@@ -196,6 +196,10 @@ two-colour track — `★★★★` filled plus `★` unfilled — because `☆`
 different advance width, so a filled/hollow mix reads as decoration rather than a proportion.
 
 ### The edit form defaults and protects
+Size uses −/+ taps in 2 oz steps; sweetness uses presets plus a custom percentage;
+ice/temperature uses labeled tap choices. These replace sliders so vertical phone scrolling
+cannot drag a value. Values remain unset until selected, and Clear removes a selection.
+
 101 of 116 drinks carry a date, so new rows default to today (timezone-corrected —
 `toISOString()` alone lands on the wrong day from Hawaii or Taipei). Rows rehydrated from
 saved drinks are untouched, so the dateless entries stay dateless. Existing drinks collapse to
