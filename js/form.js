@@ -184,6 +184,27 @@ function milkCleanupPlan(){ const out=[]; cafes.forEach(c=>{ const t={}; (c.drin
 function updateMilkBtn(){ const b=$("ab-milk"); if(!b)return; const n=isAdmin?milkCleanupPlan().length:0; b.style.display=n?"":"none"; if(n)b.textContent="🥛 Fix milk in "+n+" name"+(n===1?"":"s"); }
 function cleanupMilkNames(){ if(!isAdmin){ toast("Sign in to edit first"); return; } const plan=milkCleanupPlan(); if(!plan.length){ toast("Nothing to clean ✓"); updateMilkBtn(); return; } const ren=plan.filter(x=>x.newName).length; if(!confirm("Set the milk field on "+plan.length+" drink"+(plan.length===1?"":"s")+" that mention milk in their name?\n\n• "+ren+" also get the milk trimmed out of the name\n• "+(plan.length-ren)+" keep their name so separate visits stay separate\n\nNo drinks or dates are removed. This updates your saved data."))return; plan.forEach(x=>{ const orders=drinkOrders(x.d); orders.forEach(function(o){ if(!o.milk)o.milk=x.milk; }); x.d.orders=orders; if(x.newName)x.d.n=x.newName; syncDrinkSummary(x.d); }); save(); try{ renderList(); }catch(e){ warn("form.js",e); } if(app.dataset.view==="detail"&&curId)openDetail(curId); toast("Updated "+plan.length+" drinks ✓"); updateMilkBtn(); }
 function toggleDrinkRow(btn){ const dr=btn.closest(".dr"); const c=dr.classList.toggle("collapsed"); btn.querySelector(".drchev").textContent=c?"▸":"▾"; if(c)btn.querySelector(".drtitle").textContent=drinkRowLabel(dr); }
+/* Commit on click, never pointerdown: a finger scrolling over a choice changes nothing. */
+function setDrinkOption(control,value){
+  const wrap=control.closest('.drinkoption'), input=wrap.querySelector('.optionvalue');
+  input.dataset.set=value===null?'0':'1';
+  if(value!==null)input.value=value;
+  wrap.querySelectorAll('[data-option]').forEach(function(b){ b.setAttribute('aria-pressed',String(value!==null&&b.dataset.option===String(value))); });
+  const output=wrap.querySelector('output');
+  if(output)output.textContent=value===null?'Not set':value+' oz';
+  const custom=wrap.querySelector('.sweetcustom');
+  if(custom&&custom!==control)custom.value=value!==null&&![0,25,50,75,100].includes(Number(value))?value:'';
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function chooseDrinkOption(btn){ setDrinkOption(btn,btn.getAttribute('aria-pressed')==='true'?null:btn.dataset.option); }
+function stepDrinkSize(btn,delta){
+  const input=btn.closest('.drinkoption').querySelector('.optionvalue');
+  setDrinkOption(btn,Math.max(8,Math.min(32,(input.dataset.set==='1'?Number(input.value):16)+delta)));
+}
+function customDrinkSweetness(input){
+  if(input.value===''){ setDrinkOption(input,null); return; }
+  if(input.validity.valid)setDrinkOption(input,Number(input.value));
+}
 function addDrinkRow(n,p,date,sweet,ice,size,reorder,old,milk,qty,fx,target,orderRow){ const re=(reorder==="yes"||reorder===true)?"yes":((reorder==="no"||reorder===false)?"no":(reorder==="neutral"?"neutral":"")); const sv=parseInt(String(sweet||"").replace(/[^0-9]/g,""),10); const hasSweet=!isNaN(sv); const sval=hasSweet?sv:50; /* Ice/Temp runs coldest (left) to hottest (right). Stored values are the labels themselves, so reordering the scale doesn't touch saved data. */
 const ICS=["Extra ice","Regular ice","Less ice","No ice","Warm","Hot"]; const iv=ICS.indexOf(ice||""); const hasIce=iv>=0; const ival=hasIce?iv:3; const zoz=parseInt(String(size||"").replace(/[^0-9]/g,""),10); const hasSize=!isNaN(zoz); const zval=hasSize?Math.max(8,Math.min(32,Math.round(zoz/2)*2)):16; const qv=Math.max(1,Math.min(99,parseInt(qty,10)||1)); const collapsed=!!(n&&String(n).trim());
 /* The visible price field holds whatever was actually paid, so for a non-USD drink it shows
@@ -235,24 +256,24 @@ const qtyRow='<div class="qtywrap">'
   +'<input type="hidden" class="dqt" value="'+qv+'">'
 +'</div>';
 
-/* data-set distinguishes "never touched" from "deliberately set to the default", which is
-   why an untouched slider saves nothing rather than saving its midpoint. */
-const sizeRow='<div class="szwrap">'
-  +'<span class="swlabel">Cup size</span>'
-  +'<input class="dsz" type="range" min="8" max="32" step="2" value="'+zval+'" data-set="'+(hasSize?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.szval\').textContent=this.value+\' oz\';">'
-  +'<span class="szval">'+(hasSize?zval+" oz":"—")+'</span>'
+/* Hidden values keep the existing ledger and unsaved-change detection intact. */
+const sizeRow='<div class="drinkoption">'
+  +'<div class="optionhead">Cup size<button type="button" onclick="setDrinkOption(this,null)">Clear</button></div>'
+  +'<input class="dsz optionvalue" type="hidden" value="'+zval+'" data-set="'+(hasSize?1:0)+'">'
+  +'<div class="sizesteps"><button type="button" onclick="stepDrinkSize(this,-2)" aria-label="Decrease size by 2 ounces">−</button><output aria-live="polite">'+(hasSize?zval+' oz':'Not set')+'</output><button type="button" onclick="stepDrinkSize(this,2)" aria-label="Increase size by 2 ounces">+</button></div>'
 +'</div>';
 
-const sweetRow='<div class="swwrap">'
-  +'<span class="swlabel">Sweetness</span>'
-  +'<input class="dsw" type="range" min="0" max="100" step="5" value="'+sval+'" data-set="'+(hasSweet?1:0)+'" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.swval\').textContent=this.value+\'%\';">'
-  +'<span class="swval">'+(hasSweet?sval+"%":"—")+'</span>'
+const sweetRow='<div class="drinkoption">'
+  +'<div class="optionhead">Sweetness<button type="button" onclick="setDrinkOption(this,null)">Clear</button></div>'
+  +'<input class="dsw optionvalue" type="hidden" value="'+sval+'" data-set="'+(hasSweet?1:0)+'">'
+  +'<div class="optionchoices" role="group" aria-label="Sweetness">'+[0,25,50,75,100].map(function(v){return '<button type="button" data-option="'+v+'" aria-pressed="'+(hasSweet&&sval===v)+'" onclick="chooseDrinkOption(this)">'+v+'%</button>';}).join('')+'</div>'
+  +'<label class="customsweet">Custom <input class="sweetcustom" type="number" min="0" max="100" step="1" inputmode="numeric" aria-label="Custom sweetness percentage" value="'+(hasSweet&&![0,25,50,75,100].includes(sval)?sval:'')+'" oninput="customDrinkSweetness(this)"> %</label>'
 +'</div>';
 
-const iceRow='<div class="icwrap">'
-  +'<span class="swlabel">Ice / Temp</span>'
-  +'<input class="dic" type="range" min="0" max="5" step="1" value="'+ival+'" data-set="'+(hasIce?1:0)+'" data-labels="Extra ice|Regular ice|Less ice|No ice|Warm|Hot" oninput="this.dataset.set=\'1\';this.parentNode.querySelector(\'.icval\').textContent=this.dataset.labels.split(\'|\')[this.value];">'
-  +'<span class="icval">'+(hasIce?ICS[iv]:"—")+'</span>'
+const iceRow='<div class="drinkoption">'
+  +'<div class="optionhead">Ice / temperature<button type="button" onclick="setDrinkOption(this,null)">Clear</button></div>'
+  +'<input class="dic optionvalue" type="hidden" value="'+ival+'" data-set="'+(hasIce?1:0)+'" data-labels="Extra ice|Regular ice|Less ice|No ice|Warm|Hot">'
+  +'<div class="optionchoices icechoices" role="group" aria-label="Ice and temperature">'+ICS.map(function(v,i){return '<button type="button" data-option="'+i+'" aria-pressed="'+(hasIce&&iv===i)+'" onclick="chooseDrinkOption(this)">'+v+'</button>';}).join('')+'</div>'
 +'</div>';
 
 const milkRow='<div class="mkwrap">'
@@ -323,6 +344,13 @@ function saveForm(){
  try{
   const name=$("f-name").value.trim();
   if(!name){ toast("Please add a cafe name"); return; }
+  const invalidSweet=document.querySelector('#f-drinks .sweetcustom:invalid');
+  if(invalidSweet){
+    const row=invalidSweet.closest('.dr'), group=invalidSweet.closest('.drgroup');
+    if(group&&!group.classList.contains('open'))toggleDrinkGroup(group.querySelector('.drghead'));
+    if(row.classList.contains('collapsed'))toggleDrinkRow(row.querySelector('.drhead'));
+    invalidSweet.reportValidity(); return;
+  }
 
   /* One entry per visible drink row, read straight back out of the form. Every field the form
      owns has to be listed here: anything missing is silently dropped on the next edit, which
