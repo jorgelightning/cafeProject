@@ -196,6 +196,10 @@ two-colour track — `★★★★` filled plus `★` unfilled — because `☆`
 different advance width, so a filled/hollow mix reads as decoration rather than a proportion.
 
 ### The edit form defaults and protects
+The active order moves above collapsed history, with its full set of editable attributes.
+Order dates use a visible full-width native date input plus Today, Yesterday and Clear.
+Opening a historical order moves that same row into the editor; it never copies or replaces
+another purchase. Done collapses the editor; Save visit commits all pending edits.
 Size uses −/+ taps in 2 oz steps; sweetness uses presets plus a custom percentage;
 ice/temperature uses labeled tap choices. These replace sliders so vertical phone scrolling
 cannot drag a value. Values remain unset until selected, and Clear removes a selection.

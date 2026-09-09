@@ -13,7 +13,7 @@ function formDirty(){ return _formSnap!==null && app.dataset.view==="form" && fo
    retaken after the row is appended, so backing out of an untouched row does not prompt. */
 function logDrinkHere(){ if(!curId)return; openForm(curId); /* logging a drink IS the visit, so it takes the cafe off the wishlist — and without
     this the drinks field focused just below is still hidden. */
- if($("f-wish")&&$("f-wish").checked){ $("f-wish").checked=false; syncWishMode(); } setTimeout(function(){ addDrinkRow("","",localToday()); const rows=document.querySelectorAll("#f-drinks .dr"); const last=rows[rows.length-1]; if(last){ last.classList.remove("collapsed"); const n=last.querySelector(".dn"); if(n){ try{ n.focus({preventScroll:true}); }catch(e){ n.focus(); } } last.scrollIntoView({block:"center"}); } _formSnap=formSnapshot(); },140); }
+ if($("f-wish")&&$("f-wish").checked){ $("f-wish").checked=false; syncWishMode(); } setTimeout(function(){ const row=addDrinkRow("","",localToday()); activateDrinkRow(row); const n=row.querySelector('.dn'); if(n)n.focus({preventScroll:true}); row.scrollIntoView({block:'start'}); _formSnap=formSnapshot(); },140); }
 function closeForm(){ if(formDirty()&&!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; if(editId)show("detail"); else if(wishOnly)show("wish"); else if(favOnly)show("list",true); else show(lastMain); }
 function initFormMap(){ if(!gReady)return; const start=picked?{lat:picked.lat,lng:picked.lng}:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]}; if(!fgmap){ fgmap=new google.maps.Map($("form-map"),{center:start,zoom:13,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); fgmap.addListener("click",e=>{ formPid=""; setPicked(e.latLng.lat(),e.latLng.lng()); }); try{ const ac=new google.maps.places.Autocomplete($("f-name"),{fields:["name","geometry","address_components","place_id"]}); ac.addListener("place_changed",()=>{ const p=ac.getPlace();
  /* Picking a different place is a relocation, so the area has to follow it. Keeping the
@@ -53,7 +53,7 @@ function addOrderToGroup(btn){
   const ice=src&&src.querySelector(".dic"), iceVal=(ice&&ice.dataset.set==="1")?ice.dataset.labels.split("|")[ice.value]:"";
   const row=addDrinkRow(g.dataset.name,"",localToday(),set(".dsw"),iceVal,set(".dsz"),"",false,val(".dmk"),1,{pc:pc},body,true);
   g.classList.add("open"); const h=g.querySelector(".drghead"); if(h){ h.setAttribute("aria-expanded","true"); const ch=h.querySelector(".drgchev"); if(ch)ch.textContent="▾"; }
-  row.classList.remove("collapsed"); const p=row.querySelector(".dp"); if(p){ try{ p.focus({preventScroll:true}); }catch(e){ p.focus(); } }
+  activateDrinkRow(row); const p=row.querySelector(".dp"); if(p){ try{ p.focus({preventScroll:true}); }catch(e){ p.focus(); } }
   row.scrollIntoView({block:"center"});
 }
 /* One compact group per drink, then one independently editable row per purchase. This is
@@ -72,6 +72,7 @@ function renderDrinkRows(drinks){
     host.appendChild(g);
     const body=g.querySelector(".drgorders");
     orders.forEach(function(o){ addDrinkRow(d.n,o.p,o.date,o.sweet,o.ice,o.size,o.reorder,false,o.milk,orderQty(o),{pl:o.pl,pc:o.pc,pr:o.pr,pd:o.pd},body,true); });
+    arrangeOrderHistory(body);
   });
 }
 /* The currency control doubles as the row's storage for .pc — it is a real <select>, so it
@@ -167,6 +168,21 @@ function drinkRowLabel(dr){ const g=cls=>{ const el=dr.querySelector(cls); retur
    changes — so formSnapshot(), saveForm() and drinkRowLabel() are untouched. */
 function datePillLabel(v){ if(!v)return "Add date"; if(v===localToday())return "Today"; const y=new Date(Date.now()-86400000-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10); if(v===y)return "Yesterday"; return fmtDate(v); }
 function syncDatePill(inp){ const w=inp.closest(".datepill"); if(w)w.querySelector(".dpv").textContent=datePillLabel(inp.value); const dr=inp.closest(".dr"); if(dr){ const dp=dr.querySelector(".dp"); if(dp)syncPrice(dp); } if(dr&&dr.classList.contains("collapsed")){ const t=dr.querySelector(".drtitle"); if(t)t.textContent=drinkRowLabel(dr); } }
+function setOrderDay(btn,offset){ const inp=btn.closest('.orderdate').querySelector('.dd'); if(offset===null)inp.value=''; else {const d=new Date();d.setDate(d.getDate()+offset);inp.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');} syncDatePill(inp);inp.dispatchEvent(new Event('input',{bubbles:true})); }
+function arrangeOrderHistory(body,active){
+  let history=body.querySelector(':scope > .orderhistory');
+  if(!history){history=document.createElement('details');history.className='orderhistory';history.innerHTML='<summary>Previous orders</summary>';body.appendChild(history);}
+  [...body.querySelectorAll('.dr')].forEach(function(row){if(row!==active){row.classList.add('collapsed');row.querySelector('.drchev').textContent='▸';row.querySelector('.drtitle').textContent=drinkRowLabel(row);history.appendChild(row);}});
+  if(active)body.insertBefore(active,history);
+  const count=history.querySelectorAll('.dr').length;history.querySelector('summary').textContent='Previous orders ('+count+')';history.hidden=!count;history.open=false;
+}
+function activateDrinkRow(row){
+  const group=row.closest('.drgroup');
+  document.querySelectorAll('#f-drinks .dr').forEach(function(other){if(other!==row){other.classList.add('collapsed');other.querySelector('.drchev').textContent='▸';other.querySelector('.drtitle').textContent=drinkRowLabel(other);}});
+  document.querySelectorAll('#f-drinks .drgroup').forEach(function(g){if(g!==group){g.classList.remove('open');g.querySelector('.drghead').setAttribute('aria-expanded','false');g.querySelector('.drgchev').textContent='▸';}});
+  if(group){$('f-drinks').prepend(group);arrangeOrderHistory(group.querySelector('.drgorders'),row);}else $('f-drinks').prepend(row);
+  row.classList.remove('collapsed');row.querySelector('.drchev').textContent='▾';
+}
 /* closest() rather than parentNode: the trash sits inside .dr today, but parentNode would
    silently delete the wrong node the moment the row markup gains a wrapper. A named row is
    real logged data, so it asks first; a blank row has nothing to lose and just goes. */
@@ -183,7 +199,7 @@ function milkFromName(n){ for(let i=0;i<MILK_IN_NAME.length;i++){ const re=MILK_
 function milkCleanupPlan(){ const out=[]; cafes.forEach(c=>{ const t={}; (c.drinks||[]).forEach(d=>{ if(!d||!d.n)return; const m=milkFromName(d.n); const k=((m&&m.name)?m.name:d.n).trim().toLowerCase(); t[k]=(t[k]||0)+1; }); (c.drinks||[]).forEach(d=>{ if(!d||!d.n)return; const m=milkFromName(d.n); if(!m)return; const rename=(m.name&&t[m.name.toLowerCase()]===1)?m.name:null; if(d.milk&&!rename)return; out.push({d:d,milk:m.milk,newName:rename}); }); }); return out; }
 function updateMilkBtn(){ const b=$("ab-milk"); if(!b)return; const n=isAdmin?milkCleanupPlan().length:0; b.style.display=n?"":"none"; if(n)b.textContent="🥛 Fix milk in "+n+" name"+(n===1?"":"s"); }
 function cleanupMilkNames(){ if(!isAdmin){ toast("Sign in to edit first"); return; } const plan=milkCleanupPlan(); if(!plan.length){ toast("Nothing to clean ✓"); updateMilkBtn(); return; } const ren=plan.filter(x=>x.newName).length; if(!confirm("Set the milk field on "+plan.length+" drink"+(plan.length===1?"":"s")+" that mention milk in their name?\n\n• "+ren+" also get the milk trimmed out of the name\n• "+(plan.length-ren)+" keep their name so separate visits stay separate\n\nNo drinks or dates are removed. This updates your saved data."))return; plan.forEach(x=>{ const orders=drinkOrders(x.d); orders.forEach(function(o){ if(!o.milk)o.milk=x.milk; }); x.d.orders=orders; if(x.newName)x.d.n=x.newName; syncDrinkSummary(x.d); }); save(); try{ renderList(); }catch(e){ warn("form.js",e); } if(app.dataset.view==="detail"&&curId)openDetail(curId); toast("Updated "+plan.length+" drinks ✓"); updateMilkBtn(); }
-function toggleDrinkRow(btn){ const dr=btn.closest(".dr"); const c=dr.classList.toggle("collapsed"); btn.querySelector(".drchev").textContent=c?"▸":"▾"; if(c)btn.querySelector(".drtitle").textContent=drinkRowLabel(dr); }
+function toggleDrinkRow(btn){ const dr=btn.closest('.dr');if(dr.classList.contains('collapsed')){activateDrinkRow(dr);dr.scrollIntoView({block:'nearest'});}else{dr.classList.add('collapsed');btn.querySelector('.drchev').textContent='▸';btn.querySelector('.drtitle').textContent=drinkRowLabel(dr);} }
 /* Commit on click, never pointerdown: a finger scrolling over a choice changes nothing. */
 function setDrinkOption(control,value){
   const wrap=control.closest('.drinkoption'), input=wrap.querySelector('.optionvalue');
@@ -239,10 +255,6 @@ const nameAndPrice='<input class="dn" type="text" autocomplete="off" placeholder
   +'<div class="priceline">'
     +ccySelectHTML(pcode,!showCcy)
     +'<input class="dp" type="text" autocomplete="off" placeholder="Price" value="'+esc(amt)+'" oninput="syncPrice(this)">'
-    +'<span class="datepill">'
-      +'<span class="dpv">'+esc(datePillLabel(date))+'</span>'
-      +'<input class="dd" type="date" value="'+esc(date||"")+'" onchange="syncDatePill(this)">'
-    +'</span>'
   +'</div>'
   +'<input type="hidden" class="dpr" data-frozen="'+(fx.pr?"1":"")+'" value="'+esc(prate?String(prate):"")+'">'
   +'<input type="hidden" class="dpd" value="'+esc(pdate)+'">'
@@ -292,12 +304,15 @@ const rateRow='<div class="rowrap">'
   +'<input type="hidden" class="dre" value="'+re+'">'
 +'</div>';
 
-div.innerHTML=head+nameAndPrice+qtyRow+sizeRow+sweetRow+iceRow+milkRow+rateRow
+const dateRow='<div class="orderdate"><label>Order date<input class="dd" type="date" value="'+esc(date||'')+'" onchange="syncDatePill(this)"></label><div class="datequick"><button type="button" onclick="setOrderDay(this,0)">Today</button><button type="button" onclick="setOrderDay(this,-1)">Yesterday</button><button type="button" onclick="setOrderDay(this,null)">Clear date</button></div></div>';
+div.innerHTML=head+dateRow+nameAndPrice+qtyRow+sizeRow+sweetRow+iceRow+milkRow+rateRow
+  +'<button type="button" class="orderdone" onclick="toggleDrinkRow(this.closest(\'.dr\').querySelector(\'.drhead\'))">Done editing this order</button>'
   +'<button class="delrow" onclick="delDrinkRow(this)">✕</button>';
 
 if(old){ div.classList.add("dr-old"); div.style.display="none"; }
 const host=target||$("f-drinks");
 host.appendChild(div);
+if(!target&&!old)activateDrinkRow(div);
 return div;
 }
 function visitCount(d){ const a=drinkOrders(d); return a.length?a.reduce(function(t,o){ return t+orderQty(o); },0):1; }

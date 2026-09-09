@@ -1,0 +1,26 @@
+const {serve,launch,checker}=require('./harness');const {eq,done}=checker();
+(async()=>{const srv=await serve(),b=await launch();try{
+ const p=await b.newPage({viewport:{width:360,height:800},hasTouch:true});
+ await p.route('**://**',r=>r.request().url().startsWith(srv.origin)?r.continue():r.abort());
+ await p.goto(srv.origin+'/index.html');await p.waitForTimeout(500);
+ await p.evaluate(()=>{isAdmin=true;cafes=[{id:'date-test',name:'Date cafe',drinks:[{n:'Latte',orders:[{date:'2026-09-02',p:'7.25',size:'16 oz',sweet:'30%',ice:'Less ice',milk:'Oat',reorder:'yes'},{date:'2026-06-11',p:'6.75'}]}]}];openForm('date-test');});
+ await p.locator('.drghead').click();await p.locator('.orderhistory summary').click();
+ await p.locator('.drhead').filter({hasText:'Jun 11'}).click();
+ const active=p.locator('.dr:not(.collapsed)');
+ eq(await active.locator('.dd').isVisible(),true,'historical date is visible');
+ await active.locator('.dd').fill('2026-06-12');await active.locator('.dp').click();
+ eq(await p.evaluate(()=>document.querySelector('.drgorders').firstElementChild.classList.contains('dr')),true,'selected order moves above history');
+ eq(await active.locator('.drinkoption').count(),3,'size sweetness and ice controls remain available');
+ eq(await active.locator('.mkwrap').isVisible(),true,'milk remains available');
+ await active.getByRole('button',{name:'Done editing this order'}).click();
+ await p.locator('.drgadd').click();
+ eq(await p.locator('.dr:not(.collapsed) .dp').inputValue(),'','new order has a separate blank price');
+ await p.locator('.dr:not(.collapsed) .dp').fill('8.00');
+ await p.locator('.dr:not(.collapsed)').getByRole('button',{name:'Yesterday',exact:true}).click();
+ const result=await p.evaluate(()=>{saveForm();return cafes[0].drinks[0].orders;});
+ eq(result.length,3,'saving retains all three orders');
+ eq(result.find(o=>o.p==='6.75').date,'2026-06-12','changed historical date persists');
+ const previous=result.find(o=>o.p==='7.25');
+ eq([previous.date,previous.size,previous.sweet,previous.ice,previous.milk,previous.reorder],['2026-09-02','16 oz','30%','Less ice','Oat','yes'],'unrelated historical attributes stay intact');
+ process.exitCode=done()?0:1;
+}finally{await b.close();srv.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
