@@ -10,6 +10,7 @@ const SUITE = [
   ["currency-form",    "logging a drink in local money, end to end"],
   ["order-prices",     "same drink keeps separate dated prices"],
   ["drink-taps",       "tap controls preserve optional drink attributes"],
+  ["order-editor",     "editing dates above history preserves separate purchases"],
   ["currency-source",  "where a cafe's currency comes from, and that nothing is metered"],
   ["rates-dated",      "the rate for the day a drink was ordered"],
   ["rates-network",    "fetching a real rate, caching it, and every way it can fail"],

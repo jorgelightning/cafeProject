@@ -100,7 +100,7 @@ const { eq, done } = checker();
    const g=document.querySelector('.drgroup');
    toggleDrinkGroup(g.querySelector('.drghead'));
    addOrderToGroup(g.querySelector('.drgadd'));
-   const rows=[...g.querySelectorAll('.dr')], fresh=rows[rows.length-1];
+   const rows=[...g.querySelectorAll('.dr')], fresh=rows[0];
    return {rows:rows.length,name:fresh.querySelector('.dn').value,price:fresh.querySelector('.dp').value,
            date:fresh.querySelector('.dd').value,today:localToday(),open:g.classList.contains('open')};
  });
