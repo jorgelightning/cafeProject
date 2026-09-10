@@ -1,7 +1,7 @@
 const { serve, launch, checker, ROOT } = require("./harness");
 const fs = require("fs");
 const { eq, done } = checker();
-const OUT='/tmp/claude-0/-home-user-cafeProject/f9104775-1085-5003-b0cd-237ce001c0b8/scratchpad/';
+const OUT=require('fs').mkdtempSync(require('path').join(require('os').tmpdir(),'cafe-test-'))+require('path').sep;
 (async()=>{
  const srv=await serve();
  const b=await launch();

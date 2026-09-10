@@ -10,7 +10,7 @@ function matchSearch(c,q){ const hay=searchHay(c); return q.split(/\s+/).filter(
 function distKm(lat1,lng1,lat2,lng2){ const R=6371,toRad=x=>x*Math.PI/180; const dLat=toRad(lat2-lat1),dLng=toRad(lng2-lng1); const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
 function dupNameKeys(){ const seen={},dup={}; cafes.forEach(c=>{ const k=(c.name||"").trim().toLowerCase(); if(k){ if(seen[k])dup[k]=1; seen[k]=1; } }); return dup; }
 /* compact drops the " ago" suffix — that is what buys room for distance on the card line. */
-function lastVisitedStr(c,compact){ var dates=[]; (c.drinks||[]).forEach(function(d){ (d.dates||[]).filter(Boolean).forEach(function(dt){ dates.push(dt); }); }); var iso=dates.length?dates.slice().sort().slice(-1)[0]:c.updated; if(!iso)return ''; var diff=Date.now()-new Date(iso).getTime(); if(diff<0)return ''; var days=Math.floor(diff/86400000); var ago=compact?'':' ago'; if(days<1)return 'today'; if(days===1)return compact?'1d':'yesterday'; if(days<7)return days+'d'+ago; if(days<31)return Math.floor(days/7)+'w'+ago; var mo=Math.floor(days/30); if(mo<12)return mo+'mo'+ago; var yr=Math.floor(days/365); return yr+'y'+ago; }
+function lastVisitedStr(c,compact){ var dates=visitDates(c); var iso=dates.length?dates[dates.length-1]:''; if(!iso)return 'No visit date'; var diff=Date.now()-new Date(iso).getTime(); if(diff<0)return ''; var days=Math.floor(diff/86400000); var ago=compact?'':' ago'; if(days<1)return 'today'; if(days===1)return compact?'1d':'yesterday'; if(days<7)return days+'d'+ago; if(days<31)return Math.floor(days/7)+'w'+ago; var mo=Math.floor(days/30); if(mo<12)return mo+'mo'+ago; var yr=Math.floor(days/365); return yr+'y'+ago; }
 /* Filter chips: quick one-tap filters above the list. Type chips match against the cafe name + drink names only (searchHay adds a default "coffee" term to every cafe, so it can't distinguish types). */
 let activeChip="";
 const CHIP_DEFS=[["coffee","☕ Coffee"],["matcha","🍵 Matcha"],["boba","🧋 Boba / tea"],["liked","👍 Liked"]];
@@ -37,7 +37,7 @@ function renderFilterChips(){ const host=$("filterchips"); if(!host)return; cons
  const trow=$("tagchips"); if(trow){ if(showTagRow){ trow.style.display=""; trow.innerHTML=usedTags.map(t=>'<span class="chip'+(activeChip==="tag:"+t?" on":"")+'" role="button" tabindex="0" onclick="setChip(\'tag:'+esc(t)+'\')">'+esc(t)+'</span>').join(""); } else { trow.style.display="none"; trow.innerHTML=""; } } }
 function clearFilters(){ activeChip=""; favOnly=false; wishOnly=false; showTagRow=false; renderList(); }
 function setChip(v){ activeChip=(activeChip===v)?"":v; if(activeChip.slice(0,4)==="tag:")showTagRow=true; renderList(); }
-function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderFilterChips(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
+function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); grid.classList.toggle("compact-list",listCompact);if($("list-layout"))$("list-layout").textContent=listCompact?"Use card grid":"Use compact list"; let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderFilterChips(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
    comparisons, which floated every unranked cafe above the 36 that were compared and lost —
    putting the most-compared cafe in the app in last place. */
   /* Ordering. Every branch ends on name so the list never jitters between equal items, and
@@ -67,6 +67,7 @@ function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const gr
     if((b.rating||0)!==(a.rating||0)) return (b.rating||0)-(a.rating||0);
     return (a.name||"").localeCompare(b.name||"");
   }
+  if(sortMode==="visited"){const ad=visitDates(a).slice(-1)[0]||"",bd=visitDates(b).slice(-1)[0]||"";return bd.localeCompare(ad)||(a.name||"").localeCompare(b.name||"");}
   const ua=a.updated?(Date.parse(a.updated)||0):0, ub=b.updated?(Date.parse(b.updated)||0):0;
   if(ua!==ub) return ub-ua;
   if((b.rating||0)!==(a.rating||0)) return (b.rating||0)-(a.rating||0);
@@ -115,6 +116,7 @@ grid.innerHTML=items.map(function(c){
       +'<div class="n">'+esc(c.name)+'</div>'
       +'<div class="m">'+M.join(" · ")+'</div>'
     +'</div>'
+    +'<span class="compact-stars" aria-label="'+(c.rating||0)+' out of 5 stars">'+(c.rating?'★'.repeat(c.rating):'Unrated')+'</span>'
   +'</div>';
 }).join("");
 
@@ -122,6 +124,8 @@ grid.innerHTML=items.map(function(c){
    rather than blocking the render. */
 items.forEach(function(c){ const gp=gphotoFor(c); if(gp && !_imgFail[c.id])verifyCardPhoto(c.id,gp); });
 }
+let listCompact=localStorage.getItem("cafemap.listLayout")==="compact";
+function toggleListLayout(){listCompact=!listCompact;lsSet("cafemap.listLayout",listCompact?"compact":"grid");renderList();}
 let sortMode="recent";
 function setSort(v){ sortMode=v; renderList(); if(v==="near"){ if(navigator.geolocation)showUserLocation(false); else toast("Location not available"); } }
 function showFilteredOnMap(){ const q=($('q').value||"").toLowerCase().trim(); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(q)items=items.filter(c=>matchSearch(c,q)); const pts=items.filter(c=>c.lat!=null); show("map"); if(!gmap||!pts.length)return; setTimeout(()=>{ if(pts.length===1){ gmap.setCenter({lat:pts[0].lat,lng:pts[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); pts.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); }},100); }

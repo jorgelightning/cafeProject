@@ -4,10 +4,10 @@
 /* ---------- form ---------- */
 function checkExisting(){ if(editId)return; const name=$("f-name").value.trim(); if(!name)return; const ex=findSameCafe(name,$("f-area").value.trim(),picked?picked.lat:null,picked?picked.lng:null); if(ex){ openForm(ex.id); toast("Found "+ex.name+" — loaded your notes to edit"); } }
 function fmtEdited(iso){ if(!iso)return ""; const d=new Date(iso); if(isNaN(d))return ""; return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+" · "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
-function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?areaOf(c):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; syncWishMode(); formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; formCcy=c?(c.ccy||""):""; formPid=c?(c.pid||""):""; picked=c&&latOf(c)!=null?{lat:latOf(c),lng:lngOf(c)}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
+function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; formSyncBase=c?syncBaseFor(c.id):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?areaOf(c):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; syncWishMode(); formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; formCcy=c?(c.ccy||""):""; formPid=c?(c.pid||""):""; picked=c&&latOf(c)!=null?{lat:latOf(c),lng:lngOf(c)}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
 /* Unsaved-changes guard: snapshot the form on open, compare on any exit path (close button, back button, tab/nav via show(), page unload). Saving clears the snapshot so it never prompts. Pin coords are normalized to 5 decimals because setPicked rounds them. */
-let _formSnap=null;
-function formSnapshot(){ const rows=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const g=cl=>{ const el=r.querySelector(cl); return el?el.value:""; }; const gs=cl=>{ const el=r.querySelector(cl); return el?(el.value+":"+((el.dataset&&el.dataset.set)||"")):""; }; return [g(".dn"),g(".dp"),g(".dd"),g(".dqt"),gs(".dsz"),gs(".dsw"),gs(".dic"),g(".dmk"),g(".dre"),g(".dpc")].join("|"); }).filter(s=>s.split("|")[0].trim()); return JSON.stringify([formPid,$("f-name").value,$("f-area").value,$("f-brand")?$("f-brand").value:"",$("f-review").value,$("f-fav").checked,$("f-wish")?$("f-wish").checked:false,$("f-custom")?$("f-custom").checked:false,formPhoto,formRating,formTags,picked?[+(+picked.lat).toFixed(5),+(+picked.lng).toFixed(5)]:null,rows]); }
+let _formSnap=null, formSyncBase=null;
+function formSnapshot(){ const rows=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const g=cl=>{ const el=r.querySelector(cl); return el?el.value:""; }; const gs=cl=>{ const el=r.querySelector(cl); return el?(el.value+":"+((el.dataset&&el.dataset.set)||"")):""; }; return [g(".dn"),g(".dp"),g(".dd"),g(".dqt"),gs(".dsz"),gs(".dsw"),gs(".dic"),g(".dmk"),g(".dre"),g(".dpc")].join("|"); }).filter(s=>s.split("|")[0].trim()).sort(); return JSON.stringify([formPid,$("f-name").value,$("f-area").value,$("f-brand")?$("f-brand").value:"",$("f-review").value,$("f-fav").checked,$("f-wish")?$("f-wish").checked:false,$("f-custom")?$("f-custom").checked:false,formPhoto,formRating,formTags,picked?[+(+picked.lat).toFixed(5),+(+picked.lng).toFixed(5)]:null,rows]); }
 function formDirty(){ return _formSnap!==null && app.dataset.view==="form" && formSnapshot()!==_formSnap; }
 /* Straight from a cafe page into a dated, expanded, focused drink row. The snapshot is
    retaken after the row is appended, so backing out of an untouched row does not prompt. */
@@ -71,7 +71,7 @@ function renderDrinkRows(drinks){
       +'<button type="button" class="drgadd" onclick="addOrderToGroup(this)">＋ Add another '+esc(d.n||'order')+'</button>';
     host.appendChild(g);
     const body=g.querySelector(".drgorders");
-    orders.forEach(function(o){ addDrinkRow(d.n,o.p,o.date,o.sweet,o.ice,o.size,o.reorder,false,o.milk,orderQty(o),{pl:o.pl,pc:o.pc,pr:o.pr,pd:o.pd},body,true); });
+    orders.forEach(function(o){ addDrinkRow(d.n,o.p,o.date,o.sweet,o.ice,o.size,o.reorder,false,o.milk,orderQty(o),{pl:o.pl,pc:o.pc,pr:o.pr,pd:o.pd,id:o.id},body,true); });
     arrangeOrderHistory(body);
   });
 }
@@ -239,6 +239,7 @@ const title=esc(((n||"").trim()||"New drink")
   +(date?" · "+fmtDate(date):""));
 
 const div=document.createElement("div");
+div.dataset.orderId=fx.id||uid();
 div.className="dr"+(collapsed?" collapsed":"")+(orderRow?" orderrow":"");
 
 /* Collapsed, the header is the whole row — drinkRowLabel() keeps its text in sync. */
@@ -251,10 +252,10 @@ const head='<button type="button" class="drhead" onclick="toggleDrinkRow(this)">
 /* The currency <select> IS this row's storage for .pc — it round-trips through the form the
    way .dmk and .dre do, rather than needing saveForm()'s keep{} rescue. The two hidden
    inputs carry the frozen rate and the date that rate is from. */
-const nameAndPrice='<input class="dn" type="text" autocomplete="off" placeholder="Drink" value="'+esc(n||"")+'">'
+const nameAndPrice='<input class="dn" aria-label="Drink name" type="text" autocomplete="off" placeholder="Drink" value="'+esc(n||"")+'">'
   +'<div class="priceline">'
     +ccySelectHTML(pcode,!showCcy)
-    +'<input class="dp" type="text" autocomplete="off" placeholder="Price" value="'+esc(amt)+'" oninput="syncPrice(this)">'
+    +'<input class="dp" aria-label="Price each" type="text" autocomplete="off" placeholder="Price" value="'+esc(amt)+'" oninput="syncPrice(this)">'
   +'</div>'
   +'<input type="hidden" class="dpr" data-frozen="'+(fx.pr?"1":"")+'" value="'+esc(prate?String(prate):"")+'">'
   +'<input type="hidden" class="dpd" value="'+esc(pdate)+'">'
@@ -288,24 +289,18 @@ const iceRow='<div class="drinkoption">'
   +'<div class="optionchoices icechoices" role="group" aria-label="Ice and temperature">'+ICS.map(function(v,i){return '<button type="button" data-option="'+i+'" aria-pressed="'+(hasIce&&iv===i)+'" onclick="chooseDrinkOption(this)">'+v+'</button>';}).join('')+'</div>'
 +'</div>';
 
-const milkRow='<div class="mkwrap">'
-  +'<span class="swlabel">Milk</span>'
-  +MILKS.map(function(mk){
-     return '<button type="button" class="mkbtn'+(mk===milk?" on":"")+'" data-milk="'+esc(mk)+'" onclick="setMilk(this)">'+esc(mk)+'</button>';
-   }).join("")
-  +'<input type="hidden" class="dmk" value="'+esc(milk||"")+'">'
-+'</div>';
+const milkRow='<label class="mkwrap compactmilk">Milk<select class="dmk" aria-label="Milk"><option value="">Not set</option>'+MILKS.concat(milk&&!MILKS.includes(milk)?[milk]:[]).map(mk=>'<option value="'+esc(mk)+'"'+(mk===milk?' selected':'')+'>'+esc(mk)+'</option>').join("")+'</select></label>';
 
 const rateRow='<div class="rowrap">'
-  +'<span class="swlabel">Rate it</span>'
-  +'<button type="button" class="rbtn yes'+(re==="yes"?" on":"")+'" onclick="setReorder(this,\'yes\')">👍</button>'
-  +'<button type="button" class="rbtn neutral'+(re==="neutral"?" on":"")+'" onclick="setReorder(this,\'neutral\')">😐</button>'
-  +'<button type="button" class="rbtn no'+(re==="no"?" on":"")+'" onclick="setReorder(this,\'no\')">👎</button>'
+  +'<span class="swlabel">Would order again?</span>'
+  +'<button type="button" aria-label="Would order again: yes" class="rbtn yes'+(re==="yes"?" on":"")+'" onclick="setReorder(this,\'yes\')">👍</button>'
+  +'<button type="button" aria-label="Would order again: maybe" class="rbtn neutral'+(re==="neutral"?" on":"")+'" onclick="setReorder(this,\'neutral\')">😐</button>'
+  +'<button type="button" aria-label="Would order again: no" class="rbtn no'+(re==="no"?" on":"")+'" onclick="setReorder(this,\'no\')">👎</button>'
   +'<input type="hidden" class="dre" value="'+re+'">'
 +'</div>';
 
 const dateRow='<div class="orderdate"><label>Order date<input class="dd" type="date" value="'+esc(date||'')+'" onchange="syncDatePill(this)"></label><div class="datequick"><button type="button" onclick="setOrderDay(this,0)">Today</button><button type="button" onclick="setOrderDay(this,-1)">Yesterday</button><button type="button" onclick="setOrderDay(this,null)">Clear date</button></div></div>';
-div.innerHTML=head+dateRow+nameAndPrice+qtyRow+sizeRow+sweetRow+iceRow+milkRow+rateRow
+div.innerHTML=head+dateRow+nameAndPrice+qtyRow+sizeRow+milkRow+sweetRow+iceRow+rateRow
   +'<button type="button" class="orderdone" onclick="toggleDrinkRow(this.closest(\'.dr\').querySelector(\'.drhead\'))">Done editing this order</button>'
   +'<button class="delrow" onclick="delDrinkRow(this)">✕</button>';
 
@@ -378,6 +373,7 @@ function saveForm(){
     return {
       qty:     Math.max(1,Math.min(99,(dqt?parseInt(dqt.value,10):1)||1)),
       n:       dn?dn.value.trim():"",
+      id:      r.dataset.orderId,
       p:       dp?dp.value.trim():"",
       size:    (dsz&&dsz.dataset.set==="1")?(dsz.value+" oz"):"",
       date:    dd?dd.value:"",
@@ -398,7 +394,7 @@ function saveForm(){
     const k=d.n.toLowerCase();
     if(!dmap.has(k))dmap.set(k,{n:d.n,orders:[]});
     const e=dmap.get(k);
-    const o=priceFields(d.p,d.pc,d.pr,d.pd);
+    const o=priceFields(d.p,d.pc,d.pr,d.pd); o.id=d.id;
     if(d.date)    o.date    = d.date;
     if(d.qty>1)   o.qty     = d.qty;
     if(d.size)    o.size    = d.size;
@@ -503,7 +499,7 @@ Object.assign(c,data);
   }
  }
 
- saveCafe(savedId);
+ saveCafe(savedId,editId?formSyncBase:undefined);
  /* The public record is written above, blurred. The exact address goes to the owner-only node
     — or is deleted from it, if this stopped being a private spot, so unticking the box does
     not leave an address behind in a place nobody looks at again. */

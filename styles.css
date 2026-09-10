@@ -384,7 +384,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkrows .dr.dr-old{ opacity:.72; border-left:3px solid var(--border); padding-left:8px; }
 .drinkrows .dr-oldertoggle{ display:block; padding:4px 0 8px; }
 .drinkrows .dr input.dn{ flex:1 1 100%; } .drinkrows .dr input.dp{ flex:1 1 70px; }
-.drinkrows .dr .drinkoption{ flex:1 1 100%; min-width:0; padding:10px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; }
+.drinkrows .dr .drinkoption{ flex:1 1 100%; min-width:0; padding:0; background:transparent; border:0; border-radius:10px; }
 .drinkoption .optionhead{ display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--soft); }
 .drinkoption button{ min-height:44px; min-width:44px; padding:8px 6px; border:1px solid var(--border); border-radius:9px; background:var(--surface); color:var(--text); font-family:inherit; cursor:pointer; touch-action:manipulation; }
 .drinkoption .optionhead button{ background:transparent; border:0; color:var(--soft); font-size:12px; }
@@ -396,6 +396,34 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkoption .sizesteps button{ font-size:22px; }
 .drinkoption output{ font-size:15px; font-weight:600; }
 .drinkoption .customsweet{ display:flex; align-items:center; gap:8px; margin-top:8px; font-size:12px; color:var(--soft); }
+.drinkrows .dr .drinkoption:has(.dsz){flex:1 1 45%;}
+.drinkrows .dr .compactmilk{display:flex;flex:1 1 42%;min-width:0;align-self:stretch;flex-direction:column;justify-content:space-between;gap:8px;font-size:13px;color:var(--soft);padding:0;border:0;background:transparent;}
+.compactmilk select{width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font:16px system-ui;}
+.drinkoption .sizesteps{grid-template-columns:44px minmax(0,1fr) 44px;gap:3px;}
+.drinkoption .sizesteps output{font-size:13px;}
+.list-options{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 16px 8px;}
+.list-options button,.sync-status button,.stats-location button{min-height:44px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--acc-strong);padding:8px;font:13px system-ui;cursor:pointer;}
+.list-options span{font-size:12px;color:var(--soft);}
+.grid.compact-list{display:flex;flex-direction:column;gap:0;}
+.grid.compact-list .card{display:flex;align-items:center;gap:12px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;padding:12px 0;}
+.grid.compact-list .card .ph{flex:0 0 46px;width:46px;height:46px;border-radius:10px;overflow:visible;}
+.grid.compact-list .card .ph .cstars{display:none;}
+.grid.compact-list .card .ph > span:not(.em):not(.favbadge):not(.wishbadge){display:none;}
+.grid.compact-list .card .ph .em{font-size:22px;}
+.grid.compact-list .card .ph{font-size:16px;}
+.grid.compact-list .card .b{min-width:0;flex:1;padding:0;}
+.grid.compact-list .card .n{white-space:normal;-webkit-line-clamp:unset;display:block;}
+.grid.compact-list .card .m{margin-top:5px;}
+.compact-stars{display:none;}
+.compact-list .compact-stars{display:block;flex:none;font-size:13px;color:var(--star);}
+.sync-status{flex:none;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:13px;max-height:180px;overflow:auto;}
+.sync-status[hidden],.sync-review[hidden],.sync-retry[hidden]{display:none!important;}
+.sync-status button{margin:4px;}
+.sync-review p{margin:6px 0;color:var(--soft);}
+.stats-location{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:14px;}
+.stats-location label{flex:1;min-width:140px;font-size:12px;color:var(--soft);}
+.stats-location select{display:block;width:100%;max-width:100%;min-height:44px;margin-top:5px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:9px;font:16px system-ui;}
+.stats-location small{flex:1 1 100%;color:var(--soft);}
 .drinkrows .dr .sweetcustom{ flex:0 0 72px; width:72px; min-height:44px; font-size:16px; }
 .drinkrows .dr .swlabel{ font-size:12px; color:var(--soft); flex:0 0 auto; }
 .drinkrows .dr .swval{ font-size:13px; color:var(--text); flex:0 0 42px; text-align:right; font-weight:600; }
@@ -479,3 +507,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .rbtn.yes.on{ border-color:var(--good); background:rgba(46,158,91,.14); }
 .rbtn.no.on{ border-color:var(--bad); background:rgba(224,85,107,.14); }
 .rbtn.neutral.on{ border-color:var(--mid); background:rgba(240,169,59,.14); }
+.drinkrows .dr .mkwrap.compactmilk{flex:1 1 42%;padding:0;border:0;background:transparent;align-items:stretch;flex-wrap:nowrap;}
+.drinkrows .dr .priceline{flex:1 1 52%;flex-wrap:wrap;min-width:0;align-content:start;}
+.drinkrows .dr .priceline .dpc{flex:1 1 100%;max-width:none;}
+.drinkrows .dr .priceline .dp{min-width:0;width:100%;}
+.drinkrows .dr .qtywrap{flex:1 1 36%;display:grid;grid-template-columns:44px minmax(22px,1fr) 44px;gap:4px;padding:0;border:0;background:transparent;align-content:end;}
+.drinkrows .dr .qtywrap .swlabel{grid-column:1/-1;}
+.qbtn{width:44px;height:44px;}
+.qval{min-width:0;}
+.rbtn{min-height:44px;min-width:44px;}

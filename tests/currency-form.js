@@ -83,10 +83,9 @@ const { eq, done } = checker();
     // first visit: same drink, no price recorded
     fill(document.querySelector("#f-drinks .dr"),"Hojicha Latte","","2026-03-01");
     // second visit: priced, via the + button's blank row
-    addDrinkRow("","",localToday());
-    const rows=[...document.querySelectorAll("#f-drinks .dr")];
-    fill(rows[rows.length-1],"Hojicha Latte","500","2026-04-02");
-    const ccy=rows[rows.length-1].querySelector(".dpc").value;
+    const added=addDrinkRow("","",localToday());
+    fill(added,"Hojicha Latte","500","2026-04-02");
+    const ccy=added.querySelector(".dpc").value;
     saveForm();
     const d=cafes[0].drinks[0];
     return {ccy,n:d.n,p:d.p,pl:d.pl,pc:d.pc,pr:d.pr,dates:d.dates,nDrinks:cafes[0].drinks.length};

@@ -17,14 +17,14 @@
    CACHE_V would keep serving the old scripts. Anything cross-origin (Maps, Firebase, the FX
    endpoint) is deliberately not intercepted; those must fail normally so their own fallbacks
    run. */
-const CACHE_V = "cafemap-v36";
-const ASSET_V = "?v=36";
+const CACHE_V = "cafemap-v37";
+const ASSET_V = "?v=37";
 
 const SHELL = [
-  "./", "./index.html", "./manifest.json",
+  "./", "./index.html", "./manifest.json", "./cafes.json",
   "./styles.css" + ASSET_V,
   "./js/config.js" + ASSET_V, "./js/core.js" + ASSET_V, "./js/storage.js" + ASSET_V,
-  "./js/nav.js" + ASSET_V, "./js/map.js" + ASSET_V, "./js/photos.js" + ASSET_V,
+  "./js/sync.js" + ASSET_V, "./js/nav.js" + ASSET_V, "./js/map.js" + ASSET_V, "./js/photos.js" + ASSET_V,
   "./js/list.js" + ASSET_V, "./js/stats.js" + ASSET_V, "./js/rank.js" + ASSET_V,
   "./js/detail.js" + ASSET_V, "./js/form.js" + ASSET_V, "./js/boot.js" + ASSET_V,
   "./icon-180.png", "./icon-192.png", "./icon-512.png"
@@ -74,7 +74,7 @@ self.addEventListener("fetch", function(e){
     e.respondWith(
       fetch(req).then(function(r){ return keep(key, r); })
                 .catch(function(){ return caches.match(key).then(function(hit){
-                  return hit || caches.match("./index.html"); }); })
+                  return hit || (isData ? Response.error() : caches.match("./index.html")); }); })
     );
     return;
   }
