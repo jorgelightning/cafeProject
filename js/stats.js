@@ -11,6 +11,9 @@ function visitDates(c){ const s={}; ((c&&c.drinks)||[]).forEach(function(d){ dri
    replaces two ad-hoc show-more buttons that minted class names off a global counter and
    removed themselves so they could never close again. */
 function statFold(btn){ const box=btn.previousElementSibling; if(!box)return; const open=box.hasAttribute("data-open"); if(open)box.removeAttribute("data-open"); else box.setAttribute("data-open",""); btn.textContent=(btn.dataset.lab||"Show more")+(open?" ▾":" ▴"); }
+let statsArea=localStorage.getItem("cafemap.statsArea")||"home";
+function setStatsArea(value){statsArea=value;lsSet("cafemap.statsArea",value);_heroI=0;renderStats();}
+function statsLocate(){toast('Finding your location…');showUserLocation(false,function(ok){if(ok)setStatsArea("near");else toast('Location unavailable — choose an area instead');});}
 let _heroI=0;
 function heroNext(){ _heroI++; renderStats(); }
 let _rhythmMetric="spend", _rhythmMonth="";
@@ -64,7 +67,11 @@ function renderStats(){
   let h="";
 
   /* ---------- 1. go back to ---------- */
-  const CA_HOME={lat:37.7749,lng:-122.4194};
+  const areas=[...new Set(nonWish.filter(c=>c.lat!=null&&c.area).map(c=>c.area))].sort();
+  const selected=nonWish.find(c=>c.area===statsArea&&c.lat!=null);
+  const CA_HOME=statsArea==="near"&&userLoc?userLoc:selected?{lat:selected.lat,lng:selected.lng}:{lat:37.7749,lng:-122.4194};
+  const origin=statsArea==="near"&&userLoc?"your location":selected?selected.area:"San Francisco";
+  h+='<div class="stats-location"><label>Recommendations around<select aria-label="Recommendation area" onchange="setStatsArea(this.value)"><option value="home">San Francisco (home)</option>'+(userLoc?'<option value="near"'+(statsArea==="near"?' selected':'')+'>My location</option>':'')+areas.map(a=>'<option value="'+esc(a)+'"'+(statsArea===a?' selected':'')+'>'+esc(a)+'</option>').join('')+'</select></label><button onclick="statsLocate()">Use my location</button><small>Distances from '+esc(origin)+'</small></div>';
   const pool=nonWish.filter(function(c){
     if(c.lat==null||(c.rating||0)<4)return false;
     const ds=visitDates(c); if(ds.length!==1)return false;

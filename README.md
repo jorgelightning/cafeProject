@@ -21,6 +21,16 @@ not built.
 | `js/storage.js` | Load/save data, admin sign-in, import/export, seed data |
 | `js/nav.js` | View switching (map / list / detail / form / rank / stats) |
 | `js/map.js` | Google Maps, markers, location dropdown, geolocation, the locate button |
+| `js/sync.js` | Durable public-cafe save queue, transactions, conflict review and status |
+| `js/photos.js` | Lazy cafe photos and fallbacks |
+| `js/list.js` | Cafe grid/compact list and filters |
+| `js/stats.js` | Spending, visit statistics and area-based suggestions |
+| `js/rank.js` | Cafe Board and optional comparison sheet |
+| `js/detail.js` | Cafe detail and order history |
+| `js/form.js` | Complete drink and cafe editor |
+| `js/boot.js` | Startup, updates and back navigation |
+| `sw.js` | Offline shell and data cache |
+| `tests/` | Browser and unit checks |
 
 ### Private spots
 
@@ -74,15 +84,7 @@ coordinates rounded to about a kilometre and a numbered area field dropped *befo
 saved* — hiding it in the interface would hide nothing, since anyone can open the JSON. The
 daily backup applies the same redaction in jq, so a precise value already sitting in Firebase
 still never reaches the published file.
-| `js/photos.js` | Cafe photo fetching via Places API with cache and fallbacks |
-| `js/list.js` | Search, sorting, and the cafe card grid |
-| `js/stats.js` | Stats / leaderboard pane |
-| `js/rank.js` | Head-to-head compare + Elo ranking (cafes and drinks) |
-| `js/detail.js` | Cafe detail page |
-| `js/form.js` | Add/edit visit form and quick-log sheet |
-| `js/boot.js` | Startup wiring, update checker, back-button handling |
-| `sw.js` | Service worker — caches the app shell so it opens with no network |
-| `tests/` | Browser tests driving the real app — see `tests/README.md` |
+
 
 Scripts are classic (non-module) files loaded in order — `config.js` first,
 `boot.js` last. Functions are globals so inline `onclick` handlers keep working.
@@ -95,17 +97,16 @@ None of it is needed to deploy; Pages ignores `package.json` and `node_modules/`
 
 ## Deploying an update
 
-0. `npm test` — cheap, and it has caught things that looked safe. `cache-version` fails if
-   you forget step 2, which is worth more than remembering step 2.
-1. Commit and push to `main` — GitHub Pages redeploys automatically (~1 min).
-2. **If you changed any `js/` or `css` file, bump the `?v=` number on every
+1. **If you changed any `js/` or `css` file, bump the `?v=` number on every
    script/link tag in `index.html` — and `CACHE_V` in `sw.js` to match.**
    The `?v=` busts browser caches and triggers the in-app "🔄 New version
    available" banner for open tabs. `CACHE_V` is what makes the service
    worker fetch the new files instead of serving the previous build from
    its cache. Bumping one without the other looks exactly like a change
    that failed to deploy.
-3. Browsers may serve the old page for up to 10 minutes (Pages cache).
+2. Run `npm test`. All checks must pass before pushing.
+3. Commit and push to `main`. GitHub runs App checks and deploys Pages.
+4. Verify the deployed version. Browsers may briefly serve the old page from the Pages cache.
 
 ## Data
 
@@ -113,8 +114,7 @@ None of it is needed to deploy; Pages ignores `package.json` and `node_modules/`
   writes locked to the owner Google account set in `js/config.js`.
 - The `cafes` node is an **object keyed by cafe id**, not a JSON array. Edits
   write one cafe at a time (`cafes/<id>`) so two devices editing different
-  cafes cannot overwrite each other; only genuinely bulk operations rewrite
-  the whole node. `asArray()` reads either shape, so older array-shaped
+  cafes cannot overwrite each other; bulk operations enqueue each changed cafe. Transactions detect same-cafe conflicts before replacing a cloud record. `asArray()` reads either shape, so older array-shaped
   exports still load.
 - **`cafes.json`** (optional, next to `index.html`): offline fallback if the
   cloud is unreachable. Must be a **plain JSON array** starting with `[` —
@@ -127,7 +127,7 @@ None of it is needed to deploy; Pages ignores `package.json` and `node_modules/`
   and the day it came from. The rate is frozen when the drink is logged and
   never recalculated, so past spending cannot drift.
 - A same-named drink is one group with an `orders` array. Each order owns its
-  date, price, currency, quantity and drink options; the drink's top-level
+  stable ID, date, price, currency, quantity and drink options; the drink's top-level
   fields mirror its latest order for compatibility with older cached clients.
 - A cafe's currency comes from the country in the Places result when you add
   it by searching. For anything else the currency chip on the price row lets
@@ -145,4 +145,4 @@ stay current; everything else is served from cache.
 
 - **Viewer** (default): browse everything, edit nothing.
 - **Admin**: sign in with the owner Google account (🔒 button) to add/edit
-  cafes; edits sync to Firebase instantly for all viewers.
+  cafes. Public cafe changes are saved to a durable local queue, then synced to Firebase. The owner sees pending/failure/conflict status.

@@ -19,7 +19,7 @@ function migratePhotoCache(){
     if(fbReady&&fbAuth&&fbAuth.currentUser){
       const u=fbAuth.currentUser;
       if(u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()){
-        fbDb.ref("cafes").set(JSON.parse(JSON.stringify(cafesById()))).then(function(){ _cloudKeyed=true; }).catch(()=>{});
+        save();
       }
     }
   }
@@ -38,13 +38,13 @@ if("serviceWorker" in navigator && (location.protocol==="https:" || _localHosts.
     navigator.serviceWorker.register("sw.js").catch(function(e){ warn("sw register", e); });
   });
 }
-function reloadLatest(){ location.replace(location.pathname+"?v="+Date.now()); }
+function reloadLatest(){ const u=new URL(location.href);u.searchParams.set("v",Date.now());location.replace(u.href); }
 let _bootSrc=null, _updateShown=false;
 function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{ if(t==null)return; if(_bootSrc===null){ _bootSrc=t; return; } if(t!==_bootSrc && !_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); } }).catch(()=>{}); }
 const _fbOk=initFirebase(); initAuth();
 { const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁️ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file."; }
-applyMode();
-load().then(()=>{ migratePhotoCache(); applyMode(); const _sp=new URLSearchParams(location.search); const _sc=_sp.get('cafe'); show('map'); startMaps(); subscribeCloud(); if(_sc){ const _wait=(tries)=>{ const _fc=cafes.find(x=>x.id===_sc); if(_fc){ setTimeout(()=>openDetail(_fc.id,'map'),400); } else if(tries>0){ setTimeout(()=>_wait(tries-1),600); } }; _wait(8); } if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)fbDb.ref("cafes").set(cafes); }).catch(()=>{}); } });
+applyMode();renderSyncStatus();
+load().then(()=>{ migratePhotoCache(); applyMode(); const _sp=new URLSearchParams(location.search); const _sc=_sp.get('cafe'); show('map'); startMaps(); subscribeCloud(); if(_sc){ const _wait=(tries)=>{ const _fc=cafes.find(x=>x.id===_sc); if(_fc){ setTimeout(()=>openDetail(_fc.id,'map'),400); } else if(tries>0){ setTimeout(()=>_wait(tries-1),600); } }; _wait(8); } if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)save(); }).catch(()=>{}); } });
 let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{ mapResize(); refitMap(); },150); });
 checkForUpdate();
 setInterval(checkForUpdate,45000);

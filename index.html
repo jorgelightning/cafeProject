@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=36">
+<link rel="stylesheet" href="styles.css?v=37">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -28,12 +28,14 @@
 <button id="n-theme" onclick="cycleTheme()">🌗 <span id="n-theme-lab">Theme: auto</span></button>
 <button id="n-add" class="admin-only navlog" onclick="openForm()">＋ Log a visit</button>
 </div>
+<div id="sync-status" class="sync-status admin-only" role="status" hidden><span class="sync-label"></span><button class="sync-retry" onclick="flushSync()">Retry sync</button><div class="sync-review" hidden><p>Another device edited this cafe. Choose which version to keep.</p><button onclick="resolveSyncConflict(true)">Keep this phone’s version</button><button onclick="resolveSyncConflict(false)">Use cloud version</button></div></div>
 <div class="panes">
 <section class="pane" id="pane-list"><div class="adminbar admin-only" id="adminbar"><button class="abtoggle" onclick="toggleAdminBar()">⚙︎ Admin <span class="abchev">▾</span></button><span class="abnote" id="ab-cloud">Admin mode</span><div class="abactions"><button onclick="fetchAllPhotos()">📷 Fetch all photos</button><button id="ab-milk" onclick="cleanupMilkNames()" style="display:none">🥛 Fix milk in names</button></div></div>
 <div class="search">🔍<input id="q" placeholder="Search name, city, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="iconbtn lockbtn mobonly" onclick="toggleAdmin()" aria-label="Toggle editing mode">🔒</button><button class="iconbtn mobonly" onclick="cycleTheme()" aria-label="Switch theme">🌗</button></div>
 <div class="chiprow" id="filterchips"></div>
 <div class="chiprow tagrow" id="tagchips" style="display:none"></div>
-<div class="sortrow"><span class="sub" id="count"></span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="ranked">Top ranked</option><option value="rating">★ Highest rated</option><option value="near">📍 Nearest to me</option></select><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" style="width:34px;height:34px;font-size:15px;flex:0 0 auto;margin-left:4px">🗺️</button></div>
+<div class="sortrow"><span class="sub" id="count"></span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="visited">Recently visited</option><option value="ranked">Top ranked</option><option value="rating">★ Highest rated</option><option value="near">📍 Nearest to me</option></select><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" style="width:34px;height:34px;font-size:15px;flex:0 0 auto;margin-left:4px">🗺️</button></div>
+<div class="list-options"><button id="list-layout" onclick="toggleListLayout()">Use compact list</button><span id="save-state" class="admin-only" role="status"></span></div>
 <div class="scroll"><div class="grid" id="grid"></div></div>
 </section>
 <section class="pane" id="pane-detail">
@@ -108,17 +110,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=36"></script>
-<script src="js/core.js?v=36"></script>
-<script src="js/storage.js?v=36"></script>
-<script src="js/nav.js?v=36"></script>
-<script src="js/map.js?v=36"></script>
-<script src="js/photos.js?v=36"></script>
-<script src="js/list.js?v=36"></script>
-<script src="js/stats.js?v=36"></script>
-<script src="js/rank.js?v=36"></script>
-<script src="js/detail.js?v=36"></script>
-<script src="js/form.js?v=36"></script>
-<script src="js/boot.js?v=36"></script>
+<script src="js/config.js?v=37"></script>
+<script src="js/core.js?v=37"></script>
+<script src="js/storage.js?v=37"></script>
+<script src="js/sync.js?v=37"></script>
+<script src="js/nav.js?v=37"></script>
+<script src="js/map.js?v=37"></script>
+<script src="js/photos.js?v=37"></script>
+<script src="js/list.js?v=37"></script>
+<script src="js/stats.js?v=37"></script>
+<script src="js/rank.js?v=37"></script>
+<script src="js/detail.js?v=37"></script>
+<script src="js/form.js?v=37"></script>
+<script src="js/boot.js?v=37"></script>
 </body>
 </html>

@@ -6,6 +6,9 @@ no mock of the app itself. What is stubbed is only what cannot be reached from a
 machine — Firebase, the Google Maps key (referrer-locked to the Pages origin), and the
 exchange-rate endpoint.
 
+The `App checks` GitHub workflow runs the suite on pushes to main and pull requests.
+`audit-upgrades.js` covers layout, stable order IDs, false discard prompts and Stats origin.
+
 ## Running them
 
 ```bash
@@ -39,7 +42,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `wishlist-form.js` | Where the wishlist tick sits and which fields it hides. |
 | `wishlist-save.js` | A wishlist entry saves no visit, and ticking it on a cafe with real history asks first. |
 | `wishlist-drinks.js` | A cafe with drinks logged comes off the wishlist. |
-| `cloud-writes.js` | Per-cafe writes, deletion, and **the lost update they prevent** — reproduced against the old whole-array write, then shown gone. |
+| `cloud-writes.js` / `sync-queue.js` | Persistent pending edits, cloud snapshot reconciliation, conflict decisions, per-cafe transactions, legacy migration, deletion and failure handling. |
 | `place-id.js` | A cafe's photo is fetched by its Google place id, not by searching its name. The wrong-photo bug. |
 | `private.js` | A private spot never publishes an exact location or a street address — at save, in `cafes.json`, and in the daily backup. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |

@@ -1,7 +1,7 @@
 # Design notes
 
 Why the app is built the way it is, what the data actually supports, and what was
-deliberately **not** built. Last updated 16 Aug 2026. Figures are live values from that date
+deliberately **not** built. Last updated 9 Sep 2026. Baseline figures below are from 16 Aug 2026
 and will drift — the reasoning is the durable part, the numbers are the evidence for it.
 
 Companion to `README.md`, which covers structure and deployment.
@@ -11,7 +11,7 @@ Companion to `README.md`, which covers structure and deployment.
 ## Conventions
 
 - **No build step, no framework, no dependencies.** `index.html` is markup; `styles.css` is
-  every style; `js/*.js` are classic scripts loaded in a fixed order (config → core → storage
+  every style; `js/*.js` are classic scripts loaded in a fixed order (config → core → storage → sync
   → nav → map → photos → list → stats → rank → detail → form → boot). Functions are globals
   because inline `onclick` handlers depend on them. This is a feature: nothing to install,
   nothing to rot, deploy is `git push`.
@@ -151,6 +151,21 @@ works and asking on a separate screen did not.
 ---
 
 ## Decisions
+
+### September audit improvements
+- Public cafe edits and deletions are persisted in `cafemap.outbox.v1` before sending. Incoming
+  snapshots overlay pending edits. Transactions compare against the original cloud record;
+  conflicting cafe versions require an explicit choice. Per-cafe acknowledgments cannot clear
+  another pending edit. Old dirty snapshots are recovered conservatively, with conflict review.
+- The sync queue is for public cafe records. Owner-only precise-location storage remains separate;
+  it is never copied into the public queue. Keep that boundary when extending offline support.
+- Order IDs persist on save; the form preserves them. Dirty detection ignores visual row order.
+- The complete editor is more compact, with every milk type in a selector and all tap controls retained.
+- Compact cafe rows are optional; the grid stays available. Last-visited dates come only from orders.
+- Stats distances identify the selected origin. No automatic location prompt is introduced.
+- The shell precaches `cafes.json` so the first completed install has an offline data fallback.
+- `App checks` runs the suite on pushes and pull requests. Fixture screenshots use portable paths.
+
 
 ### Photos are fetched, never trusted from storage
 Session-bound Places URLs were being persisted to Firebase and served broken to everyone.
@@ -312,9 +327,7 @@ Recorded so they are not re-proposed. Each was considered and turned down on evi
 
 ## Open threads
 
-- **The "Go back to" hero uses a hardcoded San Francisco origin** (`CA_HOME`), inherited from
-  the old "farthest travelled" section. On a trip it will keep suggesting Bay Area cafes.
-  Preferring the map's live geolocation with `CA_HOME` as fallback is the fix.
+- Stats now offers an explicit area picker and a user-triggered location action; San Francisco remains the labeled fallback.
 - **Drink Elo erased before 16 Aug 2026 is unrecoverable.** The leak is fixed, but every
   `cafes.json` snapshot postdates the loss. 22 cafes kept their scores, and the detail page
   still shows them; nothing writes new ones.
