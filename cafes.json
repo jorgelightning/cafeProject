@@ -170,13 +170,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1455,
+    "elo": 1449,
     "emoji": "☕",
     "fav": false,
     "id": "mqf9w1vzajpl",
     "lat": 21.32908,
     "lng": -158.0914,
-    "matches": 7,
+    "matches": 8,
     "name": "Island Vintage Coffee and Wine Bar Kapolei",
     "rating": 3,
     "review": "Flat white are known for their micro foam and there was none here!",
@@ -1455,13 +1455,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1484,
+    "elo": 1469,
     "emoji": "☕",
     "fav": false,
     "id": "mrv3oazshy7o",
     "lat": 37.78969,
     "lng": -122.40414,
-    "matches": 1,
+    "matches": 2,
     "name": "Origin Lab Coffee & Matcha",
     "rating": 3,
     "review": "Nice place with limited sitting, drink wasn't good, felt water down.",
@@ -1611,13 +1611,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1490,
+    "elo": 1474,
     "emoji": "☕",
     "fav": false,
     "id": "msu00kujuuz2",
     "lat": 37.58007,
     "lng": -122.34666,
-    "matches": 1,
+    "matches": 2,
     "name": "Sunright Tea Studio - Burlingame",
     "rating": 4,
     "review": "Classic, if you can't decide this is the place to go to!",
@@ -1677,13 +1677,13 @@
         "sweet": "25%"
       }
     ],
-    "elo": 1516,
+    "elo": 1531,
     "emoji": "☕",
     "fav": false,
     "id": "msu1q6bvm46n",
     "lat": 37.66805,
     "lng": -122.46815,
-    "matches": 1,
+    "matches": 2,
     "name": "Chicha San Chen 吃茶三千",
     "rating": 4,
     "review": "Nice cafe but like it may take a while to get your order!",
@@ -1940,13 +1940,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1515,
+    "elo": 1530,
     "emoji": "☕",
     "fav": false,
     "id": "mt6wojizh8ca",
     "lat": 49.28251,
     "lng": -123.11126,
-    "matches": 1,
+    "matches": 2,
     "name": "Saunter Coffee",
     "rating": 5,
     "review": "Great atmosphere to work in the front and there is something on the back for more of a quiet experience. The flat white is so good, strong espresso and the matcha has a good strong matcha taste too!",
@@ -2200,11 +2200,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1515,
     "emoji": "☕",
     "fav": false,
     "id": "mthlqaxscg4f",
     "lat": 37.78287,
     "lng": -122.47021,
+    "matches": 1,
     "name": "Diamond Coffee n' Pastry",
     "pid": "ChIJb6xMEteHhYARs1pgqASF0Uk",
     "rating": 4,
@@ -2233,11 +2235,13 @@
         "sweet": "25%"
       }
     ],
+    "elo": 1485,
     "emoji": "☕",
     "fav": false,
     "id": "mtjapri20t98",
     "lat": 37.72773,
     "lng": -122.47697,
+    "matches": 1,
     "name": "heytea (Stonestown Galleria)",
     "pid": "ChIJ0YtwyBR9j4ARvkOcmtK324I",
     "rating": 4,
@@ -2258,9 +2262,9 @@
     "name": "Song Tea & Ceramics",
     "pid": "ChIJhdFZ_7eAhYARPwcETfqzaxM",
     "rating": 0,
-    "review": "",
-    "updated": "2026-09-02T08:53:40.842Z",
-    "wish": true
+    "review": "It was not a cafe here but they have sample to drink from.",
+    "updated": "2026-09-10T17:46:11.300Z",
+    "wish": false
   },
   {
     "area": "New Tacoma",
@@ -2292,11 +2296,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1485,
     "emoji": "☕",
     "fav": false,
     "id": "mtl3m4gs7el5",
     "lat": 47.25377,
     "lng": -122.43843,
+    "matches": 1,
     "name": "Jin Jin Matcha",
     "pid": "ChIJ83tHO_pVkFQRp5biyGbC0bo",
     "rating": 4,
@@ -2334,11 +2340,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1516,
     "emoji": "☕",
     "fav": false,
     "id": "mtqn96pbnv35",
     "lat": 37.32234,
     "lng": -122.01675,
+    "matches": 1,
     "name": "MoonTea",
     "pid": "ChIJ77mZztW1j4ARA7L4u49X9AU",
     "rating": 4,
@@ -2579,6 +2587,75 @@
     "custom": false,
     "drinks": [
       {
+        "count": 5,
+        "dates": [
+          "2026-03-24",
+          "2026-07-09",
+          "2026-07-27",
+          "2026-09-08",
+          "2026-09-09"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Flat White",
+        "orders": [
+          {
+            "date": "2026-03-24",
+            "ice": "Warm",
+            "id": "mtvs2elobsr6",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-09",
+            "ice": "Warm",
+            "id": "mtvs2elnvxe0",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-27",
+            "ice": "Warm",
+            "id": "mtvs2elmn0g5",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-08",
+            "ice": "Warm",
+            "id": "mtvs2ell0gxx",
+            "milk": "Oat",
+            "p": "4.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-09",
+            "ice": "Warm",
+            "id": "mtvs2eqp5azy",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      },
+      {
         "count": 8,
         "dates": [
           "2026-03-22",
@@ -2597,6 +2674,7 @@
           {
             "date": "2026-03-22",
             "ice": "Warm",
+            "id": "mtvs2elwc6i8",
             "milk": "Oat",
             "p": "7.25",
             "reorder": "yes",
@@ -2606,6 +2684,7 @@
           {
             "date": "2026-03-25",
             "ice": "Warm",
+            "id": "mtvs2elvrya3",
             "milk": "Oat",
             "p": "7.25",
             "reorder": "yes",
@@ -2615,6 +2694,7 @@
           {
             "date": "2026-04-09",
             "ice": "Warm",
+            "id": "mtvs2elu1cxx",
             "milk": "Oat",
             "p": "7.25",
             "reorder": "yes",
@@ -2624,6 +2704,7 @@
           {
             "date": "2026-07-31",
             "ice": "Warm",
+            "id": "mtvs2eluc131",
             "milk": "Oat",
             "p": "7.25",
             "reorder": "yes",
@@ -2633,6 +2714,7 @@
           {
             "date": "2026-08-05",
             "ice": "Warm",
+            "id": "mtvs2els7c5a",
             "milk": "Oat",
             "p": "7.25",
             "reorder": "yes",
@@ -2642,6 +2724,7 @@
           {
             "date": "2026-08-07",
             "ice": "Warm",
+            "id": "mtvs2elra3n6",
             "milk": "Oat",
             "p": "7.25",
             "reorder": "yes",
@@ -2651,6 +2734,7 @@
           {
             "date": "2026-08-11",
             "ice": "Warm",
+            "id": "mtvs2elq5lmi",
             "milk": "Oat",
             "p": "7.25",
             "reorder": "yes",
@@ -2660,6 +2744,7 @@
           {
             "date": "2026-09-04",
             "ice": "Warm",
+            "id": "mtvs2elqmwjn",
             "milk": "Oat",
             "p": "7.25",
             "reorder": "yes",
@@ -2683,6 +2768,7 @@
           {
             "date": "2026-07-28",
             "ice": "Less ice",
+            "id": "mtvs2elysglo",
             "milk": "Oat",
             "p": "7.75",
             "reorder": "yes",
@@ -2696,67 +2782,14 @@
         "sweet": "0%"
       },
       {
-        "count": 4,
-        "dates": [
-          "2026-03-24",
-          "2026-07-09",
-          "2026-07-27",
-          "2026-09-08"
-        ],
-        "ice": "Warm",
-        "milk": "Oat",
-        "n": "Flat White",
-        "orders": [
-          {
-            "date": "2026-03-24",
-            "ice": "Warm",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-09",
-            "ice": "Warm",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-27",
-            "ice": "Warm",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-08",
-            "ice": "Warm",
-            "milk": "Oat",
-            "p": "4.25",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          }
-        ],
-        "p": "4.25",
-        "reorder": "yes",
-        "size": "8 oz",
-        "sweet": "0%"
-      },
-      {
         "dates": [
           "2026-03-23"
         ],
         "n": "Matcha latte",
         "orders": [
           {
-            "date": "2026-03-23"
+            "date": "2026-03-23",
+            "id": "mtvs2elzzzgm"
           }
         ]
       }
@@ -2774,7 +2807,7 @@
     "tags": [
       "specialty"
     ],
-    "updated": "2026-09-08T20:20:40.033Z",
+    "updated": "2026-09-10T17:05:54.257Z",
     "wish": false
   },
   {
