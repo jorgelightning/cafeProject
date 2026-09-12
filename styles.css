@@ -345,6 +345,17 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .priceline select.dpc[hidden]{ display:none; }
 /* Sits on its own line under the price. Empty at a dollar cafe, and collapsed rather than
    left as an 8px gap, so the common path gains no furniture. */
+/* "Log again" — your three most-ordered drinks, above the drink list. Sits in the form flow
+   rather than floating, and wraps rather than scrolling sideways: on a phone these are the
+   widest short things on the screen. */
+.usualrow{ display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-bottom:10px; }
+.usualrow[hidden]{ display:none; }
+.usuallbl{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--soft); width:100%; }
+.uchip{ display:inline-flex; align-items:center; gap:6px; min-height:38px; padding:0 13px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer; max-width:100%; }
+.uchip > :first-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.uchip:hover{ border-color:var(--acc); }
+.uchip:active{ transform:scale(.97); }
+.uchip .ucount{ font-size:11px; font-weight:700; color:var(--on-acc); background:var(--acc-strong); border-radius:7px; padding:1px 6px; font-variant-numeric:tabular-nums; flex:none; }
 .drinkrows .dr .convhint{ flex:1 1 100%; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; padding:0 2px; font-size:12px; color:var(--soft); }
 .drinkrows .dr .convhint:empty{ display:none; }
 .drinkrows .dr .convhint .usd{ font-size:14px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
