@@ -152,6 +152,26 @@ works and asking on a separate screen did not.
 
 ## Decisions
 
+### A drink you order everywhere needs a shortcut that is not per-cafe
+"Log again" is built from `drinkIndex()`, which counts every drink across every cafe. Scoping
+it to the cafe on screen would have been the obvious move and would have been useless: a cafe
+you have logged before already renders each drink as a group with its own "＋ Add another"
+button. The case with no shortcut at all is a cafe you have *never* been to — and that is
+exactly where a whole-history index still knows the answer.
+
+One tap has to produce a finished order, not a head start: `usualSpec()` fills in the options
+you pick most for that drink, and focus lands in the price field because price is the only
+part that genuinely differs per cafe.
+
+### The typo guard asks, and must never correct
+`nearestDrinkName()` is deliberately strict — a proportional cap as well as an absolute one,
+and nothing under five characters — because the map is full of names one keystroke apart that
+are **different drinks**: `Matcha latte - Saemidori` and `- Samidori` are two cultivars,
+`Hojicha latte (Snoopy version)` is its own thing. Auto-correcting any of those would destroy
+real records silently. The same rule governs `spellingFixPlan()`, which additionally requires
+the surviving spelling to outnumber the variant 3:1 before it will even propose a merge.
+
+
 ### September audit improvements
 - Public cafe edits and deletions are persisted in `cafemap.outbox.v1` before sending. Incoming
   snapshots overlay pending edits. Transactions compare against the original cloud record;
