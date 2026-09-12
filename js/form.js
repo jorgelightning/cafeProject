@@ -4,7 +4,7 @@
 /* ---------- form ---------- */
 function checkExisting(){ if(editId)return; const name=$("f-name").value.trim(); if(!name)return; const ex=findSameCafe(name,$("f-area").value.trim(),picked?picked.lat:null,picked?picked.lng:null); if(ex){ openForm(ex.id); toast("Found "+ex.name+" — loaded your notes to edit"); } }
 function fmtEdited(iso){ if(!iso)return ""; const d=new Date(iso); if(isNaN(d))return ""; return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+" · "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
-function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; formSyncBase=c?syncBaseFor(c.id):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?areaOf(c):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; syncWishMode(); formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; formCcy=c?(c.ccy||""):""; formPid=c?(c.pid||""):""; picked=c&&latOf(c)!=null?{lat:latOf(c),lng:lngOf(c)}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
+function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; formSyncBase=c?syncBaseFor(c.id):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?areaOf(c):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; syncWishMode(); formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; formCcy=c?(c.ccy||""):""; formPid=c?(c.pid||""):""; picked=c&&latOf(c)!=null?{lat:latOf(c),lng:lngOf(c)}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); renderUsuals(); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
 /* Unsaved-changes guard: snapshot the form on open, compare on any exit path (close button, back button, tab/nav via show(), page unload). Saving clears the snapshot so it never prompts. Pin coords are normalized to 5 decimals because setPicked rounds them. */
 let _formSnap=null, formSyncBase=null;
 function formSnapshot(){ const rows=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const g=cl=>{ const el=r.querySelector(cl); return el?el.value:""; }; const gs=cl=>{ const el=r.querySelector(cl); return el?(el.value+":"+((el.dataset&&el.dataset.set)||"")):""; }; return [g(".dn"),g(".dp"),g(".dd"),g(".dqt"),gs(".dsz"),gs(".dsw"),gs(".dic"),g(".dmk"),g(".dre"),g(".dpc")].join("|"); }).filter(s=>s.split("|")[0].trim()).sort(); return JSON.stringify([formPid,$("f-name").value,$("f-area").value,$("f-brand")?$("f-brand").value:"",$("f-review").value,$("f-fav").checked,$("f-wish")?$("f-wish").checked:false,$("f-custom")?$("f-custom").checked:false,formPhoto,formRating,formTags,picked?[+(+picked.lat).toFixed(5),+(+picked.lng).toFixed(5)]:null,rows]); }
@@ -58,6 +58,47 @@ function addOrderToGroup(btn){
 }
 /* One compact group per drink, then one independently editable row per purchase. This is
    what prevents a price typed for September from rewriting the same drink bought in June. */
+/* ---------- your usuals ----------
+   Three taps' worth of shortcut at the top of the drinks section. The drink you order most
+   is the one you should never have to spell, and the options you always pick are the ones
+   you should never have to set again — "Hojicha latte" has been typed out by hand at more
+   than twenty cafes, and four of those came out misspelled into their own separate record.
+
+   Scoped to your whole history rather than this cafe deliberately: at a cafe you have logged
+   before, the drink already has a group with its own "＋ Add another" button, so this is for
+   the case that has no shortcut at all — a cafe you have never been to. */
+let _formIx=null;
+function renderUsuals(){
+  const host=$("f-usuals");
+  if(!host)return;
+  _formIx=drinkIndex();
+  const top=topUsuals(_formIx,3);
+  if(!top.length){ host.hidden=true; host.innerHTML=""; return; }
+  host.hidden=false;
+  host.innerHTML='<span class="usuallbl">Log again</span>'+top.map(function(e){
+    const spec=usualSpec(e);
+    const bits=USUAL_FIELDS.map(function(f){ return spec[f]; }).filter(Boolean).join(" · ");
+    return '<button type="button" class="uchip" onclick="logUsual(this)" data-key="'+esc(e.key)+'"'
+      +' title="'+esc(e.n+(bits?" — "+bits:""))+'">'
+      +esc(e.n)+'<span class="ucount">'+e.count+'</span></button>';
+  }).join("");
+}
+/* One tap has to produce a finished order, not a head start: the name spelled the way you
+   spell it, the options you usually pick, dated today. Price is the one thing that genuinely
+   differs per cafe, so that is where the cursor lands. */
+function logUsual(btn){
+  const e=(_formIx||drinkIndex())[btn.dataset.key];
+  if(!e)return;
+  const spec=usualSpec(e);
+  const row=addDrinkRow(e.n,"",localToday(),spec.sweet,spec.ice,spec.size,"",false,spec.milk,1,null);
+  if(!row)return;
+  activateDrinkRow(row);
+  const p=row.querySelector(".dp");
+  if(p){ try{ p.focus({preventScroll:true}); }catch(_){ p.focus(); } }
+  row.scrollIntoView({block:"start"});
+  const bits=USUAL_FIELDS.map(function(f){ return spec[f]; }).filter(Boolean).join(" · ");
+  toast("Added "+e.n+(bits?" — "+bits:"")+" ✓");
+}
 function renderDrinkRows(drinks){
   const host=$("f-drinks"); host.innerHTML="";
   if(!drinks||!drinks.length){ addDrinkRow("","",localToday()); return; }
@@ -198,6 +239,92 @@ const MILK_IN_NAME=[[/\s*\/w\s*oak\s*milk\b/i,"Oat"],[/\s*[+]\s*oak\s*milk\b/i,"
 function milkFromName(n){ for(let i=0;i<MILK_IN_NAME.length;i++){ const re=MILK_IN_NAME[i][0]; if(re.test(n))return {milk:MILK_IN_NAME[i][1],name:n.replace(re,"").replace(/\s{2,}/g," ").replace(/[\s+/-]+$/,"").trim()}; } return null; }
 function milkCleanupPlan(){ const out=[]; cafes.forEach(c=>{ const t={}; (c.drinks||[]).forEach(d=>{ if(!d||!d.n)return; const m=milkFromName(d.n); const k=((m&&m.name)?m.name:d.n).trim().toLowerCase(); t[k]=(t[k]||0)+1; }); (c.drinks||[]).forEach(d=>{ if(!d||!d.n)return; const m=milkFromName(d.n); if(!m)return; const rename=(m.name&&t[m.name.toLowerCase()]===1)?m.name:null; if(d.milk&&!rename)return; out.push({d:d,milk:m.milk,newName:rename}); }); }); return out; }
 function updateMilkBtn(){ const b=$("ab-milk"); if(!b)return; const n=isAdmin?milkCleanupPlan().length:0; b.style.display=n?"":"none"; if(n)b.textContent="🥛 Fix milk in "+n+" name"+(n===1?"":"s"); }
+/* ---------- fix drinks already split by a typo ----------
+   Prevention does nothing for the ones already on record. A variant is a name that is one or
+   two keystrokes from a spelling you use far more often — "Hojica latte" beside twenty-odd
+   "Hojicha latte". The dominant spelling wins; the rare one is renamed onto it.
+
+   Two shapes come out of that. Usually the cafe has only the misspelled record, so it is a
+   rename. Sometimes the cafe has both, and then it is a real merge — orders from each are
+   concatenated and syncDrinkSummary() rebuilds the dates, count and summary fields, exactly
+   as saveForm() does when two rows share a name. Elo follows whichever record has more
+   matches, because that is the one the ranking actually knows about. */
+function spellingFixPlan(){
+  const ix=drinkIndex();
+  const keys=Object.keys(ix);
+  const canon={};
+  keys.forEach(function(k){
+    const e=ix[k];
+    let best=null;
+    keys.forEach(function(other){
+      if(other===k)return;
+      const o=ix[other];
+      /* only a clearly dominant spelling may absorb another, so two drinks you order about
+         equally are left alone rather than silently collapsed into one */
+      if(o.count<e.count*3)return;
+      const cap=Math.min(2,Math.floor(k.length*0.2)||1);
+      const dist=editDistance(k,other,cap);
+      if(dist>cap)return;
+      if(!best||dist<best.dist||(dist===best.dist&&o.count>best.count))
+        best={key:other,n:o.n,count:o.count,dist:dist};
+    });
+    if(best)canon[k]=best;
+  });
+  const plan=[];
+  (cafes||[]).forEach(function(c){
+    (c.drinks||[]).forEach(function(d){
+      const k=(d.n||"").trim().toLowerCase();
+      const to=canon[k];
+      if(!to)return;
+      const into=(c.drinks||[]).find(function(x){ return x!==d && (x.n||"").trim().toLowerCase()===to.key; });
+      plan.push({cafe:c, drink:d, from:d.n, to:to.n, merge:!!into, into:into||null});
+    });
+  });
+  return plan;
+}
+function updateSpellBtn(){
+  const b=$("ab-spell");
+  if(!b)return;
+  const n=isAdmin?spellingFixPlan().length:0;
+  b.style.display=n?"":"none";
+  if(n)b.textContent="🔤 Fix "+n+" misspelled drink"+(n===1?"":"s");
+}
+function fixDrinkSpellings(){
+  if(!isAdmin){ toast("Sign in to edit first"); return; }
+  const plan=spellingFixPlan();
+  if(!plan.length){ toast("No misspelled drinks ✓"); updateSpellBtn(); return; }
+  const merges=plan.filter(function(x){ return x.merge; }).length;
+  const lines=plan.map(function(x){
+    return "• " + x.from + "  →  " + x.to + "   (" + x.cafe.name + (x.merge?", merges with the one already there":"") + ")";
+  });
+  if(!confirm("Rename "+plan.length+" drink"+(plan.length===1?"":"s")+" onto the spelling you use more often?\n\n"
+    +lines.join("\n")
+    +"\n\nEvery order, date and price is kept"
+    +(merges?"; "+merges+" of these merge into a drink already at that cafe":"")
+    +". Nothing is deleted."))return;
+  plan.forEach(function(x){
+    if(x.merge&&x.into){
+      const keep=x.into;
+      const ledger={n:x.to,orders:drinkOrders(keep).concat(drinkOrders(x.drink))};
+      /* the ranking follows the record it actually knows */
+      const a=keep.matches||0, b=x.drink.matches||0;
+      const src=(b>a)?x.drink:keep;
+      if(src.elo!==undefined)ledger.elo=src.elo;
+      if(src.matches!==undefined)ledger.matches=Math.max(a,b);
+      syncDrinkSummary(ledger);
+      Object.keys(keep).forEach(function(k){ delete keep[k]; });
+      Object.assign(keep,ledger);
+      x.cafe.drinks=x.cafe.drinks.filter(function(d){ return d!==x.drink; });
+    } else {
+      x.drink.n=x.to;
+    }
+  });
+  save();
+  try{ renderList(); }catch(e){ warn("form.js",e); }
+  if(app.dataset.view==="detail"&&curId)openDetail(curId);
+  toast("Fixed "+plan.length+" drink name"+(plan.length===1?"":"s")+" ✓");
+  updateSpellBtn();
+}
 function cleanupMilkNames(){ if(!isAdmin){ toast("Sign in to edit first"); return; } const plan=milkCleanupPlan(); if(!plan.length){ toast("Nothing to clean ✓"); updateMilkBtn(); return; } const ren=plan.filter(x=>x.newName).length; if(!confirm("Set the milk field on "+plan.length+" drink"+(plan.length===1?"":"s")+" that mention milk in their name?\n\n• "+ren+" also get the milk trimmed out of the name\n• "+(plan.length-ren)+" keep their name so separate visits stay separate\n\nNo drinks or dates are removed. This updates your saved data."))return; plan.forEach(x=>{ const orders=drinkOrders(x.d); orders.forEach(function(o){ if(!o.milk)o.milk=x.milk; }); x.d.orders=orders; if(x.newName)x.d.n=x.newName; syncDrinkSummary(x.d); }); save(); try{ renderList(); }catch(e){ warn("form.js",e); } if(app.dataset.view==="detail"&&curId)openDetail(curId); toast("Updated "+plan.length+" drinks ✓"); updateMilkBtn(); }
 function toggleDrinkRow(btn){ const dr=btn.closest('.dr');if(dr.classList.contains('collapsed')){activateDrinkRow(dr);dr.scrollIntoView({block:'nearest'});}else{dr.classList.add('collapsed');btn.querySelector('.drchev').textContent='▸';btn.querySelector('.drtitle').textContent=drinkRowLabel(dr);} }
 /* Commit on click, never pointerdown: a finger scrolling over a choice changes nothing. */
@@ -371,6 +498,10 @@ function saveForm(){
           dre=q(".dre"), dmk=q(".dmk"), dqt=q(".dqt"),
           dpc=q(".dpc"), dprt=q(".dpr"), dpdt=q(".dpd");
     return {
+      /* carried so the guard below can write a correction back into the field the user is
+         looking at; `raw` is filtered, so an index into the row list would not line up.
+         Never reaches saved data — the grouping below copies named fields only. */
+      _row:    r,
       qty:     Math.max(1,Math.min(99,(dqt?parseInt(dqt.value,10):1)||1)),
       n:       dn?dn.value.trim():"",
       id:      r.dataset.orderId,
@@ -386,6 +517,35 @@ function saveForm(){
       pd:      dpdt?dpdt.value:""
     };
   }).filter(function(d){ return d.n; });
+
+  /* A name one keystroke away from something you already log is almost always that thing,
+     typed in a hurry — "Hojica latte" and "Hojicha lattye" both reached the record this way
+     and became separate drinks with their own counts and their own Elo.
+
+     It asks rather than corrects, and that is not politeness: "Hojicha latte (Snoopy version)"
+     and "Hojicha Einspanner" are real, separate drinks. Only a name that is genuinely new AND
+     within a keystroke or two of an existing one gets a question; everything else saves
+     silently. Corrections are applied to the rows themselves, so the grouping below merges
+     them the same way it merges any two rows sharing a name. */
+  const _gix=drinkIndex();
+  const _asked={};
+  raw.forEach(function(d){
+    const k=d.n.toLowerCase();
+    if(_asked[k]!==undefined){ if(_asked[k])d.n=_asked[k]; return; }
+    const near=nearestDrinkName(_gix,d.n);
+    if(!near){ _asked[k]=""; return; }
+    const use=confirm('Did you mean "'+near.n+'"?\n\n'
+      +'You typed "'+d.n+'", and you have logged "'+near.n+'" '
+      +near.count+' time'+(near.count===1?'':'s')+'.\n\n'
+      +'OK — log it as "'+near.n+'"\n'
+      +'Cancel — keep "'+d.n+'" as a separate drink');
+    _asked[k]=use?near.n:"";
+    if(use){
+      d.n=near.n;
+      const el=d._row&&d._row.querySelector(".dn");
+      if(el)el.value=near.n;
+    }
+  });
 
   /* Rows still group by lowercased drink name, but every row remains an independent order.
      This is the key distinction: dates, prices, quantities and options travel together. */

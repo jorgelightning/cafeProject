@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=37">
+<link rel="stylesheet" href="styles.css?v=38">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -30,7 +30,7 @@
 </div>
 <div id="sync-status" class="sync-status admin-only" role="status" hidden><span class="sync-label"></span><button class="sync-retry" onclick="flushSync()">Retry sync</button><div class="sync-review" hidden><p>Another device edited this cafe. Choose which version to keep.</p><button onclick="resolveSyncConflict(true)">Keep this phone’s version</button><button onclick="resolveSyncConflict(false)">Use cloud version</button></div></div>
 <div class="panes">
-<section class="pane" id="pane-list"><div class="adminbar admin-only" id="adminbar"><button class="abtoggle" onclick="toggleAdminBar()">⚙︎ Admin <span class="abchev">▾</span></button><span class="abnote" id="ab-cloud">Admin mode</span><div class="abactions"><button onclick="fetchAllPhotos()">📷 Fetch all photos</button><button id="ab-milk" onclick="cleanupMilkNames()" style="display:none">🥛 Fix milk in names</button></div></div>
+<section class="pane" id="pane-list"><div class="adminbar admin-only" id="adminbar"><button class="abtoggle" onclick="toggleAdminBar()">⚙︎ Admin <span class="abchev">▾</span></button><span class="abnote" id="ab-cloud">Admin mode</span><div class="abactions"><button onclick="fetchAllPhotos()">📷 Fetch all photos</button><button id="ab-milk" onclick="cleanupMilkNames()" style="display:none">🥛 Fix milk in names</button><button id="ab-spell" onclick="fixDrinkSpellings()" style="display:none">🔤 Fix misspelled drinks</button></div></div>
 <div class="search">🔍<input id="q" placeholder="Search name, city, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="iconbtn lockbtn mobonly" onclick="toggleAdmin()" aria-label="Toggle editing mode">🔒</button><button class="iconbtn mobonly" onclick="cycleTheme()" aria-label="Switch theme">🌗</button></div>
 <div class="chiprow" id="filterchips"></div>
 <div class="chiprow tagrow" id="tagchips" style="display:none"></div>
@@ -68,7 +68,7 @@
 <div class="field"><label>Area / neighborhood</label><input type="text" id="f-area" placeholder="e.g. Manoa" autocomplete="off"></div>
 <div class="field"><label>Brand / chain (optional)</label><input type="text" id="f-brand" placeholder="e.g. Tadaima — groups locations together" autocomplete="off"></div>
 <div class="field visit-only"><label>Drink photo</label><div class="photodrop" id="f-photodrop"><div style="font-size:26px">📷</div><span id="f-photolabel">Paste an image link below to preview</span></div><input type="text" id="f-photo-url" placeholder="Paste an image link (Google Photos, Cloudinary…)" oninput="onPhotoUrl()" autocomplete="off" style="margin-top:8px"><div style="font-size:11px; color:var(--soft); margin-top:4px">From Google Photos: open the photo, right-click it → "Copy image address" and paste that link here (the Share link won't work).</div><div id="f-photo-status" style="font-size:11px; margin-top:3px"></div></div>
-<div class="field visit-only"><label>Drinks had</label><div class="drinkrows" id="f-drinks"></div><button class="hintbtn" onclick="addDrinkRow('','',localToday())">+ Add another drink</button></div>
+<div class="field visit-only"><label>Drinks had</label><div class="usualrow" id="f-usuals" hidden></div><div class="drinkrows" id="f-drinks"></div><button class="hintbtn" onclick="addDrinkRow('','',localToday())">+ Add another drink</button></div>
 <div class="field visit-only"><label>Rating</label><div class="rate" id="f-rate"></div></div>
 <div class="field"><label id="f-review-label">Review / thoughts</label><textarea id="f-review" placeholder="Vibe, taste, service…"></textarea></div>
 <div class="field visit-only"><label>Tags</label><div class="tagpick" id="f-tags"></div></div>
@@ -110,18 +110,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=37"></script>
-<script src="js/core.js?v=37"></script>
-<script src="js/storage.js?v=37"></script>
-<script src="js/sync.js?v=37"></script>
-<script src="js/nav.js?v=37"></script>
-<script src="js/map.js?v=37"></script>
-<script src="js/photos.js?v=37"></script>
-<script src="js/list.js?v=37"></script>
-<script src="js/stats.js?v=37"></script>
-<script src="js/rank.js?v=37"></script>
-<script src="js/detail.js?v=37"></script>
-<script src="js/form.js?v=37"></script>
-<script src="js/boot.js?v=37"></script>
+<script src="js/config.js?v=38"></script>
+<script src="js/core.js?v=38"></script>
+<script src="js/storage.js?v=38"></script>
+<script src="js/sync.js?v=38"></script>
+<script src="js/nav.js?v=38"></script>
+<script src="js/map.js?v=38"></script>
+<script src="js/photos.js?v=38"></script>
+<script src="js/list.js?v=38"></script>
+<script src="js/stats.js?v=38"></script>
+<script src="js/rank.js?v=38"></script>
+<script src="js/detail.js?v=38"></script>
+<script src="js/form.js?v=38"></script>
+<script src="js/boot.js?v=38"></script>
 </body>
 </html>

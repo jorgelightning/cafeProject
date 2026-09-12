@@ -247,6 +247,88 @@ function syncDrinkSummary(d){
   DRINK_ORDER_FIELDS.forEach(function(k){ if(latest[k]!==undefined&&latest[k]!=="")d[k]=latest[k]; });
   return d;
 }
+/* ---------- what you usually order ----------
+   Built across every cafe, not the one on screen. That is the whole point: the same drink is
+   ordered everywhere, so an index scoped to this cafe would be empty at exactly the moment it
+   helps most — the first time you log something at a place you have never been. */
+function topKey(tally){
+  let best=null,bn=0;
+  Object.keys(tally||{}).forEach(function(k){ if(tally[k]>bn){ bn=tally[k]; best=k; } });
+  return best;
+}
+const USUAL_FIELDS=["size","sweet","ice","milk"];
+function drinkIndex(){
+  const ix={};
+  (cafes||[]).forEach(function(c){
+    (c.drinks||[]).forEach(function(d){
+      const n=(d.n||"").trim();
+      if(!n)return;
+      const k=n.toLowerCase();
+      if(!ix[k])ix[k]={n:n,key:k,count:0,spell:{},size:{},sweet:{},ice:{},milk:{}};
+      const e=ix[k];
+      const orders=drinkOrders(d);
+      const cups=orders.reduce(function(t,o){ return t+orderQty(o); },0)||1;
+      e.count+=cups;
+      e.spell[n]=(e.spell[n]||0)+cups;
+      orders.forEach(function(o){
+        USUAL_FIELDS.forEach(function(f){ if(o[f])e[f][o[f]]=(e[f][o[f]]||0)+1; });
+      });
+    });
+  });
+  /* Display it the way you most often write it, so the shortcut never teaches a new casing. */
+  Object.keys(ix).forEach(function(k){ ix[k].n=topKey(ix[k].spell)||ix[k].n; });
+  return ix;
+}
+function usualSpec(entry){
+  const out={};
+  if(entry)USUAL_FIELDS.forEach(function(f){ const v=topKey(entry[f]); if(v)out[f]=v; });
+  return out;
+}
+function topUsuals(ix,limit){
+  return Object.keys(ix||{}).map(function(k){ return ix[k]; })
+    .filter(function(e){ return e.count>1; })   /* a one-off is not a usual */
+    .sort(function(a,b){ return b.count-a.count || a.n.localeCompare(b.n); })
+    .slice(0,limit||3);
+}
+
+/* Levenshtein, bailing out as soon as the distance exceeds what the caller cares about —
+   this runs against every name you have ever logged, on every save. */
+function editDistance(a,b,max){
+  a=String(a||""); b=String(b||"");
+  if(a===b)return 0;
+  if(Math.abs(a.length-b.length)>max)return max+1;
+  let prev=[],cur=[];
+  for(let j=0;j<=b.length;j++)prev[j]=j;
+  for(let i=1;i<=a.length;i++){
+    cur[0]=i;
+    let best=cur[0];
+    for(let j=1;j<=b.length;j++){
+      cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(cur[j]<best)best=cur[j];
+    }
+    if(best>max)return max+1;
+    prev=cur.slice();
+  }
+  return prev[b.length];
+}
+/* A name close enough to one you already use that it is probably the same drink typed in a
+   hurry. Deliberately strict: a proportional cap as well as an absolute one, so short names
+   need an exact-ish match and "Hojicha latte (Snoopy version)" never collides with
+   "Hojicha latte". Returns null for anything genuinely new. */
+function nearestDrinkName(ix,name){
+  const q=(name||"").trim().toLowerCase();
+  if(q.length<5)return null;
+  if(ix[q])return null;                         /* already a drink you log */
+  let best=null;
+  Object.keys(ix).forEach(function(k){
+    const cap=Math.min(2,Math.floor(k.length*0.2)||1);
+    const d=editDistance(q,k,cap);
+    if(d>cap)return;
+    if(!best||d<best.dist||(d===best.dist&&ix[k].count>best.count))
+      best={n:ix[k].n,key:k,count:ix[k].count,dist:d};
+  });
+  return best;
+}
 function drinkPriceRange(d){
   const a=drinkOrders(d).filter(function(o){ return ccyNum(o.p)!=null||ccyNum(o.pl)!=null; });
   if(!a.length)return null;
