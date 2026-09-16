@@ -77,4 +77,4 @@ function renderSyncStatus(){
   el.querySelector('.sync-retry').hidden=!!conflict||syncBusy;
   const state=$('save-state');if(state)state.textContent=keys.length?'Saved on this phone':syncFailure||(syncLastConfirmed&&navigator.onLine?'Synced ✓':'No pending edits');
 }
-window.addEventListener('online',()=>flushSync());
+window.addEventListener('online',()=>{flushSync();if(typeof flushPrivate==='function')flushPrivate();});

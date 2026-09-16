@@ -18,7 +18,18 @@ One-time setup (~3 min):
 2) Build → Realtime Database → Create database → Start in test mode.
 3) Project settings → Your apps → Web (</>) → register → copy the config.
 4) Paste the values below (databaseURL is the important one).
-5) Authentication → Sign-in method → enable Google sign-in, then Realtime Database → Rules → paste this and Publish: { "rules": { "cafes": { ".read": true, ".write": "auth != null && auth.token.email === 'jorgemarco.portillo@gmail.com'" } } }
+5) Authentication → Sign-in method → enable Google sign-in, then Realtime Database → Rules → paste this and Publish (replace the address with your OWNER_EMAIL below):
+   {
+     "rules": {
+       "cafes":   { ".read": true,
+                    ".write": "auth != null && auth.token.email_verified == true && auth.token.email == 'jorgemarco.portillo@gmail.com'" },
+       "private": { ".read":  "auth != null && auth.token.email_verified == true && auth.token.email == 'jorgemarco.portillo@gmail.com'",
+                    ".write": "auth != null && auth.token.email_verified == true && auth.token.email == 'jorgemarco.portillo@gmail.com'" }
+     }
+   }
+   The "private" block is NOT optional. Realtime Database denies any path no rule grants, so
+   leaving it out makes private spots' exact addresses unwritable — and this file used to say
+   exactly that, which is the bug it caused. README.md carries the same block; keep them equal.
 After this, your signed-in account's edits save to the cloud instantly for all viewers — no more cafes.json uploads.
 NOTE: public read is expected for a shared map; writes are locked to your Google account so no one else can overwrite your data.
 ============================================================ */
