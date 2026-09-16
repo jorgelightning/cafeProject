@@ -25,6 +25,7 @@ const SUITE = [
   ["relocate",         "correcting a cafe location moves its area and its photo with it"],
   ["place-id",         "a cafe's photo is fetched by place id, not by searching its name"],
   ["usuals",           "logging a drink you have had before, without retyping it"],
+  ["audit-fixes",      "the 16 Sep audit fixes: durable private writes, rule probe, folded form"],
   ["offline",          "the app boots with the network pulled"],
   ["regression",       "101 real cafes still render exactly as before"]
 ];

@@ -51,16 +51,74 @@ function adminSignIn(){ if(!fbAuth){ toast("Cloud not connected"); return; } con
    address, exactly as everyone sees it. The exact address lives under PRIVATE_PATH, behind a
    database rule that only the owner's account can read (the rule text is in the README —
    without it this node is as public as the other one, so it is not optional). */
+/* The exact address has to survive a refused write. The cloud write can fail for precisely
+   the reason this feature exists — a missing database rule — and by the time it runs the
+   public copy has already been blurred, so a dropped write would destroy the only precise
+   copy there is. It is mirrored on this device, retried, and the failure is said out loud
+   rather than left in console.warn.
+
+   The mirror only ever exists on the owner's own device: for anyone else privDetail stays
+   empty and nothing is written. */
+const PRIV_MIRROR="cafemap.private.v1";
+const PRIV_QUEUE="cafemap.private.pending.v1";
+let privPending={}, _privWarned=false;
+function _readPrivStore(k){
+  try{ const v=JSON.parse(localStorage.getItem(k)||"{}"); if(v&&typeof v==="object"&&!Array.isArray(v))return v; }
+  catch(e){ warn("storage.js",e); }
+  return {};
+}
+function persistPrivate(){
+  lsSet(PRIV_MIRROR,JSON.stringify(privDetail));
+  lsSet(PRIV_QUEUE,JSON.stringify(privPending));
+}
 function loadPrivateDetail(){
-  if(!fbReady||!ownerSignedIn()){ privDetail={}; return Promise.resolve(); }
+  if(!ownerSignedIn()){ privDetail={}; privPending={}; return Promise.resolve(); }
+  /* Start from this device, so an address that never reached the cloud is still here. */
+  privDetail=_readPrivStore(PRIV_MIRROR);
+  privPending=_readPrivStore(PRIV_QUEUE);
+  if(!fbReady)return Promise.resolve();
   return fbDb.ref(PRIVATE_PATH).once("value").then(function(s){
-    privDetail=s.val()||{};
-  }).catch(function(e){ warn("storage.js",e); privDetail={}; });
+    const cloud=s.val()||{};
+    /* Cloud wins, except where this device still holds a write the cloud never accepted —
+       including a pending deletion, which the queue stores as null. */
+    const merged=Object.assign({},cloud);
+    Object.keys(privPending).forEach(function(k){
+      if(privPending[k]===null)delete merged[k]; else merged[k]=privPending[k];
+    });
+    privDetail=merged;
+    persistPrivate();
+    flushPrivate();
+  }).catch(function(e){
+    warn("storage.js",e);
+    /* A refused read means the rule is missing or wrong — the same cause as a refused write,
+       and worth saying now rather than at the next save. */
+    privateWriteFailed();
+  });
+}
+/* Said once a session. It names the cause, because there is really only one. */
+function privateWriteFailed(){
+  if(_privWarned)return;
+  _privWarned=true;
+  toast("Private address kept on this device — the cloud refused it. Check the database rules (see README).");
+}
+function flushPrivate(){
+  const ids=Object.keys(privPending);
+  if(!ids.length)return;
+  if(!fbReady||!ownerSignedIn())return;
+  ids.forEach(function(id){
+    const exact=privPending[id];
+    const write=(exact===null)?fbDb.ref(PRIVATE_PATH+"/"+id).remove()
+                              :fbDb.ref(PRIVATE_PATH+"/"+id).set(exact);
+    write.then(function(){
+      if(privPending[id]===exact){ delete privPending[id]; persistPrivate(); }
+    }).catch(function(e){ warn("storage.js",e); privateWriteFailed(); });
+  });
 }
 function savePrivateDetail(id,exact){
   privDetail[id]=exact;
-  if(!fbReady||!ownerSignedIn())return;
-  fbDb.ref(PRIVATE_PATH+"/"+id).set(exact).catch(function(e){ warn("storage.js",e); });
+  privPending[id]=exact;
+  persistPrivate();
+  flushPrivate();
 }
 /* `force` spends a write even when we hold no local record of one. Deleting a cafe passes it,
    because an address left behind for a cafe that no longer exists is exactly the leak this is
@@ -69,9 +127,11 @@ function savePrivateDetail(id,exact){
 function removePrivateDetail(id,force){
   const had=Object.prototype.hasOwnProperty.call(privDetail,id);
   delete privDetail[id];
-  if(!had&&!force)return;
-  if(!fbReady||!ownerSignedIn())return;
-  fbDb.ref(PRIVATE_PATH+"/"+id).remove().catch(function(e){ warn("storage.js",e); });
+  if(!had&&!force){ if(privPending[id]!==undefined){ delete privPending[id]; persistPrivate(); } return; }
+  /* null is the queue's "remove this", so a deletion is as durable as a write */
+  privPending[id]=null;
+  persistPrivate();
+  flushPrivate();
 }
 /* A private spot saved before any of this still has its exact address sitting in the public
    node. Move it. The precise copy is written first and the public record overwritten second,
@@ -94,6 +154,41 @@ function healPrivateSpots(){
     }).catch(function(e){ warn("storage.js",e); });
   });
 }
+/* ---------- is the private node actually private? ----------
+   The whole arrangement rests on a database rule nobody in the app could see, published by
+   hand in a console, and a missing one fails silently in both directions: reads come back
+   empty, writes are refused. So check it from the outside.
+
+   A SECOND, unauthenticated Firebase app reads `private/`. Auth state is per app instance, so
+   this asks the question as a stranger would even while the owner is signed in on the main
+   one. A rule that is doing its job REJECTS that read. If it resolves — with data or with
+   null — then the path is world-readable and every private address on it is public.
+
+   Read-only on purpose: proving the database is writable would mean writing to it. */
+let _ruleProbeDone=false;
+function probePrivateRule(){
+  if(_ruleProbeDone||!fbReady||!window.firebase||!FIREBASE_CONFIG)return;
+  _ruleProbeDone=true;
+  let probe,db;
+  try{
+    probe=(firebase.apps||[]).filter(function(a){ return a.name==="ruleprobe"; })[0]
+          ||firebase.initializeApp(FIREBASE_CONFIG,"ruleprobe");
+    db=firebase.database(probe);
+  }catch(e){ warn("storage.js",e); return; }
+  db.ref(PRIVATE_PATH).once("value").then(function(){
+    showRuleWarning();
+  }).catch(function(){
+    /* Rejected. That is the good outcome and needs no announcement. */
+  });
+}
+/* Only the owner is told. A viewer can do nothing about it and the message would only
+   be alarming, so it is gated on the admin flag rather than shown to everyone. */
+function showRuleWarning(){
+  const el=$("rule-warn");
+  if(!el||!isAdmin)return;
+  el.hidden=false;
+}
+function dismissRuleWarning(){ const el=$("rule-warn"); if(el)el.hidden=true; }
 function resyncDirty(){ return flushSync(); }
 function initAuth(){ if(!fbAuth)return; fbAuth.onAuthStateChanged(u=>{ const ok=!!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()); if(u&&!ok){ toast("That account can't edit this map"); fbAuth.signOut(); return; } if(ok){ if(!isAdmin){ isAdmin=true; lsSet(ADMIN_FLAG,"1"); applyMode(); toast("Admin mode - signed in"); } load().then(()=>{ if(gReady)renderMarkers(); renderList(); resyncDirty(); }); } else if(!ok&&isAdmin){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); }); toast("Viewer mode"); } }); }
 function toggleAdmin(){ if(fbAuth){ if(isAdmin){ if(confirm("Sign out of editing mode?"))fbAuth.signOut().then(()=>toast("Viewer mode")); } else { adminSignIn(); } return; } if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; lsSet(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
