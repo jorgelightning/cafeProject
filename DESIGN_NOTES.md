@@ -94,6 +94,13 @@ Companion to `README.md`, which covers structure and deployment.
   currency chip, and the choice is stored as `c.ccy`, which outranks `c.cc` and is only ever
   asked once per cafe. Do not reintroduce a lat/lng country guess: `countryTerms()` exists for
   search terms and puts Vancouver in the United States.
+- **A private address is written to the cloud AFTER the public copy has been blurred**, so a
+  refused write used to destroy the only precise copy there was. `savePrivateDetail()` now
+  mirrors it on the device and queues a retry, and the refusal is toasted rather than left in
+  `console.warn`. **Do not reduce that back to a fire-and-forget write.**
+- **The rules in `js/config.js` and `README.md` must stay identical.** They disagreed once —
+  config.js documented the pre-private set — and because Realtime Database denies any path no
+  rule grants, following it made private spots silently unwritable.
 - **Everything this app writes is public.** `cafes.json` is served from the repo and the
   Firebase node is read without auth, so *hiding something in the UI hides nothing.* A value
   that must not be public cannot be written. `redactPrivate()` in `core.js` is the one place
@@ -192,6 +199,21 @@ Session-bound Places URLs were being persisted to Firebase and served broken to 
 Fetching moved to the Places API (New) with the legacy service as fallback; stable URLs are
 persisted by the admin "Fetch all photos" action so viewers get thumbnails at zero API cost.
 Thumbnails load lazily — rendering the list costs no requests, and opening a cafe costs one.
+
+### The app checks its own database rules
+The private node is only private if a rule says so, and that rule is published by hand in a
+console where nothing in the app can see it. `probePrivateRule()` asks from the outside: a
+second, unauthenticated Firebase app reads `private/`. Auth state is per app instance, so this
+poses the question as a stranger would even while the owner is signed in. A rule that works
+**rejects** that read; one that resolves — with data or with null — proves the path is
+world-readable. Read-only on purpose: proving the database is writable would mean writing to it.
+
+### The form folds to the part you came for
+Adding a cafe needs every field; revisiting one needs almost none of them. Location, area,
+brand, photo and tags sit in one `<details>` that opens for a new cafe and stays shut for an
+edit, taking the revisit path from 1,471px to 715px on an 844px screen. The catch worth
+remembering: **Google sizes a map when it is created, and a map created inside a closed
+`<details>` has no size to measure** — the toggle handler re-runs `mapResize()` and re-centres.
 
 ### The precise copy lives outside `cafes`
 `save()` writes the whole `cafes` array to the public node, so anything in that array is
