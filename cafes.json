@@ -170,13 +170,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1449,
+    "elo": 1443,
     "emoji": "☕",
     "fav": false,
     "id": "mqf9w1vzajpl",
     "lat": 21.32908,
     "lng": -158.0914,
-    "matches": 8,
+    "matches": 9,
     "name": "Island Vintage Coffee and Wine Bar Kapolei",
     "rating": 3,
     "review": "Flat white are known for their micro foam and there was none here!",
@@ -1094,13 +1094,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1543,
+    "elo": 1525,
     "emoji": "☕",
     "fav": true,
     "id": "mqlipq5e1fwo",
     "lat": 37.77591,
     "lng": -122.49649,
-    "matches": 4,
+    "matches": 5,
     "name": "Constance Tea & Matcha",
     "rating": 5,
     "review": "Freshly milled! Great information from the staff!",
@@ -2355,6 +2355,54 @@
     "wish": false
   },
   {
+    "area": "Downtown Los Angeles",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-12"
+        ],
+        "ice": "Regular ice",
+        "milk": "Oat",
+        "n": "Matcha Einspanner",
+        "orders": [
+          {
+            "date": "2026-09-12",
+            "ice": "Regular ice",
+            "id": "mtysl6w034ni",
+            "milk": "Oat",
+            "p": "8.50",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "8.50",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtysqdqaqnhq",
+    "lat": 34.05757,
+    "lng": -118.24085,
+    "name": "Archives Of Us",
+    "pid": "ChIJ7SJdEwbHwoARbK8FgtY2QxM",
+    "rating": 5,
+    "review": "Take the elevator to the second floor and opens up to the cafe with a cool study and conversation space inside and they have an outdoor area as well! The drink itself is well described with a stats card. I enjoy the matcha taste!",
+    "tags": [
+      "good wifi",
+      "outdoor",
+      "cozy"
+    ],
+    "updated": "2026-09-12T19:46:47.937Z",
+    "wish": false
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
@@ -2587,13 +2635,14 @@
     "custom": false,
     "drinks": [
       {
-        "count": 5,
+        "count": 6,
         "dates": [
           "2026-03-24",
           "2026-07-09",
           "2026-07-27",
           "2026-09-08",
-          "2026-09-09"
+          "2026-09-09",
+          "2026-09-15"
         ],
         "ice": "Warm",
         "milk": "Oat",
@@ -2648,6 +2697,16 @@
             "reorder": "yes",
             "size": "8 oz",
             "sweet": "0%"
+          },
+          {
+            "date": "2026-09-15",
+            "ice": "Warm",
+            "id": "mu34ylftx36w",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
           }
         ],
         "p": "5",
@@ -2656,7 +2715,7 @@
         "sweet": "0%"
       },
       {
-        "count": 8,
+        "count": 9,
         "dates": [
           "2026-03-22",
           "2026-03-25",
@@ -2665,7 +2724,8 @@
           "2026-08-05",
           "2026-08-07",
           "2026-08-11",
-          "2026-09-04"
+          "2026-09-04",
+          "2026-09-11"
         ],
         "ice": "Warm",
         "milk": "Oat",
@@ -2750,6 +2810,16 @@
             "reorder": "yes",
             "size": "12 oz",
             "sweet": "0%"
+          },
+          {
+            "date": "2026-09-11",
+            "ice": "Warm",
+            "id": "mtysu9gimksk",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
           }
         ],
         "p": "7.25",
@@ -2807,7 +2877,7 @@
     "tags": [
       "specialty"
     ],
-    "updated": "2026-09-10T17:05:54.257Z",
+    "updated": "2026-09-15T20:41:04.286Z",
     "wish": false
   },
   {
@@ -3060,13 +3130,13 @@
         "p": ""
       }
     ],
-    "elo": 1580,
+    "elo": 1571,
     "emoji": "🍵",
     "fav": true,
     "id": "tea-shoji",
     "lat": 37.78661,
     "lng": -122.4,
-    "matches": 6,
+    "matches": 7,
     "name": "Shoji",
     "rating": 4,
     "review": "Nice hojicha latte, well made.",
@@ -3111,13 +3181,13 @@
         "p": ""
       }
     ],
-    "elo": 1422,
+    "elo": 1417,
     "emoji": "🍵",
     "fav": false,
     "id": "tea-tokyo-cream",
     "lat": 37.76378,
     "lng": -122.47778,
-    "matches": 6,
+    "matches": 7,
     "name": "Tokyo Cream",
     "rating": 3,
     "review": "Nice hojicha aftertaste, but the tea was too diluted.",
