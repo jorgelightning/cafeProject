@@ -213,6 +213,25 @@ The comparison count, the Elo score, the "places are provisional" caveat and the
 **`.lbrow` is shared with the stats leaderboards**, so the guide layout is scoped to
 `.lbrow.guide`; styling `.lbrow` alone restyles Stats too.
 
+### Two devices merge; only a real disagreement asks
+A conflict used to mean "the cloud copy is not byte-identical to the one I started from",
+which fires whenever two devices touch *different* fields of the same cafe — the ordinary case.
+`syncMerge()` uses the `base` the outbox already captures: a field only one side moved is taken
+from that side, and only the same field moved differently on both sides is a conflict.
+
+Orders merge by id, so two devices each logging a drink at the same cafe combine instead of
+colliding. **A single id-less order anywhere makes the whole drinks list all-or-nothing** —
+legacy records predate ids and merging those by position would reshuffle prices between dates.
+New orders always get an id, so this heals as records are edited.
+
+`elo`/`matches` follow whichever side has seen more comparisons and never raise a conflict;
+`updated` takes the later stamp. **Every doubt resolves to "ask":** a wrong merge loses an edit
+silently, a needless question costs one tap. Deleting on one side while the other edits is
+always a question.
+
+Reconciliation happens on open and on `visibilitychange`, not only on edit and `online` —
+a phone resuming from background often does not fire `online`, which left a queue stuck.
+
 ### A conflict has to say what changed, not just that something did
 "Another device edited this cafe — choose which version to keep" is unanswerable in the moment
 it appears: a conflict happens *while you are editing*, and both options described a place
