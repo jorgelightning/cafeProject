@@ -50,8 +50,38 @@ function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp
 function safeUrl(u){ u=(u==null?"":String(u)).trim(); if(!u)return ""; if(!/^(https?:|data:image\/)/i.test(u))return ""; return u.replace(/["'()<>\s\\]/g,encodeURIComponent); }
 const _imgFail={}; let _photoRetried={};
 function initials(c){ const n=((c&&c.name)||"").trim(); if(!n)return "?"; const w=n.split(/\s+/).filter(Boolean); let s=(w[0]&&w[0][0])||""; if(w.length>1&&w[1][0])s+=w[1][0]; return s.toUpperCase(); }
-function cafeColor(name){ const P=["#e07b54","#d4a843","#7cb87c","#5b9bd5","#9b6fc4","#e06b8a","#4db8aa","#e08040"]; let h=0; for(let i=0;i<(name||"").length;i++)h=(h*31+name.charCodeAt(i))>>>0; return P[h%P.length]; }
-function nophotoBg(name){ return 'linear-gradient(140deg,rgba(255,255,255,.18),rgba(0,0,0,.26)) '+cafeColor(name); }
+/* ---------- the placeholder tint ----------
+   Every card without a photo — which is every card, since photos are only fetched when a cafe
+   is opened — used to get one of eight saturated hues hashed off its name. The hue meant
+   nothing: two cafes with nothing in common came out the same colour, and the grid read as
+   noise. It now carries the rating, on the same five-step scale the map pins use, so the two
+   screens agree and the colour is worth looking at. */
+function tintFor(c){
+  /* ratingColor lives in map.js, which loads after this file; by the time anything renders it
+     is defined. The guard keeps core.js usable on its own. */
+  if(typeof ratingColor==="function")return ratingColor(c&&c.rating);
+  return "#9aa0a6";
+}
+/* The monogram sits on top of the tint, and three of the five rating steps are too light to
+   carry white text — amber under white is 1.98:1 against a 3:1 floor. The ink follows the
+   tint's luminance instead of being fixed. */
+function inkOn(hex){
+  const m=/^#?([0-9a-f]{6})$/i.exec(String(hex||""));
+  if(!m)return "#fff";
+  const v=parseInt(m[1],16), ch=[(v>>16)&255,(v>>8)&255,v&255].map(function(x){
+    x/=255; return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);
+  });
+  const L=0.2126*ch[0]+0.7152*ch[1]+0.0722*ch[2];
+  /* White clears the 3:1 large-text floor only while L <= 0.30 — 1.05/(L+0.05) >= 3. Above
+     that the ink has to be dark, which on every tint here is 9:1 or better. */
+  return L>0.30?"rgba(0,0,0,.72)":"#fff";
+}
+function nophotoBg(c){
+  const t=tintFor(c);
+  return 'linear-gradient(140deg,rgba(255,255,255,.18),rgba(0,0,0,.26)) '+t;
+}
+/* background and a legible ink together, since they always travel as a pair */
+function nophotoStyle(c){ return 'background:'+nophotoBg(c)+';color:'+inkOn(tintFor(c)); }
 function nophotoHTML(c){ return '<span class="em">'+esc((c&&c.emoji)||"☕")+'</span><span>'+initials(c)+'</span>'; }
 /* Local calendar date. Plain toISOString() would hand back yesterday (or tomorrow) when
    logging from Hawaii or Taipei, so shift by the timezone offset before slicing. */
@@ -345,5 +375,5 @@ function starsHTML(r){ r=Math.max(0,Math.min(5,Math.round(r||0))); if(!r)return 
    it (renderList, verifyCardPhoto, applyCardPhoto) — routing them all through here is what
    keeps a resolving photo from silently wiping the star pill and wish badge. */
 function phInner(c,hasPhoto){ let h=hasPhoto?"":nophotoHTML(c); if(c&&c.fav)h+='<span class="favbadge">❤️</span>'; if(c&&c.wish)h+='<span class="wishbadge">🔖</span>'; return h+starsHTML(c&&c.rating); }
-function verifyCardPhoto(id,url){ if(!url)return; const probe=new Image(); probe.onload=function(){ _imgFail[id]=0; }; probe.onerror=function(){ _imgFail[id]=1; const c=cafes.find(x=>x.id===id); if(c&&c.gphoto)delete c.gphoto; if(gphotoCache[id]!==undefined){ delete gphotoCache[id]; saveGphotoCache(); } const el=document.querySelector('.card[data-id="'+id+'"] .ph'); if(el){ el.style.backgroundImage=""; el.classList.remove("loaded","loading"); el.classList.add("nophoto"); el.style.background=c?nophotoBg(c.name):"#caa472"; el.innerHTML=c?phInner(c,false):"?"; } if(c&&!c.photo&&!_photoRetried[id]&&gReady&&c.lat!=null&&!gphotoInflight[id]){ _photoRetried[id]=1; gphotoInflight[id]=1; fetchPlacePhoto(c,function(u){ delete gphotoInflight[id]; if(u)applyCardPhoto(id,u); }); } }; probe.src=safeUrl(url); }
+function verifyCardPhoto(id,url){ if(!url)return; const probe=new Image(); probe.onload=function(){ _imgFail[id]=0; }; probe.onerror=function(){ _imgFail[id]=1; const c=cafes.find(x=>x.id===id); if(c&&c.gphoto)delete c.gphoto; if(gphotoCache[id]!==undefined){ delete gphotoCache[id]; saveGphotoCache(); } const el=document.querySelector('.card[data-id="'+id+'"] .ph'); if(el){ el.style.backgroundImage=""; el.classList.remove("loaded","loading"); el.classList.add("nophoto"); el.style.cssText=c?nophotoStyle(c):"background:#caa472"; el.innerHTML=c?phInner(c,false):"?"; } if(c&&!c.photo&&!_photoRetried[id]&&gReady&&c.lat!=null&&!gphotoInflight[id]){ _photoRetried[id]=1; gphotoInflight[id]=1; fetchPlacePhoto(c,function(u){ delete gphotoInflight[id]; if(u)applyCardPhoto(id,u); }); } }; probe.src=safeUrl(url); }
 function fmtDate(s){ if(!s)return ""; const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); if(!m)return s; const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2]-1]; return mo+" "+(+m[3])+", "+m[1]; }

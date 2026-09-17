@@ -408,6 +408,38 @@ score renders muted at 13px rather than bold green, because it cannot bear the e
 
 Stats and Board now point at each other, so neither handoff is a dead end.
 
+### The List screen: colour with a job, and one control row
+
+Two measurements drove this. **111 of 111 cards** render a placeholder — photos are only
+fetched when a cafe is opened, so the tile colour *is* the List screen for a first-time
+visitor — and `cafeColor()` picked that colour by hashing the cafe's name into eight
+saturated hues, spread 18/17/16/14/14/13/10/9. Two cafes with nothing in common came out
+identical; a 5★ and a 1★ came out different for no reason a reader could name. And the
+controls above the grid ran to **four stacked rows** — search 51px, chips 54px, a count
+beside a sort menu 34px, a layout toggle alone on its own row 44px — **217px on a 390×844
+phone**, 26% of the screen, before a single cafe appeared.
+
+The tint now carries the **rating**, on the same five-step scale the map pins already use
+(`ratingColor()` in `map.js`), so the two screens agree and the colour is worth reading.
+`cafeColor()` is deleted — it had no other callers.
+
+Three of the five steps are too light for white text: white on the amber step is 1.98:1
+against a 3:1 large-text floor. So the ink follows the tint's luminance instead of being
+fixed. `inkOn()` computes WCAG relative luminance and flips to `rgba(0,0,0,.72)` above
+**L = 0.30** — the exact point where `1.05/(L+0.05)` drops below 3. All six tints clear the
+floor: 3.41, 8.38, 10.44, 7.59, 3.70, 7.95. `nophotoStyle()` returns background and ink
+together, because they can never travel separately.
+
+The four control rows fold into one `.listbar` — count, a **Filters** button, the map button
+— with the chips, the sort menu and the layout toggle inside a `.listpanel` that is closed at
+rest. Nothing is removed. The button carries a count of what is on, which is why
+`activeFilterCount()` deliberately does *not* count the default sort: a badge only means
+something if it matches what a person would call a filter. Measured against the real 111
+cafes, chrome went **217px → 109px** — 108px recovered, about two more cafes above the fold.
+
+Guarded by `tests/list-clean.js` (29 assertions), which checks the contrast arithmetic rather
+than the hex values, so retuning the palette stays safe.
+
 ---
 
 ## Rejected, and why
@@ -466,5 +498,6 @@ Recorded so they are not re-proposed. Each was considered and turned down on evi
   still shows them; nothing writes new ones.
 - **`#map-sub`** ("N cafes · tap a pin") no longer renders anywhere, since both title bars are
   hidden on mobile. Map errors still surface through the full-pane `#map-msg`.
-- **Remaining scale drift:** 19 font sizes and 15 border radii across the stylesheet. Worth
-  folding in opportunistically, not worth a project.
+- **Scale drift is now held by a test.** `tests/scale.js` fails on any literal corner radius
+  or gap outside the scale, and on any font size outside it except on glyph selectors (emoji
+  and icons are artwork being sized, not type being set). New CSS has to stay on the scale.

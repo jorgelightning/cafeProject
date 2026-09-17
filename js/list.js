@@ -43,7 +43,7 @@ function renderFilterChips(){ const host=$("filterchips"); if(!host)return; cons
  const trow=$("tagchips"); if(trow){ if(showTagRow){ trow.style.display=""; trow.innerHTML=usedTags.map(t=>'<span class="chip'+(activeChip==="tag:"+t?" on":"")+'" role="button" tabindex="0" onclick="setChip(\'tag:'+esc(t)+'\')">'+esc(t)+'</span>').join(""); } else { trow.style.display="none"; trow.innerHTML=""; } } }
 function clearFilters(){ activeChip=""; favOnly=false; wishOnly=false; showTagRow=false; renderList(); }
 function setChip(v){ activeChip=(activeChip===v)?"":v; if(activeChip.slice(0,4)==="tag:")showTagRow=true; renderList(); }
-function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); grid.classList.toggle("compact-list",listCompact);if($("list-layout"))$("list-layout").textContent=listCompact?"Use card grid":"Use compact list"; let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderFilterChips(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(typeof updateSpellBtn==="function")updateSpellBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
+function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); grid.classList.toggle("compact-list",listCompact);if($("list-layout"))$("list-layout").textContent=listCompact?"Use card grid":"Use compact list"; let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderFilterChips(); updateFilterBadge(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(typeof updateSpellBtn==="function")updateSpellBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
    comparisons, which floated every unranked cafe above the 36 that were compared and lost —
    putting the most-compared cafe in the app in last place. */
   /* Ordering. Every branch ends on name so the list never jitters between equal items, and
@@ -108,7 +108,7 @@ grid.innerHTML=items.map(function(c){
   const hasPhoto=!!(gp && !_imgFail[c.id]);
   let cls="ph", style="";
   if(hasPhoto){ cls+=" loaded"; style=' style="background-image:url(\''+safeUrl(gp)+'\')"'; }
-  else        { cls+=" nophoto"; style=' style="background:'+nophotoBg(c.name)+'"'; }
+  else        { cls+=" nophoto"; style=' style="'+nophotoStyle(c)+'"'; }
 
   const M=[];
   if(dstr)M.push(sortMode==="near"?'<span class="near">'+dstr+'</span>':dstr);
@@ -133,5 +133,38 @@ items.forEach(function(c){ const gp=gphotoFor(c); if(gp && !_imgFail[c.id])verif
 let listCompact=localStorage.getItem("cafemap.listLayout")==="compact";
 function toggleListLayout(){listCompact=!listCompact;lsSet("cafemap.listLayout",listCompact?"compact":"grid");renderList();}
 let sortMode="recent";
+/* ---------- one control row ----------
+   The List spent 217px — a quarter of a phone screen — on four stacked rows before the first
+   cafe: search, filter chips, a count beside a sort menu, and a layout toggle alone on its
+   own row. Chips, sort and layout now sit behind one Filters control that says how many are
+   active, so nothing is lost and two more cafes clear the fold. */
+function toggleListFilters(){
+  const p=$("listpanel"), b=$("filterbtn");
+  if(!p||!b)return;
+  p.hidden=!p.hidden;
+  b.setAttribute("aria-expanded",String(!p.hidden));
+  const ch=b.querySelector(".fchev");
+  if(ch)ch.textContent=p.hidden?"\u25be":"\u25b4";
+}
+/* A count only means anything if it matches what a person would call a filter. The default
+   sort is not one; every other choice is. */
+function activeFilterCount(){
+  let n=0;
+  if(activeChip)n++;
+  if(favOnly)n++;
+  if(wishOnly)n++;
+  if(sortMode&&sortMode!=="recent")n++;
+  if(listCompact)n++;
+  return n;
+}
+function updateFilterBadge(){
+  const el=$("fcount");
+  if(!el)return;
+  const n=activeFilterCount();
+  el.textContent=n?String(n):"";
+  el.hidden=!n;
+  const b=$("filterbtn");
+  if(b)b.classList.toggle("on",n>0);
+}
 function setSort(v){ sortMode=v; renderList(); if(v==="near"){ if(navigator.geolocation)showUserLocation(false); else toast("Location not available"); } }
 function showFilteredOnMap(){ const q=($('q').value||"").toLowerCase().trim(); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(q)items=items.filter(c=>matchSearch(c,q)); const pts=items.filter(c=>c.lat!=null); show("map"); if(!gmap||!pts.length)return; setTimeout(()=>{ if(pts.length===1){ gmap.setCenter({lat:pts[0].lat,lng:pts[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); pts.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); }},100); }
