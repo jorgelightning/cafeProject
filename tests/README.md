@@ -48,6 +48,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `usuals.js` | Logging a drink you have had before: the one-tap shortcut, the near-match guard, and the cleanup for names already split by a typo. |
 | `audit-fixes.js` | The 16 Sep audit fixes: a refused private write survives, the rule probe, the folded form, update-prompt contrast. |
 | `sync-conflict.js` | Telling two versions of a cafe apart when they collide: what differs, and which is newer. |
+| `board-guide.js` | Every board row carries its reason, and the ranking bookkeeping stays with the owner. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `locate.js` | The locate button, its three states, the user dot — which was never being drawn — and that **nothing but the button raises the permission prompt**. |
 | `offline.js` | The app boots with the network pulled. |
