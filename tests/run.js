@@ -28,6 +28,7 @@ const SUITE = [
   ["audit-fixes",      "the 16 Sep audit fixes: durable private writes, rule probe, folded form"],
   ["sync-conflict",    "telling two versions of a cafe apart when they collide"],
   ["board-guide",      "the board reads as a guide, and its bookkeeping stays with the owner"],
+  ["sync-merge",       "two devices merge automatically, and what it refuses to merge"],
   ["offline",          "the app boots with the network pulled"],
   ["regression",       "101 real cafes still render exactly as before"]
 ];

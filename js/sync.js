@@ -20,6 +20,115 @@ function syncOverlay(raw){
   Object.keys(syncPending).forEach(id=>{const value=syncPending[id].value;if(value===null)delete map[id];else map[id]=syncCopy(value);});
   renderSyncStatus();return Object.values(map);
 }
+/* ---------- three-way merge ----------
+   A conflict used to mean "the cloud copy is not byte-identical to the one I started from",
+   which fires when two devices touch different fields of the same cafe — the ordinary case,
+   and the one that interrupted an edit to ask an unanswerable question.
+
+   `base` is the version this device started from, already captured per outbox entry, so the
+   two sides can be told apart: a field only one side moved is not a disagreement. Only the
+   same field, moved differently on both sides, is.
+
+   Conservative on purpose. Every doubt resolves to "ask", because a wrong merge loses an edit
+   silently and a needless question costs one tap. */
+const SYNC_SKIP={elo:1,matches:1,updated:1,drinks:1};
+function syncNewer(a,b){
+  const x=Date.parse(a||""), y=Date.parse(b||"");
+  if(isNaN(x))return b; if(isNaN(y))return a;
+  return x>=y?a:b;
+}
+function syncById(list){
+  const o={}; let ok=true;
+  (list||[]).forEach(function(x){ if(!x||!x.id){ ok=false; return; } o[x.id]=x; });
+  return ok?o:null;
+}
+/* Orders merge by id. Legacy records predate ids, and merging those by position would
+   reshuffle prices between dates, so a single id-less order anywhere makes the whole drinks
+   list all-or-nothing. New orders always get one (form.js), so this heals as you edit. */
+function syncMergeOrders(base,mine,theirs,note,label){
+  const B=syncById(base), M=syncById(mine), T=syncById(theirs);
+  if(!B||!M||!T){ note(label,mine,theirs); return mine; }
+  const ids=Object.keys(Object.assign({},B,M,T));
+  const out=[];
+  ids.forEach(function(id){
+    const inB=!!B[id], inM=!!M[id], inT=!!T[id];
+    if(!inM&&!inT)return;                       /* gone from both */
+    if(inB&&(!inM||!inT))return;                /* one side removed it; removal wins */
+    if(!inB&&inM&&!inT){ out.push(M[id]); return; }   /* mine added */
+    if(!inB&&inT&&!inM){ out.push(T[id]); return; }   /* theirs added */
+    if(syncEqual(M[id],T[id])){ out.push(M[id]); return; }
+    if(syncEqual(M[id],B[id])){ out.push(T[id]); return; }
+    if(syncEqual(T[id],B[id])){ out.push(M[id]); return; }
+    note(label,M[id],T[id]);
+    out.push(M[id]);
+  });
+  out.sort(function(a,b){ return String(a.date||"").localeCompare(String(b.date||"")); });
+  return out;
+}
+function syncMergeDrinks(base,mine,theirs,note){
+  const key=function(d){ return String((d&&d.n)||"").trim().toLowerCase(); };
+  const idx=function(l){ const o={}; (l||[]).forEach(function(d){ const k=key(d); if(k)o[k]=d; }); return o; };
+  const B=idx(base), M=idx(mine), T=idx(theirs);
+  const keys=Object.keys(Object.assign({},B,M,T));
+  const out=[];
+  keys.forEach(function(k){
+    const inB=!!B[k], inM=!!M[k], inT=!!T[k];
+    if(!inM&&!inT)return;
+    if(inB&&(!inM||!inT))return;                /* one side deleted the drink */
+    if(!inB&&inM&&!inT){ out.push(M[k]); return; }
+    if(!inB&&inT&&!inM){ out.push(T[k]); return; }
+    if(syncEqual(M[k],T[k])){ out.push(M[k]); return; }
+    const merged=Object.assign({},T[k],M[k]);
+    merged.orders=syncMergeOrders((B[k]||{}).orders,(M[k]||{}).orders,(T[k]||{}).orders,note,"drinks");
+    /* A drink's ranking follows the side that has seen more comparisons, like the cafe's. */
+    const bm=(T[k]||{}).matches||0, am=(M[k]||{}).matches||0;
+    const src=bm>am?T[k]:M[k];
+    if(src&&src.elo!==undefined)merged.elo=src.elo; else delete merged.elo;
+    if(src&&src.matches!==undefined)merged.matches=src.matches; else delete merged.matches;
+    out.push(syncDrinkSummaryFor(merged));
+  });
+  return out;
+}
+/* syncDrinkSummary() lives in core.js and rebuilds dates/count from orders; guard the call so
+   sync.js stays loadable on its own. */
+function syncDrinkSummaryFor(d){
+  try{ return (typeof syncDrinkSummary==="function")?syncDrinkSummary(d):d; }
+  catch(e){ warn("sync",e); return d; }
+}
+function syncMerge(base,mine,theirs){
+  const conflicts=[];
+  const note=function(field,m,t){
+    if(!conflicts.some(function(c){ return c.field===field; }))conflicts.push({field:field,mine:m,theirs:t});
+  };
+  if(mine===null&&theirs===null)return {value:null,conflicts:conflicts};
+  /* A delete on one side against an edit on the other cannot be reconciled by rule. */
+  if(mine===null||theirs===null){
+    const live=mine||theirs;
+    if(!syncEqual(live,base))note("deleted",mine,theirs);
+    return {value:mine===null?null:mine,conflicts:conflicts};
+  }
+  const B=base||{}, out={};
+  const keys=Object.keys(Object.assign({},B,mine,theirs));
+  keys.forEach(function(k){
+    if(SYNC_SKIP[k])return;
+    const b=B[k], m=mine[k], t=theirs[k];
+    let v;
+    if(syncEqual(m,t))v=m;
+    else if(syncEqual(m,b))v=t;
+    else if(syncEqual(t,b))v=m;
+    else { note(k,m,t); v=m; }
+    if(v!==undefined)out[k]=v;
+  });
+  out.updated=syncNewer(mine.updated,theirs.updated);
+  if(out.updated===undefined)delete out.updated;
+  /* Ranking is derived, not authored — the side with more comparisons knows more. */
+  const src=((theirs.matches||0)>(mine.matches||0))?theirs:mine;
+  if(src.elo!==undefined)out.elo=src.elo;
+  if(src.matches!==undefined)out.matches=src.matches;
+  const drinks=syncMergeDrinks((B.drinks),(mine.drinks),(theirs.drinks),note);
+  if(mine.drinks!==undefined||theirs.drinks!==undefined)out.drinks=drinks;
+  return {value:out,conflicts:conflicts};
+}
 function queueCafe(id,value,base){
   if(!isAdmin)return;
   const old=syncPending[id];
@@ -36,24 +145,38 @@ async function flushSync(){
       const op=syncPending[id];if(op.conflict)continue;
       const keyed=_cloudKeyed, ref=fbDb.ref(keyed?'cafes/'+id:'cafes');
       await ref.once('value');
+      /* The transaction body can run more than once; the last run is the one that counts,
+         so these record its outcome rather than accumulating. */
+      let lastConflicts=null, lastWritten;
       const result=await ref.transaction(function(raw){
         let current=raw, collection;
         if(!keyed){collection={};asArray(raw).forEach(c=>{if(c&&c.id)collection[c.id]=c;});current=collection[id]||null;}
         // Firebase may first invoke this with an empty local cache. A null base can
         // create, but an existing remote value is checked again on server retry.
-        if(!syncEqual(current,op.base)&&!syncEqual(current,op.value))return;
-        if(keyed)return syncCopy(op.value);
-        if(op.value===null)delete collection[id];else collection[id]=syncCopy(op.value);
+        let write=op.value;
+        if(!syncEqual(current,op.base)&&!syncEqual(current,op.value)){
+          /* Somebody else moved this record. That is only a conflict where we both moved the
+             same thing — otherwise the two edits are combined and nobody is interrupted. */
+          const m=syncMerge(op.base,op.value,current);
+          if(m.conflicts.length){ lastConflicts=m.conflicts; return; }
+          write=m.value;
+        }
+        lastConflicts=null; lastWritten=syncCopy(write);
+        if(keyed)return syncCopy(write);
+        if(write===null)delete collection[id];else collection[id]=syncCopy(write);
         return collection;
       },undefined,false);
       if(syncPending[id]!==op){if(result.committed&&syncPending[id])syncPending[id].base=syncCopy(op.value);syncPersist();again=true;continue;}
       if(result.committed){
         syncLastConfirmed=true;
-        syncRemote[id]=syncCopy(op.value);delete syncPending[id];
+        /* What landed may be a merge of both sides, not what this device queued. */
+        syncRemote[id]=syncCopy(lastWritten!==undefined?lastWritten:op.value);delete syncPending[id];
         if(op.value===null)removePrivateDetail(id,true);
         if(!keyed)_cloudKeyed=true;
       }else{
         const raw=result.snapshot.val();op.conflict=true;op.remote=syncCopy(keyed?raw:asArray(raw).find(c=>c&&c.id===id)||null);
+        /* Naming the fields that actually clashed turns "something differs" into a question. */
+        op.conflictFields=(lastConflicts||[]).map(function(c){ return c.field; });
       }
       syncPersist();
     }
@@ -116,7 +239,14 @@ function renderSyncConflict(op){
   const name=((mine||theirs||{}).name)||"this cafe";
   const rows=syncDiffRows(mine,theirs);
   const mineWhen=mine?syncAgo(mine.updated):"", theirsWhen=theirs?syncAgo(theirs.updated):"";
-  let h='<p><b>'+esc(name)+'</b> was changed in two places. Here is what differs \u2014 pick the one you want to keep.</p>';
+  const FIELD_WORDS={rating:"the rating",review:"the note",drinks:"the drinks",name:"the name",
+                     area:"the area",tags:"the tags",fav:"the favourite mark",wish:"the wishlist mark",
+                     deleted:"whether it still exists"};
+  const clashed=(op.conflictFields||[]).map(function(f){ return FIELD_WORDS[f]||f; });
+  const lead=clashed.length
+    ? 'You and another device both changed '+esc(clashed.join(" and "))+' on <b>'+esc(name)+'</b>. Everything else was merged for you \u2014 pick which of these to keep.'
+    : '<b>'+esc(name)+'</b> was changed in two places. Here is what differs \u2014 pick the one you want to keep.';
+  let h='<p>'+lead+'</p>';
   if(rows.length){
     h+='<div class="cfhead"><span></span><span>On this phone'+(mineWhen?' \u00b7 '+esc(mineWhen):'')
       +'</span><span>In the cloud'+(theirsWhen?' \u00b7 '+esc(theirsWhen):'')+'</span></div>';
