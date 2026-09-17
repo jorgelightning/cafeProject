@@ -205,6 +205,18 @@ Thumbnails load lazily — rendering the list costs no requests, and opening a c
 when there is something to clean. That combination made them undiscoverable: you had to open a
 panel to find out the panel had anything in it. A count now rides on the closed toggle.
 
+### The guide leads with what you can reach
+A standing whose top entry is 6,000 miles away is a list of places you cannot go. When
+`userLoc` is known the same ranking splits into "Near you" (within `NEAR_MI`, 25) and "Further
+afield" — **ordering inside each group stays the standing**, so it reads as the best places
+nearby rather than the closest ones. Nothing is hidden; the far group is still there, labelled.
+
+Two rules it must keep: the guide **never raises the location prompt on its own** — with no
+location it shows a tap that calls `locate()`, the only path allowed to ask — and somewhere
+with nothing close by names the nearest cafe and its distance rather than rendering an empty
+screen. `showUserLocation()` re-renders the board when it is the visible view, so the grouping
+appears the moment the fix lands.
+
 ### The Board is a guide; the ranking is bookkeeping
 A row used to read "#1 · name · 11 comparisons · area · 7.4" — a visitor was given the
 ranking's bookkeeping and none of the 88 ratings, 87 drink records or 84 written notes already

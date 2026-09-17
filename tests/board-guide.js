@@ -134,6 +134,53 @@ const { eq, done } = checker();
   eq(r.viewerGo, true, "…it offers them the guide instead");
   eq(r.ownerRanked, true, "…while the owner keeps the coverage count");
 
+  // ---- near you ----
+  /* A standing whose top entry is 2,400 miles away is a list of places you cannot go. */
+  const place = (id, name, lat, lng, elo) => ({ id, name, area: name + " area", lat, lng,
+    elo, matches: 6, rating: 4, drinks: [], review: "" });
+  const SF = { lat: 37.7749, lng: -122.4194 };
+
+  r = await pg.evaluate((SF) => {
+    cafes = [
+      { id: "far", name: "Far Best", area: "Taipei", lat: 25.03, lng: 121.56, elo: 1700, matches: 9, rating: 5, drinks: [] },
+      { id: "near1", name: "Near Good", area: "SoMa", lat: 37.78, lng: -122.41, elo: 1600, matches: 8, rating: 4, drinks: [] },
+      { id: "near2", name: "Near Okay", area: "Mission", lat: 37.76, lng: -122.42, elo: 1520, matches: 7, rating: 3, drinks: [] }
+    ];
+    isAdmin = false; applyMode && applyMode();
+    userLoc = null; renderBoard();
+    const without = document.getElementById("cmp-body").textContent.replace(/\s+/g, " ");
+    userLoc = SF; renderBoard();
+    const host = document.getElementById("cmp-body");
+    const secs = [...host.querySelectorAll(".statsec")].map(e => e.textContent);
+    /* stars render inside .lbname, so take the name's own text node */
+    const order = [...host.querySelectorAll(".lbrow.guide .lbname")]
+      .map(e => e.textContent.replace(/★+/g, "").trim());
+    return { without, secs, order, body: host.textContent.replace(/\s+/g, " "),
+             prompt: /Show what’s near me/.test(without) };
+  }, SF);
+  eq(r.prompt, true, "with no location known, it offers to find out rather than asking on its own");
+  eq(/Near you — 2 within 25 miles/.test(r.secs.join(" ")), true,
+     "once known, the reachable ones are their own group");
+  eq(/Further afield — 1/.test(r.secs.join(" ")), true, "…and the rest are still there, labelled");
+  eq(r.order.slice(0, 2), ["Near Good", "Near Okay"],
+     "the nearby group leads, even though the highest-ranked cafe is 6,000 miles away");
+  eq(r.order[2], "Far Best", "…which is not hidden, just moved below");
+  eq(/1\.[0-9] mi|0\.[0-9] mi/.test(r.body), true, "each nearby row says how far it is");
+
+  /* Being somewhere with nothing close by must not produce an empty screen. */
+  r = await pg.evaluate(() => {
+    userLoc = { lat: 41.88, lng: -87.63 };   /* Chicago: nothing within 25 miles */
+    renderBoard();
+    const host = document.getElementById("cmp-body");
+    return { secs: [...host.querySelectorAll(".statsec")].map(e => e.textContent),
+             rows: host.querySelectorAll(".lbrow.guide").length };
+  });
+  eq(/Nothing within 25 miles/.test(r.secs.join(" ")), true, "somewhere with nothing close says so");
+  eq(/nearest is .* away/.test(r.secs.join(" ")), true, "…and names the nearest with its distance");
+  eq(r.rows, 3, "…while still showing the whole standing rather than an empty screen");
+
+  await pg.evaluate(() => { userLoc = null; });
+
   eq(errs, [], "no page errors");
   const ok = done();
   await b.close(); srv.close(); process.exit(ok ? 0 : 1);
