@@ -8,6 +8,12 @@ function countryTerms(c){ const lat=c.lat,lng=c.lng; if(lat==null||lng==null)ret
 function searchHay(c){ return (c.name+" "+areaOf(c)+" "+regionTerms(c)+" "+countryTerms(c)+" "+typeTerms(c)+" "+(c.tags||[]).join(" ")+" "+(c.drinks||[]).map(d=>d.n).join(" ")).toLowerCase(); }
 function matchSearch(c,q){ const hay=searchHay(c); return q.split(/\s+/).filter(Boolean).every(tok=>hay.includes(tok)); }
 function distKm(lat1,lng1,lat2,lng2){ const R=6371,toRad=x=>x*Math.PI/180; const dLat=toRad(lat2-lat1),dLng=toRad(lng2-lng1); const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
+/* One distance wording for the whole app: feet up close, miles beyond that. */
+function fmtDist(dkm){
+  if(dkm==null)return "";
+  const mi=dkm*0.621371;
+  return mi<0.1?(Math.round(mi*5280)+" ft"):(mi.toFixed(1)+" mi");
+}
 function dupNameKeys(){ const seen={},dup={}; cafes.forEach(c=>{ const k=(c.name||"").trim().toLowerCase(); if(k){ if(seen[k])dup[k]=1; seen[k]=1; } }); return dup; }
 /* compact drops the " ago" suffix — that is what buys room for distance on the card line. */
 function lastVisitedStr(c,compact){ var dates=visitDates(c); var iso=dates.length?dates[dates.length-1]:''; if(!iso)return 'No visit date'; var diff=Date.now()-new Date(iso).getTime(); if(diff<0)return ''; var days=Math.floor(diff/86400000); var ago=compact?'':' ago'; if(days<1)return 'today'; if(days===1)return compact?'1d':'yesterday'; if(days<7)return days+'d'+ago; if(days<31)return Math.floor(days/7)+'w'+ago; var mo=Math.floor(days/30); if(mo<12)return mo+'mo'+ago; var yr=Math.floor(days/365); return yr+'y'+ago; }
@@ -94,7 +100,7 @@ grid.innerHTML=items.map(function(c){
   const gp=gphotoFor(c);
   const dkm=(userLoc&&c.lat!=null)?distKm(userLoc.lat,userLoc.lng,c.lat,c.lng):null;
   const dstr=dkm!=null
-    ? ((dkm*0.621371)<0.1 ? Math.round(dkm*0.621371*5280)+" ft" : (dkm*0.621371).toFixed(1)+" mi")
+    ? fmtDist(dkm)
     : "";
 
   /* A photo that has already failed once must not be re-offered, or the tile flashes a

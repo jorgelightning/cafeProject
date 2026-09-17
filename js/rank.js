@@ -57,12 +57,27 @@ function boardSnip(t,max){
   const sp=cut.lastIndexOf(" ");
   return (sp>max*0.6?cut.slice(0,sp):cut).replace(/[\s,.;:\u2014-]+$/,"")+"\u2026";
 }
+/* ---------- near you ----------
+   A standing that opens with a cafe 2,400 miles away is a list of places you cannot go. When
+   the app knows where you are, the same ranking is split by what you can actually reach: best
+   nearby first, everything else still underneath. Ordering inside each group stays the
+   standing — "the best places near you", not "the closest ones". */
+const NEAR_MI=25;
+function boardDistTo(c){
+  if(!userLoc||!c||c.lat==null||c.lng==null)return null;
+  return distKm(userLoc.lat,userLoc.lng,c.lat,c.lng);
+}
+function boardIsNear(c){
+  const d=boardDistTo(c);
+  return d!=null&&(d*0.621371)<=NEAR_MI;
+}
 function boardRow(c,pos,unique){
   const rank=(pos<=3&&unique)?["\ud83e\udd47","\ud83e\udd48","\ud83e\udd49"][pos-1]:("#"+pos);
   const ar=boardArea(c), m=matchCount(c);
   /* D: a comparison count and a score describe the ranking process, not the cafe. The owner
      still needs both; a visitor can act on neither. */
-  const meta=[ar?esc(ar):"",isAdmin?(m+" comparison"+(m===1?"":"s")):""].filter(Boolean).join(" \u00b7 ");
+  const dkm=boardDistTo(c);
+  const meta=[dkm!=null?fmtDist(dkm):"",ar?esc(ar):"",isAdmin?(m+" comparison"+(m===1?"":"s")):""].filter(Boolean).join(" \u00b7 ");
   const stars=c.rating?'<span class="lbstars" aria-label="'+c.rating+' out of 5">'+"\u2605".repeat(c.rating)+'</span>':"";
   const top=topDrinkAt(c);
   const order=top?'<div class="lborder">Order the '+esc(top.d.n)
@@ -79,6 +94,14 @@ function boardRow(c,pos,unique){
     +'</div>'
     +(isAdmin?'<span class="lbscore soft">'+eloScore(c)+'</span>':'')
     +'</div>';
+}
+/* Ten visible, the rest folded — the same shape whichever group it is. */
+function boardChunk(rows){
+  const html=rows.map(function(r){ return r.html; });
+  let h=html.slice(0,10).join("");
+  if(html.length>10)h+='<div class="foldbox">'+html.slice(10).join("")+'</div>'
+    +'<button class="morebtn" data-lab="Show all '+html.length+'" onclick="statFold(this)">Show all '+html.length+' ▾</button>';
+  return h;
 }
 function boardQueueRow(c){
   const ar=boardArea(c), lv=chaserLast(c);
@@ -110,10 +133,27 @@ function renderBoard(){
        "#1" here can never disagree. Genuine ties share a position. */
     const pos=board.map(function(c){ return chaserRank(c,board); });
     const uniq={}; pos.forEach(function(p){ uniq[p]=(uniq[p]||0)+1; });
-    const rows=board.map(function(c,i){ return boardRow(c,pos[i],uniq[pos[i]]===1); });
-    h+=rows.slice(0,10).join("");
-    if(rows.length>10)h+='<div class="foldbox">'+rows.slice(10).join("")+'</div>'
-      +'<button class="morebtn" data-lab="Show all '+rows.length+'" onclick="statFold(this)">Show all '+rows.length+' ▾</button>';
+    const rows=board.map(function(c,i){ return {html:boardRow(c,pos[i],uniq[pos[i]]===1),near:boardIsNear(c),c:c}; });
+    const near=rows.filter(function(r){ return r.near; }), far=rows.filter(function(r){ return !r.near; });
+    if(!userLoc){
+      /* Nothing here may raise the location prompt on its own — only a tap may, which is the
+         rule locate() exists to keep. */
+      h+='<div class="handoff top" role="button" tabindex="0" onclick="locate()">📍 Show what\u2019s near me <span>›</span></div>';
+      h+=boardChunk(rows);
+    } else if(!near.length){
+      const closest=rows.slice().sort(function(a,b){ return (boardDistTo(a.c)||1e9)-(boardDistTo(b.c)||1e9); })[0];
+      const cd=closest?boardDistTo(closest.c):null;
+      h+='<div class="statsec">Nothing within '+NEAR_MI+' miles'
+        +(closest&&cd!=null?' — nearest is '+esc(closest.c.name)+', '+fmtDist(cd)+' away':'')+'</div>';
+      h+=boardChunk(rows);
+    } else {
+      h+='<div class="statsec">📍 Near you — '+near.length+' within '+NEAR_MI+' miles</div>';
+      h+=boardChunk(near);
+      if(far.length){
+        h+='<div class="statsec">Further afield — '+far.length+'</div>';
+        h+=boardChunk(far);
+      }
+    }
     if(isAdmin){
       const thin=board.filter(function(c){ return matchCount(c)<3; }).length;
       h+='<div class="statnote">Positions come from '+h2h+' head-to-head pick'+(h2h===1?"":"s")+', not from stars.'
