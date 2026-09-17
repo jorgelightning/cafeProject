@@ -164,6 +164,20 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lbrow.mag::after{ content:""; position:absolute; left:2px; bottom:0; height:3px; border-radius:2px; background:var(--acc); width:calc((100% - 4px) * var(--mag) / 100); }
 .lbrow.one .lbname i{ font-style:normal; font-weight:500; color:var(--soft); }
 .lbrow.tap{ cursor:pointer; }
+/* A board row carries its reason: stars, the drink to order, and the owner's own sentence.
+   Scoped to .guide because .lbrow is shared with the stats leaderboards, which stay one-line.
+   Aligned to the top rather than centred — these rows are now three or four lines tall and a
+   centred rank marker would float away from the name it labels. */
+.lbrow.guide{ align-items:flex-start; padding:12px 2px; gap:10px; }
+.lbrow.guide .lbrank{ padding-top:2px; }
+.lbrow.guide .gotile{ margin-top:1px; }
+.lbrow.guide .lbmain{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.lbrow.guide .lbname{ display:flex; align-items:baseline; gap:7px; flex-wrap:wrap; }
+.lbstars{ font-size:11px; letter-spacing:1px; color:var(--star); flex:none; }
+.lborder{ font-size:12.5px; font-weight:600; color:var(--acc-strong); overflow-wrap:anywhere; }
+.lbtimes{ font-weight:500; color:var(--soft); }
+.lbsay{ font-size:12px; line-height:1.45; color:var(--soft); overflow-wrap:anywhere; }
+
 .statcard{ min-height:92px; display:flex; flex-direction:column; }
 .statcard .v .of{ font-size:15px; color:var(--soft); font-weight:700; }
 .statcard .s{ font-size:11px; font-weight:600; color:var(--faint); margin-top:auto; padding-top:5px; line-height:1.25; }
