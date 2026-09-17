@@ -29,6 +29,7 @@ const SUITE = [
   ["sync-conflict",    "telling two versions of a cafe apart when they collide"],
   ["board-guide",      "the board reads as a guide, and its bookkeeping stays with the owner"],
   ["sync-merge",       "two devices merge automatically, and what it refuses to merge"],
+  ["scale",            "one type/radius/space scale, and a layout that fits all three devices"],
   ["offline",          "the app boots with the network pulled"],
   ["regression",       "101 real cafes still render exactly as before"]
 ];

@@ -53,8 +53,11 @@ function renderStats(){
   const daysOut=Object.keys(allDays).length;
   const firstDay=Object.keys(allDays).sort()[0]||"";
   const top=function(m){ const k=Object.keys(m).sort(function(a,b){ return m[b]-m[a]; }); return k.length?[k[0],m[k[0]]]:null; };
-  const magRow=function(rank,name,sub,val,pct,onclick){
-    return '<div class="lbrow one mag'+(onclick?" tap":"")+'" style="--mag:'+Math.max(2,Math.round(pct))+'"'+(onclick?' role="button" tabindex="0" onclick="'+onclick+'"':'')+'>'
+  /* The bar under each row encoded a magnitude the row already prints beside it, competing
+     with the monthly chart, which draws data you cannot otherwise see. Rows are separated by
+     a rule now, and the figure does the comparing. */
+  const magRow=function(rank,name,sub,val,onclick){
+    return '<div class="lbrow one'+(onclick?" tap":"")+'"'+(onclick?' role="button" tabindex="0" onclick="'+onclick+'"':'')+'>'
       +(rank!==null?'<span class="lbrank">'+rank+'</span>':'')
       +'<div class="lbmain"><div class="lbname">'+esc(name)+(sub?' <i>· '+esc(sub)+'</i>':'')+'</div></div>'
       +'<span class="lbscore">'+val+'</span></div>';
@@ -124,7 +127,7 @@ function renderStats(){
     if(byCafe.length){
       const mx=byCafe[0].amt, tp=byCafe.slice(0,4);
       h+='<div class="statsec">💸 Top spending</div>';
-      tp.forEach(function(x,i){ h+=magRow(i+1,x.c.name,x.c.area,money(x.amt),x.amt/mx*100,"openDetail('"+x.c.id+"','stats')"); });
+      tp.forEach(function(x,i){ h+=magRow(i+1,x.c.name,x.c.area,money(x.amt),"openDetail('"+x.c.id+"','stats')"); });
       h+='<div class="statnote">These '+tp.length+' are '+money(tp.reduce(function(s,x){ return s+x.amt; },0))+' of the '+money(spend)+' recorded, across '+byCafe.length+' cafes with any price.</div>';
     }
   }
@@ -149,9 +152,9 @@ function renderStats(){
     prices.sort(function(a,b){ return a-b; });
     const pmed=median(prices);
     h+='<div class="statsec">🍵 Hojicha latte, priced around town</div>';
-    hojA.slice(0,4).forEach(function(x){ h+=magRow("🍵",x.c.name,x.c.area,money(x.p),x.p/hmx*100,"openDetail('"+x.c.id+"','stats')"); });
+    hojA.slice(0,4).forEach(function(x){ h+=magRow("🍵",x.c.name,x.c.area,money(x.p),"openDetail('"+x.c.id+"','stats')"); });
     if(hojA.length>4){
-      h+='<div class="foldbox">'+hojA.slice(4).map(function(x){ return magRow("🍵",x.c.name,x.c.area,money(x.p),x.p/hmx*100,"openDetail('"+x.c.id+"','stats')"); }).join("")+'</div>'
+      h+='<div class="foldbox">'+hojA.slice(4).map(function(x){ return magRow("🍵",x.c.name,x.c.area,money(x.p),"openDetail('"+x.c.id+"','stats')"); }).join("")+'</div>'
         +'<button class="morebtn" data-lab="Show '+(hojA.length-4)+' more" onclick="statFold(this)">Show '+(hojA.length-4)+' more ▾</button>';
     }
     h+='<div class="statnote">Hojicha at '+hojCafes+' cafes, '+hojA.length+' with a price. Median '+money(med)+', dearest '+money(hmx)+' ('+esc(hojA[hojA.length-1].c.name)+'). All '+prices.length+' priced drinks: median '+money(pmed)+'.</div>';
@@ -184,7 +187,7 @@ function renderStats(){
   if(reg.length){
     const rmx=reg[0].n;
     h+='<div class="statsec">🔁 Regulars</div>';
-    reg.slice(0,4).forEach(function(x,i){ h+=magRow(i+1,x.c.name,x.c.area,x.n+" days",x.n/rmx*100,"openDetail('"+x.c.id+"','stats')"); });
+    reg.slice(0,4).forEach(function(x,i){ h+=magRow(i+1,x.c.name,x.c.area,x.n+" days","openDetail('"+x.c.id+"','stats')"); });
     h+='<div class="statnote">Counted in separate days out, not drinks ordered. Only '+reg.length+' cafes ever got a second day.</div>';
   }
 
@@ -199,7 +202,7 @@ function renderStats(){
       .map(function(c){ return {c:c,mi:distKm(CA_HOME.lat,CA_HOME.lng,c.lat,c.lng)*0.621371}; })
       .sort(function(a,b){ return b.mi-a.mi; })[0];
     h+='<div class="statsec">📍 Where you go</div>';
-    shown.forEach(function(x){ h+=magRow(null,x[0],"",x[1]+" cafe"+(x[1]===1?"":"s"),x[1]/gmx*100,""); });
+    shown.forEach(function(x){ h+=magRow(null,x[0],"",x[1]+" cafe"+(x[1]===1?"":"s"),""); });
     h+='<div class="statnote">'+(rest?"+"+rest+" elsewhere. ":"")+(far?"Farthest: "+esc(far.c.name)+" — "+Math.round(far.mi).toLocaleString()+" mi.":"")+'</div>';
   }
 
