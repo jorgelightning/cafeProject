@@ -205,6 +205,26 @@ Thumbnails load lazily — rendering the list costs no requests, and opening a c
 when there is something to clean. That combination made them undiscoverable: you had to open a
 panel to find out the panel had anything in it. A count now rides on the closed toggle.
 
+### One scale, and glyphs are not type
+Colour was tokenised from the start; nothing dimensional was, so the stylesheet reached 23 font
+sizes, 18 corner radii and 13 gap values — seven font sizes inside three pixels. `--fs-1..5`,
+`--r-1..4`/`--r-pill` and `--sp-1..5` are now the whole set, and `tests/scale.js` fails if any
+rule sets a literal radius or gap.
+
+**Font size has one deliberate exception.** Emoji and icon glyphs — the raised ＋, the 34px star
+widget, the empty-state marks — are artwork being sized, not type being set, and forcing them
+onto a text scale would be wrong. The test allows a literal size on those selectors and on no
+others.
+
+### The layout has three sizes, not two
+One breakpoint at 900px meant a 744px iPad ran the phone layout stretched to double width, and
+a 1440px laptop drew **128px cards where a 390px phone drew 173px** — the browse column was
+pinned at 400/440px while the grid went from two columns to three at the same breakpoint. The
+column is now `clamp(400px, 33vw, 660px)`, the grid is `auto-fill minmax(168px, 1fr)` so the
+count follows the space, and 700–899px gets a reading width. **Map chrome positions off
+`--sidebar`**, so anything pinned to the sidebar edge must use `calc(var(--sidebar) + 12px)`
+rather than a literal.
+
 ### Stats stopped recommending
 Stats carried its own recommender — a "Recommendations around" picker driving a "Go back to"
 card — which measured from a hardcoded San Francisco whenever nothing was chosen. The guide
