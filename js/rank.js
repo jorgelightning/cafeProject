@@ -307,7 +307,7 @@ function chaserPaint(){
       +'<div class="ch-mv"><span>'+line(r.a,r.preA,r.postA,r.postN)+'</span><span>'+line(r.b,r.preB,r.postB,r.postN)+'</span></div>'
       +'<div class="ch-done">'+(_chaser.board
         ? '<button class="ch-lnk" onclick="chaserAgain()">↻ Rank another</button>'
-        : '<button class="ch-lnk" onclick="chaserDismiss();openRank()">See the board ›</button>')
+        : '<button class="ch-lnk" onclick="chaserDismiss();openRank()">See where to go ›</button>')
       +'<button class="ch-close" onclick="chaserDismiss()">Done</button></div>');
     return;
   }
