@@ -86,7 +86,7 @@ function boardRow(c,pos,unique){
   const note=say?'<div class="lbsay">\u201c'+esc(say)+'\u201d</div>':"";
   return '<div class="lbrow guide tap" role="button" tabindex="0" onclick="openDetail(\''+c.id+'\',\'compare\')">'
     +'<span class="lbrank">'+rank+'</span>'
-    +'<span class="gotile" style="background:'+cafeColor(c.name)+'">'+esc(c.emoji||"\u2615")+'</span>'
+    +'<span class="gotile" style="background:'+tintFor(c)+'">'+esc(c.emoji||"\u2615")+'</span>'
     +'<div class="lbmain">'
       +'<div class="lbname">'+esc(c.name)+stars+'</div>'
       +(meta?'<div class="lbsub">'+meta+'</div>':'')
@@ -108,7 +108,7 @@ function boardQueueRow(c){
   const sub=[ar?esc(ar):"",chaserWhen(lv)].filter(Boolean).join(" · ");
   const right=isAdmin?'<span class="rank-lnk">Rank ›</span>':'<span class="gostar">'+(c.rating||0)+'★</span>';
   const act=isAdmin?("boardRank('"+c.id+"')"):("openDetail('"+c.id+"','compare')");
-  return '<div class="gorow" role="button" tabindex="0" onclick="'+act+'"><span class="gotile" style="background:'+cafeColor(c.name)+'">'+esc(c.emoji||"☕")+'</span>'
+  return '<div class="gorow" role="button" tabindex="0" onclick="'+act+'"><span class="gotile" style="background:'+tintFor(c)+'">'+esc(c.emoji||"☕")+'</span>'
     +'<div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+sub+'</div></div>'+right+'</div>';
 }
 function renderBoard(){
@@ -311,7 +311,7 @@ function chaserOpt(c,drink,side){
   const gp=(typeof gphotoFor==="function")?gphotoFor(c):null;
   const th=(gp&&!_imgFail[c.id])
     ? '<span class="ch-th" style="background-image:url(\'' + safeUrl(gp) + '\')"></span>'
-    : '<span class="ch-th" style="background:' + nophotoBg(c.name) + '">' + esc(initials(c)) + '</span>';
+    : '<span class="ch-th" style="' + nophotoStyle(c) + '">' + esc(initials(c)) + '</span>';
   const sub=[drink?esc(drink):"",chaserWhen(chaserLast(c))].filter(Boolean).join(" · ");
   return '<button class="ch-opt" onclick="chaserPick(' + side + ')">' + th
     + '<span class="ch-m"><span class="ch-n">' + esc(c.name) + '</span><span class="ch-s">' + sub + '</span></span></button>';

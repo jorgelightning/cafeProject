@@ -338,9 +338,22 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    got the phone layout with every element stretched to double width: 350px stat tiles and
    paragraphs running the full screen. Content gets a reading width and centres; the grids
    above already fill it sensibly. */
+/* The single control row, and the panel the rest folded into. */
+.listbar{ display:flex; align-items:center; gap:var(--sp-2); margin:0 16px 10px; }
+.listbar .sub{ font-size:var(--fs-2); color:var(--soft); font-weight:600; }
+.filterbtn{ margin-left:auto; display:inline-flex; align-items:center; gap:var(--sp-1); min-height:36px; padding:0 12px; border-radius:var(--r-2); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
+.filterbtn.on{ border-color:var(--acc-strong); color:var(--acc-strong); }
+.filterbtn .fcount{ min-width:18px; height:18px; padding:0 5px; border-radius:var(--r-pill); background:var(--acc-strong); color:var(--on-acc); font-size:var(--fs-1); font-weight:800; display:inline-flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
+.filterbtn .fcount[hidden]{ display:none; }
+.filterbtn .fchev{ color:var(--soft); font-size:var(--fs-1); }
+.listpanel{ margin:0 16px 12px; padding:12px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); display:flex; flex-direction:column; gap:var(--sp-3); }
+.listpanel[hidden]{ display:none; }
+.lp-row{ display:flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-2); font-weight:600; color:var(--soft); }
+.lp-row button{ width:100%; }
+
 @media (min-width:700px) and (max-width:899px){
   #grid, .search, .adminbar, .filterrow, .statwrap, .boardwrap, .listhead, .dbody, .fbody,
-  #pane-form .field, #pane-detail .scroll > *, .sortrow{
+  #pane-form .field, #pane-detail .scroll > *, .listbar, .listpanel{
     max-width:720px; margin-inline:auto;
   }
   .statgrid{ max-width:720px; margin-inline:auto; }
@@ -445,9 +458,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .compactmilk select{width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid var(--border);border-radius:var(--r-2);background:var(--surface);color:var(--text);font:16px system-ui;}
 .drinkoption .sizesteps{grid-template-columns:44px minmax(0,1fr) 44px;gap:var(--sp-1);}
 .drinkoption .sizesteps output{font-size:var(--fs-2);}
-.list-options{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin:0 16px 8px;}
-.list-options button,.sync-status button{min-height:44px;border:1px solid var(--border);border-radius:var(--r-2);background:var(--surface);color:var(--acc-strong);padding:8px;font:13px system-ui;cursor:pointer;}
-.list-options span{font-size:var(--fs-2);color:var(--soft);}
+.listpanel button,.sync-status button{min-height:44px;border:1px solid var(--border);border-radius:var(--r-2);background:var(--surface);color:var(--acc-strong);padding:8px;font:13px system-ui;cursor:pointer;}
 .grid.compact-list{display:flex;flex-direction:column;gap:0;}
 .grid.compact-list .card{display:flex;align-items:center;gap:var(--sp-3);border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;padding:12px 0;}
 .grid.compact-list .card .ph{flex:0 0 46px;width:46px;height:46px;border-radius:var(--r-2);overflow:visible;}
@@ -565,9 +576,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .adminbar .abactions{ display:none; flex-basis:100%; gap:var(--sp-2); padding-bottom:4px; }
 .adminbar[data-open] .abactions{ display:flex; flex-wrap:wrap; }
 .adminbar[data-open] .abchev{ display:inline-block; transform:rotate(180deg); }
-.sortrow{ display:flex; align-items:center; gap:var(--sp-2); margin:0 16px 10px; font-size:var(--fs-2); color:var(--soft); }
-.sortrow #count{ font-weight:700; color:var(--text); }
-.sortrow select{ margin-left:auto; border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--text); font-size:var(--fs-2); padding:7px 10px; cursor:pointer; }
+.listbar #count{ font-weight:700; color:var(--text); }
+.lp-row select{ flex:1; border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--text); font-size:var(--fs-2); padding:7px 10px; cursor:pointer; }
 .compare{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; padding:16px; display:flex; flex-direction:column; gap:var(--sp-4); scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
 .compare::-webkit-scrollbar{ width:8px; } .compare::-webkit-scrollbar-thumb{ background:var(--border); border-radius:var(--r-2); background-clip:padding-box; border:2px solid transparent; }
 .cmp-head{ text-align:center; }

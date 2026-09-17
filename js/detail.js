@@ -66,12 +66,12 @@ function openDetail(id,from){
       _imgFail[c.id]=1;
       if(c.gphoto)delete c.gphoto;
       if(gphotoCache[c.id]!==undefined){ delete gphotoCache[c.id]; saveGphotoCache(); }
-      if(curId===c.id){ const h=$("d-hero"); h.className="hero nophoto"; h.style.background=nophotoBg(c.name); }
+      if(curId===c.id){ const h=$("d-hero"); h.className="hero nophoto"; h.style.cssText+=';'+nophotoStyle(c); }
     };
     _hp.src=safeUrl(gp0);
   } else {
     hero.className="hero nophoto";
-    hero.style.background=nophotoBg(c.name);
+    hero.style.cssText+=';'+nophotoStyle(c);
   }
   setHeroTag(c);
   if(!c.photo){
