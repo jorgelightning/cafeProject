@@ -181,6 +181,34 @@ const { eq, done } = checker();
 
   await pg.evaluate(() => { userLoc = null; });
 
+  // ---- Stats no longer carries its own recommender ----
+  /* "Recommendations around" duplicated what the guide does with real location, and pinned
+     its origin to a hardcoded San Francisco when nothing was selected. */
+  r = await pg.evaluate(() => {
+    /* two regions, because "Where you go" only draws when there is more than one */
+    cafes = [
+      { id: "a", name: "A", area: "SoMa", lat: 37.78, lng: -122.41, rating: 5,
+        elo: 1560, matches: 5, drinks: [{ n: "X", orders: [{ date: "2024-01-01" }] }] },
+      /* Hawaii, not another SF neighbourhood: "Where you go" groups by state or country. */
+      { id: "b", name: "B", area: "Honolulu", lat: 21.30, lng: -157.85, rating: 4,
+        elo: 1520, matches: 4, drinks: [{ n: "Y", orders: [{ date: "2024-02-01" }] }] }
+    ];
+    isAdmin = true; applyMode && applyMode(); renderStats();
+    const host = document.getElementById("stats-body");
+    return {
+      picker: !!host.querySelector(".stats-location"),
+      hero: !!host.querySelector(".hero-go"),
+      goBack: /Go back to/.test(host.textContent),
+      whereYouGo: /Where you go/.test(host.textContent),
+      gone: ["setStatsArea", "heroNext", "statsLocate"].filter(f => typeof window[f] === "function")
+    };
+  });
+  eq(r.picker, false, "the 'Recommendations around' picker is gone from Stats");
+  eq(r.hero, false, "…and so is the 'Go back to' card it drove");
+  eq(r.goBack, false, "…with none of its copy left behind");
+  eq(r.gone, [], "…and none of its handlers survive as dead globals");
+  eq(r.whereYouGo, true, "the 'Where you go' section, which shares the origin, still renders");
+
   eq(errs, [], "no page errors");
   const ok = done();
   await b.close(); srv.close(); process.exit(ok ? 0 : 1);

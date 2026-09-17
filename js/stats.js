@@ -11,11 +11,6 @@ function visitDates(c){ const s={}; ((c&&c.drinks)||[]).forEach(function(d){ dri
    replaces two ad-hoc show-more buttons that minted class names off a global counter and
    removed themselves so they could never close again. */
 function statFold(btn){ const box=btn.previousElementSibling; if(!box)return; const open=box.hasAttribute("data-open"); if(open)box.removeAttribute("data-open"); else box.setAttribute("data-open",""); btn.textContent=(btn.dataset.lab||"Show more")+(open?" ▾":" ▴"); }
-let statsArea=localStorage.getItem("cafemap.statsArea")||"home";
-function setStatsArea(value){statsArea=value;lsSet("cafemap.statsArea",value);_heroI=0;renderStats();}
-function statsLocate(){toast('Finding your location…');showUserLocation(false,function(ok){if(ok)setStatsArea("near");else toast('Location unavailable — choose an area instead');});}
-let _heroI=0;
-function heroNext(){ _heroI++; renderStats(); }
 let _rhythmMetric="spend", _rhythmMonth="";
 function setRhythmMetric(metric){ if(metric!=="visits"&&metric!=="spend")return; _rhythmMetric=metric; renderStats(); }
 function setRhythmMonth(month){ if(!/^\d{4}-\d{2}$/.test(month))return; _rhythmMonth=month; renderStats(); }
@@ -66,46 +61,10 @@ function renderStats(){
   };
   let h="";
 
-  /* ---------- 1. go back to ---------- */
-  const areas=[...new Set(nonWish.filter(c=>c.lat!=null&&c.area).map(c=>c.area))].sort();
-  const selected=nonWish.find(c=>c.area===statsArea&&c.lat!=null);
-  const CA_HOME=statsArea==="near"&&userLoc?userLoc:selected?{lat:selected.lat,lng:selected.lng}:{lat:37.7749,lng:-122.4194};
-  const origin=statsArea==="near"&&userLoc?"your location":selected?selected.area:"San Francisco";
-  h+='<div class="stats-location"><label>Recommendations around<select aria-label="Recommendation area" onchange="setStatsArea(this.value)"><option value="home">San Francisco (home)</option>'+(userLoc?'<option value="near"'+(statsArea==="near"?' selected':'')+'>My location</option>':'')+areas.map(a=>'<option value="'+esc(a)+'"'+(statsArea===a?' selected':'')+'>'+esc(a)+'</option>').join('')+'</select></label><button onclick="statsLocate()">Use my location</button><small>Distances from '+esc(origin)+'</small></div>';
-  const pool=nonWish.filter(function(c){
-    if(c.lat==null||(c.rating||0)<4)return false;
-    const ds=visitDates(c); if(ds.length!==1)return false;
-    if(distKm(CA_HOME.lat,CA_HOME.lng,c.lat,c.lng)*0.621371>40)return false;
-    return (now-new Date(ds[0]).getTime())/DAY>=45;
-  }).map(function(c){ return {c:c,last:visitDates(c)[0]}; })
-    .sort(function(a,b){ return ((b.c.rating||0)-(a.c.rating||0))||a.last.localeCompare(b.last); });
-  if(pool.length){
-    const doy=Math.floor((now-new Date(new Date().getFullYear(),0,0).getTime())/DAY);
-    const at=function(i){ return pool[((doy+_heroI+i)%pool.length+pool.length)%pool.length]; };
-    const p=at(0), c=p.c;
-    const days=Math.floor((now-new Date(p.last).getTime())/DAY);
-    const ago=days>=365?(Math.floor(days/365)+(days<730?" year":" years")):(days>=60?(Math.floor(days/30)+" months"):(days+" days"));
-    const mi=Math.round(distKm(CA_HOME.lat,CA_HOME.lng,c.lat,c.lng)*0.621371);
-    const best=((c.drinks||[])[0]||{}).n||"";
-    h+='<div class="hero-go">'
-      +'<div class="eyebrow"><span>Go back to</span><span>'+(((doy+_heroI)%pool.length+pool.length)%pool.length+1)+' of '+pool.length+'</span></div>'
-      +'<div class="hname">'+esc(c.name)+'</div>'
-      +'<div class="hmeta">'+starsHTML(c.rating)+' <span>'+esc(c.area||"")+(mi?" · "+mi+" mi":"")+'</span></div>'
-      +'<div class="why">You rated it '+(c.rating||0)+'★ after a single visit'+(best?' for the '+esc(best):'')+' — and that was '+ago+' ago.</div>'
-      +'<div class="acts"><button class="btn" onclick="openDetail(\''+c.id+'\',\'stats\')">Open</button>'
-      +'<button class="btn ghost" onclick="heroNext()">↻ Show another</button></div></div>';
-    const goRow=function(x){ const cc=x.c, dd=Math.floor((now-new Date(x.last).getTime())/DAY);
-      const t=dd>=365?(Math.floor(dd/365)+"y ago"):(dd>=60?(Math.floor(dd/30)+"mo ago"):(dd+"d ago"));
-      return '<div class="gorow" role="button" tabindex="0" onclick="openDetail(\''+cc.id+'\',\'stats\')"><span class="gotile" style="background:'+cafeColor(cc.name)+'">'+esc(cc.emoji||"☕")+'</span>'
-        +'<div class="lbmain"><div class="lbname">'+esc(cc.name)+'</div><div class="lbsub">'+t+(cc.area?" · "+esc(cc.area):"")+'</div></div>'
-        +'<span class="gostar">'+(cc.rating||0)+'★</span></div>'; };
-    h+=goRow(at(1));
-    if(pool.length>2)h+=goRow(at(2));
-    if(pool.length>3){
-      h+='<div class="foldbox">'+pool.slice(3).map(function(x){ return goRow(x); }).join("")+'</div>'
-        +'<button class="morebtn" data-lab="See all '+pool.length+' places you never went back to" onclick="statFold(this)">See all '+pool.length+' places you never went back to ▾</button>';
-    }
-  }
+  /* The distance origin for "Where you go" below. It used to come from the recommendation
+     picker that sat here; with that gone it follows your actual location when the app knows
+     it, and otherwise falls back to the map's default centre. */
+  const CA_HOME=userLoc||{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]};
 
   /* ---------- 2. vitals ---------- */
   const backPct=datedN?Math.round(backN/datedN*100):0;

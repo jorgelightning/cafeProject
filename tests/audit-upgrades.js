@@ -8,7 +8,7 @@ const {serve,launch,checker}=require('./harness');const {eq,done}=checker();
  await p.evaluate(()=>{show('list');toggleListLayout();});
  for(const width of [360,375,1024]){await p.setViewportSize({width,height:812});eq(await p.evaluate(()=>{const c=document.querySelector('.card');return c.scrollWidth<=c.clientWidth+1;}),true,'compact card fits '+width+'px');}
  await p.setViewportSize({width:375,height:812});
- await p.evaluate(()=>{show('stats');setStatsArea('Honolulu');});eq(await p.locator('.stats-location small').innerText(),'Distances from Honolulu','Stats identifies selected origin');
+
  r=await p.evaluate(()=>{openForm('x');const g=document.querySelector('.drgroup');toggleDrinkGroup(g.querySelector('.drghead'));toggleDrinkRow(g.querySelector('.drhead'));const row=document.querySelector('.dr:not(.collapsed)');return {height:row.getBoundingClientRect().height,fits:row.scrollWidth<=row.clientWidth+1,milks:row.querySelector('.dmk').options.length};});
  eq(r.fits,true,'full editor fits phone width');eq(r.height<1027,true,'editor is shorter than audited 1027px');eq(r.milks,12,'milk selector retains all options plus unset');
   console.log('editor height:',r.height);
