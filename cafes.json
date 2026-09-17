@@ -91,7 +91,7 @@
         ],
         "elo": 1569,
         "matches": 5,
-        "n": "Hojica latte",
+        "n": "Hojicha latte",
         "p": "10",
         "sweet": "0%"
       }
@@ -170,13 +170,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1443,
+    "elo": 1437,
     "emoji": "☕",
     "fav": false,
     "id": "mqf9w1vzajpl",
     "lat": 21.32908,
     "lng": -158.0914,
-    "matches": 9,
+    "matches": 10,
     "name": "Island Vintage Coffee and Wine Bar Kapolei",
     "rating": 3,
     "review": "Flat white are known for their micro foam and there was none here!",
@@ -392,17 +392,26 @@
         "sweet": "0%"
       },
       {
-        "n": "Hojica latte",
-        "p": "",
-        "reorder": "yes",
-        "sweet": "0%"
-      },
-      {
+        "count": 2,
         "dates": [
           "2026-08-04"
         ],
         "ice": "Warm",
         "n": "Hojicha latte",
+        "orders": [
+          {
+            "reorder": "yes",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-04",
+            "ice": "Warm",
+            "p": "5.98",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
         "p": "5.98",
         "reorder": "yes",
         "size": "12 oz",
@@ -757,7 +766,7 @@
           "2026-06-15"
         ],
         "ice": "Less ice",
-        "n": "Hojicha lattye",
+        "n": "Hojicha latte",
         "p": "6.5",
         "size": "8 oz",
         "sweet": "0%"
@@ -1094,13 +1103,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1525,
+    "elo": 1524,
     "emoji": "☕",
     "fav": true,
     "id": "mqlipq5e1fwo",
     "lat": 37.77591,
     "lng": -122.49649,
-    "matches": 5,
+    "matches": 6,
     "name": "Constance Tea & Matcha",
     "rating": 5,
     "review": "Freshly milled! Great information from the staff!",
@@ -1133,7 +1142,7 @@
           "2026-07-03"
         ],
         "milk": "Oat",
-        "n": "Matcha Einspaner",
+        "n": "Matcha Einspanner",
         "p": "",
         "reorder": "yes"
       }
@@ -1394,13 +1403,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1499,
+    "elo": 1483,
     "emoji": "☕",
     "fav": false,
     "id": "mrsr4gr9snf3",
     "lat": 37.31521,
     "lng": -122.03291,
-    "matches": 1,
+    "matches": 2,
     "name": "Shu Shia 树夏",
     "rating": 5,
     "review": "Avocado was tasty and a little bit of lightness!",
@@ -1638,7 +1647,7 @@
         ],
         "ice": "Warm",
         "milk": "Oat",
-        "n": "Hojica latte",
+        "n": "Hojicha latte",
         "p": "8.50",
         "reorder": "yes",
         "size": "12 oz",
@@ -1748,13 +1757,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1484,
+    "elo": 1475,
     "emoji": "☕",
     "fav": false,
     "id": "msu21vly3a9b",
     "lat": 37.76538,
     "lng": -122.45015,
-    "matches": 1,
+    "matches": 2,
     "name": "Yardsale San Francisco",
     "rating": 4,
     "review": "Matcha was above average but the atmosphere is great and clothing too!",
@@ -1818,7 +1827,7 @@
     "id": "mswe32c5jlz9",
     "lat": 37.56413,
     "lng": -122.32295,
-    "matches": 2,
+    "matches": 3,
     "name": "Odd One Out Tea San Mateo",
     "rating": 5,
     "review": "",
@@ -1868,7 +1877,7 @@
     "id": "mswvf0lujqg3",
     "lat": 37.32913,
     "lng": -121.8841,
-    "matches": 1,
+    "matches": 2,
     "name": "Academic Coffee",
     "rating": 0,
     "review": "",
@@ -2042,13 +2051,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1519,
+    "elo": 1518,
     "emoji": "☕",
     "fav": false,
     "id": "mt8cmelqa902",
     "lat": 49.28522,
     "lng": -123.11632,
-    "matches": 2,
+    "matches": 3,
     "name": "Nīzu Cafe",
     "rating": 4,
     "review": "Pretty good matcha! Great atmosphere! The egg sando was good too!",
@@ -2278,7 +2287,7 @@
         ],
         "ice": "Warm",
         "milk": "Oat",
-        "n": "Houjicha Latte",
+        "n": "Hojicha latte",
         "orders": [
           {
             "date": "2026-09-02",
@@ -2385,11 +2394,13 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1516,
     "emoji": "☕",
     "fav": false,
     "id": "mtysqdqaqnhq",
     "lat": 34.05757,
     "lng": -118.24085,
+    "matches": 1,
     "name": "Archives Of Us",
     "pid": "ChIJ7SJdEwbHwoARbK8FgtY2QxM",
     "rating": 5,
@@ -2401,6 +2412,94 @@
     ],
     "updated": "2026-09-12T19:46:47.937Z",
     "wish": false
+  },
+  {
+    "area": "Rincon Hill",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-16"
+        ],
+        "ice": "Warm",
+        "n": "Hojicha Latte",
+        "orders": [
+          {
+            "date": "2026-09-16",
+            "ice": "Warm",
+            "id": "mu4ohc2t82jl",
+            "p": "4.88",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "4.88",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "mu4k0lxjyzze",
+    "lat": 37.78562,
+    "lng": -122.39638,
+    "name": "Paper Son Coffee",
+    "pid": "ChIJXVRIc9aBhYARDuJoNx2IVAg",
+    "rating": 4,
+    "review": "Hojicha is great and my friends is her, good vibes and great taste!",
+    "tags": [
+      "oat milk",
+      "cozy"
+    ],
+    "updated": "2026-09-16T22:35:53.307Z",
+    "wish": false
+  },
+  {
+    "area": "",
+    "brand": "",
+    "custom": true,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-16"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Matcha Latte (Kagoshima)",
+        "orders": [
+          {
+            "date": "2026-09-16",
+            "ice": "Less ice",
+            "id": "mu4wgknc39oa",
+            "milk": "Oat",
+            "p": "8",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "8",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "🏠",
+    "fav": false,
+    "id": "mu4wjqrm33wa",
+    "matches": 1,
+    "name": "Kimi Matcha",
+    "rating": 4,
+    "review": "You get to select the region of matcha you want from Japan, strong matcha taste, so that's really great!",
+    "updated": "2026-09-17T02:21:34.467Z",
+    "wish": false,
+    "lat": null,
+    "lng": null
   },
   {
     "area": "San Francisco, CA",
@@ -2635,87 +2734,7 @@
     "custom": false,
     "drinks": [
       {
-        "count": 6,
-        "dates": [
-          "2026-03-24",
-          "2026-07-09",
-          "2026-07-27",
-          "2026-09-08",
-          "2026-09-09",
-          "2026-09-15"
-        ],
-        "ice": "Warm",
-        "milk": "Oat",
-        "n": "Flat White",
-        "orders": [
-          {
-            "date": "2026-03-24",
-            "ice": "Warm",
-            "id": "mtvs2elobsr6",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-09",
-            "ice": "Warm",
-            "id": "mtvs2elnvxe0",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-27",
-            "ice": "Warm",
-            "id": "mtvs2elmn0g5",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-08",
-            "ice": "Warm",
-            "id": "mtvs2ell0gxx",
-            "milk": "Oat",
-            "p": "4.25",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-09",
-            "ice": "Warm",
-            "id": "mtvs2eqp5azy",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-15",
-            "ice": "Warm",
-            "id": "mu34ylftx36w",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          }
-        ],
-        "p": "5",
-        "reorder": "yes",
-        "size": "8 oz",
-        "sweet": "0%"
-      },
-      {
-        "count": 9,
+        "count": 10,
         "dates": [
           "2026-03-22",
           "2026-03-25",
@@ -2725,11 +2744,12 @@
           "2026-08-07",
           "2026-08-11",
           "2026-09-04",
-          "2026-09-11"
+          "2026-09-11",
+          "2026-09-14"
         ],
         "ice": "Warm",
         "milk": "Oat",
-        "n": "Hojicha Latte",
+        "n": "Hojicha latte",
         "orders": [
           {
             "date": "2026-03-22",
@@ -2820,11 +2840,101 @@
             "reorder": "yes",
             "size": "12 oz",
             "sweet": "0%"
+          },
+          {
+            "date": "2026-09-14",
+            "ice": "Warm",
+            "id": "mu550y0i80v0",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
           }
         ],
         "p": "7.25",
         "reorder": "yes",
         "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "count": 6,
+        "dates": [
+          "2026-03-24",
+          "2026-07-09",
+          "2026-07-27",
+          "2026-09-08",
+          "2026-09-09",
+          "2026-09-15"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Flat White",
+        "orders": [
+          {
+            "date": "2026-03-24",
+            "ice": "Warm",
+            "id": "mtvs2elobsr6",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-09",
+            "ice": "Warm",
+            "id": "mtvs2elnvxe0",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-27",
+            "ice": "Warm",
+            "id": "mtvs2elmn0g5",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-08",
+            "ice": "Warm",
+            "id": "mtvs2ell0gxx",
+            "milk": "Oat",
+            "p": "4.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-09",
+            "ice": "Warm",
+            "id": "mtvs2eqp5azy",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-15",
+            "ice": "Warm",
+            "id": "mu34ylftx36w",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5",
+        "reorder": "yes",
+        "size": "8 oz",
         "sweet": "0%"
       },
       {
@@ -2864,20 +2974,20 @@
         ]
       }
     ],
-    "elo": 1587,
+    "elo": 1593,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 13,
+    "matches": 14,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-09-15T20:41:04.286Z",
+    "updated": "2026-09-17T06:18:01.315Z",
     "wish": false
   },
   {
@@ -2887,19 +2997,21 @@
     "drinks": [
       {
         "dates": [
-          "2026-02-13"
-        ],
-        "ice": "Warm",
-        "n": "Hojicha latte",
-        "p": "6.75",
-        "sweet": "0%"
-      },
-      {
-        "dates": [
           "2026-07-29"
         ],
         "ice": "Less ice",
         "n": "Jasmine Yuzu Tea Aiyu Jelly",
+        "orders": [
+          {
+            "date": "2026-07-29",
+            "ice": "Less ice",
+            "id": "mu57bei3f28c",
+            "p": "7",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "25%"
+          }
+        ],
         "p": "7",
         "reorder": "yes",
         "size": "16 oz",
@@ -2911,19 +3023,48 @@
         ],
         "ice": "Less ice",
         "n": "Iced Hojicha Latte w/ Salted Cheese Foam",
+        "orders": [
+          {
+            "date": "2026-07-29",
+            "ice": "Less ice",
+            "id": "mu57bei5k3xl",
+            "p": "8.50",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
         "p": "8.50",
         "reorder": "yes",
         "size": "16 oz",
         "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-02-13"
+        ],
+        "ice": "Warm",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-02-13",
+            "ice": "Warm",
+            "id": "mu57bei65453",
+            "p": "6.75",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.75",
+        "sweet": "0%"
       }
     ],
-    "elo": 1587,
+    "elo": 1596,
     "emoji": "☕",
     "fav": true,
     "id": "tea-komeya",
     "lat": 37.80007,
     "lng": -122.43134,
-    "matches": 6,
+    "matches": 7,
     "name": "Komeya No Bento",
     "rating": 4,
     "review": "Surprisingly good hojicha latte alongside the bento.",
@@ -2931,7 +3072,7 @@
       "matcha",
       "to-go"
     ],
-    "updated": "2026-07-29T22:00:31.183Z",
+    "updated": "2026-09-17T07:21:41.062Z",
     "wish": false
   },
   {
