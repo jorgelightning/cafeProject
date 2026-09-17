@@ -200,6 +200,15 @@ Fetching moved to the Places API (New) with the legacy service as fallback; stab
 persisted by the admin "Fetch all photos" action so viewers get thumbnails at zero API cost.
 Thumbnails load lazily — rendering the list costs no requests, and opening a cafe costs one.
 
+### A conflict has to say what changed, not just that something did
+"Another device edited this cafe — choose which version to keep" is unanswerable in the moment
+it appears: a conflict happens *while you are editing*, and both options described a place
+rather than a change. The outbox entry already holds both versions, so the panel now diffs
+them field by field and stamps each side with how long ago it was touched — minute
+granularity, because `chaserWhen()`'s "today" cannot separate two edits ten minutes apart.
+Only fields a person would recognise are compared; when none of them differ it says so rather
+than asking the same unanswerable question again.
+
 ### The app checks its own database rules
 The private node is only private if a rule says so, and that rule is published by hand in a
 console where nothing in the app can see it. `probePrivateRule()` asks from the outside: a
