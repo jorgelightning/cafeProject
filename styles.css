@@ -186,16 +186,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .sc-meter.g > i{ background:var(--good); }
 .statnote{ font-size:12px; color:var(--faint); line-height:1.45; margin:7px 2px 0; }
 /* The only --surface block on the screen, so it lifts without introducing a new colour. */
-.hero-go{ background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; box-shadow:var(--shadow); }
-.hero-go .eyebrow{ display:flex; justify-content:space-between; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); }
-.hero-go .eyebrow span:last-child{ text-transform:none; letter-spacing:0; font-weight:600; color:var(--faint); }
-.hero-go .hname{ font-size:21px; font-weight:800; letter-spacing:-.02em; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.hero-go .hmeta{ margin-top:3px; font-size:13px; }
-.hero-go .hmeta span{ color:var(--soft); font-weight:500; }
-.hero-go .why{ margin-top:10px; font-size:13.5px; line-height:1.4; }
-.hero-go .acts{ display:flex; gap:8px; margin-top:14px; }
-.hero-go .acts .btn{ flex:1; height:44px; border-radius:12px; font-size:15px; font-weight:700; background:var(--acc-strong); color:var(--on-acc); border:none; }
-.hero-go .acts .btn.ghost{ flex:0 0 132px; background:var(--surface2); color:var(--text); border:1px solid var(--border); }
 .gorow{ display:flex; align-items:center; gap:11px; min-height:48px; padding:5px 2px; cursor:pointer; }
 .gotile{ width:34px; height:34px; flex:0 0 34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; }
 .gostar{ font-size:14px; font-weight:800; color:var(--star); flex:none; }
@@ -427,7 +417,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkoption .sizesteps{grid-template-columns:44px minmax(0,1fr) 44px;gap:3px;}
 .drinkoption .sizesteps output{font-size:13px;}
 .list-options{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 16px 8px;}
-.list-options button,.sync-status button,.stats-location button{min-height:44px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--acc-strong);padding:8px;font:13px system-ui;cursor:pointer;}
+.list-options button,.sync-status button{min-height:44px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--acc-strong);padding:8px;font:13px system-ui;cursor:pointer;}
 .list-options span{font-size:12px;color:var(--soft);}
 .grid.compact-list{display:flex;flex-direction:column;gap:0;}
 .grid.compact-list .card{display:flex;align-items:center;gap:12px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;padding:12px 0;}
@@ -464,10 +454,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .cfbtns{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
 .cfbtns button{ flex:1 1 150px; margin:0 !important; }
 
-.stats-location{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:14px;}
-.stats-location label{flex:1;min-width:140px;font-size:12px;color:var(--soft);}
-.stats-location select{display:block;width:100%;max-width:100%;min-height:44px;margin-top:5px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:9px;font:16px system-ui;}
-.stats-location small{flex:1 1 100%;color:var(--soft);}
 .drinkrows .dr .sweetcustom{ flex:0 0 72px; width:72px; min-height:44px; font-size:16px; }
 .drinkrows .dr .swlabel{ font-size:12px; color:var(--soft); flex:0 0 auto; }
 .drinkrows .dr .swval{ font-size:13px; color:var(--text); flex:0 0 42px; text-align:right; font-weight:600; }

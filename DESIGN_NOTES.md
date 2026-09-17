@@ -205,6 +205,18 @@ Thumbnails load lazily — rendering the list costs no requests, and opening a c
 when there is something to clean. That combination made them undiscoverable: you had to open a
 panel to find out the panel had anything in it. A count now rides on the closed toggle.
 
+### Stats stopped recommending
+Stats carried its own recommender — a "Recommendations around" picker driving a "Go back to"
+card — which measured from a hardcoded San Francisco whenever nothing was chosen. The guide
+does this properly now, from your real location, so the picker, the card, `statsArea`,
+`heroNext` and `statsLocate` are gone. **The origin it computed is still needed** by "Where you
+go" for the farthest-cafe line, so `CA_HOME` survives as `userLoc || DEFAULT_CENTER` — no
+hardcoded city.
+
+What went with it, in case it is wanted back: the card surfaced cafes rated 4★+, **visited
+exactly once, and not returned to in 45+ days** — a different question from "what is good near
+me", and one nothing else in the app asks.
+
 ### The guide leads with what you can reach
 A standing whose top entry is 6,000 miles away is a list of places you cannot go. When
 `userLoc` is known the same ranking splits into "Near you" (within `NEAR_MI`, 25) and "Further
