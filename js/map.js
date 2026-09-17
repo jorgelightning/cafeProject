@@ -69,6 +69,8 @@ function showUserLocation(center,done){
     const pos={lat:p.coords.latitude,lng:p.coords.longitude};
     userLoc=pos;
     if(app.dataset.view==="list")renderList();
+    /* The guide regroups the moment we know where you are, rather than on the next navigation. */
+    else if(app.dataset.view==="compare"&&typeof renderBoard==="function")renderBoard();
     if(!gmap){ done&&done(true); return; }
     drawUserLocation(pos,p.coords.accuracy||0);
     if(center&&!mapJumped){
