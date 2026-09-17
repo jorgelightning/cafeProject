@@ -67,13 +67,84 @@ function resolveSyncConflict(useLocal){
   else{delete syncPending[id];cafes=cafes.filter(c=>c.id!==id);if(op.remote)cafes.push(op.remote);_localSave();}
   syncPersist();flushSync();if(app.dataset.view==='list')renderList();
 }
+/* ---------- telling the two versions apart ----------
+   "Another device edited this cafe — choose which version to keep" is unanswerable while you
+   are mid-edit, which is exactly when a conflict happens: both options describe a place, not
+   a change. Both versions are already in hand, so show what actually differs between them and
+   when each was last touched. Minute granularity, because a conflict is usually minutes old
+   and chaserWhen()'s "today" cannot separate them. */
+function syncAgo(iso){
+  const t=iso?new Date(iso).getTime():NaN;
+  if(isNaN(t))return "";
+  const s=Math.max(0,Math.round((Date.now()-t)/1000));
+  if(s<45)return "just now";
+  const m=Math.round(s/60); if(m<60)return m+" min ago";
+  const h=Math.round(m/60); if(h<24)return h+(h===1?" hour ago":" hours ago");
+  const d=Math.round(h/24); return d===1?"yesterday":d+" days ago";
+}
+function syncOrderCount(c){
+  return ((c&&c.drinks)||[]).reduce(function(t,d){
+    return t+drinkOrders(d).reduce(function(n,o){ return n+orderQty(o); },0);
+  },0);
+}
+function syncTrim(v,n){ v=String(v==null?"":v).replace(/\s+/g," ").trim(); return v.length>n?v.slice(0,n-1)+"\u2026":v; }
+/* Only fields a person would recognise, labelled the way the form labels them. */
+const SYNC_FIELDS=[
+  ["Name",     function(c){ return c.name||""; }],
+  ["Area",     function(c){ return c.area||"none"; }],
+  ["Rating",   function(c){ return c.rating?c.rating+"\u2605":"none"; }],
+  ["Drinks",   function(c){ const n=(c.drinks||[]).length, o=syncOrderCount(c);
+                            return n+(n===1?" drink":" drinks")+" \u00b7 "+o+(o===1?" order":" orders"); }],
+  ["Notes",    function(c){ return (c.review||"").trim()||"none"; }],
+  ["Tags",     function(c){ return (c.tags||[]).join(", ")||"none"; }],
+  ["Favourite",function(c){ return c.fav?"yes":"no"; }],
+  ["Wishlist", function(c){ return c.wish?"yes":"no"; }]
+];
+function syncDiffRows(mine,theirs){
+  const out=[];
+  SYNC_FIELDS.forEach(function(f){
+    const a=mine?f[1](mine):"deleted", b=theirs?f[1](theirs):"deleted";
+    if(String(a)===String(b))return;
+    out.push({ label:f[0], mine:syncTrim(a,90), theirs:syncTrim(b,90) });
+  });
+  return out;
+}
+function renderSyncConflict(op){
+  const box=$("sync-status")&&$("sync-status").querySelector(".sync-review");
+  if(!box)return;
+  const mine=op.value, theirs=op.remote;
+  const name=((mine||theirs||{}).name)||"this cafe";
+  const rows=syncDiffRows(mine,theirs);
+  const mineWhen=mine?syncAgo(mine.updated):"", theirsWhen=theirs?syncAgo(theirs.updated):"";
+  let h='<p><b>'+esc(name)+'</b> was changed in two places. Here is what differs \u2014 pick the one you want to keep.</p>';
+  if(rows.length){
+    h+='<div class="cfhead"><span></span><span>On this phone'+(mineWhen?' \u00b7 '+esc(mineWhen):'')
+      +'</span><span>In the cloud'+(theirsWhen?' \u00b7 '+esc(theirsWhen):'')+'</span></div>';
+    h+=rows.map(function(r){
+      return '<div class="cfrow"><span class="cfk">'+esc(r.label)+'</span>'
+        +'<span class="cfv mine">'+esc(r.mine)+'</span>'
+        +'<span class="cfv">'+esc(r.theirs)+'</span></div>';
+    }).join("");
+  } else {
+    /* Equal on every field a person can see: the difference is in something invisible, so
+       saying "they differ" without saying how would be the same dead end all over again. */
+    h+='<p class="cfsame">Nothing you can see differs \u2014 the two copies vary only in data the form does not show. Keeping either is safe.</p>';
+  }
+  h+='<div class="cfbtns">'
+    +'<button onclick="resolveSyncConflict(true)">Keep this phone\u2019s'+(mineWhen?' \u00b7 '+esc(mineWhen):'')+'</button>'
+    +'<button onclick="resolveSyncConflict(false)">Use the cloud\u2019s'+(theirsWhen?' \u00b7 '+esc(theirsWhen):'')+'</button>'
+    +'</div>';
+  box.innerHTML=h;
+}
 function renderSyncStatus(){
   const el=$('sync-status');if(!el)return;
   const keys=Object.keys(syncPending), conflict=keys.find(k=>syncPending[k].conflict);
   el.hidden=!keys.length&&!syncFailure;
   const label=el.querySelector('.sync-label');
-  label.textContent=syncFailure||(conflict?'Another device changed '+((syncPending[conflict].value||syncPending[conflict].remote||{}).name||'this cafe'):(syncBusy?'Syncing…':'Saved on this phone · '+keys.length+' waiting to sync'));
-  el.querySelector('.sync-review').hidden=!conflict;
+  label.textContent=syncFailure||(conflict?'One cafe needs your choice':(syncBusy?'Syncing…':'Saved on this phone · '+keys.length+' waiting to sync'));
+  const review=el.querySelector('.sync-review');
+  review.hidden=!conflict;
+  if(conflict)renderSyncConflict(syncPending[conflict]);
   el.querySelector('.sync-retry').hidden=!!conflict||syncBusy;
   const state=$('save-state');if(state)state.textContent=keys.length?'Saved on this phone':syncFailure||(syncLastConfirmed&&navigator.onLine?'Synced ✓':'No pending edits');
 }
