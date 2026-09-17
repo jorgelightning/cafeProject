@@ -200,6 +200,19 @@ Fetching moved to the Places API (New) with the legacy service as fallback; stab
 persisted by the admin "Fetch all photos" action so viewers get thumbnails at zero API cost.
 Thumbnails load lazily — rendering the list costs no requests, and opening a cafe costs one.
 
+### The Board is a guide; the ranking is bookkeeping
+A row used to read "#1 · name · 11 comparisons · area · 7.4" — a visitor was given the
+ranking's bookkeeping and none of the 88 ratings, 87 drink records or 84 written notes already
+stored against these cafes. Rows now carry stars, the drink to order (counted by orders, not by
+record), and the owner's own sentence. **No photo:** photos are fetched lazily on the detail
+page so Places costs one lookup per cafe *viewed*, and 102 rows would invert that — the emoji
+tile stays.
+
+The comparison count, the Elo score, the "places are provisional" caveat and the
+"Never compared" queue are all `isAdmin`-only now. They describe work only the owner can do.
+**`.lbrow` is shared with the stats leaderboards**, so the guide layout is scoped to
+`.lbrow.guide`; styling `.lbrow` alone restyles Stats too.
+
 ### A conflict has to say what changed, not just that something did
 "Another device edited this cafe — choose which version to keep" is unanswerable in the moment
 it appears: a conflict happens *while you are editing*, and both options described a place

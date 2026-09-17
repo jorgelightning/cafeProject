@@ -33,14 +33,52 @@ function boardArea(c){
   const co=(typeof cafeCountryName==="function")?cafeCountryName(c):"";
   return (co&&co!=="Other")?co:"";
 }
+/* ---------- a board row is a recommendation, not a position ----------
+   The row used to read "#1 · Zen Gelato & Bar · 11 comparisons · <area> · 7.4". A visitor was
+   told how often the owner had compared it and given a score where #1 and #2 both print 7.4,
+   and none of the stars, drinks or written notes already on the record reached the screen.
+
+   No photo here on purpose: photos are fetched lazily on the detail page so Places costs one
+   lookup per cafe *viewed* rather than one per cafe *listed*, and 102 rows would invert that.
+   The emoji tile the board already used stays. */
+function topDrinkAt(c){
+  const ds=((c&&c.drinks)||[]).map(function(d){
+    return { d:d, n:drinkOrders(d).reduce(function(t,o){ return t+orderQty(o); },0) };
+  }).filter(function(x){ return (x.d.n||"").trim(); });
+  if(!ds.length)return null;
+  ds.sort(function(a,b){ return b.n-a.n || (a.d.n||"").localeCompare(b.d.n||""); });
+  return ds[0];
+}
+/* Trim on a word boundary — a note cut mid-word reads as broken rather than abbreviated. */
+function boardSnip(t,max){
+  t=String(t||"").replace(/\s+/g," ").trim();
+  if(t.length<=max)return t;
+  const cut=t.slice(0,max);
+  const sp=cut.lastIndexOf(" ");
+  return (sp>max*0.6?cut.slice(0,sp):cut).replace(/[\s,.;:\u2014-]+$/,"")+"\u2026";
+}
 function boardRow(c,pos,unique){
-  const rank=(pos<=3&&unique)?["🥇","🥈","🥉"][pos-1]:("#"+pos);
+  const rank=(pos<=3&&unique)?["\ud83e\udd47","\ud83e\udd48","\ud83e\udd49"][pos-1]:("#"+pos);
   const ar=boardArea(c), m=matchCount(c);
-  const sub=m+" comparison"+(m===1?"":"s")+(ar?" · "+esc(ar):"");
-  return '<div class="lbrow tap" role="button" tabindex="0" onclick="openDetail(\''+c.id+'\',\'compare\')"><span class="lbrank">'+rank+'</span>'
-    +'<span class="gotile" style="background:'+cafeColor(c.name)+'">'+esc(c.emoji||"☕")+'</span>'
-    +'<div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+sub+'</div></div>'
-    +'<span class="lbscore soft">'+eloScore(c)+'</span></div>';
+  /* D: a comparison count and a score describe the ranking process, not the cafe. The owner
+     still needs both; a visitor can act on neither. */
+  const meta=[ar?esc(ar):"",isAdmin?(m+" comparison"+(m===1?"":"s")):""].filter(Boolean).join(" \u00b7 ");
+  const stars=c.rating?'<span class="lbstars" aria-label="'+c.rating+' out of 5">'+"\u2605".repeat(c.rating)+'</span>':"";
+  const top=topDrinkAt(c);
+  const order=top?'<div class="lborder">Order the '+esc(top.d.n)
+    +(top.n>1?' <span class="lbtimes">\u00b7 '+top.n+'\u00d7</span>':'')+'</div>':"";
+  const say=boardSnip(c.review,96);
+  const note=say?'<div class="lbsay">\u201c'+esc(say)+'\u201d</div>':"";
+  return '<div class="lbrow guide tap" role="button" tabindex="0" onclick="openDetail(\''+c.id+'\',\'compare\')">'
+    +'<span class="lbrank">'+rank+'</span>'
+    +'<span class="gotile" style="background:'+cafeColor(c.name)+'">'+esc(c.emoji||"\u2615")+'</span>'
+    +'<div class="lbmain">'
+      +'<div class="lbname">'+esc(c.name)+stars+'</div>'
+      +(meta?'<div class="lbsub">'+meta+'</div>':'')
+      +order+note
+    +'</div>'
+    +(isAdmin?'<span class="lbscore soft">'+eloScore(c)+'</span>':'')
+    +'</div>';
 }
 function boardQueueRow(c){
   const ar=boardArea(c), lv=chaserLast(c);
@@ -57,8 +95,13 @@ function renderBoard(){
   const never=vis.filter(function(c){ return matchCount(c)===0; })
     .sort(function(a,b){ return (chaserLast(b)||"").localeCompare(chaserLast(a)||""); });
   const h2h=Math.round(vis.reduce(function(s,c){ return s+matchCount(c); },0)/2);
-  let h='<div class="cmp-head left"><div class="ct">🏆 The board</div><div class="cs">'
-    +board.length+' of '+vis.length+' cafes ranked'+(h2h?' · '+h2h+' head-to-head'+(h2h===1?"":"s"):"")+'</div></div>';
+  /* D: a visitor is told what the collection is; the owner is told how far the ranking has
+     got. The second is a progress report on a chore only they can do. */
+  const countries=Object.keys(vis.reduce(function(o,c){ o[cafeCountryName(c)]=1; return o; },{})).length;
+  const sub=isAdmin
+    ? board.length+' of '+vis.length+' cafes ranked'+(h2h?' \u00b7 '+h2h+' head-to-head'+(h2h===1?"":"s"):"")
+    : vis.length+' cafes \u00b7 '+countries+' countr'+(countries===1?'y':'ies')+' \u00b7 best first';
+  let h='<div class="cmp-head left"><div class="ct">\ud83c\udfc6 Where to go</div><div class="cs">'+sub+'</div></div>';
   if(isAdmin&&vis.length>1)h+='<div class="handoff top" role="button" tabindex="0" onclick="boardRank()">⚖️ Rank a pair'+(never.length?' <span>· '+never.length+' never compared</span>':'')+'</div>';
   if(!board.length){
     h+='<div class="empty"><div class="big">🏆</div>Nothing ranked yet.'+(isAdmin?" Tap “Rank a pair”, or log a visit and answer the question that follows.":"")+'</div>';
@@ -71,11 +114,14 @@ function renderBoard(){
     h+=rows.slice(0,10).join("");
     if(rows.length>10)h+='<div class="foldbox">'+rows.slice(10).join("")+'</div>'
       +'<button class="morebtn" data-lab="Show all '+rows.length+'" onclick="statFold(this)">Show all '+rows.length+' ▾</button>';
-    const thin=board.filter(function(c){ return matchCount(c)<3; }).length;
-    h+='<div class="statnote">Positions come from '+h2h+' head-to-head pick'+(h2h===1?"":"s")+', not from stars.'
-      +(thin?' '+thin+' cafe'+(thin===1?" has":"s have")+' fewer than three comparisons, so '+(thin===1?"its place is":"their places are")+' provisional.':"")+'</div>';
+    if(isAdmin){
+      const thin=board.filter(function(c){ return matchCount(c)<3; }).length;
+      h+='<div class="statnote">Positions come from '+h2h+' head-to-head pick'+(h2h===1?"":"s")+', not from stars.'
+        +(thin?' '+thin+' cafe'+(thin===1?" has":"s have")+' fewer than three comparisons, so '+(thin===1?"its place is":"their places are")+' provisional.':"")+'</div>';
+    }
   }
-  if(never.length){
+  /* D: "Never compared" is a queue of work only the owner can clear. */
+  if(isAdmin&&never.length){
     const q=never.map(boardQueueRow);
     h+='<div class="statsec">Never compared — '+never.length+'</div>'+q.slice(0,3).join("");
     if(q.length>3)h+='<div class="foldbox">'+q.slice(3).join("")+'</div>'
