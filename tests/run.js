@@ -30,6 +30,7 @@ const SUITE = [
   ["board-guide",      "the board reads as a guide, and its bookkeeping stays with the owner"],
   ["sync-merge",       "two devices merge automatically, and what it refuses to merge"],
   ["scale",            "one type/radius/space scale, and a layout that fits all three devices"],
+  ["list-clean",       "the list tint carries the rating, and four control rows fold into one"],
   ["offline",          "the app boots with the network pulled"],
   ["regression",       "101 real cafes still render exactly as before"]
 ];
