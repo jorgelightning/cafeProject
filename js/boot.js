@@ -44,7 +44,7 @@ function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"n
 const _fbOk=initFirebase(); initAuth();
 { const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁️ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file."; }
 applyMode();renderSyncStatus();
-load().then(()=>{ migratePhotoCache(); applyMode(); const _sp=new URLSearchParams(location.search); const _sc=_sp.get('cafe'); show('map'); startMaps(); subscribeCloud(); probePrivateRule(); if(_sc){ const _wait=(tries)=>{ const _fc=cafes.find(x=>x.id===_sc); if(_fc){ setTimeout(()=>openDetail(_fc.id,'map'),400); } else if(tries>0){ setTimeout(()=>_wait(tries-1),600); } }; _wait(8); } if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)save(); }).catch(()=>{}); } });
+load().then(()=>{ migratePhotoCache(); applyMode(); const _sp=new URLSearchParams(location.search); const _sc=_sp.get('cafe'); show('map'); startMaps(); subscribeCloud(); probePrivateRule(); syncOnResume("open"); if(_sc){ const _wait=(tries)=>{ const _fc=cafes.find(x=>x.id===_sc); if(_fc){ setTimeout(()=>openDetail(_fc.id,'map'),400); } else if(tries>0){ setTimeout(()=>_wait(tries-1),600); } }; _wait(8); } if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)save(); }).catch(()=>{}); } });
 let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{ mapResize(); refitMap(); },150); });
 checkForUpdate();
 setInterval(checkForUpdate,45000);
@@ -53,5 +53,13 @@ let _exitArmed=false,_exitT=null;
 function _rearmBack(){ try{ history.pushState({cafeapp:1},""); }catch(e){ warn("boot.js",e); } }
 _rearmBack();
 window.addEventListener("popstate",()=>{ if(typeof chaserOpen==="function"&&chaserOpen()){ chaserDismiss(); _rearmBack(); return; } const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden)checkForUpdate(); });
+/* Coming back to the app is the moment to reconcile. Incoming changes already arrive on a
+   live listener, but anything this device queued while offline sat in the outbox until the
+   next edit — and "online" often does not fire when a phone resumes from background, so
+   waiting for it was not enough. */
+function syncOnResume(why){
+  try{ if(typeof flushSync==="function")flushSync(); }catch(e){ warn("boot.js",e); }
+  try{ if(typeof flushPrivate==="function")flushPrivate(); }catch(e){ warn("boot.js",e); }
+}
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ checkForUpdate(); syncOnResume("resume"); } });
 window.addEventListener("beforeunload",e=>{ if(typeof formDirty==="function"&&formDirty()){ e.preventDefault(); e.returnValue=""; } });
