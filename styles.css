@@ -539,6 +539,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* Collapsed to a single line; the bulk actions only unfold when asked for. */
 .adminbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:6px 16px; background:var(--surface2); border-bottom:1px solid var(--border); margin-bottom:10px; }
 .adminbar button{ padding:7px 11px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12px; font-weight:600; cursor:pointer; }
+/* Says the collapsed panel has something waiting, without opening it. */
+.adminbar .abcount{ display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; margin-left:2px; border-radius:9px; background:var(--acc-strong); color:var(--on-acc); font-size:11px; font-weight:800; font-variant-numeric:tabular-nums; }
+.adminbar .abcount[hidden]{ display:none; }
 .adminbar .abnote{ font-size:11px; color:var(--soft); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .adminbar .abactions{ display:none; flex-basis:100%; gap:8px; padding-bottom:4px; }
 .adminbar[data-open] .abactions{ display:flex; flex-wrap:wrap; }

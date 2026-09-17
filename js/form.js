@@ -305,7 +305,22 @@ function spellingFixPlan(){
   });
   return plan;
 }
+/* The admin bar is collapsed by default, so an action that only appears when there is work to
+   do was invisible — you had to open the panel to discover the panel had anything in it. The
+   count rides on the closed toggle instead. */
+function updateAdminBadge(){
+  const el=$("ab-count");
+  if(!el)return;
+  let n=0;
+  if(isAdmin){
+    try{ n+=spellingFixPlan().length; }catch(e){ warn("form.js",e); }
+    try{ n+=milkCleanupPlan().length; }catch(e){ warn("form.js",e); }
+  }
+  el.textContent=n?String(n):"";
+  el.hidden=!n;
+}
 function updateSpellBtn(){
+  updateAdminBadge();
   const b=$("ab-spell");
   if(!b)return;
   const n=isAdmin?spellingFixPlan().length:0;
