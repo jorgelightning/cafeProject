@@ -109,6 +109,31 @@ const { eq, done } = checker();
   eq(v.exists, true, "the stats leaderboards still render");
   eq(v.guide, false, "…and did not pick up the board's row layout, which .lbrow alone would have");
 
+  // ---- the tab and the heading say the same thing ----
+  r = await pg.evaluate(() => ({
+    tab: document.getElementById("t-rank").textContent.trim(),
+    nav: document.getElementById("n-rank").textContent.trim(),
+    heading: (document.querySelector("#cmp-body .ct") || {}).textContent || "",
+    anyBoardLabel: /Board/.test(document.body.textContent)
+  }));
+  eq(/Go$/.test(r.tab), true, "the tab is the short form of the heading");
+  eq(/Go$/.test(r.nav), true, "…and so is the side-nav entry");
+  eq(/Where to go/.test(r.heading), true, "…which the pane spells out in full");
+  eq(r.anyBoardLabel, false, "the old 'Board' label is gone from the interface");
+
+  // ---- Stats leaks the same bookkeeping, so it follows the same rule ----
+  r = await pg.evaluate(() => {
+    isAdmin = false; applyMode && applyMode(); renderStats();
+    const viewer = document.getElementById("stats-body").textContent;
+    isAdmin = true; applyMode && applyMode(); renderStats();
+    const owner = document.getElementById("stats-body").textContent;
+    return { viewerRanked: /cafes ranked/.test(viewer), viewerGo: /Where to go/.test(viewer),
+             ownerRanked: /cafes ranked/.test(owner) };
+  });
+  eq(r.viewerRanked, false, "Stats does not show a visitor the ranking coverage either");
+  eq(r.viewerGo, true, "…it offers them the guide instead");
+  eq(r.ownerRanked, true, "…while the owner keeps the coverage count");
+
   eq(errs, [], "no page errors");
   const ok = done();
   await b.close(); srv.close(); process.exit(ok ? 0 : 1);
