@@ -246,8 +246,12 @@ function renderStats(){
 
   /* ---------- 9. keep ranking ---------- */
   /* Cafe coverage, not the drink count — drinks are no longer what ranking moves. */
+  /* Ranking coverage is a chore only the owner can clear, so it is theirs alone — the same
+     rule the board itself follows. A visitor gets a way through to the guide instead. */
   const rankedN=nonWish.filter(function(c){ return matchCount(c)>0; }).length;
-  h+='<div class="handoff" role="button" tabindex="0" onclick="openRank()">⚖️ '+rankedN+' of '+nonWish.length+' cafes ranked'+((nonWish.length-rankedN)?' <span>· '+(nonWish.length-rankedN)+' to go</span>':'')+'</div>';
+  h+=isAdmin
+    ? '<div class="handoff" role="button" tabindex="0" onclick="openRank()">⚖️ '+rankedN+' of '+nonWish.length+' cafes ranked'+((nonWish.length-rankedN)?' <span>· '+(nonWish.length-rankedN)+' to go</span>':'')+'</div>'
+    : '<div class="handoff" role="button" tabindex="0" onclick="openRank()">🏆 Where to go <span>›</span></div>';
 
   host.innerHTML=h;
 }

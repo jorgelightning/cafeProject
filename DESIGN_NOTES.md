@@ -200,6 +200,11 @@ Fetching moved to the Places API (New) with the legacy service as fallback; stab
 persisted by the admin "Fetch all photos" action so viewers get thumbnails at zero API cost.
 Thumbnails load lazily — rendering the list costs no requests, and opening a cafe costs one.
 
+### The admin bar is collapsed, so pending work has to announce itself
+`.abactions` is `display:none` until the bar is opened, and the cleanup buttons only appear
+when there is something to clean. That combination made them undiscoverable: you had to open a
+panel to find out the panel had anything in it. A count now rides on the closed toggle.
+
 ### The Board is a guide; the ranking is bookkeeping
 A row used to read "#1 · name · 11 comparisons · area · 7.4" — a visitor was given the
 ranking's bookkeeping and none of the 88 ratings, 87 drink records or 84 written notes already
@@ -209,7 +214,8 @@ page so Places costs one lookup per cafe *viewed*, and 102 rows would invert tha
 tile stays.
 
 The comparison count, the Elo score, the "places are provisional" caveat and the
-"Never compared" queue are all `isAdmin`-only now. They describe work only the owner can do.
+"Never compared" queue are all `isAdmin`-only now — **and so is the Stats handoff**, which
+leaked the same coverage count ("102 of 104 cafes ranked") from a different pane. They describe work only the owner can do.
 **`.lbrow` is shared with the stats leaderboards**, so the guide layout is scoped to
 `.lbrow.guide`; styling `.lbrow` alone restyles Stats too.
 
