@@ -103,11 +103,14 @@ const { eq, done } = checker();
   // ---- stats leaderboards must not have been restyled ----
   v = await pg.evaluate(() => {
     renderStats();
-    const mag = document.querySelector("#stats-body .lbrow.mag");
-    return { exists: !!mag, guide: mag ? mag.classList.contains("guide") : null };
+    /* .mag went with the magnitude bars; a Stats row is now a plain .lbrow.one. */
+    const row = document.querySelector("#stats-body .lbrow");
+    return { exists: !!row, guide: row ? row.classList.contains("guide") : null,
+             bars: !!document.querySelector("#stats-body .lbrow.mag") };
   });
   eq(v.exists, true, "the stats leaderboards still render");
   eq(v.guide, false, "…and did not pick up the board's row layout, which .lbrow alone would have");
+  eq(v.bars, false, "…and no longer draw a magnitude bar under a figure they already print");
 
   // ---- the tab and the heading say the same thing ----
   r = await pg.evaluate(() => ({
