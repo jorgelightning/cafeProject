@@ -2752,36 +2752,15 @@
     "custom": false,
     "drinks": [
       {
-        "dates": [
-          "2026-09-17"
-        ],
-        "ice": "Less ice",
-        "n": "Ichigo Matcha",
-        "orders": [
-          {
-            "date": "2026-09-17",
-            "ice": "Less ice",
-            "id": "mu5y4ylky6sg",
-            "p": "7.75",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          }
-        ],
-        "p": "7.75",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
-      },
-      {
-        "count": 6,
+        "count": 7,
         "dates": [
           "2026-03-24",
           "2026-07-09",
           "2026-07-27",
           "2026-09-08",
           "2026-09-09",
-          "2026-09-15"
+          "2026-09-15",
+          "2026-09-18"
         ],
         "ice": "Warm",
         "milk": "Oat",
@@ -2846,11 +2825,43 @@
             "reorder": "yes",
             "size": "8 oz",
             "sweet": "0%"
+          },
+          {
+            "date": "2026-09-18",
+            "ice": "Warm",
+            "id": "mu7boi2nzdul",
+            "milk": "Oat",
+            "p": "4.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
           }
         ],
-        "p": "5",
+        "p": "4.25",
         "reorder": "yes",
         "size": "8 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-09-17"
+        ],
+        "ice": "Less ice",
+        "n": "Ichigo Matcha",
+        "orders": [
+          {
+            "date": "2026-09-17",
+            "ice": "Less ice",
+            "id": "mu5y4ylky6sg",
+            "p": "7.75",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.75",
+        "reorder": "yes",
+        "size": "12 oz",
         "sweet": "0%"
       },
       {
@@ -3014,20 +3025,20 @@
         ]
       }
     ],
-    "elo": 1600,
+    "elo": 1605,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 15,
+    "matches": 16,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-09-17T19:53:50.838Z",
+    "updated": "2026-09-18T18:59:47.627Z",
     "wish": false
   },
   {
