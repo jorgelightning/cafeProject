@@ -1289,13 +1289,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1515,
+    "elo": 1514,
     "emoji": "☕",
     "fav": false,
     "id": "mr7ejpw1qafq",
     "lat": 37.86832,
     "lng": -122.26044,
-    "matches": 1,
+    "matches": 2,
     "name": "8 Grams Matcha",
     "rating": 5,
     "review": "I like they have different blends!",
@@ -1720,11 +1720,41 @@
     "drinks": [
       {
         "dates": [
+          "2026-09-20"
+        ],
+        "ice": "Regular ice",
+        "n": "Kalamansi Summer Spritz",
+        "orders": [
+          {
+            "date": "2026-09-20",
+            "ice": "Regular ice",
+            "id": "muaeutr9mcex",
+            "p": "8.25",
+            "reorder": "yes",
+            "size": "16 oz"
+          }
+        ],
+        "p": "8.25",
+        "reorder": "yes",
+        "size": "16 oz"
+      },
+      {
+        "dates": [
           "2026-08-10"
         ],
         "ice": "Less ice",
         "milk": "Oat",
         "n": "Pandan Muối Latte",
+        "orders": [
+          {
+            "date": "2026-08-10",
+            "ice": "Less ice",
+            "id": "muaeummelust",
+            "milk": "Oat",
+            "p": "7.50",
+            "reorder": "yes"
+          }
+        ],
         "p": "7.50",
         "reorder": "yes"
       },
@@ -1733,24 +1763,32 @@
           "2026-08-10"
         ],
         "n": "Davao Mocha",
+        "orders": [
+          {
+            "date": "2026-08-10",
+            "id": "muaeummffvl6",
+            "p": "7",
+            "reorder": "yes"
+          }
+        ],
         "p": "7",
         "reorder": "yes"
       }
     ],
-    "elo": 1531,
+    "elo": 1545,
     "emoji": "☕",
-    "fav": false,
+    "fav": true,
     "id": "msu1xc32ec38",
     "lat": 37.33282,
     "lng": -121.90455,
-    "matches": 2,
+    "matches": 3,
     "name": "Kasama Cà Phê",
     "rating": 5,
     "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
     "tags": [
       "cozy"
     ],
-    "updated": "2026-08-15T07:25:35.726Z",
+    "updated": "2026-09-20T22:53:27.808Z",
     "wish": false
   },
   {
@@ -1963,13 +2001,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1530,
+    "elo": 1524,
     "emoji": "☕",
     "fav": false,
     "id": "mt6wojizh8ca",
     "lat": 49.28251,
     "lng": -123.11126,
-    "matches": 2,
+    "matches": 3,
     "name": "Saunter Coffee",
     "rating": 5,
     "review": "Great atmosphere to work in the front and there is something on the back for more of a quiet experience. The flat white is so good, strong espresso and the matcha has a good strong matcha taste too!",
@@ -1993,13 +2031,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1485,
+    "elo": 1471,
     "emoji": "☕",
     "fav": false,
     "id": "mt8cgxumld22",
     "lat": 47.62301,
     "lng": -122.13215,
-    "matches": 1,
+    "matches": 2,
     "name": "Chayan 茶宴 Bellevue",
     "rating": 3,
     "review": "I thought it was okay, there just wasn’t enough tea flavor and a hint of water and tea mixture.",
@@ -2118,13 +2156,13 @@
         "size": "16 oz"
       }
     ],
-    "elo": 1516,
+    "elo": 1532,
     "emoji": "☕",
     "fav": false,
     "id": "mt9me8ytssjp",
     "lat": 49.28744,
     "lng": -123.12887,
-    "matches": 1,
+    "matches": 2,
     "name": "Alfa Tea Concept",
     "rating": 5,
     "review": "Amazing mango taste!",
@@ -2223,13 +2261,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1529,
+    "elo": 1513,
     "emoji": "☕",
     "fav": false,
     "id": "mthlqaxscg4f",
     "lat": 37.78287,
     "lng": -122.47021,
-    "matches": 2,
+    "matches": 3,
     "name": "Diamond Coffee n' Pastry",
     "pid": "ChIJb6xMEteHhYARs1pgqASF0Uk",
     "rating": 4,
@@ -2321,13 +2359,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1485,
+    "elo": 1486,
     "emoji": "☕",
     "fav": false,
     "id": "mtl3m4gs7el5",
     "lat": 47.25377,
     "lng": -122.43843,
-    "matches": 1,
+    "matches": 2,
     "name": "Jin Jin Matcha",
     "pid": "ChIJ83tHO_pVkFQRp5biyGbC0bo",
     "rating": 4,
@@ -2365,13 +2403,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1516,
+    "elo": 1530,
     "emoji": "☕",
     "fav": false,
     "id": "mtqn96pbnv35",
     "lat": 37.32234,
     "lng": -122.01675,
-    "matches": 1,
+    "matches": 2,
     "name": "MoonTea",
     "pid": "ChIJ77mZztW1j4ARA7L4u49X9AU",
     "rating": 4,
@@ -2458,13 +2496,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1502,
+    "elo": 1488,
     "emoji": "☕",
     "fav": false,
     "id": "mu4k0lxjyzze",
     "lat": 37.78562,
     "lng": -122.39638,
-    "matches": 1,
+    "matches": 2,
     "name": "Paper Son Coffee",
     "pid": "ChIJXVRIc9aBhYARDuJoNx2IVAg",
     "rating": 4,
@@ -3025,20 +3063,20 @@
         ]
       }
     ],
-    "elo": 1605,
+    "elo": 1611,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 16,
+    "matches": 17,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-09-18T18:59:47.627Z",
+    "updated": "2026-09-20T20:23:28.817Z",
     "wish": false
   },
   {
