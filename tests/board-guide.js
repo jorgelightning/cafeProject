@@ -55,7 +55,7 @@ const { eq, done } = checker();
   await seed();
   let v = await render(false);
   eq(v.rows, 3, "the three ranked cafes are listed (the never-compared one is not ranked)");
-  eq(v.firstStars, "★★★★★", "a row shows the rating that was already stored");
+  eq(v.firstStars, "Loved it", "a row shows the judgement that was already stored");
   eq(v.firstOrder, "Order the Hojicha latte · 3×",
      "…and the drink to order there, counted by orders rather than by record");
   eq(/four different types of matcha/.test(v.firstSay), true, "…and the owner's own words");
@@ -155,9 +155,9 @@ const { eq, done } = checker();
     userLoc = SF; renderBoard();
     const host = document.getElementById("cmp-body");
     const secs = [...host.querySelectorAll(".statsec")].map(e => e.textContent);
-    /* stars render inside .lbname, so take the name's own text node */
+    /* the bucket pill renders inside .lbname, so take the name's own text node */
     const order = [...host.querySelectorAll(".lbrow.guide .lbname")]
-      .map(e => e.textContent.replace(/★+/g, "").trim());
+      .map(e => { const p = e.querySelector(".bkpill"); if (p) p.remove(); return e.textContent.trim(); });
     return { without, secs, order, body: host.textContent.replace(/\s+/g, " "),
              prompt: /Show what’s near me/.test(without) };
   }, SF);

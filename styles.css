@@ -195,7 +195,13 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lbrow.guide .gotile{ margin-top:1px; }
 .lbrow.guide .lbmain{ display:flex; flex-direction:column; gap:var(--sp-1); min-width:0; }
 .lbrow.guide .lbname{ display:flex; align-items:baseline; gap:var(--sp-2); flex-wrap:wrap; }
-.lbstars{ font-size:11px; letter-spacing:1px; color:var(--star); flex:none; }
+/* One value deserves a word, not a run of glyphs. The dot carries the colour so the pill
+   reads the same as the tile and the map pin it belongs to. */
+.bkpill{ display:inline-flex; align-items:center; gap:var(--sp-1); padding:2px 9px 2px 7px; border-radius:var(--r-pill); background:var(--surface2); color:var(--text); font-size:var(--fs-1); font-weight:700; white-space:nowrap; flex:none; }
+.bkpill i{ width:8px; height:8px; border-radius:50%; flex:none; }
+.bkpill.big{ font-size:var(--fs-2); padding:4px 12px 4px 9px; }
+.bkpill.big i{ width:10px; height:10px; }
+.lbstars{ flex:none; }
 .lborder{ font-size:var(--fs-2); font-weight:600; color:var(--acc-strong); overflow-wrap:anywhere; }
 .lbtimes{ font-weight:500; color:var(--soft); }
 .lbsay{ font-size:var(--fs-2); line-height:1.45; color:var(--soft); overflow-wrap:anywhere; }
@@ -210,7 +216,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* The only --surface block on the screen, so it lifts without introducing a new colour. */
 .gorow{ display:flex; align-items:center; gap:var(--sp-3); min-height:48px; padding:5px 2px; cursor:pointer; }
 .gotile{ width:34px; height:34px; flex:0 0 34px; border-radius:var(--r-2); display:flex; align-items:center; justify-content:center; font-size:16px; }
-.gostar{ font-size:14px; font-weight:800; color:var(--star); flex:none; }
+.gostar{ flex:none; }
 .foldbox{ display:none; }
 .foldbox[data-open]{ display:block; }
 .morebtn{ display:block; width:100%; text-align:left; min-height:44px; background:none; border:none; border-top:1px solid var(--border); color:var(--acc-strong); font-size:var(--fs-2); font-weight:700; font-family:inherit; cursor:pointer; padding:0 2px; }
@@ -240,12 +246,13 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .card .m .near{ color:var(--text); font-weight:700; }
 /* Two-colour track using the SAME glyph for both halves — ☆ is optically lighter and a
    different advance width, so a filled/hollow mix does not read as a proportion. */
-.cstars{ color:var(--star-off); letter-spacing:.5px; }
-.cstars b{ color:var(--star); font-weight:inherit; }
+/* Position, in the corner the star run used to hold. It survives on a photo tile because it
+   is the mark a photo cannot carry. */
+.rankbadge{ position:absolute; left:6px; top:6px; height:22px; display:inline-flex; align-items:center; padding:0 8px; border-radius:var(--r-pill); background:rgba(20,16,13,.62); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); color:#fff; font-size:var(--fs-1); font-weight:800; font-variant-numeric:tabular-nums; text-shadow:none; }
+.rankpos{ font-weight:800; font-variant-numeric:tabular-nums; color:var(--text); }
+.ranktot{ color:var(--soft); }
 /* On the tile the pill sits on its own dark scrim, so it uses literal colours: identical
    contrast in both themes and over any photo that later resolves. */
-.card .ph .cstars{ position:absolute; left:6px; bottom:6px; height:24px; display:flex; align-items:center; padding:0 7px; border-radius:var(--r-2); background:rgba(20,16,13,.78); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); font-size:var(--fs-2); letter-spacing:1px; color:rgba(255,255,255,.34); text-shadow:none; }
-.card .ph .cstars b{ color:#f5b544; }
 /* Absolutely positioned so they survive the .nophoto column-flex centring */
 .card .ph .favbadge{ position:absolute; top:6px; right:7px; font-size:16px; line-height:1; }
 .card .ph .wishbadge{ position:absolute; top:6px; left:7px; background:rgba(91,155,213,.9); color:#fff; border-radius:var(--r-1); padding:1px 7px; font-size:var(--fs-1); font-weight:700; line-height:1.4; }
@@ -350,7 +357,25 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    paragraphs running the full screen. Content gets a reading width and centres; the grids
    above already fill it sensibly. */
 /* The single control row, and the panel the rest folded into. */
-.listbar{ display:flex; align-items:center; gap:var(--sp-2); margin:0 16px 10px; }
+/* The two lists the app is about, at the top of the list rather than behind Filters. */
+/* Stats leads with the collection, not with a chart. */
+.profile{ display:flex; flex-wrap:wrap; gap:var(--sp-2); margin:0 0 var(--sp-2); }
+.pfig{ flex:1 1 84px; padding:var(--sp-3) var(--sp-2); border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); text-align:center; }
+.pfig b{ display:block; font-size:var(--fs-5); font-weight:800; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.pfig span{ display:block; margin-top:2px; font-size:var(--fs-1); color:var(--soft); }
+.pline{ margin:0 0 var(--sp-4); font-size:var(--fs-2); color:var(--soft); line-height:1.5; }
+.pline b{ color:var(--text); }
+/* The two lists the app is about — in the control row, not on a row of their own. A row of
+   their own cost 62px of a 390px phone, and the tab's own count made the separate "106 cafes"
+   label redundant, so dropping that paid for most of this. */
+.listtabs{ display:flex; gap:var(--sp-1); padding:4px; background:var(--surface2); border-radius:var(--r-2); }
+.listtabs button{ min-height:36px; padding:0 10px; border:none; border-radius:var(--r-1); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:600; white-space:nowrap; cursor:pointer; }
+.listtabs button[aria-pressed="true"]{ background:var(--surface); color:var(--acc-strong); font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.listtabs .tabn{ font-weight:700; font-variant-numeric:tabular-nums; opacity:.6; }
+/* Admin only, and the one thing in the row that does not fit beside the tabs on a phone.
+   Given its own line on purpose rather than shoving the controls around as its text changes. */
+.listbar #save-state{ flex-basis:100%; }
+.listbar{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin:0 16px 10px; }
 .listbar .sub{ font-size:var(--fs-2); color:var(--soft); font-weight:600; }
 .filterbtn{ margin-left:auto; display:inline-flex; align-items:center; gap:var(--sp-1); min-height:36px; padding:0 12px; border-radius:var(--r-2); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 .filterbtn.on{ border-color:var(--acc-strong); color:var(--acc-strong); }
@@ -426,8 +451,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .field input[type=text],.field input[type=number],.field input[type=date],.field textarea{ width:100%; border:1px solid var(--border); border-radius:var(--r-2); padding:11px 12px; font-size:var(--fs-4); background:var(--surface); color:var(--text); outline:none; font-family:inherit; }
 .field textarea{ min-height:84px; resize:vertical; }
 .hintbtn{ font-size:var(--fs-2); color:var(--acc-strong); background:none; border:none; cursor:pointer; padding:6px 0 0; font-weight:600; }
-.rate{ font-size:34px; color:var(--star-off); letter-spacing:10px; cursor:pointer; user-select:none; }
-.rate .on{ color:var(--star); }
+/* Three buttons, not five glyphs. They wrap rather than shrink below the touch floor on a
+   narrow phone. */
+.rate{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.bkt{ flex:1 1 30%; min-height:52px; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2); padding:0 10px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; }
+.bkt i{ width:10px; height:10px; border-radius:50%; flex:none; }
+.bkt.on{ border-color:var(--acc-strong); border-width:2px; background:var(--surface2); color:var(--acc-strong); }
 .photodrop{ position:relative; height:150px; border:2px dashed var(--border); border-radius:var(--r-3); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-2); color:var(--soft); font-size:var(--fs-2); background-size:cover; background-position:center; overflow:hidden; }
 .drinkrows .dr{ display:flex; flex-wrap:wrap; gap:var(--sp-2); margin-bottom:10px; }
 .drinkrows .drgroup{ margin-bottom:10px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); overflow:hidden; }
@@ -473,7 +502,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .grid.compact-list{display:flex;flex-direction:column;gap:0;}
 .grid.compact-list .card{display:flex;align-items:center;gap:var(--sp-3);border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;padding:12px 0;}
 .grid.compact-list .card .ph{flex:0 0 46px;width:46px;height:46px;border-radius:var(--r-2);overflow:visible;}
-.grid.compact-list .card .ph .cstars{display:none;}
 .grid.compact-list .card .ph > span:not(.em):not(.favbadge):not(.wishbadge){display:none;}
 .grid.compact-list .card .ph .em{font-size:22px;}
 .grid.compact-list .card .ph{font-size:var(--fs-4);}
@@ -481,7 +509,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .grid.compact-list .card .n{white-space:normal;-webkit-line-clamp:unset;display:block;}
 .grid.compact-list .card .m{margin-top:5px;}
 .compact-stars{display:none;}
-.compact-list .compact-stars{display:block;flex:none;font-size:var(--fs-2);color:var(--star);}
+.compact-list .compact-stars{display:block;flex:none;font-size:var(--fs-2);color:var(--soft);white-space:nowrap;}
 /* 180px suited a one-line status. A conflict now shows a comparison plus its two buttons,
    and a cap that hides the buttons is worse than one that lets the panel grow. */
 .sync-status{flex:none;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:var(--fs-2);max-height:min(62vh,440px);overflow:auto;}

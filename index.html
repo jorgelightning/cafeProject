@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=50">
+<link rel="stylesheet" href="styles.css?v=51">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -34,7 +34,7 @@
 <div class="search">🔍<input id="q" placeholder="Search name, city, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
 
 
-<div class="listbar"><span class="sub" id="count"></span><button class="filterbtn" id="filterbtn" onclick="toggleListFilters()" aria-expanded="false" aria-controls="listpanel">Filters<span class="fcount" id="fcount" hidden></span><span class="fchev">▾</span></button><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" style="width:34px;height:34px;font-size:15px;flex:0 0 auto;margin-left:4px">🗺️</button><span id="save-state" class="admin-only" role="status"></span></div><div class="listpanel" id="listpanel" hidden><label class="lp-row"><span>Sort</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="visited">Recently visited</option><option value="ranked">Top ranked</option><option value="rating">★ Highest rated</option><option value="near">📍 Nearest to me</option></select></label><div class="chiprow" id="filterchips"></div><div class="chiprow tagrow" id="tagchips" style="display:none"></div></div>
+<div class="listbar"><div class="listtabs" id="listtabs" role="group" aria-label="Been or want to try"></div><button class="filterbtn" id="filterbtn" onclick="toggleListFilters()" aria-expanded="false" aria-controls="listpanel">Filters<span class="fcount" id="fcount" hidden></span><span class="fchev">▾</span></button><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" style="width:34px;height:34px;font-size:15px;flex:0 0 auto;margin-left:4px">🗺️</button><span id="save-state" class="admin-only" role="status"></span></div><div class="listpanel" id="listpanel" hidden><label class="lp-row"><span>Sort</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="visited">Recently visited</option><option value="ranked">Top ranked</option><option value="rating">Loved first</option><option value="near">📍 Nearest to me</option></select></label><div class="chiprow" id="filterchips"></div><div class="chiprow tagrow" id="tagchips" style="display:none"></div></div>
 
 <div class="scroll"><div class="grid" id="grid"></div></div>
 </section>
@@ -70,7 +70,7 @@
 <div class="field visit-only"><label>Drink photo</label><div class="photodrop" id="f-photodrop"><div style="font-size:26px">📷</div><span id="f-photolabel">Paste an image link below to preview</span></div><input type="text" id="f-photo-url" placeholder="Paste an image link (Google Photos, Cloudinary…)" oninput="onPhotoUrl()" autocomplete="off" style="margin-top:8px"><div style="font-size:11px; color:var(--soft); margin-top:4px">From Google Photos: open the photo, right-click it → "Copy image address" and paste that link here (the Share link won't work).</div><div id="f-photo-status" style="font-size:11px; margin-top:3px"></div></div>
 <div class="field visit-only"><label>Tags</label><div class="tagpick" id="f-tags"></div></div></div></details>
 <div class="field visit-only"><label>Drinks had</label><div class="usualrow" id="f-usuals" hidden></div><div class="drinkrows" id="f-drinks"></div><button class="hintbtn" onclick="addDrinkRow('','',localToday())">+ Add another drink</button></div>
-<div class="field visit-only"><label>Rating</label><div class="rate" id="f-rate"></div></div>
+<div class="field visit-only"><label>How was it?</label><div class="rate" id="f-rate" role="group" aria-label="How was it?"></div></div>
 <div class="field"><label id="f-review-label">Review / thoughts</label><textarea id="f-review" placeholder="Vibe, taste, service…"></textarea></div>
 
 <div class="field visit-only"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-fav"> Mark as favorite ❤️</label></div>
@@ -120,7 +120,7 @@
 <div class="mapbox">
 <div id="map"></div>
 <div class="mapsearch"><select id="locsel" aria-label="Jump to a country or state" onchange="jumpToLocation(this.value)"></select><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
-<div class="maplegend"><span><i style="background:#2e9e5b"></i>4–5★</span><span><i style="background:#f0a93b"></i>≤3★</span><span><i class="wl"></i>wishlist</span><span><i style="background:#d5803b"></i>group</span></div>
+<div class="maplegend"><span><i style="background:#2e9e5b"></i>loved</span><span><i style="background:#f0a93b"></i>fine</span><span><i style="background:#c0374b"></i>not for me</span><span><i class="wl"></i>want to try</span></div>
 <button class="locbtn" id="btn-locate" data-state="idle" onclick="locate()" aria-label="Show my location"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="6.2" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.6v3.2"/><path d="M12 19.2v3.2"/><path d="M1.6 12h3.2"/><path d="M19.2 12h3.2"/></g></svg></button>
 <div class="rulewarn admin-only" id="rule-warn" hidden role="alert"><b>Your private addresses are readable by anyone.</b> The <code>private</code> rule is missing from your Realtime Database — see the block in README.md, then Firebase console → Realtime Database → Rules → Publish.<button type="button" onclick="dismissRuleWarning()" aria-label="Dismiss">✕</button></div>
 <div class="map-msg" id="map-msg"></div>
@@ -146,18 +146,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=50"></script>
-<script src="js/core.js?v=50"></script>
-<script src="js/storage.js?v=50"></script>
-<script src="js/sync.js?v=50"></script>
-<script src="js/nav.js?v=50"></script>
-<script src="js/map.js?v=50"></script>
-<script src="js/photos.js?v=50"></script>
-<script src="js/list.js?v=50"></script>
-<script src="js/stats.js?v=50"></script>
-<script src="js/rank.js?v=50"></script>
-<script src="js/detail.js?v=50"></script>
-<script src="js/form.js?v=50"></script>
-<script src="js/boot.js?v=50"></script>
+<script src="js/config.js?v=51"></script>
+<script src="js/core.js?v=51"></script>
+<script src="js/storage.js?v=51"></script>
+<script src="js/sync.js?v=51"></script>
+<script src="js/nav.js?v=51"></script>
+<script src="js/map.js?v=51"></script>
+<script src="js/photos.js?v=51"></script>
+<script src="js/list.js?v=51"></script>
+<script src="js/stats.js?v=51"></script>
+<script src="js/rank.js?v=51"></script>
+<script src="js/detail.js?v=51"></script>
+<script src="js/form.js?v=51"></script>
+<script src="js/boot.js?v=51"></script>
 </body>
 </html>
