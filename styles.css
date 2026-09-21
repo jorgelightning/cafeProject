@@ -81,7 +81,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
   .side-head{ display:none; }
   .mobile-topbar{ display:none; }
   .mobonly{ display:flex; }
-  .search{ padding:0 6px 0 14px; }
+  /* The List is the one pane that opens flush against the top: the form, Stats, Go and
+     Settings all start their content 12-32px down, and Detail's hero is full-bleed on
+     purpose. The sidebar's safe-area inset clears the notch but leaves no gap under it, so
+     on a phone without one the search box sat on the very first pixel. */
+  .search{ padding:0 6px 0 14px; margin-top:var(--sp-3); }
   .search input{ padding:14px 0; }
   /* .side-head used to carry the only top inset in the sidebar; with it hidden the
      panes would start under the notch, so the inset moves to the sidebar itself. */
