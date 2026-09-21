@@ -118,13 +118,15 @@ function openDetail(id,from){
 
   const _lastDate=d=>((latestDrinkOrder(d)||{}).date)||"";
   const _dsorted=(c.drinks||[]).slice().sort((a,b)=>_lastDate(b).localeCompare(_lastDate(a)));
-/* One compact card per drink. The newest drink opens by default; every order stays available
-   in the timeline without making the normal detail page feel like an edit form. */
+/* One compact card per drink, and all of them start closed. The newest used to open itself,
+   which meant the one cafe with a long history pushed the note and the tags off the screen on
+   arrival. The summary line — name, how many, latest, price — is the part worth reading at a
+   glance; the order timeline is what you go looking for. */
 $("d-drinks").innerHTML=_dsorted.length ? _dsorted.map(function(d,di){
     const orders=drinkOrders(d).slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
     const latest=orders[0]||latestDrinkOrder(d)||{};
     const cnt=orders.reduce(function(t,o){ return t+orderQty(o); },0);
-    const v=reorderVal(latest), open=di===0, hid="drink-history-"+di;
+    const v=reorderVal(latest), open=false, hid="drink-history-"+di;
     const last=latest.date?fmtDate(latest.date):"Undated";
     const rows=orders.map(function(o,oi){
       const ov=reorderVal(o), qty=orderQty(o);
