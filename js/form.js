@@ -305,19 +305,27 @@ function spellingFixPlan(){
   });
   return plan;
 }
-/* The admin bar is collapsed by default, so an action that only appears when there is work to
-   do was invisible — you had to open the panel to discover the panel had anything in it. The
-   count rides on the closed toggle instead. */
-function updateAdminBadge(){
-  const el=$("ab-count");
-  if(!el)return;
+/* An action that only appears when there is work to do is invisible the rest of the time, so
+   it needs to announce itself from outside the screen it lives on. The count rides on every
+   settings door — the List and the Map both say something is waiting, and tapping through is
+   where it gets done. */
+function adminTodo(){
+  if(!isAdmin)return 0;
   let n=0;
-  if(isAdmin){
-    try{ n+=spellingFixPlan().length; }catch(e){ warn("form.js",e); }
-    try{ n+=milkCleanupPlan().length; }catch(e){ warn("form.js",e); }
-  }
-  el.textContent=n?String(n):"";
-  el.hidden=!n;
+  try{ n+=spellingFixPlan().length; }catch(e){ warn("form.js",e); }
+  try{ n+=milkCleanupPlan().length; }catch(e){ warn("form.js",e); }
+  return n;
+}
+function updateAdminBadge(){
+  const n=adminTodo();
+  document.querySelectorAll(".setdoor").forEach(function(b){
+    const el=b.querySelector(".gcount");
+    if(el){ el.textContent=n?String(n):""; el.hidden=!n; }
+    /* icon-only doors say nothing without this; the side-nav one reads its own text */
+    if(b.hasAttribute("aria-label"))b.setAttribute("aria-label",n?("Settings, "+n+" to tidy"):"Settings");
+  });
+  const idle=$("ab-idle");
+  if(idle)idle.hidden=n>0;
 }
 function updateSpellBtn(){
   updateAdminBadge();

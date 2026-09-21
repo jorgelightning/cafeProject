@@ -469,6 +469,21 @@ The version line reads the `?v=` off the `boot.js` script tag the browser actual
 rather than a hard-coded string that would drift on the next bump. "Am I on the new build?" is
 the question it exists to answer.
 
+The admin bar went in with them. It was a collapsed `⚙︎ Admin ▾` strip on the List pane — a
+second gear, three rows above the new one, holding the bulk maintenance actions. Its actions
+are now an admin-only card in the same screen, and its buttons went from 30px tall to 44px on
+the way (part of the outstanding U3 finding).
+
+What the strip did well was **announce itself**: the count rode on the closed toggle, because
+an action that only appears when there is work to do is invisible the rest of the time. Moving
+the actions behind a door would have thrown that away, so the count moved onto the door — every
+settings gear carries it, on the List and on the Map, and the icon-only ones put it in their
+`aria-label` too ("Settings, 3 to tidy"). A viewer never sees it.
+
+`#sync-status` deliberately stayed where it is, in the sidebar above the panes. It is a live
+status with a retry button and a conflict review, not a preference — it needs to be visible
+while you work, not behind a door.
+
 ### A map failure used to blank the whole app
 
 Found while measuring the above. At laptop width the sidebar is `position:absolute; z-index:2`

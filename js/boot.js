@@ -38,6 +38,8 @@ function storedTheme(){ try{ return localStorage.getItem(THEME_KEY)||""; }catch(
 function segOn(id,v){ const g=$(id); if(!g)return; g.querySelectorAll("button").forEach(function(b){
   const on=b.dataset.v===v; b.classList.toggle("on",on); b.setAttribute("aria-pressed",String(on)); }); }
 function renderSettings(){
+  if(typeof updateMilkBtn==="function")updateMilkBtn();
+  if(typeof updateSpellBtn==="function")updateSpellBtn();
   segOn("seg-theme",storedTheme());
   segOn("seg-layout",(typeof listCompact!=="undefined"&&listCompact)?"compact":"grid");
   const m=$("set-mode"), b=$("set-admin"), n=$("set-adminnote");
