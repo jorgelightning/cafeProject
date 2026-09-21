@@ -7,7 +7,7 @@
    The legacy "wish" argument still works for goBack() and any old entry point. */
 const _TABS={map:"t-map",list:"t-list",form:"t-log",compare:"t-rank",stats:"t-stats"};
 /* map maps to n-list because on desktop the map and the list pane share the screen */
-const _NAVS={map:"n-list",list:"n-list",form:"n-add",compare:"n-rank",stats:"n-stats"};
+const _NAVS={map:"n-list",list:"n-list",form:"n-add",compare:"n-rank",stats:"n-stats",settings:"n-settings"};
 function _mark(id){ const el=id&&$(id); if(el)el.classList.add("on"); }
 function show(view,fav){ if(app.dataset.view==="form"&&view!=="form"&&typeof formDirty==="function"&&formDirty()){ if(!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; } if(view==="wish"){ wishOnly=true; favOnly=false; view="list"; } else if(fav){ favOnly=true; wishOnly=false; } if(view==="map"||view==="list")lastMain=view; app.dataset.view=view;
 document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
@@ -15,6 +15,7 @@ document.querySelectorAll(".side-nav button").forEach(b=>b.classList.remove("on"
 _mark(_TABS[view]); _mark(_NAVS[view]);
 if(view==="compare")renderBoard();
 if(view==="stats")renderStats();
+if(view==="settings")renderSettings();
 if(view==="list"||view==="map")renderList();
 if(gReady)setTimeout(()=>{ mapResize(); if(view==="map")focusNearest(); },60);
 }

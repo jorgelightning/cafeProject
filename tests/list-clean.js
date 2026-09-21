@@ -96,8 +96,9 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
       chrome: Math.round(grid.getBoundingClientRect().top - pane.getBoundingClientRect().top),
       rows: rows.length,
       panelHidden: document.getElementById("listpanel").hidden,
-      inPanel: ["sortsel", "filterchips", "list-layout"]
+      inPanel: ["sortsel", "filterchips"]
         .map(id => !!document.getElementById("listpanel").querySelector("#" + id)),
+      layoutMoved: !document.getElementById("listpanel").querySelector("#list-layout"),
       expanded: document.getElementById("filterbtn").getAttribute("aria-expanded"),
       doc: document.documentElement.scrollWidth, win: window.innerWidth
     };
@@ -107,7 +108,8 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
   eq(shape.chrome <= 130, true,
      "…so the grid starts " + shape.chrome + "px down instead of 217px");
   eq(shape.panelHidden, true, "the panel is closed at rest");
-  eq(shape.inPanel, [true, true, true], "sort, chips and the layout toggle all live inside it");
+  eq(shape.inPanel, [true, true], "sort and the filter chips both live inside it");
+  eq(shape.layoutMoved, true, "…and the layout toggle does not — it is a preference, not a filter");
   eq(shape.expanded, "false", "…and the button says so");
   eq(shape.doc <= shape.win + 1, true, "nothing scrolls sideways");
 
@@ -118,12 +120,12 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
     const vis = id => { const el = document.getElementById(id); const r = el.getBoundingClientRect();
                         return r.width > 0 && r.height > 0; };
     return { hidden: p.hidden, expanded: b.getAttribute("aria-expanded"),
-             sort: vis("sortsel"), layout: vis("list-layout"),
+             sort: vis("sortsel"),
              chips: p.querySelectorAll("#filterchips .chip").length };
   });
   eq(opened.hidden, false, "tapping Filters opens the panel");
   eq(opened.expanded, "true", "…and updates aria-expanded for a screen reader");
-  eq(opened.sort && opened.layout, true, "sort and layout are reachable once it is open");
+  eq(opened.sort, true, "sort is reachable once it is open");
   eq(opened.chips > 0, true, "…and so are the filter chips");
 
   // ---------- C: the badge says how many are on ----------
