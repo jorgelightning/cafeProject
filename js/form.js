@@ -14,7 +14,7 @@ function formDirty(){ return _formSnap!==null && app.dataset.view==="form" && fo
 function logDrinkHere(){ if(!curId)return; openForm(curId); /* logging a drink IS the visit, so it takes the cafe off the wishlist — and without
     this the drinks field focused just below is still hidden. */
  if($("f-wish")&&$("f-wish").checked){ $("f-wish").checked=false; syncWishMode(); } setTimeout(function(){ const row=addDrinkRow("","",localToday()); activateDrinkRow(row); const n=row.querySelector('.dn'); if(n)n.focus({preventScroll:true}); row.scrollIntoView({block:'start'}); _formSnap=formSnapshot(); },140); }
-function closeForm(){ if(formDirty()&&!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; if(editId)show("detail"); else if(wishOnly)show("wish"); else if(favOnly)show("list",true); else show(lastMain); }
+function closeForm(){ if(formDirty()&&!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; if(editId)show("detail"); else if(listTab==="want")show("wish"); else if(favOnly)show("list",true); else show(lastMain); }
 function initFormMap(){ if(!gReady)return; const start=picked?{lat:picked.lat,lng:picked.lng}:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]}; if(!fgmap){ fgmap=new google.maps.Map($("form-map"),{center:start,zoom:13,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); fgmap.addListener("click",e=>{ formPid=""; setPicked(e.latLng.lat(),e.latLng.lng()); }); try{ const ac=new google.maps.places.Autocomplete($("f-name"),{fields:["name","geometry","address_components","place_id"]}); ac.addListener("place_changed",()=>{ const p=ac.getPlace();
  /* Picking a different place is a relocation, so the area has to follow it. Keeping the
     old one left the cafe reading as its previous neighbourhood, and left the photo query
@@ -35,7 +35,15 @@ function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; i
 function formLocate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ formPid=""; if(fgmap){ fgmap.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}); fgmap.setZoom(15); } setPicked(p.coords.latitude,p.coords.longitude); },()=>toast("Couldn't get location")); }
 function renderPhoto(){ const d=$("f-photodrop"); const icon=d.querySelector("div"); if(formPhoto){ d.style.backgroundImage='url("'+safeUrl(formPhoto)+'")'; if(icon)icon.style.display="none"; $("f-photolabel").textContent=""; } else { d.style.backgroundImage=""; if(icon)icon.style.display=""; $("f-photolabel").textContent="Paste an image link below to preview"; } }
 function onPhotoUrl(){ const v=$("f-photo-url").value.trim(); formPhoto=v||null; renderPhoto(); const s=$("f-photo-status"); if(!s)return; if(!v){ s.textContent=""; return; } s.textContent="Checking link…"; s.style.color="var(--soft)"; const t=new Image(); t.onload=()=>{ s.textContent="✓ Image loaded"; s.style.color="#3aa76d"; }; t.onerror=()=>{ s.textContent='⚠ Couldn\'t load this link — use the photo\'s "Copy image address" link, not the Share link.'; s.style.color="var(--acc2)"; }; t.src=v; }
-function renderRate(){ $("f-rate").innerHTML=[1,2,3,4,5].map(n=>'<span class="'+(n<=formRating?"on":"")+'" role="button" tabindex="0" onclick="formRating='+n+';renderRate()">★</span>').join(""); }
+/* Re-tapping the lit one clears it, which is the only way back to "no opinion yet" now that
+   there is no empty run of stars to tap the start of. */
+function renderRate(){ const host=$("f-rate"); if(!host)return;
+  const cur=bucketOf({rating:formRating});
+  host.innerHTML=BUCKETS.map(function(b){ const on=cur===b[0];
+    return '<button type="button" class="bkt'+(on?" on":"")+'" aria-pressed="'+(on?"true":"false")+
+      '" onclick="setBucket(\''+b[0]+'\')"><i style="background:'+BUCKET_HEX[b[0]]+'"></i>'+b[2]+'</button>';
+  }).join(""); }
+function setBucket(k){ formRating=(bucketOf({rating:formRating})===k)?0:bucketRating(k); renderRate(); }
 function renderTags(){ $("f-tags").innerHTML=ALL_TAGS.map(t=>'<span class="chip '+(formTags.includes(t)?"on":"")+'" role="button" tabindex="0" onclick="toggleTag(\''+t+'\')">'+t+'</span>').join(""); }
 function toggleTag(t){ formTags.includes(t)?formTags=formTags.filter(x=>x!==t):formTags.push(t); renderTags(); }
 function drinkGroupPriceText(d){

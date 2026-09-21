@@ -78,7 +78,7 @@ function boardRow(c,pos,unique){
      still needs both; a visitor can act on neither. */
   const dkm=boardDistTo(c);
   const meta=[dkm!=null?fmtDist(dkm):"",ar?esc(ar):"",isAdmin?(m+" comparison"+(m===1?"":"s")):""].filter(Boolean).join(" \u00b7 ");
-  const stars=c.rating?'<span class="lbstars" aria-label="'+c.rating+' out of 5">'+"\u2605".repeat(c.rating)+'</span>':"";
+  const stars=bucketPill(c,"lbstars");
   const top=topDrinkAt(c);
   const order=top?'<div class="lborder">Order the '+esc(top.d.n)
     +(top.n>1?' <span class="lbtimes">\u00b7 '+top.n+'\u00d7</span>':'')+'</div>':"";
@@ -106,7 +106,7 @@ function boardChunk(rows){
 function boardQueueRow(c){
   const ar=boardArea(c), lv=chaserLast(c);
   const sub=[ar?esc(ar):"",chaserWhen(lv)].filter(Boolean).join(" · ");
-  const right=isAdmin?'<span class="rank-lnk">Rank ›</span>':'<span class="gostar">'+(c.rating||0)+'★</span>';
+  const right=isAdmin?'<span class="rank-lnk">Rank ›</span>':bucketPill(c,"gostar");
   const act=isAdmin?("boardRank('"+c.id+"')"):("openDetail('"+c.id+"','compare')");
   return '<div class="gorow" role="button" tabindex="0" onclick="'+act+'"><span class="gotile" style="background:'+tintFor(c)+'">'+esc(c.emoji||"☕")+'</span>'
     +'<div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+sub+'</div></div>'+right+'</div>';
@@ -253,6 +253,23 @@ function chaserArm(id){
   _chaser={cafe:c.id,opp:pick.id,tier:tier,fam:fam,myDrink:fresh?fresh.n:null,theirDrink:theirDrink,flip:Math.random()<0.5,ts:Date.now(),res:null,board:false};
 }
 function chaserBoard(){ return cafes.filter(function(c){ return !c.wish&&matchCount(c)>0; }).sort(function(a,b){ return eloScoreNum(b)-eloScoreNum(a); }); }
+/* Position, everywhere. chaserRank walks the whole board per cafe, which is fine for one
+   detail page and quadratic across 113 cards, so the list builds the whole map in one sorted
+   pass. Competition ranking, the same as chaserRank: a tie group shares the first position,
+   so "#1" can be two cafes and the next is "#3". A cafe that has never been compared is NOT
+   in here — sixteen of them share the untouched 5.0, and numbering that is a lie. */
+function rankMap(){
+  const board=chaserBoard(), m={_n:board.length};
+  let pos=0, prev=null;
+  board.forEach(function(c,i){ const s=eloScoreNum(c);
+    if(prev===null||s<prev){ pos=i+1; prev=s; }
+    m[c.id]=pos; });
+  return m;
+}
+function rankOf(c,m){ if(!c)return null; return (m||rankMap())[c.id]||null; }
+/* A badge on the tile, where the stars used to be — the tile colour already carries the
+   bucket, so repeating it there said nothing twice. */
+function rankBadge(c,m){ const r=rankOf(c,m); return r?('<span class="rankbadge">#'+r+'</span>'):""; }
 function chaserRank(c,board){ let n=1; const s=eloScoreNum(c); board.forEach(function(x){ if(x.id!==c.id&&eloScoreNum(x)>s)n++; }); return n; }
 /* Both cafes are re-resolved by id from the live array, so the Firebase echo that repaints a
    few hundred ms after every save can never orphan the vote. */

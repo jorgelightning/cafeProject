@@ -25,25 +25,36 @@ function chipMatch(c,chip){ if(chip.slice(0,4)==="tag:")return (c.tags||[]).incl
    "coffee favorites" stays expressible — folding them into the single-select chip would
    quietly remove combined filters. They stay mutually exclusive to each other. */
 let showTagRow=false;
-function toggleFavFilter(){ favOnly=!favOnly; if(favOnly)wishOnly=false; renderList(); }
-function toggleWishFilter(){ wishOnly=!wishOnly; if(wishOnly)favOnly=false; renderList(); }
+function toggleFavFilter(){ favOnly=!favOnly; renderList(); }
 /* Closing the row also drops an active tag filter, otherwise the chip would be inert
    (the row has to stay open to show the lit tag) and the list would stay filtered by
    something no longer on screen. */
 function toggleTagRow(){ showTagRow=!showTagRow; if(!showTagRow&&activeChip.slice(0,4)==="tag:")activeChip=""; renderList(); }
-function renderFilterChips(){ const host=$("filterchips"); if(!host)return; const nFav=cafes.filter(c=>c.fav).length, nWish=cafes.filter(c=>c.wish).length; const usedTags=ALL_TAGS.filter(t=>t!=="matcha"&&cafes.some(c=>(c.tags||[]).includes(t)));
- let h='<span class="chip'+((activeChip===""&&!favOnly&&!wishOnly)?" on":"")+'" role="button" tabindex="0" onclick="clearFilters()">All</span>';
+/* ---------- been, and want to try ----------
+   These are the two lists the app is actually about, and the wishlist spent its life as one
+   chip among seven, two taps deep behind Filters. It is a tab now, and "Been" means been:
+   the 7 places you have not been to stop padding the 106 you have. */
+let listTab="been";
+function setListTab(t){ listTab=(t==="want")?"want":"been"; renderList(); }
+function renderListTabs(){ const host=$("listtabs"); if(!host)return;
+  const nBeen=cafes.filter(c=>!c.wish).length, nWant=cafes.filter(c=>c.wish).length;
+  host.innerHTML=[["been","Been",nBeen],["want","Want to try",nWant]].map(function(t){
+    const on=listTab===t[0];
+    return '<button type="button" aria-pressed="'+(on?"true":"false")+'" onclick="setListTab(\''+t[0]+'\')">'
+      +t[1]+' <span class="tabn">'+t[2]+'</span></button>'; }).join(""); }
+function renderFilterChips(){ const host=$("filterchips"); if(!host)return; const nFav=cafes.filter(c=>c.fav).length; const usedTags=ALL_TAGS.filter(t=>t!=="matcha"&&cafes.some(c=>(c.tags||[]).includes(t)));
+ let h='<span class="chip'+((activeChip===""&&!favOnly)?" on":"")+'" role="button" tabindex="0" onclick="clearFilters()">All</span>';
  /* keep a lit chip on screen even if the set empties, or the list looks broken with
     nothing explaining why it is filtered */
  if(nFav||favOnly)h+='<span class="chip'+(favOnly?" on":"")+'" role="button" tabindex="0" onclick="toggleFavFilter()">❤️ '+nFav+'</span>';
- if(nWish||wishOnly)h+='<span class="chip'+(wishOnly?" on":"")+'" role="button" tabindex="0" onclick="toggleWishFilter()">🔖 '+nWish+'</span>';
  CHIP_DEFS.forEach(d=>{ h+='<span class="chip'+(activeChip===d[0]?" on":"")+'" role="button" tabindex="0" onclick="setChip(\''+d[0]+'\')">'+d[1]+'</span>'; });
  if(usedTags.length)h+='<span class="chip'+(showTagRow?" on":"")+'" role="button" tabindex="0" onclick="toggleTagRow()"># Tags</span>';
  host.innerHTML=h;
  const trow=$("tagchips"); if(trow){ if(showTagRow){ trow.style.display=""; trow.innerHTML=usedTags.map(t=>'<span class="chip'+(activeChip==="tag:"+t?" on":"")+'" role="button" tabindex="0" onclick="setChip(\'tag:'+esc(t)+'\')">'+esc(t)+'</span>').join(""); } else { trow.style.display="none"; trow.innerHTML=""; } } }
-function clearFilters(){ activeChip=""; favOnly=false; wishOnly=false; showTagRow=false; renderList(); }
+/* The tab is not one of the things "All" clears — it is which list you are looking at. */
+function clearFilters(){ activeChip=""; favOnly=false; showTagRow=false; renderList(); }
 function setChip(v){ activeChip=(activeChip===v)?"":v; if(activeChip.slice(0,4)==="tag:")showTagRow=true; renderList(); }
-function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); grid.classList.toggle("compact-list",listCompact); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderFilterChips(); updateFilterBadge(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(typeof updateSpellBtn==="function")updateSpellBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
+function renderList(){ _cardRanks=(typeof rankMap==="function")?rankMap():null; const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); grid.classList.toggle("compact-list",listCompact); let items=cafes.filter(c=>listTab==="want"?!!c.wish:!c.wish); if(favOnly)items=items.filter(c=>c.fav); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderListTabs(); renderFilterChips(); updateFilterBadge(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(typeof updateSpellBtn==="function")updateSpellBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
    comparisons, which floated every unranked cafe above the 36 that were compared and lost —
    putting the most-compared cafe in the app in last place. */
   /* Ordering. Every branch ends on name so the list never jitters between equal items, and
@@ -80,12 +91,11 @@ function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const gr
   return (a.name||"").localeCompare(b.name||"");
 });
 
-if($("count"))$("count").textContent=items.length+(favOnly?" favorite":"")+" cafe"+(items.length===1?"":"s");
 
 if(!items.length){
   grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">'
-    +(wishOnly?"\u{1F516}":"\u2615")+'</div>'
-    +(wishOnly
+    +(listTab==="want"?"\u{1F516}":"\u2615")+'</div>'
+    +(listTab==="want"
       ? "No wishlist cafes yet — tap the bookmark on a cafe to save it for later."
       : (favOnly
         ? "No favorites yet — tap the heart on a cafe."
@@ -122,7 +132,7 @@ grid.innerHTML=items.map(function(c){
       +'<div class="n">'+esc(c.name)+'</div>'
       +'<div class="m">'+M.join(" · ")+'</div>'
     +'</div>'
-    +'<span class="compact-stars" aria-label="'+(c.rating||0)+' out of 5 stars">'+(c.rating?'★'.repeat(c.rating):'Unrated')+'</span>'
+    +'<span class="compact-stars">'+(bucketLabel(c)||"Not rated yet")+'</span>'
   +'</div>';
 }).join("");
 
@@ -155,7 +165,6 @@ function activeFilterCount(){
   let n=0;
   if(activeChip)n++;
   if(favOnly)n++;
-  if(wishOnly)n++;
   if(sortMode&&sortMode!=="recent")n++;
   return n;
 }
@@ -169,4 +178,4 @@ function updateFilterBadge(){
   if(b)b.classList.toggle("on",n>0);
 }
 function setSort(v){ sortMode=v; renderList(); if(v==="near"){ if(navigator.geolocation)showUserLocation(false); else toast("Location not available"); } }
-function showFilteredOnMap(){ const q=($('q').value||"").toLowerCase().trim(); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(q)items=items.filter(c=>matchSearch(c,q)); const pts=items.filter(c=>c.lat!=null); show("map"); if(!gmap||!pts.length)return; setTimeout(()=>{ if(pts.length===1){ gmap.setCenter({lat:pts[0].lat,lng:pts[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); pts.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); }},100); }
+function showFilteredOnMap(){ const q=($('q').value||"").toLowerCase().trim(); let items=cafes.filter(c=>listTab==="want"?!!c.wish:!c.wish); if(favOnly)items=items.filter(c=>c.fav); if(q)items=items.filter(c=>matchSearch(c,q)); const pts=items.filter(c=>c.lat!=null); show("map"); if(!gmap||!pts.length)return; setTimeout(()=>{ if(pts.length===1){ gmap.setCenter({lat:pts[0].lat,lng:pts[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); pts.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); }},100); }
