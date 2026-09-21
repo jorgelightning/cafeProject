@@ -78,6 +78,53 @@ const fs = require("fs"), path = require("path");
   eq(ipad.content <= 760, true,
      "…and the content keeps a reading width instead of running the full 744px");
 
+  // ---- a pane must not open flush against the top edge ----
+  /* The sidebar's safe-area inset clears the notch but adds no gap under it, so on a phone
+     without one the search box sat on the very first pixel — the only pane that did. The
+     hero on Detail is the deliberate exception: it is full-bleed artwork. */
+  const gaps = async (w, h) => {
+    const ctx = await b.newContext({ viewport: { width: w, height: h } });
+    const pg = await ctx.newPage();
+    await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
+    await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
+    await pg.waitForTimeout(900);
+    const out = await pg.evaluate(() => {
+      isAdmin = false; applyMode && applyMode();
+      cafes = [{ id: "x", name: "Test Cafe", area: "Oakland", rating: 4, elo: 1500, matches: 3,
+                 drinks: [{ n: "Latte", orders: [{ date: "2026-09-01" }] }], lat: 1, lng: 1 }];
+      renderList();
+      const top = (view, pane) => {
+        if (view === "detail") openDetail("x", "list"); else app.dataset.view = view;
+        if (view === "compare") renderBoard();
+        if (view === "stats") renderStats();
+        if (view === "settings") renderSettings();
+        const p = document.getElementById(pane), pr = p.getBoundingClientRect();
+        /* the first descendant that actually paints: a fill, a border, or its own text */
+        const k = [...p.querySelectorAll("*")].find(e => {
+          const r = e.getBoundingClientRect();
+          if (r.height <= 0 || r.width <= 0) return false;
+          const st = getComputedStyle(e);
+          return st.backgroundColor !== "rgba(0, 0, 0, 0)" || st.backgroundImage !== "none" ||
+                 st.borderTopWidth !== "0px" || (!e.children.length && e.textContent.trim());
+        });
+        return k ? Math.round(k.getBoundingClientRect().top - pr.top) : -1;
+      };
+      return { list: top("list", "pane-list"), form: top("form", "pane-form"),
+               go: top("compare", "pane-compare"), stats: top("stats", "pane-stats"),
+               settings: top("settings", "pane-settings"), detail: top("detail", "pane-detail") };
+    });
+    await ctx.close();
+    return out;
+  };
+
+  const pg1 = await gaps(390, 844), pg2 = await gaps(744, 1133);
+  [["phone", pg1], ["iPad portrait", pg2]].forEach(([name, g]) => {
+    ["list", "form", "go", "stats", "settings"].forEach(k =>
+      eq(g[k] >= 12, true, "the " + k + " pane opens with room above it on " + name +
+                           " (" + g[k] + "px)"));
+    eq(g.detail, 0, "…while the hero on Detail stays full-bleed on " + name);
+  });
+
   // ---- nothing scrolls sideways at any of them ----
   [["phone", phone], ["iPad portrait", ipad], ["iPad landscape", ipadL], ["laptop", laptop]]
     .forEach(([name, m]) => eq(m.doc <= m.win + 1, true, "no sideways scroll on " + name));
