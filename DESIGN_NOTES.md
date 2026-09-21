@@ -503,6 +503,50 @@ Both now start where the map does. Guarded in `tests/settings.js`, which asserts
 cross-origin request, so the Maps failure the bug needed is the default state there rather
 than something to simulate.
 
+### The ranking becomes the spine
+
+The comparison engine had been here for months — the Go tab force-ranks cafes with Elo, and a
+sheet asks you to compare right after you save. What was missing is that **nothing else on
+screen knew about it**. Four changes, all of them about surfacing what was already computed.
+
+**Five stars became three buckets.** 75 of the 90 rated cafes sat on 4★ or 5★ and only five on
+1–2★, so for three quarters of the app the star said nothing. The input is now *Loved it /
+It was fine / Not for me* — the coarse call a comparison ranking wants, with the fine order
+coming from comparing. **Nothing was migrated**: it is still stored as a rating, and 4 and 5
+both read as loved, 3 as fine, 1 and 2 as not-for-me. New saves land on a canonical 5 / 3 / 1.
+
+One consequence worth stating: `ratingColor()` went from five steps to four, so most tiles are
+now the same green. That is the point — the colour carries the judgement, and the **rank badge**
+carries what separates one loved cafe from another. It is also why the star run left the tile:
+repeating the tile's own colour said nothing twice.
+
+**Position goes everywhere.** `chaserRank()` existed but was owner-only and buried on Go.
+`rankMap()` now builds every position in one sorted pass — `chaserRank` walks the whole board
+per cafe, which is fine for one detail page and quadratic across 113 cards. Competition
+ranking, so a tie shares a position and the next one skips. A cafe nobody has compared gets
+**no** badge: sixteen of them share the untouched 5.0, and numbering that is a lie.
+
+This is deliberately *not* Beli's big number out of 10. On this data 104 of 113 cafes print a
+score another cafe also prints, the score takes only 29 distinct values, and 16 print exactly
+5.0. A position is the one number that is actually a given cafe's own.
+
+**Been and Want to try became the two lists.** The wishlist was one chip among seven, two taps
+deep behind Filters, and "the list" silently mixed 106 places you had been with 7 you had not.
+They are tabs now. A row of their own cost 62px of a 390px phone, so they went *into* the
+control row instead and the separate "106 cafes" label came out — the tab's own count made it
+redundant. Viewer chrome is unchanged at 121px; admin wraps to 155px because the sync note
+does not fit beside them, and that wrap is now declared rather than accidental.
+
+`wishOnly` is gone. It and `listTab` could drift apart the moment anything but `setListTab`
+wrote either one, and four places did.
+
+**Stats opens with the collection** — cafes, countries, visits, drinks, then what you actually
+order — before any chart. All of it was already computed. `cafeCountryName()` falls back to
+`"Other"` for a cafe whose coordinates match no country box, and six real ones do, so the
+count excludes it: **5 countries, not 6**.
+
+Guarded by `tests/beli.js` (36 assertions).
+
 ---
 
 ## Rejected, and why

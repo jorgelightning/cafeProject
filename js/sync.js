@@ -215,7 +215,7 @@ function syncTrim(v,n){ v=String(v==null?"":v).replace(/\s+/g," ").trim(); retur
 const SYNC_FIELDS=[
   ["Name",     function(c){ return c.name||""; }],
   ["Area",     function(c){ return c.area||"none"; }],
-  ["Rating",   function(c){ return c.rating?c.rating+"\u2605":"none"; }],
+  ["Rating",   function(c){ return bucketLabel(c)||"none"; }],
   ["Drinks",   function(c){ const n=(c.drinks||[]).length, o=syncOrderCount(c);
                             return n+(n===1?" drink":" drinks")+" \u00b7 "+o+(o===1?" order":" orders"); }],
   ["Notes",    function(c){ return (c.review||"").trim()||"none"; }],

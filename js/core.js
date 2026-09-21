@@ -1,7 +1,7 @@
 "use strict";
 /* core.js — App state, DOM/format helpers, Firebase init and cloud sync.
    Loaded by index.html; script order matters (config first, boot last). */
-let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], formCC="", formCcy="", formPid="", favOnly=false, wishOnly=false, lastMain="map";
+let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], formCC="", formCcy="", formPid="", favOnly=false, lastMain="map";
 let gReady=false, gmap=null, fgmap=null, fgmarker=null, gmarkers=[], userMarker=null, userAccuracy=null;
 let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gphotos"))||{}; }catch(e){ warn("core.js",e); }
 let isAdmin=false;
@@ -50,21 +50,36 @@ function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp
 function safeUrl(u){ u=(u==null?"":String(u)).trim(); if(!u)return ""; if(!/^(https?:|data:image\/)/i.test(u))return ""; return u.replace(/["'()<>\s\\]/g,encodeURIComponent); }
 const _imgFail={}; let _photoRetried={};
 function initials(c){ const n=((c&&c.name)||"").trim(); if(!n)return "?"; const w=n.split(/\s+/).filter(Boolean); let s=(w[0]&&w[0][0])||""; if(w.length>1&&w[1][0])s+=w[1][0]; return s.toUpperCase(); }
+/* ---------- how much you liked it ----------
+   Five stars had stopped separating anything: 75 of the 90 rated cafes sat on 4 or 5, and only
+   five on 1-2. So the input is now the three-way call a comparison ranking wants — it says
+   roughly where in the list to start looking, and the fine order comes from comparing.
+
+   It is still STORED as a rating, which is why nothing had to be migrated: 4 and 5 both read
+   as loved, 3 as fine, 1 and 2 as not-for-me, and new saves land on the canonical 5 / 3 / 1. */
+const BUCKETS=[["loved",5,"Loved it"],["fine",3,"It was fine"],["meh",1,"Not for me"]];
+const BUCKET_HEX={loved:"#2e9e5b",fine:"#f0a93b",meh:"#c0374b","":"#9aa0a6"};
+function bucketOf(c){ const r=(c&&c.rating)||0; return r>=4?"loved":(r===3?"fine":(r>=1?"meh":"")); }
+function bucketRating(k){ for(let i=0;i<BUCKETS.length;i++)if(BUCKETS[i][0]===k)return BUCKETS[i][1]; return 0; }
+function bucketLabel(c){ const k=bucketOf(c); for(let i=0;i<BUCKETS.length;i++)if(BUCKETS[i][0]===k)return BUCKETS[i][2]; return ""; }
+/* A pill rather than a run of glyphs: there is one value now, and it deserves a word. */
+function bucketPill(c,cls){ const k=bucketOf(c); if(!k)return "";
+  return '<span class="bkpill '+(cls||"")+'"><i style="background:'+BUCKET_HEX[k]+'"></i>'+bucketLabel(c)+'</span>'; }
 /* ---------- the placeholder tint ----------
    Every card without a photo — which is every card, since photos are only fetched when a cafe
    is opened — used to get one of eight saturated hues hashed off its name. The hue meant
-   nothing: two cafes with nothing in common came out the same colour, and the grid read as
-   noise. It now carries the rating, on the same five-step scale the map pins use, so the two
-   screens agree and the colour is worth looking at. */
+   nothing: two cafes with nothing in common came out the same colour. It carries the bucket
+   now, on the same scale the map pins use, so the two screens agree — and the rank badge on
+   the tile, not the colour, is what separates one loved cafe from another. */
 function tintFor(c){
   /* ratingColor lives in map.js, which loads after this file; by the time anything renders it
      is defined. The guard keeps core.js usable on its own. */
   if(typeof ratingColor==="function")return ratingColor(c&&c.rating);
   return "#9aa0a6";
 }
-/* The monogram sits on top of the tint, and three of the five rating steps are too light to
-   carry white text — amber under white is 1.98:1 against a 3:1 floor. The ink follows the
-   tint's luminance instead of being fixed. */
+/* The monogram sits on top of the tint, and the amber step is far too light to carry white
+   text — 1.98:1 against a 3:1 floor. The ink follows the tint's luminance instead of being
+   fixed. */
 function inkOn(hex){
   const m=/^#?([0-9a-f]{6})$/i.exec(String(hex||""));
   if(!m)return "#fff";
@@ -370,10 +385,13 @@ function drinkPriceRange(d){
 }
 /* Same glyph for both halves — ☆ is optically lighter and a different advance width, so a
    filled/hollow mix reads as decoration rather than a proportion. */
-function starsHTML(r){ r=Math.max(0,Math.min(5,Math.round(r||0))); if(!r)return ""; return '<span class="cstars"><b>'+"★".repeat(r)+"</b>"+"★".repeat(5-r)+"</span>"; }
+let _cardRanks=null;
 /* Single source of truth for what lives inside a card's .ph tile. Three call sites rebuild
    it (renderList, verifyCardPhoto, applyCardPhoto) — routing them all through here is what
    keeps a resolving photo from silently wiping the star pill and wish badge. */
-function phInner(c,hasPhoto){ let h=hasPhoto?"":nophotoHTML(c); if(c&&c.fav)h+='<span class="favbadge">❤️</span>'; if(c&&c.wish)h+='<span class="wishbadge">🔖</span>'; return h+starsHTML(c&&c.rating); }
+/* The rank badge takes the corner the stars had. On a photo tile it is the only mark that
+   survives, which is the one that carries information the picture does not. */
+function phInner(c,hasPhoto){ let h=hasPhoto?"":nophotoHTML(c); if(c&&c.fav)h+='<span class="favbadge">❤️</span>'; if(c&&c.wish)h+='<span class="wishbadge">🔖</span>';
+  return h+((typeof rankBadge==="function")?rankBadge(c,_cardRanks):""); }
 function verifyCardPhoto(id,url){ if(!url)return; const probe=new Image(); probe.onload=function(){ _imgFail[id]=0; }; probe.onerror=function(){ _imgFail[id]=1; const c=cafes.find(x=>x.id===id); if(c&&c.gphoto)delete c.gphoto; if(gphotoCache[id]!==undefined){ delete gphotoCache[id]; saveGphotoCache(); } const el=document.querySelector('.card[data-id="'+id+'"] .ph'); if(el){ el.style.backgroundImage=""; el.classList.remove("loaded","loading"); el.classList.add("nophoto"); el.style.cssText=c?nophotoStyle(c):"background:#caa472"; el.innerHTML=c?phInner(c,false):"?"; } if(c&&!c.photo&&!_photoRetried[id]&&gReady&&c.lat!=null&&!gphotoInflight[id]){ _photoRetried[id]=1; gphotoInflight[id]=1; fetchPlacePhoto(c,function(u){ delete gphotoInflight[id]; if(u)applyCardPhoto(id,u); }); } }; probe.src=safeUrl(url); }
 function fmtDate(s){ if(!s)return ""; const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); if(!m)return s; const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2]-1]; return mo+" "+(+m[3])+", "+m[1]; }
