@@ -43,7 +43,7 @@ function renderFilterChips(){ const host=$("filterchips"); if(!host)return; cons
  const trow=$("tagchips"); if(trow){ if(showTagRow){ trow.style.display=""; trow.innerHTML=usedTags.map(t=>'<span class="chip'+(activeChip==="tag:"+t?" on":"")+'" role="button" tabindex="0" onclick="setChip(\'tag:'+esc(t)+'\')">'+esc(t)+'</span>').join(""); } else { trow.style.display="none"; trow.innerHTML=""; } } }
 function clearFilters(){ activeChip=""; favOnly=false; wishOnly=false; showTagRow=false; renderList(); }
 function setChip(v){ activeChip=(activeChip===v)?"":v; if(activeChip.slice(0,4)==="tag:")showTagRow=true; renderList(); }
-function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); grid.classList.toggle("compact-list",listCompact);if($("list-layout"))$("list-layout").textContent=listCompact?"Use card grid":"Use compact list"; let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderFilterChips(); updateFilterBadge(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(typeof updateSpellBtn==="function")updateSpellBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
+function renderList(){ const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); grid.classList.toggle("compact-list",listCompact); let items=cafes.slice(); if(favOnly)items=items.filter(c=>c.fav); if(wishOnly)items=items.filter(c=>c.wish); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderFilterChips(); updateFilterBadge(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(typeof updateSpellBtn==="function")updateSpellBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
    comparisons, which floated every unranked cafe above the 36 that were compared and lost —
    putting the most-compared cafe in the app in last place. */
   /* Ordering. Every branch ends on name so the list never jitters between equal items, and
@@ -131,13 +131,16 @@ grid.innerHTML=items.map(function(c){
 items.forEach(function(c){ const gp=gphotoFor(c); if(gp && !_imgFail[c.id])verifyCardPhoto(c.id,gp); });
 }
 let listCompact=localStorage.getItem("cafemap.listLayout")==="compact";
-function toggleListLayout(){listCompact=!listCompact;lsSet("cafemap.listLayout",listCompact?"compact":"grid");renderList();}
+/* Set explicitly from Settings; toggleListLayout stays for any caller that only wants the
+   other one of the two. */
+function setListLayout(compact){ listCompact=!!compact; lsSet("cafemap.listLayout",listCompact?"compact":"grid"); renderList(); if(typeof renderSettings==="function")renderSettings(); }
+function toggleListLayout(){ setListLayout(!listCompact); }
 let sortMode="recent";
 /* ---------- one control row ----------
    The List spent 217px — a quarter of a phone screen — on four stacked rows before the first
    cafe: search, filter chips, a count beside a sort menu, and a layout toggle alone on its
-   own row. Chips, sort and layout now sit behind one Filters control that says how many are
-   active, so nothing is lost and two more cafes clear the fold. */
+   own row. Chips and sort now sit behind one Filters control that says how many are active;
+   the layout toggle went to Settings, where a preference belongs. */
 function toggleListFilters(){
   const p=$("listpanel"), b=$("filterbtn");
   if(!p||!b)return;
@@ -154,7 +157,6 @@ function activeFilterCount(){
   if(favOnly)n++;
   if(wishOnly)n++;
   if(sortMode&&sortMode!=="recent")n++;
-  if(listCompact)n++;
   return n;
 }
 function updateFilterBadge(){

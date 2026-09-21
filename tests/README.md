@@ -52,6 +52,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `sync-merge.js` | Two devices merging automatically — and every case where it must refuse and ask instead. |
 | `scale.js` | The type/radius/space scale is the whole set, and all three device widths get a sane layout. |
 | `list-clean.js` | The placeholder tint carries the rating with legible ink, and four control rows fold into one. |
+| `settings.js` | Appearance, list layout and editing mode share one screen; a Maps failure no longer paints over the whole app. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `locate.js` | The locate button, its three states, the user dot — which was never being drawn — and that **nothing but the button raises the permission prompt**. |
 | `offline.js` | The app boots with the network pulled. |

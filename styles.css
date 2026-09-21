@@ -35,7 +35,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .sidebar{ position:absolute; inset:0 0 calc(64px + env(safe-area-inset-bottom)) 0; display:flex; flex-direction:column; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); z-index:30; min-height:0; }
 .mapwrap{ position:absolute; inset:0 0 calc(64px + env(safe-area-inset-bottom)) 0; display:flex; flex-direction:column; }
 #app[data-view="map"] .sidebar{ display:none; }
-#app[data-view="list"] .mapwrap, #app[data-view="detail"] .mapwrap, #app[data-view="form"] .mapwrap, #app[data-view="compare"] .mapwrap{ display:none; }
+#app[data-view="list"] .mapwrap, #app[data-view="detail"] .mapwrap, #app[data-view="form"] .mapwrap, #app[data-view="compare"] .mapwrap, #app[data-view="settings"] .mapwrap{ display:none; }
 .side-head{ padding:calc(14px + env(safe-area-inset-top)) 16px 8px; display:flex; align-items:flex-start; gap:var(--sp-3); }
 .side-head h1{ font-size:var(--fs-5); font-weight:800; margin:0; letter-spacing:-.02em; }
 .side-head .sub{ font-size:var(--fs-2); color:var(--soft); margin-top:2px; }
@@ -50,6 +50,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 #app[data-view="form"] #pane-form{ display:flex; }
 #app[data-view="compare"] #pane-compare{ display:flex; }
 #app[data-view="stats"] #pane-stats{ display:flex; }
+#app[data-view="settings"] #pane-settings{ display:flex; }
 .scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
 .scroll::-webkit-scrollbar{ width:8px; }
 .scroll::-webkit-scrollbar-track{ background:transparent; }
@@ -59,7 +60,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mobile-topbar h1{ font-size:var(--fs-5); font-weight:800; margin:0; letter-spacing:-.02em; }
 .mobile-topbar .sub{ font-size:var(--fs-2); color:var(--soft); margin-top:2px; }
 .iconbtn{ width:40px; height:40px; border-radius:var(--r-3); background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:var(--fs-4); cursor:pointer; flex:0 0 auto; color:var(--text); }
-.lockbtn{ width:auto; padding:0 12px; gap:var(--sp-2); font-size:var(--fs-2); font-weight:600; }
 .search{ margin:0 16px 12px; display:flex; align-items:center; gap:var(--sp-2); background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-3); padding:0 14px; transition:border-color .15s, box-shadow .15s; }
 .search:focus-within{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); background:var(--surface); }
 .search input{ border:none; background:none; outline:none; padding:12px 0; font-size:var(--fs-4); color:var(--text); width:100%; }
@@ -74,7 +74,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .map-msg code{ background:var(--surface2); padding:2px 6px; border-radius:var(--r-1); font-size:var(--fs-2); }
 /* Width must hug its contents — a full-width strip here would swallow map drags. */
 .mapsearch{ position:absolute; z-index:6; top:calc(12px + env(safe-area-inset-top)); left:12px; max-width:calc(100% - 24px); display:flex; align-items:center; gap:var(--sp-2); }
-.mapsearch .lockbtn{ margin-left:auto; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); }
+.mapsearch .iconbtn{ margin-left:auto; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); }
 /* Buttons that only exist because the mobile title bars are hidden */
 .mobonly{ display:none; }
 @media (max-width:899px){
@@ -274,6 +274,13 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .maplegend i{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; }
 .maplegend i.wl{ width:5px; height:5px; background:transparent; border:2px solid #5b9bd5; }
 @media (min-width:900px){ .maplegend{ bottom:26px; } }
+/* Every other piece of map chrome is offset past the browse column on a laptop — .mapsearch
+   (left), .maplegend and .locbtn (right-anchored). The full-pane map message and the rule
+   warning were not: both are inset from the window, and both outrank the sidebar (z-index 5
+   and 8 against its 2). So a Maps failure — a dropped connection, an expired key — painted
+   its error over the header, the nav, the search box and all 111 cafes, and the only way back
+   was a reload. They now start where the map does. */
+@media (min-width:900px){ .map-msg{ left:var(--sidebar); } .rulewarn{ left:calc(var(--sidebar) + 12px); } }
 /* Locate button — bottom-right, stacked above the legend. That corner is the one a thumb
    reaches without regripping, which is the posture you are in when you are standing on a
    street asking the app what is near you. Same glass treatment as the lock button in
@@ -562,6 +569,27 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 @media (min-width:1400px){
 .mapwrap{ inset:0; }
 }
+/* ---- Settings ----
+   Theme used to live in two places and behave differently in each: a labelled button in the
+   desktop side nav, and an unlabelled 🌗 in the List search bar that cycled blind — tap, and
+   a toast told you where you landed. It was also the only side-nav item that did not
+   navigate. Appearance, list layout and editing mode are preferences, so they share one
+   screen, and the segmented controls show which value is on instead of hiding it in a cycle. */
+.setwrap{ padding:4px 16px 24px; display:flex; flex-direction:column; gap:var(--sp-4); }
+.sethead{ display:flex; align-items:center; gap:var(--sp-3); padding:8px 0 0; }
+.sethead h2{ margin:0; font-size:var(--fs-5); font-weight:800; letter-spacing:-.02em; }
+.setcard{ padding:var(--sp-4); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-3); display:flex; flex-direction:column; gap:var(--sp-3); }
+.setlabel{ font-size:var(--fs-1); font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--soft); }
+.seg{ display:flex; gap:var(--sp-1); padding:4px; background:var(--surface2); border-radius:var(--r-3); }
+.seg button{ flex:1; min-height:44px; padding:0 8px; border:none; border-radius:var(--r-2); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
+.seg button:hover{ color:var(--text); }
+/* --acc-strong is the only accent that clears 4.5:1 on --surface; --acc is 3.01:1 there. */
+.seg button.on{ background:var(--surface); color:var(--acc-strong); font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.setnote{ margin:0; font-size:var(--fs-2); color:var(--soft); line-height:1.5; }
+.setrow{ display:flex; align-items:center; gap:var(--sp-3); }
+.setmode{ flex:1; min-width:0; font-size:var(--fs-3); font-weight:700; }
+.setrow .btn{ width:auto; flex:0 0 auto; padding:12px 16px; }
+.setver{ margin:0; text-align:center; font-size:var(--fs-1); color:var(--soft); }
 #app[data-mode="viewer"] .admin-only{ display:none !important; }
 /* Wishlist mode: a place you have not been has no visit to describe, so the visit fields
    step aside. Hidden, not cleared — anything already typed survives unticking. */
