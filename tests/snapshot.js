@@ -26,13 +26,13 @@ if(!out){ console.error('usage: node tests/snapshot.js <file.json>\n  run before
    for(const m of modes){
      try{ sortMode=m; }catch(e){}
      for(const st of [{f:false,w:false,c:""},{f:true,w:false,c:""},{f:false,w:true,c:""},{f:false,w:false,c:"tag:matcha"}]){
-       favOnly=st.f; wishOnly=st.w; try{ activeChip=st.c; }catch(e){}
+       favOnly=st.f; listTab=st.w?"want":"been"; try{ activeChip=st.c; }catch(e){}
        show('list'); renderList();
        S['list|'+m+'|'+st.f+st.w+st.c]=(document.getElementById('grid')||{}).innerHTML||'';
        S['chips|'+m+'|'+st.f+st.w+st.c]=(document.getElementById('chips')||{}).innerHTML||'';
      }
    }
-   favOnly=wishOnly=false; try{ activeChip=""; }catch(e){}
+   favOnly=false; listTab="been"; try{ activeChip=""; }catch(e){}
    // viewer role changes the copy in several places
    isAdmin=false; applyMode(); show('list'); renderList();
    S['list|viewer']=(document.getElementById('grid')||{}).innerHTML||'';

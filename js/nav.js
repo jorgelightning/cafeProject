@@ -3,13 +3,13 @@
    Loaded by index.html; script order matters (config first, boot last). */
 /* ---------- navigation ---------- */
 /* Faves and Wish are filter chips now, not views, so show() no longer clears favOnly /
-   wishOnly — that would wipe the chip the moment you opened a cafe and came back.
+   the been/want tab — that would wipe the chip the moment you opened a cafe and came back.
    The legacy "wish" argument still works for goBack() and any old entry point. */
 const _TABS={map:"t-map",list:"t-list",form:"t-log",compare:"t-rank",stats:"t-stats"};
 /* map maps to n-list because on desktop the map and the list pane share the screen */
 const _NAVS={map:"n-list",list:"n-list",form:"n-add",compare:"n-rank",stats:"n-stats",settings:"n-settings"};
 function _mark(id){ const el=id&&$(id); if(el)el.classList.add("on"); }
-function show(view,fav){ if(app.dataset.view==="form"&&view!=="form"&&typeof formDirty==="function"&&formDirty()){ if(!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; } if(view==="wish"){ wishOnly=true; favOnly=false; view="list"; } else if(fav){ favOnly=true; wishOnly=false; } if(view==="map"||view==="list")lastMain=view; app.dataset.view=view;
+function show(view,fav){ if(app.dataset.view==="form"&&view!=="form"&&typeof formDirty==="function"&&formDirty()){ if(!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; } if(view==="wish"){ listTab="want"; favOnly=false; view="list"; } else if(fav){ listTab="been"; favOnly=true; } if(view==="map"||view==="list")lastMain=view; app.dataset.view=view;
 document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
 document.querySelectorAll(".side-nav button").forEach(b=>b.classList.remove("on"));
 _mark(_TABS[view]); _mark(_NAVS[view]);

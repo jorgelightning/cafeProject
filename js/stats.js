@@ -64,6 +64,30 @@ function renderStats(){
   };
   let h="";
 
+  /* ---------- 0. the collection at a glance ----------
+     Stats opened straight into data about cafes. The same figures, led with as what the
+     collection IS, is the first thing every app of this shape shows — and it costs nothing,
+     because the pass above already counted all of it. */
+  /* cafeCountryName falls back to "Other" for a cafe whose coordinates match no country box,
+     and six of them do. Counting that as a country would claim one more than there is. */
+  const _ctry={}; nonWish.forEach(function(c){ const k=cafeCountryName(c); if(k&&k!=="Other")_ctry[k]=1; });
+  const _nCtry=Object.keys(_ctry).length;
+  let _famName="", _famN=0;
+  Object.keys(drinkFam).forEach(function(k){ if(drinkFam[k]>_famN){ _famN=drinkFam[k]; _famName=k; } });
+  const _ranked=cafes.filter(function(c){ return !c.wish&&matchCount(c)>0; }).length;
+  const _fig=function(v,k){ return '<div class="pfig"><b>'+v+'</b><span>'+k+'</span></div>'; };
+  h+='<div class="profile">'
+    +_fig(nonWish.length,"cafes")
+    +(_nCtry?_fig(_nCtry,_nCtry===1?"country":"countries"):"")
+    +_fig(nVisits,"visits")
+    +_fig(nDrinkRows,"drinks")
+    +'</div>';
+  const _tail=[];
+  if(_famName)_tail.push('Most ordered: <b>'+esc(_famName)+'</b>');
+  if(_ranked)_tail.push('<b>'+_ranked+'</b> ranked head to head');
+  if(wishN)_tail.push('<b>'+wishN+'</b> still to try');
+  if(_tail.length)h+='<div class="pline">'+_tail.join(" \u00b7 ")+'</div>';
+
   /* The distance origin for "Where you go" below. It used to come from the recommendation
      picker that sat here; with that gone it follows your actual location when the app knows
      it, and otherwise falls back to the map's default centre. */

@@ -39,15 +39,17 @@ const { eq, done } = checker();
     { id: "c1", name: "Kissaten HiFi", area: "San Francisco", rating: 5, review: "Consistent and cozy.",
       tags: ["cozy"], fav: true, updated: iso(2 * 60 * 1000),
       drinks: [{ n: "Hojicha latte", orders: [{ date: "2026-09-16" }, { date: "2026-09-17" }] }] },
-    { id: "c1", name: "Kissaten HiFi", area: "San Francisco", rating: 4, review: "Consistent and cozy.",
+    { id: "c1", name: "Kissaten HiFi", area: "San Francisco", rating: 3, review: "Consistent and cozy.",
       tags: ["cozy", "quiet"], fav: true, updated: iso(3 * 60 * 60 * 1000),
       drinks: [{ n: "Hojicha latte", orders: [{ date: "2026-09-16" }] }] }
   );
   eq(r.hidden, false, "a conflict shows the comparison");
   eq(/Kissaten HiFi/.test(r.text), true, "…naming the cafe in question");
   eq(r.fields, ["Rating", "Drinks", "Tags"], "…listing only the fields that actually differ");
-  eq(r.mine[0], "5★", "…this phone's value on one side");
-  eq(r.theirs[0], "4★", "…and the cloud's on the other");
+  /* The bucket, not the stored number. A 4 against a 5 is no longer a disagreement worth
+     showing — both are "Loved it" — so the seed above differs by an actual bucket. */
+  eq(r.mine[0], "Loved it", "…this phone's value on one side");
+  eq(r.theirs[0], "It was fine", "…and the cloud's on the other");
   eq(r.mine[1], "1 drink · 2 orders", "…with drink counts spelled out, not just 'drinks changed'");
   eq(r.theirs[1], "1 drink · 1 order", "…on both sides");
   eq(/Name|Area|Notes|Favourite/.test(r.fields.join(",")), false,

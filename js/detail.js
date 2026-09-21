@@ -86,9 +86,13 @@ function openDetail(id,from){
 
   /* ---- header ---- */
   $("d-name").textContent=c.name;
-  $("d-stars").innerHTML=(c.rating?'<b>'+"★".repeat(c.rating)+"</b>":"")+"★".repeat(5-(c.rating||0));
+  $("d-stars").innerHTML=bucketPill(c,"big");
+  /* Position first, score second: 104 of 113 cafes share a printed score with another, and a
+     rank is the one number here that is actually theirs. */
+  const _rk=(typeof rankOf==="function")?rankOf(c):null, _rn=(typeof rankMap==="function")?rankMap()._n:0;
   $("d-meta").innerHTML=[
     areaOf(c)?esc(areaOf(c)):"",
+    _rk?('<span class="rankpos">#'+_rk+'</span> <span class="ranktot">of '+_rn+'</span>'):"",
     c.matches?('<span class="scorebadge">⚖️ '+eloScore(c)+' · '+c.matches+(c.matches===1?" compare":" compares")+'</span>'):"",
     (isAdmin&&c.updated)?("edited "+esc(fmtEdited(c.updated))):""
   ].filter(Boolean).join("  ·  ");
@@ -159,6 +163,6 @@ function deleteCurrent(){ if(!confirm("Delete this cafe?"))return; const _gone=c
 function cafeShareUrl(id){ const base=location.origin+location.pathname; return base+'?cafe='+encodeURIComponent(id); }
 /* Deliberately c.area and not areaOf(c): sharing sends this to someone else, so it must carry
    the public value even when the owner is the one tapping share. */
-function shareCafe(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const url=cafeShareUrl(c.id); const title=c.name+(c.area?' ('+c.area+')':''); const text='Check out '+c.name+(c.area?' in '+c.area:'')+' '+'★'.repeat(c.rating||0); if(navigator.share){ navigator.share({title:title,text:text,url:url}).catch(e=>{ if(e&&e.name!=='AbortError'){ navigator.clipboard&&navigator.clipboard.writeText(url); toast('Link copied!'); } }); } else { navigator.clipboard&&navigator.clipboard.writeText(url); toast('Link copied! Share it to open this cafe on the map.'); } }
+function shareCafe(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const url=cafeShareUrl(c.id); const title=c.name+(c.area?' ('+c.area+')':''); const _b=bucketLabel(c); const text='Check out '+c.name+(c.area?' in '+c.area:'')+(_b?' \u2014 '+_b.toLowerCase():''); if(navigator.share){ navigator.share({title:title,text:text,url:url}).catch(e=>{ if(e&&e.name!=='AbortError'){ navigator.clipboard&&navigator.clipboard.writeText(url); toast('Link copied!'); } }); } else { navigator.clipboard&&navigator.clipboard.writeText(url); toast('Link copied! Share it to open this cafe on the map.'); } }
 function navigateTo(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const _la=latOf(c),_ln=lngOf(c); const dest=(_la!=null&&_ln!=null)?(_la+","+_ln):encodeURIComponent(c.name+(areaOf(c)?" "+areaOf(c):"")); const url="https://www.google.com/maps/dir/?api=1&destination="+dest; if(window.innerWidth>=900){ window.open(url,"_blank"); } else { window.location.href=url; } }
 function editCurrent(){ openForm(curId); }

@@ -34,7 +34,7 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
 
   const seed = () => pg.evaluate(() => {
     isAdmin = false; applyMode && applyMode();
-    favOnly = false; wishOnly = false; activeChip = null; sortMode = "recent"; listCompact = false;
+    favOnly = false; listTab = "been"; activeChip = null; sortMode = "recent"; listCompact = false;
     cafes = [
       { id: "a", name: "Aurora Roasters",  area: "Honolulu", rating: 5, drinks: [] },
       { id: "z", name: "Zephyr & Vine",    area: "Honolulu", rating: 5, drinks: [] },
@@ -64,7 +64,9 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
   eq(tints.m.bg !== tints.u.bg, true, "…and an unrated cafe is different again");
 
   const uniq = [...new Set(tints.steps)];
-  eq(uniq.length, 6, "the tint has one step per rating plus unrated, not eight hashed hues");
+  /* Four, not six: 4 and 5 were two names for "loved" and 1 and 2 for "not for me". The rank
+     badge on the tile is what separates one loved cafe from another now. */
+  eq(uniq.length, 4, "one colour per bucket plus unrated, not eight hashed hues");
   eq(tints.steps[5], await pg.evaluate(() => ratingColor(5)),
      "the tint is the same scale the map pins use");
 

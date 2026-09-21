@@ -32,6 +32,7 @@ const SUITE = [
   ["scale",            "one type/radius/space scale, and a layout that fits all three devices"],
   ["list-clean",       "the list tint carries the rating, and four control rows fold into one"],
   ["settings",         "one home for the preferences, and a map error that stays in the map"],
+  ["beli",             "three buckets, a position on every card, and the two lists up front"],
   ["offline",          "the app boots with the network pulled"],
   ["regression",       "101 real cafes still render exactly as before"]
 ];

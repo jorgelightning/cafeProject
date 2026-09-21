@@ -58,13 +58,17 @@ const { eq, done } = checker();
  });
  eq(r.defaultPrevented,true,'Space activates without scrolling the page');
 
- // the star rating in the form
+ // the three-way call in the form
  r=await pg.evaluate(()=>{
    editId=null; _formSnap=null; openForm();
-   const stars=[...document.querySelectorAll('#f-rate span')];
-   return {n:stars.length, focusable:stars.filter(s=>s.getAttribute('tabindex')==='0').length};
+   const b=[...document.querySelectorAll('#f-rate button')];
+   return {n:b.length, pressed:b.filter(x=>x.hasAttribute('aria-pressed')).length,
+           tall:b.filter(x=>x.getBoundingClientRect().height>=44).length,
+           tag:[...new Set(b.map(x=>x.tagName))]};
  });
- eq({n:r.n,f:r.focusable},{n:5,f:5},'all five rating stars are reachable');
+ /* Real buttons now, so Tab reaches them without a tabindex and Space activates them. */
+ eq({n:r.n,p:r.pressed,t:r.tall},{n:3,p:3,t:3},'all three answers are reachable, and each says whether it is on');
+ eq(r.tag,['BUTTON'],'…as buttons, not focusable spans');
 
  // A2 landed
  r=await pg.evaluate(()=>{
