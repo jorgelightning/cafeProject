@@ -24,11 +24,32 @@ function migratePhotoCache(){
     }
   }
 }
-/* auto → light → dark. "auto" removes the attribute so the media query decides;
-   the other two set [data-theme], which both token blocks are written to honour. */
+/* "auto" removes the attribute so the media query decides; the other two set [data-theme],
+   which both token blocks are written to honour. */
 const THEME_KEY="cafemap.theme";
-function applyTheme(t){ const r=document.documentElement; if(t==="light"||t==="dark")r.dataset.theme=t; else delete r.dataset.theme; const lab=$("n-theme-lab"); if(lab)lab.textContent="Theme: "+(t||"auto"); /* the two media-scoped meta tags follow the SYSTEM preference, so a manual choice needs an explicit override tag to keep the browser chrome in step */ let m=document.getElementById("tc-override"); if(t){ if(!m){ m=document.createElement("meta"); m.id="tc-override"; m.name="theme-color"; document.head.appendChild(m); } m.content=(t==="dark")?"#15110e":"#f6f5f3"; } else if(m)m.remove(); }
-function cycleTheme(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){ warn("boot.js",e); } const next=t==="light"?"dark":(t==="dark"?"":"light"); try{ next?lsSet(THEME_KEY,next):localStorage.removeItem(THEME_KEY); }catch(e){ warn("boot.js",e); } applyTheme(next); toast("Theme: "+(next||"auto")); }
+function applyTheme(t){ const r=document.documentElement; if(t==="light"||t==="dark")r.dataset.theme=t; else delete r.dataset.theme; if(typeof renderSettings==="function")renderSettings(); /* the two media-scoped meta tags follow the SYSTEM preference, so a manual choice needs an explicit override tag to keep the browser chrome in step */ let m=document.getElementById("tc-override"); if(t){ if(!m){ m=document.createElement("meta"); m.id="tc-override"; m.name="theme-color"; document.head.appendChild(m); } m.content=(t==="dark")?"#15110e":"#f6f5f3"; } else if(m)m.remove(); }
+/* One tap to any state, rather than a blind cycle that needed a toast to say where it
+   landed. "" is auto, and removing the key is what auto means. */
+function setTheme(v){ try{ v?lsSet(THEME_KEY,v):localStorage.removeItem(THEME_KEY); }catch(e){ warn("boot.js",e); } applyTheme(v); }
+function storedTheme(){ try{ return localStorage.getItem(THEME_KEY)||""; }catch(e){ return ""; } }
+/* ---------- the settings screen ----------
+   Static markup; this only syncs which value is on, so a preference changed anywhere
+   else (a sign-in, a layout toggle) is reflected the next time the screen is drawn. */
+function segOn(id,v){ const g=$(id); if(!g)return; g.querySelectorAll("button").forEach(function(b){
+  const on=b.dataset.v===v; b.classList.toggle("on",on); b.setAttribute("aria-pressed",String(on)); }); }
+function renderSettings(){
+  segOn("seg-theme",storedTheme());
+  segOn("seg-layout",(typeof listCompact!=="undefined"&&listCompact)?"compact":"grid");
+  const m=$("set-mode"), b=$("set-admin"), n=$("set-adminnote");
+  if(m)m.textContent=isAdmin?"\u{1F513} Editing":"\u{1F512} Viewer";
+  if(b)b.textContent=isAdmin?"Sign out":"Sign in to edit";
+  if(n)n.textContent=isAdmin?"You can add cafes, log visits and rank them.":"Signing in lets you add cafes, log visits and rank them.";
+  /* Read back from the script tag the browser actually loaded, so it cannot drift from
+     the deploy version the way a hard-coded string would. */
+  const v=$("set-ver");
+  if(v){ const sc=document.querySelector('script[src*="js/boot.js"]'), mt=sc&&/\?v=(\d+)/.exec(sc.getAttribute("src"));
+    v.textContent="JL Cafe Project \u00b7 v"+(mt?mt[1]:"?"); }
+}
 (function(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){ warn("boot.js",e); } applyTheme(t); })();
 /* Registered after load so it never competes with the first paint. localhost is allowed so
    the offline path can actually be exercised in development; everywhere else needs https. */

@@ -440,6 +440,54 @@ cafes, chrome went **217px → 109px** — 108px recovered, about two more cafes
 Guarded by `tests/list-clean.js` (29 assertions), which checks the contrast arithmetic rather
 than the hex values, so retuning the palette stays safe.
 
+### Preferences get a screen of their own
+
+Theme lived in two places and behaved differently in each. On a laptop, `🌗 Theme: auto` was
+the fourth button in the side nav, 106×46px — the other three navigate, this one mutated state
+in place, and it was the only one whose label changed under you. On a phone it was an
+unlabelled `🌗` in the List search bar that cycled auto → light → dark **blind**: you learned
+where you landed from a toast. It cost 40px of a 372px bar, and it was reachable from the List
+tab and nowhere else.
+
+There is now a Settings pane — the same pattern Detail, Go and the form already use — holding
+Appearance, list layout and editing mode. A single `⚙︎` opens it, in place of **both** the
+theme cycler and the lock pill, in all four places those appeared (List search bar, map
+overlay, desktop side head, desktop side nav). The search input goes 212px → 260px, and
+Settings is reachable from Map as well as List, which the theme control never was.
+
+The controls are segmented rather than cycling: three named states, each one tap away, the
+current one visibly on and carrying `aria-pressed`. `cycleTheme()` is deleted.
+
+Two consequences worth knowing. **Signing in to edit is now two taps** rather than one — that
+was the accepted cost, chosen deliberately over keeping a second button in the chrome; the
+side nav's `＋ Log a visit` and the admin bar still make the mode obvious at a glance. And the
+list layout toggle moved out of the Filters panel, so `activeFilterCount()` stopped counting
+it — it was never a filter, and a badge only means something if it matches what a person would
+call one.
+
+The version line reads the `?v=` off the `boot.js` script tag the browser actually loaded,
+rather than a hard-coded string that would drift on the next bump. "Am I on the new build?" is
+the question it exists to answer.
+
+### A map failure used to blank the whole app
+
+Found while measuring the above. At laptop width the sidebar is `position:absolute; z-index:2`
+over a full-window `.mapwrap`. Every piece of map chrome is offset past it — `.mapsearch`
+(`left:calc(var(--sidebar) + 12px)`), `.maplegend` and `.locbtn` (right-anchored). Two were
+not: `.map-msg` (`inset:0`, z-index **5**) and `.rulewarn` (`left:12px; right:12px`, z-index
+**8**). Both outrank the sidebar.
+
+So whenever Google Maps failed to load — a dropped connection, an expired key, an ad blocker —
+its full-pane error painted over the header, the nav, the search box and all 111 cafes.
+`document.elementFromPoint` returned `#map-msg` everywhere in the browse column. Nothing on
+the left half of the screen could be clicked, and the only way out was a reload. It had been
+true at every desktop width since the split view was built.
+
+Both now start where the map does. Guarded in `tests/settings.js`, which asserts what
+`elementFromPoint` returns at the header, nav, search box and grid — the harness aborts every
+cross-origin request, so the Maps failure the bug needed is the default state there rather
+than something to simulate.
+
 ---
 
 ## Rejected, and why
@@ -497,7 +545,9 @@ Recorded so they are not re-proposed. Each was considered and turned down on evi
   `cafes.json` snapshot postdates the loss. 22 cafes kept their scores, and the detail page
   still shows them; nothing writes new ones.
 - **`#map-sub`** ("N cafes · tap a pin") no longer renders anywhere, since both title bars are
-  hidden on mobile. Map errors still surface through the full-pane `#map-msg`.
+  hidden on mobile. Map errors still surface through the full-pane `#map-msg`. `.mobile-topbar`
+  is dead chrome for the same reason — its `⚙︎` was swapped in with the others so it cannot
+  drift, but nothing renders it.
 - **Scale drift is now held by a test.** `tests/scale.js` fails on any literal corner radius
   or gap outside the scale, and on any font size outside it except on glyph selectors (emoji
   and icons are artwork being sized, not type being set). New CSS has to stay on the scale.
