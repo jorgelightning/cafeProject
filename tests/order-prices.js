@@ -59,17 +59,22 @@ const { eq, done } = checker();
    openDetail(cafes[0].id);
    const card=document.querySelector('.drinkcard');
    const summary=card.querySelector('.drinksum').innerText;
-   const rows=[...card.querySelectorAll('.dorder')].map(x=>x.innerText);
    const fits=card.scrollWidth<=card.clientWidth+1;
-   const startsOpen=card.classList.contains('open')&&card.querySelector('.drinksum').getAttribute('aria-expanded')==='true';
-   toggleDrinkHistory(card.querySelector('.drinksum'));
-   const closes=(!card.classList.contains('open'))&&getComputedStyle(card.querySelector('.drinkhistory')).display==='none'
+   /* Every card starts closed now, so the timeline is something you ask for. */
+   const startsShut=(!card.classList.contains('open'))
+     &&getComputedStyle(card.querySelector('.drinkhistory')).display==='none'
      &&card.querySelector('.drinksum').getAttribute('aria-expanded')==='false';
+   toggleDrinkHistory(card.querySelector('.drinksum'));
+   const opens=card.classList.contains('open')
+     &&card.querySelector('.drinksum').getAttribute('aria-expanded')==='true';
+   const rows=[...card.querySelectorAll('.dorder')].map(x=>x.innerText);
+   toggleDrinkHistory(card.querySelector('.drinksum'));
+   const closesAgain=!card.classList.contains('open');
    isAdmin=true; setRhythmMetric('spend'); setRhythmMonth('2026-06');
    const june=$("stats-body").innerText;
    setRhythmMonth('2026-09');
    const sep=$("stats-body").innerText;
-   return {summary,rows,fits,startsOpen,closes,june,sep};
+   return {summary,rows,fits,startsShut,opens,closesAgain,june,sep};
  });
  eq(/Hojicha Latte/.test(r.summary)&&/3 ordered/.test(r.summary)&&/\$6\.75–\$7\.25/.test(r.summary),true,
     'detail summary shows drink, order count and historical price range');
@@ -79,7 +84,8 @@ const { eq, done } = checker();
  eq(/Jun 11, 2026/.test(r.rows[1])&&/\$6\.75/.test(r.rows[1]),true,
     'older order row keeps its historical date and price');
  eq(r.fits,true,'detail card and timeline fit a 360px phone without horizontal overflow');
- eq(r.startsOpen&&r.closes,true,'newest drink starts open and its button collapses accessibly');
+ eq(r.startsShut,true,'every drink starts collapsed \u2014 the summary line is the part worth a glance');
+ eq(r.opens&&r.closesAgain,true,'\u2026and its button expands and collapses accessibly');
  eq(/\$6\.75 recorded in June/.test(r.june),true,'June Stats uses the June price');
  eq(/\$14\.50 recorded in September/.test(r.sep),true,'September Stats uses September price × quantity');
 
@@ -118,6 +124,35 @@ const { eq, done } = checker();
  });
  eq(/Hojicha Latte/.test(dialogText)&&/Jun 11, 2026/.test(dialogText),true,'delete confirmation names the drink and exact order date');
  eq(r.after,r.before,'cancelling delete leaves the historical order intact');
+
+ /* One card is not the case that hurt. A cafe with a long history had the newest drink open
+    itself on arrival, which on the worst real cafe pushed the note 479px — more than half a
+    phone — further down the page. */
+ r=await pg.evaluate(()=>{
+   cafes=[{id:"m",name:"Many Drinks",area:"Honolulu",rating:5,elo:1500,matches:3,lat:21.3,lng:-157.8,
+     drinks:[
+       {n:"Hojicha latte",orders:[{date:"2026-09-10",p:"$7"},{date:"2026-08-01",p:"$6.5"}]},
+       {n:"Matcha latte", orders:[{date:"2026-09-05",p:"$8"}]},
+       {n:"Cold brew",    orders:[{date:"2026-07-02",p:"$5"},{date:"2026-06-02",p:"$5"}]}
+     ]}];
+   /* the form is still open with unsaved rows by now, and show() would stop to ask */
+   app.dataset.view="list"; _formSnap=null; editId=null;
+   openDetail("m","list");
+   const box=$("d-drinks");
+   const cards=[...box.querySelectorAll('.drinkcard')];
+   const shut=Math.round(box.getBoundingClientRect().height);
+   cards.forEach(c=>toggleDrinkHistory(c.querySelector('.drinksum')));
+   const all=Math.round(box.getBoundingClientRect().height);
+   return {cards:cards.length, stillShut:box.querySelectorAll('.drinkcard.open').length,
+           shut,all,
+           chev:[...box.querySelectorAll('.drinkchev')].map(x=>x.textContent),
+           summaries:cards.map(c=>c.querySelector('.dsub').innerText)};
+ });
+ eq(r.cards,3,'three drinks on the cafe');
+ eq(r.chev,['▾','▾','▾'],'…and every one of them can be opened');
+ eq(r.summaries.every(t=>/ordered/.test(t)&&/latest/.test(t)),true,
+    'the summary still says how many and when, so collapsing costs no information at a glance');
+ eq(r.all>r.shut,true,'opening them all is still available, and taller ('+r.shut+'px → '+r.all+'px)');
 
   eq(errs,[],'no page errors');
  const ok=done();

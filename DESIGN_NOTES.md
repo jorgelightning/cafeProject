@@ -547,6 +547,20 @@ count excludes it: **5 countries, not 6**.
 
 Guarded by `tests/beli.js` (36 assertions).
 
+### Every drink starts collapsed
+
+The newest drink opened itself on arrival (`open = di === 0`). On the cafe where it cost the
+most — Kissaten HiFi, five drinks — that pushed everything below it **479px** down, more than
+half a phone screen, so the note and the tags were off the page when you landed. Constance Tea
+& Matcha paid 139px, Molly Tea 41px.
+
+All of them start shut now. Nothing is lost at a glance: the summary line still carries the
+drink, how many you have ordered, the latest date and the price range. The order timeline is
+the part you go looking for, so it is the part behind a tap.
+
+Guarded in `tests/order-prices.js`, which checks a three-drink cafe rather than one card — the
+single-card case was never the one that hurt.
+
 ---
 
 ## Rejected, and why
