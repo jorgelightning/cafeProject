@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=48">
+<link rel="stylesheet" href="styles.css?v=49">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -25,13 +25,13 @@
 <button id="n-list" onclick="show('list')">☰ List</button>
 <button id="n-rank" onclick="openRank()">🏆 Go</button>
 <button id="n-stats" onclick="show('stats')">📊 Stats</button>
-<button id="n-settings" onclick="show('settings')">⚙︎ Settings</button>
+<button id="n-settings" class="setdoor" onclick="show('settings')">⚙︎ Settings<span class="gcount" hidden></span></button>
 <button id="n-add" class="admin-only navlog" onclick="openForm()">＋ Log a visit</button>
 </div>
 <div id="sync-status" class="sync-status admin-only" role="status" hidden><span class="sync-label"></span><button class="sync-retry" onclick="flushSync()">Retry sync</button><div class="sync-review" hidden></div></div>
 <div class="panes">
-<section class="pane" id="pane-list"><div class="adminbar admin-only" id="adminbar"><button class="abtoggle" onclick="toggleAdminBar()">⚙︎ Admin <span class="abcount" id="ab-count" hidden></span><span class="abchev">▾</span></button><span class="abnote" id="ab-cloud">Admin mode</span><div class="abactions"><button onclick="fetchAllPhotos()">📷 Fetch all photos</button><button id="ab-milk" onclick="cleanupMilkNames()" style="display:none">🥛 Fix milk in names</button><button id="ab-spell" onclick="fixDrinkSpellings()" style="display:none">🔤 Fix misspelled drinks</button></div></div>
-<div class="search">🔍<input id="q" placeholder="Search name, city, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="iconbtn mobonly" onclick="show('settings')" aria-label="Settings">⚙︎</button></div>
+<section class="pane" id="pane-list">
+<div class="search">🔍<input id="q" placeholder="Search name, city, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
 
 
 <div class="listbar"><span class="sub" id="count"></span><button class="filterbtn" id="filterbtn" onclick="toggleListFilters()" aria-expanded="false" aria-controls="listpanel">Filters<span class="fcount" id="fcount" hidden></span><span class="fchev">▾</span></button><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" style="width:34px;height:34px;font-size:15px;flex:0 0 auto;margin-left:4px">🗺️</button><span id="save-state" class="admin-only" role="status"></span></div><div class="listpanel" id="listpanel" hidden><label class="lp-row"><span>Sort</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="visited">Recently visited</option><option value="ranked">Top ranked</option><option value="rating">★ Highest rated</option><option value="near">📍 Nearest to me</option></select></label><div class="chiprow" id="filterchips"></div><div class="chiprow tagrow" id="tagchips" style="display:none"></div></div>
@@ -101,15 +101,25 @@
 <div class="setrow"><span class="setmode" id="set-mode">🔒 Viewer</span><button type="button" class="btn" id="set-admin" onclick="toggleAdmin()">Sign in to edit</button></div>
 <p class="setnote" id="set-adminnote">Signing in lets you add cafes, log visits and rank them.</p>
 </div>
+<div class="setcard admin-only">
+<div class="setlabel">Admin</div>
+<p class="setnote" id="ab-cloud">Admin mode</p>
+<div class="setactions">
+<button type="button" onclick="fetchAllPhotos()">📷 Fetch all photos</button>
+<button type="button" id="ab-milk" onclick="cleanupMilkNames()" style="display:none">🥛 Fix milk in names</button>
+<button type="button" id="ab-spell" onclick="fixDrinkSpellings()" style="display:none">🔤 Fix misspelled drinks</button>
+</div>
+<p class="setnote" id="ab-idle">Nothing needs tidying right now.</p>
+</div>
 <p class="setver" id="set-ver"></p>
 </div></div></section>
 </div>
 </aside>
 <main class="mapwrap">
-<div class="mobile-topbar"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn" onclick="show('settings')" aria-label="Settings">⚙︎</button></div>
+<div class="mobile-topbar"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
 <div class="mapbox">
 <div id="map"></div>
-<div class="mapsearch"><select id="locsel" aria-label="Jump to a country or state" onchange="jumpToLocation(this.value)"></select><button class="iconbtn mobonly" onclick="show('settings')" aria-label="Settings">⚙︎</button></div>
+<div class="mapsearch"><select id="locsel" aria-label="Jump to a country or state" onchange="jumpToLocation(this.value)"></select><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
 <div class="maplegend"><span><i style="background:#2e9e5b"></i>4–5★</span><span><i style="background:#f0a93b"></i>≤3★</span><span><i class="wl"></i>wishlist</span><span><i style="background:#d5803b"></i>group</span></div>
 <button class="locbtn" id="btn-locate" data-state="idle" onclick="locate()" aria-label="Show my location"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="6.2" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.6v3.2"/><path d="M12 19.2v3.2"/><path d="M1.6 12h3.2"/><path d="M19.2 12h3.2"/></g></svg></button>
 <div class="rulewarn admin-only" id="rule-warn" hidden role="alert"><b>Your private addresses are readable by anyone.</b> The <code>private</code> rule is missing from your Realtime Database — see the block in README.md, then Firebase console → Realtime Database → Rules → Publish.<button type="button" onclick="dismissRuleWarning()" aria-label="Dismiss">✕</button></div>
@@ -136,18 +146,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=48"></script>
-<script src="js/core.js?v=48"></script>
-<script src="js/storage.js?v=48"></script>
-<script src="js/sync.js?v=48"></script>
-<script src="js/nav.js?v=48"></script>
-<script src="js/map.js?v=48"></script>
-<script src="js/photos.js?v=48"></script>
-<script src="js/list.js?v=48"></script>
-<script src="js/stats.js?v=48"></script>
-<script src="js/rank.js?v=48"></script>
-<script src="js/detail.js?v=48"></script>
-<script src="js/form.js?v=48"></script>
-<script src="js/boot.js?v=48"></script>
+<script src="js/config.js?v=49"></script>
+<script src="js/core.js?v=49"></script>
+<script src="js/storage.js?v=49"></script>
+<script src="js/sync.js?v=49"></script>
+<script src="js/nav.js?v=49"></script>
+<script src="js/map.js?v=49"></script>
+<script src="js/photos.js?v=49"></script>
+<script src="js/list.js?v=49"></script>
+<script src="js/stats.js?v=49"></script>
+<script src="js/rank.js?v=49"></script>
+<script src="js/detail.js?v=49"></script>
+<script src="js/form.js?v=49"></script>
+<script src="js/boot.js?v=49"></script>
 </body>
 </html>

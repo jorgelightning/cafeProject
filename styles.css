@@ -359,7 +359,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lp-row button{ width:100%; }
 
 @media (min-width:700px) and (max-width:899px){
-  #grid, .search, .adminbar, .filterrow, .statwrap, .boardwrap, .listhead, .dbody, .fbody,
+  #grid, .search, .filterrow, .statwrap, .boardwrap, .listhead, .dbody, .fbody,
   #pane-form .field, #pane-detail .scroll > *, .listbar, .listpanel{
     max-width:720px; margin-inline:auto;
   }
@@ -549,7 +549,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .card{ transition:transform .08s ease; }
 .card:active{ transform:scale(.97); }
 .tab{ transition:transform .08s ease; }
-.iconbtn:active,.round:active,.btn:active,.tab:active,.chip:active,.hintbtn:active,.adminbar button:active,.side-nav button:active{ transform:scale(.95); opacity:.9; }
+.iconbtn:active,.round:active,.btn:active,.tab:active,.chip:active,.hintbtn:active,.setactions button:active,.side-nav button:active{ transform:scale(.95); opacity:.9; }
 /* ---- desktop split view ---- */
 /* The browse column used to be pinned at 400px, then 440px past 1400 — while the grid went
    from two columns to three at the same breakpoint. The result was that a 1440px laptop drew
@@ -589,21 +589,20 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .setrow{ display:flex; align-items:center; gap:var(--sp-3); }
 .setmode{ flex:1; min-width:0; font-size:var(--fs-3); font-weight:700; }
 .setrow .btn{ width:auto; flex:0 0 auto; padding:12px 16px; }
+.setactions{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.setactions button{ min-height:44px; padding:0 12px; border-radius:var(--r-2); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
+/* The bulk actions used to sit on a collapsed bar on the List, with a count on the closed
+   toggle — an action that only appears when there is work to do is invisible otherwise. The
+   actions moved behind the gear, so the count moved onto the gear: the List still says there
+   is something waiting, and Settings is where it gets done. */
+.setdoor{ position:relative; }
+.gcount{ position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 5px; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-pill); background:var(--acc-strong); color:var(--on-acc); font-size:var(--fs-1); font-weight:800; font-variant-numeric:tabular-nums; box-shadow:0 0 0 2px var(--bg); }
+.gcount[hidden]{ display:none; }
 .setver{ margin:0; text-align:center; font-size:var(--fs-1); color:var(--soft); }
 #app[data-mode="viewer"] .admin-only{ display:none !important; }
 /* Wishlist mode: a place you have not been has no visit to describe, so the visit fields
    step aside. Hidden, not cleared — anything already typed survives unticking. */
 #pane-form[data-wish="1"] .visit-only{ display:none !important; }
-/* Collapsed to a single line; the bulk actions only unfold when asked for. */
-.adminbar{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); padding:6px 16px; background:var(--surface2); border-bottom:1px solid var(--border); margin-bottom:10px; }
-.adminbar button{ padding:7px 11px; border-radius:var(--r-2); border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:var(--fs-2); font-weight:600; cursor:pointer; }
-/* Says the collapsed panel has something waiting, without opening it. */
-.adminbar .abcount{ display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; margin-left:2px; border-radius:var(--r-2); background:var(--acc-strong); color:var(--on-acc); font-size:var(--fs-1); font-weight:800; font-variant-numeric:tabular-nums; }
-.adminbar .abcount[hidden]{ display:none; }
-.adminbar .abnote{ font-size:var(--fs-1); color:var(--soft); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.adminbar .abactions{ display:none; flex-basis:100%; gap:var(--sp-2); padding-bottom:4px; }
-.adminbar[data-open] .abactions{ display:flex; flex-wrap:wrap; }
-.adminbar[data-open] .abchev{ display:inline-block; transform:rotate(180deg); }
 .listbar #count{ font-weight:700; color:var(--text); }
 .lp-row select{ flex:1; border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--text); font-size:var(--fs-2); padding:7px 10px; cursor:pointer; }
 .compare{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; padding:16px; display:flex; flex-direction:column; gap:var(--sp-4); scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
