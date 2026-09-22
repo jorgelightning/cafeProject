@@ -1140,12 +1140,36 @@
     "custom": false,
     "drinks": [
       {
+        "count": 2,
         "dates": [
-          "2026-09-02"
+          "2026-09-02",
+          "2026-09-21"
         ],
         "ice": "Warm",
         "milk": "Oat",
         "n": "Triple hojicha latte",
+        "orders": [
+          {
+            "date": "2026-09-02",
+            "ice": "Warm",
+            "id": "mublzqz96i97",
+            "milk": "Oat",
+            "p": "7.50",
+            "reorder": "yes",
+            "size": "10 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-21",
+            "ice": "Warm",
+            "id": "mubm05uqjjll",
+            "milk": "Oat",
+            "p": "7.50",
+            "reorder": "yes",
+            "size": "10 oz",
+            "sweet": "0%"
+          }
+        ],
         "p": "7.50",
         "reorder": "yes",
         "size": "10 oz",
@@ -1157,24 +1181,31 @@
         ],
         "milk": "Oat",
         "n": "Matcha Einspanner",
-        "p": "",
+        "orders": [
+          {
+            "date": "2026-07-03",
+            "id": "mublzqzbwtz7",
+            "milk": "Oat",
+            "reorder": "yes"
+          }
+        ],
         "reorder": "yes"
       }
     ],
-    "elo": 1501,
+    "elo": 1487,
     "emoji": "☕",
     "fav": false,
     "id": "mqm06fjnsrlj",
     "lat": 37.74313,
     "lng": -122.47803,
-    "matches": 5,
+    "matches": 6,
     "name": "Jandii Cafe",
     "rating": 4,
     "review": "I like the taste of hojicha and I like it! Great for study!",
     "tags": [
       "cozy"
     ],
-    "updated": "2026-09-02T19:43:51.657Z",
+    "updated": "2026-09-21T18:59:38.706Z",
     "wish": false
   },
   {
@@ -1775,20 +1806,20 @@
         "reorder": "yes"
       }
     ],
-    "elo": 1545,
+    "elo": 1557,
     "emoji": "☕",
     "fav": true,
     "id": "msu1xc32ec38",
     "lat": 37.33282,
     "lng": -121.90455,
-    "matches": 3,
+    "matches": 4,
     "name": "Kasama Cà Phê",
     "rating": 5,
     "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
     "tags": [
       "cozy"
     ],
-    "updated": "2026-09-20T22:53:27.808Z",
+    "updated": "2026-09-21T16:34:17.031Z",
     "wish": false
   },
   {
@@ -2228,13 +2259,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1531,
+    "elo": 1545,
     "emoji": "☕",
     "fav": true,
     "id": "mtdcqterwyid",
     "lat": 47.61176,
     "lng": -122.28955,
-    "matches": 2,
+    "matches": 3,
     "name": "Yoka Tea",
     "pid": "ChIJqTPr5FxrkFQRIgTFZDo3zfQ",
     "rating": 5,
@@ -2296,13 +2327,13 @@
         "sweet": "25%"
       }
     ],
-    "elo": 1485,
+    "elo": 1473,
     "emoji": "☕",
     "fav": false,
     "id": "mtjapri20t98",
     "lat": 37.72773,
     "lng": -122.47697,
-    "matches": 1,
+    "matches": 2,
     "name": "heytea (Stonestown Galleria)",
     "pid": "ChIJ0YtwyBR9j4ARvkOcmtK324I",
     "rating": 4,
@@ -2448,13 +2479,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1516,
+    "elo": 1520,
     "emoji": "☕",
     "fav": false,
     "id": "mtysqdqaqnhq",
     "lat": 34.05757,
     "lng": -118.24085,
-    "matches": 1,
+    "matches": 2,
     "name": "Archives Of Us",
     "pid": "ChIJ7SJdEwbHwoARbK8FgtY2QxM",
     "rating": 5,
@@ -3063,20 +3094,20 @@
         ]
       }
     ],
-    "elo": 1611,
+    "elo": 1607,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 17,
+    "matches": 18,
     "name": "Kissaten HiFi",
     "rating": 4,
-    "review": "Go-to for hojicha lattes and flat white — consistent and cozy.",
+    "review": "Go-to for hojicha lattes and flat white — consistent and cozy.\n\nAshley Cafe is next around the corner for a good bagel and sandwiches!",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-09-20T20:23:28.817Z",
+    "updated": "2026-09-21T16:57:16.367Z",
     "wish": false
   },
   {
