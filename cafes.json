@@ -1699,13 +1699,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1499,
+    "elo": 1493,
     "emoji": "☕",
     "fav": false,
     "id": "msu1j50kxltv",
     "lat": 37.74058,
     "lng": -122.46647,
-    "matches": 2,
+    "matches": 3,
     "name": "Hardware Coffee Co.",
     "rating": 4,
     "review": "Great study spot! Hojicha is ok!",
@@ -2821,6 +2821,141 @@
     "custom": false,
     "drinks": [
       {
+        "count": 11,
+        "dates": [
+          "2026-03-22",
+          "2026-03-25",
+          "2026-04-09",
+          "2026-07-31",
+          "2026-08-05",
+          "2026-08-07",
+          "2026-08-11",
+          "2026-09-04",
+          "2026-09-11",
+          "2026-09-14",
+          "2026-09-23"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-03-22",
+            "ice": "Warm",
+            "id": "mtvs2elwc6i8",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-03-25",
+            "ice": "Warm",
+            "id": "mtvs2elvrya3",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-04-09",
+            "ice": "Warm",
+            "id": "mtvs2elu1cxx",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-31",
+            "ice": "Warm",
+            "id": "mtvs2eluc131",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-05",
+            "ice": "Warm",
+            "id": "mtvs2els7c5a",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-07",
+            "ice": "Warm",
+            "id": "mtvs2elra3n6",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-11",
+            "ice": "Warm",
+            "id": "mtvs2elq5lmi",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-04",
+            "ice": "Warm",
+            "id": "mtvs2elqmwjn",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-11",
+            "ice": "Warm",
+            "id": "mtysu9gimksk",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-14",
+            "ice": "Warm",
+            "id": "mu550y0i80v0",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-23",
+            "ice": "Less ice",
+            "id": "muepi55514xa",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.25",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
         "count": 7,
         "dates": [
           "2026-03-24",
@@ -2934,130 +3069,6 @@
         "sweet": "0%"
       },
       {
-        "count": 10,
-        "dates": [
-          "2026-03-22",
-          "2026-03-25",
-          "2026-04-09",
-          "2026-07-31",
-          "2026-08-05",
-          "2026-08-07",
-          "2026-08-11",
-          "2026-09-04",
-          "2026-09-11",
-          "2026-09-14"
-        ],
-        "ice": "Warm",
-        "milk": "Oat",
-        "n": "Hojicha latte",
-        "orders": [
-          {
-            "date": "2026-03-22",
-            "ice": "Warm",
-            "id": "mtvs2elwc6i8",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-03-25",
-            "ice": "Warm",
-            "id": "mtvs2elvrya3",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-04-09",
-            "ice": "Warm",
-            "id": "mtvs2elu1cxx",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-31",
-            "ice": "Warm",
-            "id": "mtvs2eluc131",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-08-05",
-            "ice": "Warm",
-            "id": "mtvs2els7c5a",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-08-07",
-            "ice": "Warm",
-            "id": "mtvs2elra3n6",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-08-11",
-            "ice": "Warm",
-            "id": "mtvs2elq5lmi",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-04",
-            "ice": "Warm",
-            "id": "mtvs2elqmwjn",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-11",
-            "ice": "Warm",
-            "id": "mtysu9gimksk",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-14",
-            "ice": "Warm",
-            "id": "mu550y0i80v0",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          }
-        ],
-        "p": "7.25",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
-      },
-      {
         "dates": [
           "2026-07-28"
         ],
@@ -3094,20 +3105,20 @@
         ]
       }
     ],
-    "elo": 1607,
+    "elo": 1613,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 18,
+    "matches": 19,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.\n\nAshley Cafe is next around the corner for a good bagel and sandwiches!",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-09-21T16:57:16.367Z",
+    "updated": "2026-09-23T23:01:21.137Z",
     "wish": false
   },
   {
