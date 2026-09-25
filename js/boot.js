@@ -61,9 +61,47 @@ if("serviceWorker" in navigator && (location.protocol==="https:" || _localHosts.
     navigator.serviceWorker.register("sw.js").catch(function(e){ warn("sw register", e); });
   });
 }
-function reloadLatest(){ const u=new URL(location.href);u.searchParams.set("v",Date.now());location.replace(u.href); }
-let _bootSrc=null, _updateShown=false;
-function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{ if(t==null)return; if(_bootSrc===null){ _bootSrc=t; return; } if(t!==_bootSrc && !_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); } }).catch(()=>{}); }
+/* ---------- updates ----------
+   A new build used to announce itself with a bar and then wait for a tap, and until that
+   tap the phone kept running whatever it had — which is how "is it live?" kept turning into
+   "nvm, refreshing showed it". Now it applies itself at the one moment a reload is
+   invisible: before you have touched anything since the app came to the front, which is at
+   launch and every time you switch back to it. If you are already scrolling or typing when
+   it is spotted, the bar still appears, and the next time you come back to the app it
+   updates itself before you notice. A half-logged visit is never reloaded away. */
+function reloadLatest(auto){
+  /* An automatic reload that lands on the same mismatch again — a half-finished deploy, a
+     CDN still serving the old page — must not loop. One automatic reload a minute; after
+     that it falls back to asking. A tap on the bar always goes through. */
+  if(auto){ try{ const last=+(sessionStorage.getItem("cafemap.autoReload")||0);
+      if(Date.now()-last<60000)return false;
+      sessionStorage.setItem("cafemap.autoReload",String(Date.now())); }catch(e){ return false; } }
+  const u=new URL(location.href); u.searchParams.set("v",Date.now()); location.replace(u.href);
+  return true;
+}
+function buildOf(src){ const m=/js\/boot\.js\?v=(\d+)/.exec(src||""); return m?m[1]:null; }
+const _runningBuild=(function(){ const sc=document.querySelector('script[src*="js/boot.js"]'); return sc?buildOf(sc.getAttribute("src")):null; })();
+let _bootSrc=null, _updateShown=false, _updatePending=false, _touched=false;
+/* Any real input since the app came to the front means someone is using it. */
+["pointerdown","keydown","wheel","touchstart"].forEach(function(ev){
+  window.addEventListener(ev,function(){ _touched=true; },{passive:true,capture:true}); });
+function updateIsSafe(){ return !_touched && !(typeof formDirty==="function"&&formDirty()); }
+function onNewBuild(){
+  _updatePending=true;
+  if(updateIsSafe()&&reloadLatest(true))return;
+  if(!_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); }
+}
+function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{
+  if(t==null)return;
+  /* Compare builds, not bytes. The first fetch used to become the baseline, so a phone that
+     booted from the offline cache and then came online adopted the NEW page as "current"
+     and never offered the update at all. The running build is read from the script tag the
+     browser actually executed. Bytes stay as the fallback for a page with no version tag. */
+  const next=buildOf(t);
+  if(next&&_runningBuild){ if(next!==_runningBuild)onNewBuild(); return; }
+  if(_bootSrc===null){ _bootSrc=t; return; }
+  if(t!==_bootSrc)onNewBuild();
+}).catch(()=>{}); }
 const _fbOk=initFirebase(); initAuth();
 { const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁️ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file."; }
 applyMode();renderSyncStatus();
@@ -84,5 +122,11 @@ function syncOnResume(why){
   try{ if(typeof flushSync==="function")flushSync(); }catch(e){ warn("boot.js",e); }
   try{ if(typeof flushPrivate==="function")flushPrivate(); }catch(e){ warn("boot.js",e); }
 }
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ checkForUpdate(); syncOnResume("resume"); } });
+/* Coming back to the front is a fresh start as far as updates go: nothing has been touched
+   yet, so an update already spotted applies now, before the first tap, and otherwise the
+   check that follows can still apply one it finds. The outbox is durable, so reloading
+   before syncOnResume loses nothing — boot flushes it again. */
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ _touched=false;
+  if(_updatePending&&updateIsSafe()&&reloadLatest(true))return;
+  checkForUpdate(); syncOnResume("resume"); } });
 window.addEventListener("beforeunload",e=>{ if(typeof formDirty==="function"&&formDirty()){ e.preventDefault(); e.returnValue=""; } });
