@@ -33,6 +33,7 @@ const SUITE = [
   ["list-clean",       "the list tint carries the rating, and four control rows fold into one"],
   ["settings",         "one home for the preferences, and a map error that stays in the map"],
   ["beli",             "three buckets, a position on every card, and the two lists up front"],
+  ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["offline",          "the app boots with the network pulled"],
   ["regression",       "101 real cafes still render exactly as before"]
 ];

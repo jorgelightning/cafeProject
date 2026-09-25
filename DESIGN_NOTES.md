@@ -561,6 +561,33 @@ the part you go looking for, so it is the part behind a tap.
 Guarded in `tests/order-prices.js`, which checks a three-drink cafe rather than one card — the
 single-card case was never the one that hurt.
 
+### Updates apply themselves
+
+The detection was already good: `checkForUpdate()` fetches the page with `cache:"no-store"`
+and a `?_chk=` buster that the service worker deliberately lets through, every 45 seconds and
+whenever the app returns to the front. What it did with the answer was show a bar and wait for
+a tap — so until that tap, the phone ran whatever it had, and "is it live?" kept turning into
+"nvm, refreshing showed it".
+
+It now reloads itself at the one moment a reload is invisible: **before anything has been
+touched since the app came to the front** — at launch, and every time you switch back to it.
+Any `pointerdown`, `keydown`, `wheel` or `touchstart` means someone is using it, and then the
+bar appears as before; the update lands the next time you come back. A dirty form blocks it
+entirely, bar or no bar.
+
+Two guards. An automatic reload that lands on the same mismatch — a half-finished deploy, a
+CDN still serving the old page — would loop, so there is **one automatic reload a minute**
+(`sessionStorage`); after that it falls back to the bar. A tap on the bar always goes through.
+
+And a bug fixed on the way: the first check used to become the baseline for "current". A phone
+that booted from the offline cache and then came online adopted the **new** page as current
+and never offered the update at all. It now compares the `?v=` on the `boot.js` tag the browser
+actually executed against the one in the fetched page. Byte comparison stays as the fallback.
+
+`tests/updates.js` fakes a new build by answering the version check with the real page, its
+`?v=` rewritten. Run against the old `boot.js`, four of its assertions fail — including that
+the old code did not even raise the bar in the offline-boot case.
+
 ---
 
 ## Rejected, and why
