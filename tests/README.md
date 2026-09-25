@@ -54,6 +54,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `list-clean.js` | The placeholder tint carries the rating with legible ink, and four control rows fold into one. |
 | `settings.js` | Appearance, list layout, editing mode and the admin actions share one screen, with the maintenance count on the door; a Maps failure no longer paints over the whole app. |
 | `beli.js` | The ranking is the spine: three buckets instead of five stars, a position on every card, been/want as the two lists, and Stats opening with the collection. |
+| `updates.js` | A new build reloads itself before anything is touched, waits behind the bar when you are mid-use or mid-form, and can never loop. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `locate.js` | The locate button, its three states, the user dot — which was never being drawn — and that **nothing but the button raises the permission prompt**. |
 | `offline.js` | The app boots with the network pulled. |
