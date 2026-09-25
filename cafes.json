@@ -170,13 +170,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1437,
+    "elo": 1433,
     "emoji": "☕",
     "fav": false,
     "id": "mqf9w1vzajpl",
     "lat": 21.32908,
     "lng": -158.0914,
-    "matches": 10,
+    "matches": 11,
     "name": "Island Vintage Coffee and Wine Bar Kapolei",
     "rating": 3,
     "review": "Flat white are known for their micro foam and there was none here!",
@@ -1320,13 +1320,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1514,
+    "elo": 1497,
     "emoji": "☕",
     "fav": false,
     "id": "mr7ejpw1qafq",
     "lat": 37.86832,
     "lng": -122.26044,
-    "matches": 2,
+    "matches": 3,
     "name": "8 Grams Matcha",
     "rating": 5,
     "review": "I like they have different blends!",
@@ -2589,6 +2589,51 @@
     "lng": null
   },
   {
+    "area": "Little Russia",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-24"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Cafe latte",
+        "orders": [
+          {
+            "date": "2026-09-24",
+            "ice": "Warm",
+            "id": "mugj0ronwwh9",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1517,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mugj206txj1r",
+    "lat": 37.78001,
+    "lng": -122.48168,
+    "matches": 1,
+    "name": "HI NRG",
+    "pid": "ChIJYXSOVACHhYAREXl6l-Jr_-w",
+    "rating": 5,
+    "review": "Vibes are super good, the coffee is strong here, and by default they don't add sugar!",
+    "updated": "2026-09-25T05:35:45.269Z",
+    "wish": false
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
@@ -2821,6 +2866,108 @@
     "custom": false,
     "drinks": [
       {
+        "count": 8,
+        "dates": [
+          "2026-03-24",
+          "2026-07-09",
+          "2026-07-27",
+          "2026-09-08",
+          "2026-09-09",
+          "2026-09-15",
+          "2026-09-18",
+          "2026-09-24"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Flat White",
+        "orders": [
+          {
+            "date": "2026-03-24",
+            "ice": "Warm",
+            "id": "mtvs2elobsr6",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-09",
+            "ice": "Warm",
+            "id": "mtvs2elnvxe0",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-27",
+            "ice": "Warm",
+            "id": "mtvs2elmn0g5",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-08",
+            "ice": "Warm",
+            "id": "mtvs2ell0gxx",
+            "milk": "Oat",
+            "p": "4.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-09",
+            "ice": "Warm",
+            "id": "mtvs2eqp5azy",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-15",
+            "ice": "Warm",
+            "id": "mu34ylftx36w",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-18",
+            "ice": "Warm",
+            "id": "mu7boi2nzdul",
+            "milk": "Oat",
+            "p": "4.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-24",
+            "ice": "Warm",
+            "id": "mufx9yuhrhf8",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      },
+      {
         "count": 11,
         "dates": [
           "2026-03-22",
@@ -2956,97 +3103,6 @@
         "sweet": "0%"
       },
       {
-        "count": 7,
-        "dates": [
-          "2026-03-24",
-          "2026-07-09",
-          "2026-07-27",
-          "2026-09-08",
-          "2026-09-09",
-          "2026-09-15",
-          "2026-09-18"
-        ],
-        "ice": "Warm",
-        "milk": "Oat",
-        "n": "Flat White",
-        "orders": [
-          {
-            "date": "2026-03-24",
-            "ice": "Warm",
-            "id": "mtvs2elobsr6",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-09",
-            "ice": "Warm",
-            "id": "mtvs2elnvxe0",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-27",
-            "ice": "Warm",
-            "id": "mtvs2elmn0g5",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-08",
-            "ice": "Warm",
-            "id": "mtvs2ell0gxx",
-            "milk": "Oat",
-            "p": "4.25",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-09",
-            "ice": "Warm",
-            "id": "mtvs2eqp5azy",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-15",
-            "ice": "Warm",
-            "id": "mu34ylftx36w",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-18",
-            "ice": "Warm",
-            "id": "mu7boi2nzdul",
-            "milk": "Oat",
-            "p": "4.25",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          }
-        ],
-        "p": "4.25",
-        "reorder": "yes",
-        "size": "8 oz",
-        "sweet": "0%"
-      },
-      {
         "dates": [
           "2026-09-17"
         ],
@@ -3105,20 +3161,20 @@
         ]
       }
     ],
-    "elo": 1613,
+    "elo": 1617,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 19,
+    "matches": 20,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.\n\nAshley Cafe is next around the corner for a good bagel and sandwiches!",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-09-23T23:01:21.137Z",
+    "updated": "2026-09-24T19:26:15.440Z",
     "wish": false
   },
   {
