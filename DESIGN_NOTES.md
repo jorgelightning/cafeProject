@@ -674,6 +674,47 @@ Pinned in `tests/sync-merge.js` (six edit-vs-delete cases, both directions, clea
 still clean) and `tests/sync-queue.js` (storage-full save neither throws nor stops the
 listener and still reaches the cloud; resolving with the cloud updates the remote mirror).
 
+### Scoped, not built: many people, one app
+
+The Beli review's item F, scoped on request (27 Sep 2026). This is the plan; building it is a
+separate decision. Estimated at several focused sessions, phased so the app never breaks.
+
+**What multi-user means here.** A shared directory of places, per-person opinions and logs on
+top of it, and a small invited circle — not an open network. The current cafe record conflates
+the two: name / area / lat / lng / pid / emoji are facts about a *place*; rating, review,
+tags, fav, wish, drinks, orders, elo and matches are one *person's* history with it.
+
+**Phase 1 — split the record (invisible).** `places/<id>` keeps the place facts;
+`users/<uid>/cafes/<placeId>` keeps everything personal; `private/<uid>/<id>` replaces the
+single private node. A one-way migration script maps today's `cafes/<id>` into `places` plus
+the owner's user record, with a full export kept beside `cafes.json` as the rollback. The
+backup workflow follows. Run this while the app still serves one user — no visible change.
+
+**Phase 2 — membership (kills two liabilities).** A `members/<uid>` allowlist, invite-only,
+replaces the single `OWNER_EMAIL` comparison. This is also where `ADMIN_PASS` finally dies —
+a hardcoded passphrase in a public JS file is already only theatre, and in a multi-user world
+it is a hole. Rules: `places` writable by members; `users/<uid>` writable only by that uid;
+`private/<uid>` readable only by that uid. The existing rule probe extends to the new paths —
+the private-node lesson was that unverified rules fail silently in both directions.
+
+**Phase 3 — the client reads the join.** `cafes` (the in-memory array every screen reads)
+becomes places joined with *my* user record, so every reader of `c.rating` and `c.drinks`
+keeps working untouched. The sync outbox splits into two lanes: place edits (multi-writer —
+exactly what the field-level merge already handles) and my record (single-writer per person,
+so its only conflicts are my own devices — the engine's original job). `isAdmin` becomes
+"signed-in member"; viewer stays what anonymous visitors get. The audited merge, the outbox,
+the update flow, the service worker, buckets, the chaser and the whole test harness survive
+as-is.
+
+**Phase 4 — the social surface, last.** Friends are read-only overlays: their rank beside
+mine on a cafe page, a "two friends loved this" line on the Go tab, whose ranking the board
+shows (mine signed in; the owner's for anonymous visitors, since elo is per-person now). A
+feed is a later decision, not part of this scope.
+
+**Honest risks.** The migration is the one irreversible step — it runs only with the export
+in hand. RTDB rules grow real complexity and must be probed, not trusted. And the free tier
+is fine at friend scale but the photo-fetch quota is per-key, shared by everyone invited.
+
 ---
 
 ## Rejected, and why
