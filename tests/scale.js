@@ -125,6 +125,40 @@ const fs = require("fs"), path = require("path");
     eq(g.detail, 0, "…while the hero on Detail stays full-bleed on " + name);
   });
 
+  // ---- the map steps aside for the screens that are not about it ----
+  /* At 1440px every screen used to be 475px of content beside 965px of visible map — Stats
+     crammed its charts into a phone-width column while a map nobody was looking at took the
+     rest. Map, List and a cafe's page keep the split; Go, Stats and Settings take the width. */
+  {
+    const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
+    const pg = await ctx.newPage();
+    await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
+    await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
+    await pg.waitForTimeout(900);
+    const split = await pg.evaluate(() => {
+      isAdmin = false; applyMode && applyMode();
+      const probe = (v) => { show(v);
+        if (v === "compare") renderBoard(); if (v === "stats") renderStats();
+        if (v === "settings") renderSettings(); if (v === "list") renderList();
+        return { map: getComputedStyle(document.querySelector(".mapwrap")).display !== "none",
+                 side: Math.round(document.querySelector(".sidebar").getBoundingClientRect().width) };
+      };
+      const wrap = (sel) => { const r = document.querySelector(sel).getBoundingClientRect();
+        return { w: Math.round(r.width), centered: Math.abs((1440 - r.right) - r.left) < 4 }; };
+      const stats = probe("stats"), statwrap = wrap(".statwrap");
+      const go = probe("compare"), settings = probe("settings"), list = probe("list");
+      return { stats, statwrap, go, settings, list };
+    });
+    eq(split.list, { map: true, side: 475 }, "List keeps the split — browsing beside the map earns it");
+    eq(split.stats.map, false, "Stats gets the whole window instead of two-thirds map");
+    eq(split.stats.side, 1440, "…the content column spans it");
+    eq(split.statwrap.w <= 880, true, "…at a reading width (" + split.statwrap.w + "px), not a 1440px text measure");
+    eq(split.statwrap.centered, true, "…centered in the window");
+    eq(split.go.map, false, "the guide gets the same room");
+    eq(split.settings.map, false, "…and so do the settings");
+    await ctx.close();
+  }
+
   // ---- nothing scrolls sideways at any of them ----
   [["phone", phone], ["iPad portrait", ipad], ["iPad landscape", ipadL], ["laptop", laptop]]
     .forEach(([name, m]) => eq(m.doc <= m.win + 1, true, "no sideways scroll on " + name));

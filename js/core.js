@@ -391,7 +391,10 @@ let _cardRanks=null;
    keeps a resolving photo from silently wiping the star pill and wish badge. */
 /* The rank badge takes the corner the stars had. On a photo tile it is the only mark that
    survives, which is the one that carries information the picture does not. */
-function phInner(c,hasPhoto){ let h=hasPhoto?"":nophotoHTML(c); if(c&&c.fav)h+='<span class="favbadge">❤️</span>'; if(c&&c.wish)h+='<span class="wishbadge">🔖</span>';
+/* No wishbadge: since been and want-to-try became separate tabs, every card that would
+   carry one sits on the tab that already says it. The heart stays — favourites are a subset
+   of been, so it still separates. */
+function phInner(c,hasPhoto){ let h=hasPhoto?"":nophotoHTML(c); if(c&&c.fav)h+='<span class="favbadge">❤️</span>';
   return h+((typeof rankBadge==="function")?rankBadge(c,_cardRanks):""); }
 function verifyCardPhoto(id,url){ if(!url)return; const probe=new Image(); probe.onload=function(){ _imgFail[id]=0; }; probe.onerror=function(){ _imgFail[id]=1; const c=cafes.find(x=>x.id===id); if(c&&c.gphoto)delete c.gphoto; if(gphotoCache[id]!==undefined){ delete gphotoCache[id]; saveGphotoCache(); } const el=document.querySelector('.card[data-id="'+id+'"] .ph'); if(el){ el.style.backgroundImage=""; el.classList.remove("loaded","loading"); el.classList.add("nophoto"); el.style.cssText=c?nophotoStyle(c):"background:#caa472"; el.innerHTML=c?phInner(c,false):"?"; } if(c&&!c.photo&&!_photoRetried[id]&&gReady&&c.lat!=null&&!gphotoInflight[id]){ _photoRetried[id]=1; gphotoInflight[id]=1; fetchPlacePhoto(c,function(u){ delete gphotoInflight[id]; if(u)applyCardPhoto(id,u); }); } }; probe.src=safeUrl(url); }
 function fmtDate(s){ if(!s)return ""; const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); if(!m)return s; const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2]-1]; return mo+" "+(+m[3])+", "+m[1]; }
