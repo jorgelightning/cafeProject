@@ -631,10 +631,12 @@ Jose · No vis…") and the bookmark badge (the tab *is* the bookmark) are gone.
 left `phInner()` entirely: since been/want became tabs, every card that would carry one sits
 on the tab that already says it.
 
-**The laptop map steps aside.** At ≥900px, Go, Stats and Settings take the whole window —
-every screen used to be 475px of content beside 965px of visible map, charts included. Content
-caps at an 860px centered column, the header row with it. Map, List and a cafe's page keep the
-split; browsing beside the map is what earns it.
+**The laptop map steps aside — shipped in v55, REVERTED in v57.** The reasoning was sound on
+paper (475px of content beside 965px of map, charts included), but the owner tried it for two
+days and asked for the panel back: "I really like having the side panel with the map when I go
+between Go, Stats and Settings." The always-there map is a *preference*, not an oversight —
+`tests/scale.js` now pins the persistent split on all four screens and says so in its comment,
+so this does not get re-proposed as an improvement.
 
 **The 44px touch floor, met everywhere.** The settings gear (40), the map button (34), the
 tabs and Filters (36), the Settings back arrow (40), the sign-in button (41) and the
