@@ -85,17 +85,22 @@ function openDetail(id,from){
   }
 
   /* ---- header ---- */
+  /* The header used to be one middot run-on — area, rank, score and compare count over three
+     wrapping lines, with #1 buried mid-sentence. Each fact has its own element now: the
+     position is the block you see first and cannot wrap, the judgement and the place share a
+     line (a long area truncates instead of pushing), and the score drops to a caption — it is
+     bookkeeping, and 104 of 113 cafes share theirs with another. */
   $("d-name").textContent=c.name;
   $("d-stars").innerHTML=bucketPill(c,"big");
-  /* Position first, score second: 104 of 113 cafes share a printed score with another, and a
-     rank is the one number here that is actually theirs. */
   const _rk=(typeof rankOf==="function")?rankOf(c):null, _rn=(typeof rankMap==="function")?rankMap()._n:0;
-  $("d-meta").innerHTML=[
-    areaOf(c)?esc(areaOf(c)):"",
-    _rk?('<span class="rankpos">#'+_rk+'</span> <span class="ranktot">of '+_rn+'</span>'):"",
-    c.matches?('<span class="scorebadge">⚖️ '+eloScore(c)+' · '+c.matches+(c.matches===1?" compare":" compares")+'</span>'):"",
-    (isAdmin&&c.updated)?("edited "+esc(fmtEdited(c.updated))):""
-  ].filter(Boolean).join("  ·  ");
+  const _rkEl=$("d-rank");
+  if(_rkEl){ _rkEl.hidden=!_rk; _rkEl.innerHTML=_rk?('<b>#'+_rk+'</b><span>of '+_rn+'</span>'):""; }
+  $("d-meta").textContent=areaOf(c)||"";
+  const _scEl=$("d-score");
+  if(_scEl){ const bits=[];
+    if(c.matches)bits.push(eloScore(c)+" from "+c.matches+(c.matches===1?" comparison":" comparisons"));
+    if(isAdmin&&c.updated)bits.push("edited "+fmtEdited(c.updated));
+    _scEl.textContent=bits.join(" · "); _scEl.hidden=!bits.length; }
   try{ renderChaser(c); }catch(e){ warn("detail.js renderChaser",e); }
   $("d-fav").textContent=c.fav?"❤️":"🤍";
   if($("d-wish")){ $("d-wish").textContent="🔖"; $("d-wish").style.opacity=c.wish?"1":".45"; }

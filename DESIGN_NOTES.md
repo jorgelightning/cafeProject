@@ -613,6 +613,35 @@ against a hidden pane — the form widget block left the form dirty, and every l
 stalled on a discard-confirm that Playwright silently dismisses. Every existing assertion was
 DOM-only, so nothing noticed until the first geometry assertion returned an empty rect.
 
+### The review's four choices, taken together
+
+**The cafe page header** stopped being a middot run-on. Each fact owns an element: the
+position is the block you see first (`#1 / of 107`, cannot wrap), the judgement and the place
+share one line with the place truncating rather than pushing, and the score dropped to a
+caption in plain words — it is bookkeeping, and 104 of 113 cafes share theirs with another.
+This supersedes the `scorebadge` nowrap fix from three days earlier: the badge itself is gone.
+
+**The obvious stopped being said twice.** On Go, the bucket pill appears only when a row
+breaks the pattern — a fine or a not-for-me sitting in the ranking — because on a best-first
+list, 90 "Loved it" pills with 3 distinct values said nothing the position didn't. The green
+tile went with it (it repeated the pill, which repeated the rank), and the width it freed goes
+to the note, the one thing on the row you cannot get anywhere else. On Want to try, "No visit
+date" (the definition of the tab, printed seven times, truncating every area to "West San
+Jose · No vis…") and the bookmark badge (the tab *is* the bookmark) are gone. The wishbadge
+left `phInner()` entirely: since been/want became tabs, every card that would carry one sits
+on the tab that already says it.
+
+**The laptop map steps aside.** At ≥900px, Go, Stats and Settings take the whole window —
+every screen used to be 475px of content beside 965px of visible map, charts included. Content
+caps at an 860px centered column, the header row with it. Map, List and a cafe's page keep the
+split; browsing beside the map is what earns it.
+
+**The 44px touch floor, met everywhere.** The settings gear (40), the map button (34), the
+tabs and Filters (36), the Settings back arrow (40), the sign-in button (41) and the
+rule-warning dismiss (34) all sit at 44+ now. It cost 8px of List chrome (129 → 137, against
+the original 217) and the floor wins that trade; the budget in `tests/list-clean.js` says so
+in its own comment.
+
 ---
 
 ## Rejected, and why

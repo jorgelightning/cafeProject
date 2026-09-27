@@ -28,6 +28,7 @@ const { eq, done } = checker();
         review: "Go-to for hojicha lattes and flat white — consistent and cozy.",
         drinks: [{ n: "Hojicha Latte", orders: [{ date: "2026-09-01" }] }] },
       { id: "b", name: "Bare Cafe", area: "Oakland", elo: 1520, matches: 4, drinks: [] },
+      { id: "f", name: "Fine Row", area: "Berkeley", rating: 3, elo: 1450, matches: 5, drinks: [] },
       { id: "n", name: "Never Ranked", area: "Seattle", rating: 3, matches: 0, drinks: [] }
     ];
   });
@@ -54,8 +55,18 @@ const { eq, done } = checker();
   // ---- A: the row carries its reason ----
   await seed();
   let v = await render(false);
-  eq(v.rows, 3, "the three ranked cafes are listed (the never-compared one is not ranked)");
-  eq(v.firstStars, "Loved it", "a row shows the judgement that was already stored");
+  eq(v.rows, 4, "the four ranked cafes are listed (the never-compared one is not ranked)");
+  const odd = await pg.evaluate(() => {
+    const rows = [...document.querySelectorAll("#cmp-body .lbrow.guide")];
+    const fine = rows.find(r => /Fine Row/.test(r.textContent));
+    return { pill: (fine.querySelector(".bkpill") || {}).textContent || "",
+             tiles: document.querySelectorAll("#cmp-body .lbrow.guide .gotile").length };
+  });
+  eq(odd.pill.trim(), "It was fine", "…a fine cafe sitting in the ranking is the row worth marking");
+  eq(odd.tiles, 0, "…and the green tile is gone — it repeated the pill, which repeated the rank");
+  /* On a best-first list, "Loved it" on every top row said nothing — 90 pills, 3 distinct.
+     The pill now appears only when a row breaks the pattern. */
+  eq(v.firstStars, "", "a loved row does not repeat what its position already says");
   eq(v.firstOrder, "Order the Hojicha latte · 3×",
      "…and the drink to order there, counted by orders rather than by record");
   eq(/four different types of matcha/.test(v.firstSay), true, "…and the owner's own words");
@@ -86,7 +97,7 @@ const { eq, done } = checker();
 
   v = await render(true);
   eq(/11 comparisons/.test(v.firstSub), true, "the owner still sees the comparison count");
-  eq(v.scores, 3, "…and the scores");
+  eq(v.scores, 4, "…and the scores");
   eq(v.statnote, true, "…and the provisional caveat");
   eq(v.queue, true, "…and the never-compared queue");
   eq(/head-to-head/.test(v.sub), true, "…and the ranking progress in the header");

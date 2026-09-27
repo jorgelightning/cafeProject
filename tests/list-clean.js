@@ -107,13 +107,33 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
   });
 
   eq(shape.rows, 2, "the controls are a search box and one bar, not four stacked rows");
-  eq(shape.chrome <= 130, true,
+  /* 145, not 130: raising the tabs and Filters to the 44px touch floor bought back 8px of
+     chrome, and the floor wins that trade. Still 137px against the original 217. */
+  eq(shape.chrome <= 145, true,
      "…so the grid starts " + shape.chrome + "px down instead of 217px");
   eq(shape.panelHidden, true, "the panel is closed at rest");
   eq(shape.inPanel, [true, true], "sort and the filter chips both live inside it");
   eq(shape.layoutMoved, true, "…and the layout toggle does not — it is a preference, not a filter");
   eq(shape.expanded, "false", "…and the button says so");
   eq(shape.doc <= shape.win + 1, true, "nothing scrolls sideways");
+
+  // ---- every control a finger reaches clears the 44px floor ----
+  /* The gear was 40px, the map button 34, the tabs and Filters 36 — while everything inside
+     Settings and the form had already been raised. */
+  const floor = await pg.evaluate(() => {
+    const els = [...document.querySelectorAll(".search button, .listbar button")]
+      .filter(e => e.offsetParent);
+    return els.map(e => (e.getAttribute("aria-label") || e.textContent.trim().slice(0, 14))
+                        + ":" + Math.round(e.getBoundingClientRect().height))
+              .filter(t => +t.split(":")[1] < 44);
+  });
+  eq(floor, [], "the search gear, both tabs, Filters and the map button all clear 44px");
+  const oneLine = await pg.evaluate(() => {
+    const bar = document.querySelector(".listbar");
+    const kids = [...bar.children].filter(e => e.getBoundingClientRect().height > 0 && e.id !== "save-state");
+    return [...new Set(kids.map(e => Math.round(e.getBoundingClientRect().top / 10)))].length;
+  });
+  eq(oneLine, 1, "…and the taller controls still share one line at 390px");
 
   // ---------- C: nothing is lost behind the fold ----------
   const opened = await pg.evaluate(() => {
