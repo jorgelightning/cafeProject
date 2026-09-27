@@ -59,7 +59,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mobile-topbar{ display:flex; align-items:center; gap:var(--sp-3); padding:calc(14px + env(safe-area-inset-top)) 16px 10px; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-bottom:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,.04); z-index:10; }
 .mobile-topbar h1{ font-size:var(--fs-5); font-weight:800; margin:0; letter-spacing:-.02em; }
 .mobile-topbar .sub{ font-size:var(--fs-2); color:var(--soft); margin-top:2px; }
-.iconbtn{ width:40px; height:40px; border-radius:var(--r-3); background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:var(--fs-4); cursor:pointer; flex:0 0 auto; color:var(--text); }
+/* 44px is the touch floor, and seven controls sat under it — the gear at 40, the map button
+   at 34, the tabs and Filters at 36. */
+.iconbtn{ width:44px; height:44px; border-radius:var(--r-3); background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:var(--fs-4); cursor:pointer; flex:0 0 auto; color:var(--text); }
 .search{ margin:0 16px 12px; display:flex; align-items:center; gap:var(--sp-2); background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-3); padding:0 14px; transition:border-color .15s, box-shadow .15s; }
 .search:focus-within{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); background:var(--surface); }
 .search input{ border:none; background:none; outline:none; padding:12px 0; font-size:var(--fs-4); color:var(--text); width:100%; }
@@ -91,7 +93,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
      panes would start under the notch, so the inset moves to the sidebar itself. */
   .sidebar{ padding-top:env(safe-area-inset-top); }
 }
-.search .iconbtn{ width:40px; height:40px; flex:0 0 40px; font-size:var(--fs-3); }
+.search .iconbtn{ width:44px; height:44px; flex:0 0 44px; font-size:var(--fs-3); }
 .mapsearch select{ font-family:inherit; max-width:62vw; appearance:none; -webkit-appearance:none; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--border); border-radius:var(--r-3); padding:10px 34px 10px 14px; font-size:var(--fs-3); font-weight:600; color:var(--text); box-shadow:var(--shadow); cursor:pointer; outline:none; background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%); background-position:calc(100% - 17px) calc(50% - 2px),calc(100% - 12px) calc(50% - 2px); background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
 .mapsearch select:focus{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); }
 @media (min-width:900px){ .mapsearch{ left:calc(var(--sidebar) + 12px); } .mapsearch select{ max-width:300px; } }
@@ -249,16 +251,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* Position, in the corner the star run used to hold. It survives on a photo tile because it
    is the mark a photo cannot carry. */
 .rankbadge{ position:absolute; left:6px; top:6px; height:22px; display:inline-flex; align-items:center; padding:0 8px; border-radius:var(--r-pill); background:rgba(20,16,13,.62); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); color:#fff; font-size:var(--fs-1); font-weight:800; font-variant-numeric:tabular-nums; text-shadow:none; }
-.rankpos{ font-weight:800; font-variant-numeric:tabular-nums; color:var(--text); }
-.ranktot{ color:var(--soft); }
+
 /* On the tile the pill sits on its own dark scrim, so it uses literal colours: identical
    contrast in both themes and over any photo that later resolves. */
 /* Absolutely positioned so they survive the .nophoto column-flex centring */
 .card .ph .favbadge{ position:absolute; top:6px; right:7px; font-size:16px; line-height:1; }
-.card .ph .wishbadge{ position:absolute; top:6px; left:7px; background:rgba(91,155,213,.9); color:#fff; border-radius:var(--r-1); padding:1px 7px; font-size:var(--fs-1); font-weight:700; line-height:1.4; }
-/* white-space, or a long area name wraps the line THROUGH the badge and its background
-   paints as two separate boxes */
-.scorebadge{ background:rgba(46,158,91,.14); color:var(--good); border-radius:var(--r-1); padding:1px 7px; font-weight:700; white-space:nowrap; }
+
 .empty{ text-align:center; color:var(--soft); padding:60px 30px; }
 .empty .big{ font-size:46px; margin-bottom:10px; }
 .hero{ position:relative; height:176px; background-size:cover; background-position:center; display:flex; align-items:flex-end; }
@@ -272,9 +270,19 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .tagphoto{ position:absolute; bottom:12px; left:14px; background:rgba(0,0,0,.55); color:#fff; font-size:var(--fs-1); padding:3px 9px; border-radius:var(--r-4); }
 .dbody{ padding:16px 16px 30px; }
 .dbody h2{ margin:0 0 4px; font-size:var(--fs-5); }
-.row{ display:flex; align-items:center; gap:var(--sp-2); color:var(--soft); font-size:var(--fs-2); }
-.stars{ color:var(--star-off); font-size:var(--fs-4); letter-spacing:1px; }
-.stars b{ color:var(--star); font-weight:inherit; }
+/* ---- the cafe page header ----
+   The position leads, as a block that cannot wrap. Judgement and place share one line — the
+   place truncates rather than pushing — and the score is a caption underneath. */
+.dhead{ display:flex; align-items:flex-start; gap:var(--sp-3); }
+.dranktile{ flex:0 0 auto; min-width:64px; padding:9px 12px 10px; border-radius:var(--r-3); background:var(--surface2); text-align:center; }
+.dranktile b{ display:block; font-size:var(--fs-5); font-weight:800; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; }
+.dranktile span{ display:block; margin-top:3px; font-size:var(--fs-1); color:var(--soft); }
+.dranktile[hidden]{ display:none; }
+.dheadmain{ flex:1; min-width:0; }
+.dsub{ display:flex; align-items:center; gap:var(--sp-2); margin-top:7px; }
+.darea{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--fs-2); color:var(--soft); }
+.dscoreline{ margin-top:7px; font-size:var(--fs-1); color:var(--faint); }
+.dscoreline[hidden]{ display:none; }
 .chips{ display:flex; flex-wrap:wrap; gap:var(--sp-2); margin:12px 0; }
 .chip{ background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-4); padding:4px 11px; font-size:var(--fs-2); }
 /* The mask fades the right edge so the hidden horizontal scroll is discoverable. */
@@ -371,7 +379,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    their own cost 62px of a 390px phone, and the tab's own count made the separate "106 cafes"
    label redundant, so dropping that paid for most of this. */
 .listtabs{ display:flex; gap:var(--sp-1); padding:4px; background:var(--surface2); border-radius:var(--r-2); }
-.listtabs button{ min-height:36px; padding:0 10px; border:none; border-radius:var(--r-1); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:600; white-space:nowrap; cursor:pointer; }
+.listtabs button{ min-height:44px; padding:0 10px; border:none; border-radius:var(--r-1); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:600; white-space:nowrap; cursor:pointer; }
 .listtabs button[aria-pressed="true"]{ background:var(--surface); color:var(--acc-strong); font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.1); }
 .listtabs .tabn{ font-weight:700; font-variant-numeric:tabular-nums; opacity:.6; }
 /* Admin only, and the one thing in the row that does not fit beside the tabs on a phone.
@@ -379,7 +387,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .listbar #save-state{ flex-basis:100%; }
 .listbar{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin:0 16px 10px; }
 .listbar .sub{ font-size:var(--fs-2); color:var(--soft); font-weight:600; }
-.filterbtn{ margin-left:auto; display:inline-flex; align-items:center; gap:var(--sp-1); min-height:36px; padding:0 12px; border-radius:var(--r-2); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
+.filterbtn{ margin-left:auto; display:inline-flex; align-items:center; gap:var(--sp-1); min-height:44px; padding:0 12px; border-radius:var(--r-2); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 .filterbtn.on{ border-color:var(--acc-strong); color:var(--acc-strong); }
 .filterbtn .fcount{ min-width:18px; height:18px; padding:0 5px; border-radius:var(--r-pill); background:var(--acc-strong); color:var(--on-acc); font-size:var(--fs-1); font-weight:800; display:inline-flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
 .filterbtn .fcount[hidden]{ display:none; }
@@ -504,7 +512,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .grid.compact-list{display:flex;flex-direction:column;gap:0;}
 .grid.compact-list .card{display:flex;align-items:center;gap:var(--sp-3);border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;padding:12px 0;}
 .grid.compact-list .card .ph{flex:0 0 46px;width:46px;height:46px;border-radius:var(--r-2);overflow:visible;}
-.grid.compact-list .card .ph > span:not(.em):not(.favbadge):not(.wishbadge){display:none;}
+.grid.compact-list .card .ph > span:not(.em):not(.favbadge){display:none;}
 .grid.compact-list .card .ph .em{font-size:22px;}
 .grid.compact-list .card .ph{font-size:var(--fs-4);}
 .grid.compact-list .card .b{min-width:0;flex:1;padding:0;}
@@ -571,7 +579,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .rulewarn[hidden]{ display:none; }
 .rulewarn b{ font-weight:700; }
 .rulewarn code{ background:rgba(255,255,255,.22); border-radius:var(--r-1); padding:0 4px; font-size:var(--fs-1); }
-.rulewarn button{ margin-left:auto; min-width:34px; min-height:34px; border:none; border-radius:var(--r-2); background:rgba(255,255,255,.18); color:#fff; font-size:var(--fs-3); cursor:pointer; flex:none; }
+.rulewarn button{ margin-left:auto; min-width:44px; min-height:44px; border:none; border-radius:var(--r-2); background:rgba(255,255,255,.18); color:#fff; font-size:var(--fs-3); cursor:pointer; flex:none; }
 .rulewarn button:hover{ background:rgba(255,255,255,.3); }
 @media (min-width:900px){ .rulewarn{ left:calc(var(--sidebar) + 12px); top:16px; } }
 .updatebar{ position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:var(--acc-strong); color:var(--on-acc); padding:11px 18px; border-radius:var(--r-4); font-size:var(--fs-2); font-weight:600; box-shadow:var(--shadow); cursor:pointer; opacity:0; transition:.25s; z-index:300; pointer-events:none; }
@@ -597,6 +605,16 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mobile-topbar{ display:none; }
 .side-nav{ display:flex; flex-wrap:wrap; }
 .side-nav .navlog{ flex-basis:100%; background:var(--acc-strong); color:var(--on-acc); margin-top:4px; }
+/* Go, Stats and Settings are not about places on a map, so they take the whole window
+   instead of leaving two-thirds of it to one — every screen used to be 475px of content
+   beside 965px of map, charts included. Map, List and a cafe's page keep the split; that
+   pairing earns it. */
+#app[data-view="compare"] .mapwrap, #app[data-view="stats"] .mapwrap, #app[data-view="settings"] .mapwrap{ display:none !important; }
+#app[data-view="compare"] .sidebar, #app[data-view="stats"] .sidebar, #app[data-view="settings"] .sidebar{ width:100%; border-right:none; box-shadow:none; }
+/* The width is for breathing room, not a 1440px text measure. */
+#app[data-view="compare"] .compare > *, #app[data-view="stats"] .statwrap, #app[data-view="settings"] .setwrap{ width:100%; max-width:860px; margin-inline:auto; }
+#app[data-view="compare"] .side-head, #app[data-view="stats"] .side-head, #app[data-view="settings"] .side-head,
+#app[data-view="compare"] .side-nav, #app[data-view="stats"] .side-nav, #app[data-view="settings"] .side-nav{ width:100%; max-width:860px; margin-inline:auto; }
 .hero{ height:200px; }
 .dbody h2{ font-size:var(--fs-5); }
 }
@@ -622,7 +640,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .setnote{ margin:0; font-size:var(--fs-2); color:var(--soft); line-height:1.5; }
 .setrow{ display:flex; align-items:center; gap:var(--sp-3); }
 .setmode{ flex:1; min-width:0; font-size:var(--fs-3); font-weight:700; }
-.setrow .btn{ width:auto; flex:0 0 auto; padding:12px 16px; }
+.setrow .btn{ width:auto; flex:0 0 auto; min-height:44px; padding:12px 16px; }
 .setactions{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
 .setactions button{ min-height:44px; padding:0 12px; border-radius:var(--r-2); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 /* The bulk actions used to sit on a collapsed bar on the List, with a count on the closed

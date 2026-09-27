@@ -78,7 +78,10 @@ function boardRow(c,pos,unique){
      still needs both; a visitor can act on neither. */
   const dkm=boardDistTo(c);
   const meta=[dkm!=null?fmtDist(dkm):"",ar?esc(ar):"",isAdmin?(m+" comparison"+(m===1?"":"s")):""].filter(Boolean).join(" \u00b7 ");
-  const stars=bucketPill(c,"lbstars");
+  /* On a best-first list every top row said "Loved it" — 90 pills down the page, 3 of them
+     distinct. The position already says it, so the pill appears only when a row BREAKS the
+     pattern: a fine or a not-for-me sitting in the ranking. */
+  const stars=(bucketOf(c)==="loved")?"":bucketPill(c,"lbstars");
   const top=topDrinkAt(c);
   const order=top?'<div class="lborder">Order the '+esc(top.d.n)
     +(top.n>1?' <span class="lbtimes">\u00b7 '+top.n+'\u00d7</span>':'')+'</div>':"";
@@ -86,7 +89,6 @@ function boardRow(c,pos,unique){
   const note=say?'<div class="lbsay">\u201c'+esc(say)+'\u201d</div>':"";
   return '<div class="lbrow guide tap" role="button" tabindex="0" onclick="openDetail(\''+c.id+'\',\'compare\')">'
     +'<span class="lbrank">'+rank+'</span>'
-    +'<span class="gotile" style="background:'+tintFor(c)+'">'+esc(c.emoji||"\u2615")+'</span>'
     +'<div class="lbmain">'
       +'<div class="lbname">'+esc(c.name)+stars+'</div>'
       +(meta?'<div class="lbsub">'+meta+'</div>':'')
