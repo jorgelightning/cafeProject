@@ -17,10 +17,17 @@ const OUT=require('fs').mkdtempSync(require('path').join(require('os').tmpdir(),
  let r=await pg.evaluate(()=>{
    isAdmin=true; cafes=[]; editId=null; picked=null; _formSnap=null;
    openForm(); $("f-name").value="Fuglen Tokyo";
-   const fields=[...document.querySelectorAll("#pane-form .form .field")];
+   const fields=[...document.querySelectorAll("#f-more .field")];
    return {wIdx:fields.findIndex(f=>f.querySelector("#f-wish"))};
  });
- eq(r.wIdx,1,'wishlist is the 2nd field, under the cafe name');
+ /* v58 moved it under More to keep the counter path on one screen; the Want tab ticks it for you. */
+ eq(r.wIdx,0,'wishlist is the first thing under More');
+
+ r=await pg.evaluate(()=>{ listTab="want"; openForm(); const o={wish:$("f-wish").checked, open:$("f-more").open,
+   title:$("form-title").textContent, sum:$("f-more-sum").textContent, dirty:formDirty()}; listTab="been"; return o; });
+ eq(r,{wish:true,open:true,title:"Add a place to try",sum:"Want to try",dirty:false},
+    'adding from the Want tab ticks it, opens More to show it, and is not an unsaved change');
+ await pg.evaluate(()=>{ openForm(); $("f-name").value="Fuglen Tokyo"; $("f-more").open=true; });
 
  // ---- ticking it hides the visit fields, keeps notes ---------------------
  await pg.evaluate(()=>{ $("f-wish").checked=true; syncWishMode(); });
@@ -31,7 +38,7 @@ const OUT=require('fs').mkdtempSync(require('path').join(require('os').tmpdir(),
  eq(await vis('f-fav'),      false,'favourite hidden');
  eq(await vis('f-review'),   true, 'notes box KEPT');
  eq(await vis('f-wish'),     true, 'wishlist tick itself stays');
- eq(await vis('f-area'),     true, 'cafe details stay (area)');
+ eq(await pg.evaluate(()=>getComputedStyle($("f-details")).display!=="none"),true,'the place line stays');
 
  r=await pg.evaluate(()=>({lab:$("f-review-label").textContent, ph:$("f-review").placeholder}));
  eq(r.lab,'Notes','label stops calling it a review');

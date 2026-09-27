@@ -9,6 +9,9 @@ const {eq,done}=checker();
   await pg.evaluate(()=>{isAdmin=true;cafes=[];openForm();$('f-name').value='Tap test';document.querySelector('.dn').value='Latte';});
   eq(await pg.locator('#f-drinks input[type=range]').count(),0,'no sliders can catch a scrolling gesture');
   eq(await pg.evaluate(()=>[...document.querySelectorAll('.optionvalue')].map(x=>x.dataset.set)),['0','0','0'],'untouched options are unset');
+  /* a first drink opens as name and price; the options are one tap further */
+  eq(await pg.getByRole('button',{name:'Increase size by 2 ounces'}).isVisible(),false,'a first drink starts as just a name and a price');
+  await pg.getByRole('button',{name:/size, sweetness, ice, milk/}).click();
   await pg.getByRole('button',{name:'Increase size by 2 ounces'}).click();
   await pg.getByRole('button',{name:'0%',exact:true}).click();
   await pg.getByRole('button',{name:'Less ice',exact:true}).click();

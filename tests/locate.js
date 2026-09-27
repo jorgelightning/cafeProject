@@ -49,7 +49,7 @@ const { eq, done } = checker();
     } });
     gReady = true;
     cafes = [{ id: "a", name: "Near Cafe", area: "X", lat: 37.7750, lng: -122.4190, tags: [], drinks: [] }];
-    gmap = null; userMarker = null; userAccuracy = null; mapJumped = false;
+    gmap = null; userMarker = null; userAccuracy = null; mapOwned = false;
     initMap();
   });
 
@@ -201,6 +201,44 @@ const { eq, done } = checker();
   await pg.waitForTimeout(60);
   eq(await pg.evaluate(() => document.getElementById("toast").textContent), "Couldn't get your location",
      "…but a failure you started does explain itself");
+
+  // --- the map keeps the view you gave it ---
+  /* Returning to the map tab re-centred on you unless the location DROPDOWN had been used —
+     dragging, pinching or tapping a pin did not count. So: pan to another neighbourhood, tap a
+     pin, come back, and the map had jumped to where you stand. Every pin. */
+  r = await pg.evaluate(async () => {
+    window.__perm = "granted"; mapOwned = false;
+    const fix = () => window.__geo && window.__geo.ok({ coords: { latitude: 37.7751, longitude: -122.4189, accuracy: 10 } });
+    const settle = () => new Promise(res => setTimeout(res, 30));
+
+    /* untouched: arriving at the map may centre on you — nobody chose a view yet */
+    window.__fitted = false; window.__center = null;
+    focusNearest(); await settle(); fix();
+    const untouched = !!window.__fitted || !!window.__center;
+
+    /* a touch on the map: that is the person's view now */
+    document.getElementById("map").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    window.__fitted = false; window.__center = null;
+    focusNearest(); await settle(); fix();
+    const afterTouch = !!window.__fitted || !!window.__center;
+
+    /* the locate button is an explicit request, and always wins */
+    window.__fitted = false; window.__center = null;
+    setLocateState("idle"); locate(); fix();
+    const buttonAfterTouch = !!window.__fitted || !!window.__center;
+
+    /* …and the dropdown used to switch the button off; it must not */
+    /* a SPECIFIC place — "All locations" happened to be handled already */
+    jumpToLocation("country:" + encodeURIComponent("United States"));
+    window.__fitted = false; window.__center = null;
+    setLocateState("idle"); locate(); fix();
+    const buttonAfterDropdown = !!window.__fitted || !!window.__center;
+    return { untouched, afterTouch, buttonAfterTouch, buttonAfterDropdown };
+  });
+  eq(r.untouched, true, "an untouched map still centres on you when you arrive");
+  eq(r.afterTouch, false, "once you have touched the map, coming back to it keeps your view");
+  eq(r.buttonAfterTouch, true, "the locate button still centres on you — you asked");
+  eq(r.buttonAfterDropdown, true, "…even after using the location dropdown, which used to switch it off");
 
   eq(errs, [], "no page errors");
   const ok = done();

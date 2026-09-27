@@ -113,7 +113,7 @@ setInterval(checkForUpdate,45000);
 let _exitArmed=false,_exitT=null;
 function _rearmBack(){ try{ history.pushState({cafeapp:1},""); }catch(e){ warn("boot.js",e); } }
 _rearmBack();
-window.addEventListener("popstate",()=>{ if(typeof chaserOpen==="function"&&chaserOpen()){ chaserDismiss(); _rearmBack(); return; } const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
+window.addEventListener("popstate",()=>{ if(typeof chaserOpen==="function"&&chaserOpen()){ chaserDismiss(); _rearmBack(); return; } if(typeof peekOpen==="function"&&peekOpen()){ closePeek(); _rearmBack(); return; } const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
 /* Coming back to the app is the moment to reconcile. Incoming changes already arrive on a
    live listener, but anything this device queued while offline sat in the outbox until the
    next edit — and "online" often does not fire when a phone resumes from background, so

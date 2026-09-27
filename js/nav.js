@@ -9,7 +9,7 @@ const _TABS={map:"t-map",list:"t-list",form:"t-log",compare:"t-rank",stats:"t-st
 /* map maps to n-list because on desktop the map and the list pane share the screen */
 const _NAVS={map:"n-list",list:"n-list",form:"n-add",compare:"n-rank",stats:"n-stats",settings:"n-settings"};
 function _mark(id){ const el=id&&$(id); if(el)el.classList.add("on"); }
-function show(view,fav){ if(app.dataset.view==="form"&&view!=="form"&&typeof formDirty==="function"&&formDirty()){ if(!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; } if(view==="wish"){ listTab="want"; favOnly=false; view="list"; } else if(fav){ listTab="been"; favOnly=true; } if(view==="map"||view==="list")lastMain=view; app.dataset.view=view;
+function show(view,fav){ if(app.dataset.view==="form"&&view!=="form"&&typeof formDirty==="function"&&formDirty()){ if(!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; } if(view==="wish"){ listTab="want"; favOnly=false; view="list"; } else if(fav){ listTab="been"; favOnly=true; } if(view==="map"||view==="list")lastMain=view; if(typeof closePeek==="function"&&peekOpen())closePeek(); app.dataset.view=view;
 document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
 document.querySelectorAll(".side-nav button").forEach(b=>b.classList.remove("on"));
 _mark(_TABS[view]); _mark(_NAVS[view]);
