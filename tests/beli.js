@@ -72,7 +72,8 @@ const fs = require("fs"), path = require("path");
     /* two cafes on an identical score, so competition ranking has a tie to handle */
     cafes = [
       { id: "a", name: "Top",   rating: 5, elo: 1700, matches: 9, drinks: [] },
-      { id: "b", name: "Tie 1", rating: 5, elo: 1600, matches: 9, drinks: [] },
+      { id: "b", name: "Tie 1", area: "Diamond Head / Kapahulu / St. Louis Heights",
+        rating: 5, elo: 1600, matches: 9, drinks: [] },
       { id: "c", name: "Tie 2", rating: 5, elo: 1600, matches: 9, drinks: [] },
       { id: "d", name: "Last",  rating: 3, elo: 1400, matches: 9, drinks: [] },
       { id: "e", name: "Never compared", rating: 4, matches: 0, drinks: [] },
@@ -88,6 +89,9 @@ const fs = require("fs"), path = require("path");
   eq(ranks.n, 4, "the total counts only what is actually ranked");
 
   const badges = await pg.evaluate(() => {
+    /* the widget block left the form dirty; drop the snapshot or every show() from here on
+       stalls on a discard-confirm that the harness auto-dismisses */
+    _formSnap = null;
     isAdmin = false; applyMode(); document.getElementById("q").value = "";
     setListTab("been"); show("list"); renderList();
     const cards = [...document.querySelectorAll(".card")];
@@ -106,10 +110,26 @@ const fs = require("fs"), path = require("path");
     openDetail("b", "list");
     const m = document.getElementById("d-meta").textContent;
     const pill = document.querySelector("#d-stars .bkpill");
-    return { meta: m.replace(/\s+/g, " ").trim(), pill: pill ? pill.textContent.trim() : null };
+    const badge = document.querySelector("#d-meta .scorebadge");
+    return { meta: m.replace(/\s+/g, " ").trim(), pill: pill ? pill.textContent.trim() : null,
+             /* the badge starting below the meta's first line proves the line really wrapped */
+             badgeDropped: badge ? Math.round(badge.getBoundingClientRect().top
+               - document.getElementById("d-meta").getBoundingClientRect().top) : -1,
+             badgeRects: badge ? badge.getClientRects().length : 0,
+             badgeNowrap: badge ? getComputedStyle(badge).whiteSpace : "" };
   });
   eq(/#2 of 4/.test(detail.meta), true, "the detail page leads with the position: " + detail.meta);
   eq(detail.pill, "Loved it", "…and says the judgement in words, not a run of glyphs");
+  /* This cafe's 44-character area forces the meta line to wrap. The score pill must move to
+     the next line as one piece — it used to break mid-phrase, painting its background as two
+     separate boxes. */
+  eq(detail.badgeDropped > 8, true,
+     "the 44-character area really wraps the line — the pill starts " + detail.badgeDropped + "px down");
+  eq(detail.badgeRects, 1, "…and it sits there as one piece");
+  /* Where the break lands depends on the exact text, so the rect count alone cannot catch a
+     regression — on the real Zen Gelato the break landed inside the pill and its background
+     painted as two boxes. The property is what guarantees it for every cafe. */
+  eq(detail.badgeNowrap, "nowrap", "…because the pill refuses to break internally, whatever the text around it");
 
   // ================= C: been, and want to try =================
   const tabs = await pg.evaluate(() => {
@@ -173,6 +193,38 @@ const fs = require("fs"), path = require("path");
   eq(other.indexOf("2 countries") > -1, true, "a cafe that resolves to \"Other\" does not become a country");
   eq(/Most ordered/.test(profile.line), true, "…and what you actually order: " + profile.line.trim());
   eq(/still to try/.test(profile.line), true, "…with the other list not forgotten");
+  eq(/days out/.test(profile.line), true, "…and the days-out fact its old card used to carry");
+
+  /* Go and Stats printed 5 and 6 countries for the same data, because only Stats knew that
+     "Other" is not a country. One shared count now — the seed still holds the unplaceable
+     cafe, so both screens face the case they used to disagree on. */
+  const agree = await pg.evaluate(() => {
+    show("compare"); renderBoard();
+    const sub = document.querySelector("#cmp-body .cs").textContent;
+    show("stats"); renderStats();
+    const fig = [...document.querySelectorAll(".profile .pfig")]
+      .map(f => f.querySelector("b").textContent + " " + f.querySelector("span").textContent)
+      .find(t => /countr/.test(t));
+    return { board: (/(\d+) countr/.exec(sub) || [])[1] || null, stats: (fig || "").split(" ")[0] };
+  });
+  eq(agree.board, "2", "the Go board excludes \"Other\" too");
+  eq(agree.board === agree.stats, true,
+     "…so the two screens can no longer disagree (" + agree.board + " = " + agree.stats + ")");
+
+  /* The band and the cards below it said the same numbers 300px apart. */
+  const dedup = await pg.evaluate(() => {
+    const body = document.getElementById("stats-body");
+    const cards = [...body.querySelectorAll(".statcard .k")].map(k => k.textContent.trim());
+    const figs = [...body.querySelectorAll(".profile .pfig b")].map(b => b.textContent);
+    const vals = [...body.querySelectorAll(".statcard .v")].map(v => v.firstChild.textContent.trim());
+    const tops = [...new Set([...body.querySelectorAll(".profile .pfig")]
+      .map(f => Math.round(f.getBoundingClientRect().top)))];
+    return { cards, overlap: vals.filter(v => figs.indexOf(v) > -1), rows: tops.length };
+  });
+  eq(dedup.cards.some(k => /Cafes visited|Visits/.test(k)), false,
+     "the cards that repeated the band are gone (" + dedup.cards.join(", ") + " remain)");
+  eq(dedup.overlap, [], "no figure appears in both the band and a card");
+  eq(dedup.rows, 1, "…and the four figures sit on one row, not three plus a straggler");
 
   eq(errs, [], "no page errors");
 

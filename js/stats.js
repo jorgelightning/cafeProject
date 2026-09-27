@@ -68,13 +68,9 @@ function renderStats(){
      Stats opened straight into data about cafes. The same figures, led with as what the
      collection IS, is the first thing every app of this shape shows — and it costs nothing,
      because the pass above already counted all of it. */
-  /* cafeCountryName falls back to "Other" for a cafe whose coordinates match no country box,
-     and six of them do. Counting that as a country would claim one more than there is. */
-  const _ctry={}; nonWish.forEach(function(c){ const k=cafeCountryName(c); if(k&&k!=="Other")_ctry[k]=1; });
-  const _nCtry=Object.keys(_ctry).length;
+  const _nCtry=countryCount(nonWish);
   let _famName="", _famN=0;
   Object.keys(drinkFam).forEach(function(k){ if(drinkFam[k]>_famN){ _famN=drinkFam[k]; _famName=k; } });
-  const _ranked=cafes.filter(function(c){ return !c.wish&&matchCount(c)>0; }).length;
   const _fig=function(v,k){ return '<div class="pfig"><b>'+v+'</b><span>'+k+'</span></div>'; };
   h+='<div class="profile">'
     +_fig(nonWish.length,"cafes")
@@ -82,9 +78,12 @@ function renderStats(){
     +_fig(nVisits,"visits")
     +_fig(nDrinkRows,"drinks")
     +'</div>';
+  /* The days-out figure lived as the subtitle of a Visits card that duplicated the band
+     above; the card went, the fact moves here. "N ranked head to head" went with nothing to
+     replace it — it repeated the cafe count a third time. */
   const _tail=[];
   if(_famName)_tail.push('Most ordered: <b>'+esc(_famName)+'</b>');
-  if(_ranked)_tail.push('<b>'+_ranked+'</b> ranked head to head');
+  if(daysOut)_tail.push('<b>'+daysOut+'</b> days out'+(firstDay?' since '+esc(fmtDate(firstDay).replace(/ \d+,/,"")):''));
   if(wishN)_tail.push('<b>'+wishN+'</b> still to try');
   if(_tail.length)h+='<div class="pline">'+_tail.join(" \u00b7 ")+'</div>';
 
@@ -96,9 +95,10 @@ function renderStats(){
   /* ---------- 2. vitals ---------- */
   const backPct=datedN?Math.round(backN/datedN*100):0;
   const pricedPct=nDrinkRows?Math.round(nPriced/nDrinkRows*100):0;
+  /* Two cards fewer than it had: "Cafes visited" and "Visits" repeated the band above,
+     300px apart — 106 printed three times in the first screen of the page. What only they
+     carried (the wishlist count, days out) lives in the pline now. */
   h+='<div class="statgrid">'
-    +'<div class="statcard"><div class="v">'+nonWish.length+'</div><div class="k">☕ Cafes visited</div><div class="s">'+(wishN?"+"+wishN+" on the wishlist":"none on the wishlist")+'</div></div>'
-    +'<div class="statcard"><div class="v">'+nVisits+'</div><div class="k">📍 Visits</div><div class="s">'+daysOut+' days out'+(firstDay?" since "+fmtDate(firstDay).replace(/ \d+,/,""):"")+'</div></div>'
     +'<div class="statcard"><div class="v">'+backN+'<span class="of"> / '+datedN+'</span></div><div class="k">🔁 Went back</div><div class="s"><span class="sc-meter g"><i style="width:'+backPct+'%"></i></span>'+backPct+'% · '+onceN+' once, '+undatedN+' undated</div></div>'
     +(isAdmin
       ?'<div class="statcard"><div class="v">'+money(spend)+'</div><div class="k">💸 Spent</div><div class="s"><span class="sc-meter"><i style="width:'+pricedPct+'%"></i></span>'+nPriced+' of '+nDrinkRows+' drinks priced</div></div>'
