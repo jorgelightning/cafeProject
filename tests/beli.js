@@ -77,7 +77,7 @@ const fs = require("fs"), path = require("path");
       { id: "c", name: "Tie 2", rating: 5, elo: 1600, matches: 9, drinks: [] },
       { id: "d", name: "Last",  rating: 3, elo: 1400, matches: 9, drinks: [] },
       { id: "e", name: "Never compared", rating: 4, matches: 0, drinks: [] },
-      { id: "w", name: "Someday", wish: true, rating: 0, drinks: [] }
+      { id: "w", name: "Someday", area: "Kitsilano", wish: true, rating: 0, drinks: [] }
     ];
     const m = rankMap();
     return { a: m.a, b: m.b, c: m.c, d: m.d, never: m.e || null, wish: m.w || null, n: m._n };
@@ -108,35 +108,39 @@ const fs = require("fs"), path = require("path");
 
   const detail = await pg.evaluate(() => {
     openDetail("b", "list");
-    const m = document.getElementById("d-meta").textContent;
+    const rk = document.getElementById("d-rank");
     const pill = document.querySelector("#d-stars .bkpill");
-    const badge = document.querySelector("#d-meta .scorebadge");
-    return { meta: m.replace(/\s+/g, " ").trim(), pill: pill ? pill.textContent.trim() : null,
-             /* the badge starting below the meta's first line proves the line really wrapped */
-             badgeDropped: badge ? Math.round(badge.getBoundingClientRect().top
-               - document.getElementById("d-meta").getBoundingClientRect().top) : -1,
-             badgeRects: badge ? badge.getClientRects().length : 0,
-             badgeNowrap: badge ? getComputedStyle(badge).whiteSpace : "" };
+    const area = document.getElementById("d-meta");
+    const score = document.getElementById("d-score");
+    const name = document.getElementById("d-name");
+    return { rank: rk.hidden ? null : (rk.querySelector("b").textContent + " " + rk.querySelector("span").textContent),
+             /* the tile leads: its left edge is at or left of the name's */
+             tileLeads: rk.getBoundingClientRect().left <= name.getBoundingClientRect().left,
+             tileRects: rk.getClientRects().length,
+             pill: pill ? pill.textContent.trim() : null,
+             /* the 44-character area must truncate on its own line, not push or wrap */
+             areaLine: area.getClientRects().length,
+             areaClipped: area.scrollWidth > area.clientWidth,
+             areaStyle: getComputedStyle(area).textOverflow + "/" + getComputedStyle(area).whiteSpace,
+             score: score.hidden ? null : score.textContent.trim() };
   });
-  eq(/#2 of 4/.test(detail.meta), true, "the detail page leads with the position: " + detail.meta);
-  eq(detail.pill, "Loved it", "…and says the judgement in words, not a run of glyphs");
-  /* This cafe's 44-character area forces the meta line to wrap. The score pill must move to
-     the next line as one piece — it used to break mid-phrase, painting its background as two
-     separate boxes. */
-  eq(detail.badgeDropped > 8, true,
-     "the 44-character area really wraps the line — the pill starts " + detail.badgeDropped + "px down");
-  eq(detail.badgeRects, 1, "…and it sits there as one piece");
-  /* Where the break lands depends on the exact text, so the rect count alone cannot catch a
-     regression — on the real Zen Gelato the break landed inside the pill and its background
-     painted as two boxes. The property is what guarantees it for every cafe. */
-  eq(detail.badgeNowrap, "nowrap", "…because the pill refuses to break internally, whatever the text around it");
+  /* The header used to be one middot run-on over three wrapping lines, with #1 buried
+     mid-sentence and the score pill split by the wrap. Each fact owns an element now. */
+  eq(detail.rank, "#2 of 4", "the position is the first thing on the page, as its own block");
+  eq(detail.tileLeads && detail.tileRects === 1, true, "…which leads the header and cannot wrap");
+  eq(detail.pill, "Loved it", "the judgement is said in words beside the place");
+  eq(detail.areaLine, 1, "the 44-character area stays on one line");
+  eq(detail.areaClipped, true, "…by truncating (" + detail.areaStyle + "), not by pushing the header taller");
+  eq(detail.score, "6.5 from 9 comparisons", "the score is a caption in plain words, not a badge mid-sentence");
 
   // ================= C: been, and want to try =================
   const tabs = await pg.evaluate(() => {
     const read = () => ({
       labels: [...document.querySelectorAll("#listtabs button")].map(b => b.textContent.replace(/\s+/g, " ").trim()),
       on: [...document.querySelectorAll('#listtabs button[aria-pressed="true"]')].map(b => b.textContent.trim().split(" ")[0]),
-      names: [...document.querySelectorAll(".card .n")].map(e => e.textContent)
+      names: [...document.querySelectorAll(".card .n")].map(e => e.textContent),
+      metas: [...document.querySelectorAll(".card .m")].map(e => e.textContent),
+      badges: document.querySelectorAll(".card .wishbadge").length
     });
     setListTab("been"); const been = read();
     setListTab("want"); const want = read();
@@ -149,6 +153,10 @@ const fs = require("fs"), path = require("path");
   eq(tabs.been.on, ["Been"], "…and the one you are looking at says so");
   eq(tabs.been.names.indexOf("Someday"), -1, "\"Been\" means been — the wishlist stops padding it");
   eq(tabs.want.names, ["Someday"], "…and \"Want to try\" is only the places you have not been");
+  /* Both of these said what the tab already says — and "No visit date" was what truncated
+     the area to "West San Jose · No vis…" on all seven real cards. */
+  eq(tabs.want.metas, ["Kitsilano"], "a want-to-try card says where it is, not \"No visit date\"");
+  eq(tabs.want.badges, 0, "…and carries no bookmark badge — the tab is the bookmark");
   eq(tabs.wishChip, false, "the wishlist is no longer a chip behind Filters");
   eq(tabs.count, 0, "…and which list you are on is navigation, so it never counts as a filter");
 

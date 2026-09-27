@@ -189,7 +189,7 @@ const fs = require("fs"), path = require("path");
     isAdmin = true; applyMode(); show("settings");
     const btns = [...document.querySelectorAll("#pane-settings button")].filter(b => b.offsetParent);
     return { count: btns.length,
-             small: btns.filter(b => b.getBoundingClientRect().height < 40)
+             small: btns.filter(b => b.getBoundingClientRect().height < 44)
                         .map(b => (b.getAttribute("aria-label") || b.textContent).trim()),
              labelled: btns.every(b => (b.textContent || "").trim() || b.getAttribute("aria-label")),
              groups: [...document.querySelectorAll("#pane-settings .seg")]
@@ -197,7 +197,7 @@ const fs = require("fs"), path = require("path");
                                    document.getElementById(g.getAttribute("aria-labelledby"))) };
   });
   eq(reach.count, 8, "back, three appearance states, two layouts, sign-out and the photo fetch");
-  eq(reach.small, [], "nothing is under the 40px floor — the old admin buttons were 30px");
+  eq(reach.small, [], "nothing is under the 44px touch floor");
   eq(reach.labelled, true, "every control says what it does");
   eq(reach.groups, true, "…and each group of segments points at its own heading");
 

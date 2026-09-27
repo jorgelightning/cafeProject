@@ -123,7 +123,9 @@ grid.innerHTML=items.map(function(c){
   const M=[];
   if(dstr)M.push(sortMode==="near"?'<span class="near">'+dstr+'</span>':dstr);
   if(areaOf(c))M.push(esc(areaOf(c)));
-  const _lv=lastVisitedStr(c,true);
+  /* "No visit date" on a place you have not been is the definition of the want-to-try tab,
+     and it was what truncated the area to "West San Jose · No vis…" seven times over. */
+  const _lv=c.wish?"":lastVisitedStr(c,true);
   if(_lv)M.push(_lv);
 
   return '<div class="card" data-id="'+c.id+'" role="button" tabindex="0" onclick="openDetail(\''+c.id+'\',\'list\')">'
