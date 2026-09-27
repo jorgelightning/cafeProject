@@ -125,10 +125,11 @@ const fs = require("fs"), path = require("path");
     eq(g.detail, 0, "…while the hero on Detail stays full-bleed on " + name);
   });
 
-  // ---- the map steps aside for the screens that are not about it ----
-  /* At 1440px every screen used to be 475px of content beside 965px of visible map — Stats
-     crammed its charts into a phone-width column while a map nobody was looking at took the
-     rest. Map, List and a cafe's page keep the split; Go, Stats and Settings take the width. */
+  // ---- the map stays beside every screen on a laptop ----
+  /* Shipped the other way in v55 (Go, Stats and Settings took the full window) and REVERTED
+     in v57 at the owner's request: "I really like having the side panel with the map when I
+     go between Go, Stats and Settings." The persistent map is a preference, not an
+     oversight — do not re-propose hiding it without asking. */
   {
     const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
     const pg = await ctx.newPage();
@@ -143,19 +144,10 @@ const fs = require("fs"), path = require("path");
         return { map: getComputedStyle(document.querySelector(".mapwrap")).display !== "none",
                  side: Math.round(document.querySelector(".sidebar").getBoundingClientRect().width) };
       };
-      const wrap = (sel) => { const r = document.querySelector(sel).getBoundingClientRect();
-        return { w: Math.round(r.width), centered: Math.abs((1440 - r.right) - r.left) < 4 }; };
-      const stats = probe("stats"), statwrap = wrap(".statwrap");
-      const go = probe("compare"), settings = probe("settings"), list = probe("list");
-      return { stats, statwrap, go, settings, list };
+      return { list: probe("list"), go: probe("compare"), stats: probe("stats"), settings: probe("settings") };
     });
-    eq(split.list, { map: true, side: 475 }, "List keeps the split — browsing beside the map earns it");
-    eq(split.stats.map, false, "Stats gets the whole window instead of two-thirds map");
-    eq(split.stats.side, 1440, "…the content column spans it");
-    eq(split.statwrap.w <= 880, true, "…at a reading width (" + split.statwrap.w + "px), not a 1440px text measure");
-    eq(split.statwrap.centered, true, "…centered in the window");
-    eq(split.go.map, false, "the guide gets the same room");
-    eq(split.settings.map, false, "…and so do the settings");
+    ["list", "go", "stats", "settings"].forEach(v =>
+      eq(split[v], { map: true, side: 475 }, "the map keeps its panel beside " + v));
     await ctx.close();
   }
 
