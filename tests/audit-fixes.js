@@ -136,7 +136,7 @@ const fs = require("fs"), path = require("path");
     cafes = [{ id: "k1", name: "Kissaten HiFi", area: "Tokyo", lat: 35.6, lng: 139.7,
                tags: ["cozy"], drinks: [{ n: "Hojicha latte", orders: [{ date: "2026-09-01", p: "7" }] }] }];
     const inPlace = ["f-coords", "f-area"].every(id => !!document.getElementById(id).closest("#f-details"));
-    const inMore = ["f-brand", "f-photodrop", "f-tags", "f-fav", "f-wish", "f-custom"].every(id => !!document.getElementById(id).closest("#f-more"));
+    const inMore = ["f-brand", "f-tags", "f-fav", "f-wish", "f-custom"].every(id => !!document.getElementById(id).closest("#f-more"));
     openForm();                                   // adding a cafe
     const openNew = [document.getElementById("f-details").open, document.getElementById("f-more").open];
     openForm("k1");                               // revisiting one
@@ -146,7 +146,7 @@ const fs = require("fs"), path = require("path");
              drinksOutside: !document.getElementById("f-drinks").closest("#f-details, #f-more") };
   });
   eq(r.inPlace, true, "the pin and area live behind the place line");
-  eq(r.inMore, true, "brand, photo, tags, favourite, wishlist and private live under More");
+  eq(r.inMore, true, "brand, tags, favourite, wishlist and private live under More");
   eq(r.drinksOutside, true, "…and the drinks do not — that is the part you came for");
   eq(r.openNew, [false, false], "adding a cafe leaves both shut: Google answers the place, More is rarely needed");
   eq(r.openEdit, [false, false], "revisiting one leaves them shut too, because none of it changes");

@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=58">
+<link rel="stylesheet" href="styles.css?v=59">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -75,10 +75,9 @@
 <div class="field visit-only"><label>How was it?</label><div class="rate" id="f-rate" role="group" aria-label="How was it?"></div></div>
 <div class="field"><label id="f-review-label">Review / thoughts</label><textarea id="f-review" placeholder="Vibe, taste, service…"></textarea></div>
 <!-- Everything a visit can carry but rarely needs at the counter. -->
-<details class="cafedetails" id="f-more"><summary class="cdsum"><span class="cdchev">▸</span><span class="cdmain"><b>More</b><small id="f-more-sum">photo, tags, brand, favourite, wishlist, private</small></span></summary><div class="cdbody"><div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-wish" onchange="syncWishMode()"> Add to wishlist 🔖 <span style="font-size:11px;color:var(--soft);font-weight:400">(haven’t visited yet)</span></label></div>
+<details class="cafedetails" id="f-more"><summary class="cdsum"><span class="cdchev">▸</span><span class="cdmain"><b>More</b><small id="f-more-sum">tags, brand, favourite, wishlist, private</small></span></summary><div class="cdbody"><div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-wish" onchange="syncWishMode()"> Add to wishlist 🔖 <span style="font-size:11px;color:var(--soft);font-weight:400">(haven’t visited yet)</span></label></div>
 <div class="field"><label class="checkwrap" style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-custom"> Private spot 🏠 <span style="font-size:11px;color:var(--soft);font-weight:400">(friend's place, pop-up, event — the saved pin is rounded to about a kilometre and a street address is dropped, so this never publishes someone's door)</span></label></div>
 <div class="field"><label>Brand / chain (optional)</label><input type="text" id="f-brand" placeholder="e.g. Tadaima — groups locations together" autocomplete="off"></div>
-<div class="field visit-only"><label>Drink photo</label><div class="photodrop" id="f-photodrop"><div style="font-size:26px">📷</div><span id="f-photolabel">Paste an image link below to preview</span></div><input type="text" id="f-photo-url" placeholder="Paste an image link (Google Photos, Cloudinary…)" oninput="onPhotoUrl()" autocomplete="off" style="margin-top:8px"><div style="font-size:11px; color:var(--soft); margin-top:4px">From Google Photos: open the photo, right-click it → "Copy image address" and paste that link here (the Share link won't work).</div><div id="f-photo-status" style="font-size:11px; margin-top:3px"></div></div>
 <div class="field visit-only"><label>Tags</label><div class="tagpick" id="f-tags"></div></div>
 <div class="field visit-only"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-fav"> Mark as favorite ❤️</label></div></div></details>
 <div class="savebar"><button class="btn" onclick="saveForm()">Save visit</button></div>
@@ -154,18 +153,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=58"></script>
-<script src="js/core.js?v=58"></script>
-<script src="js/storage.js?v=58"></script>
-<script src="js/sync.js?v=58"></script>
-<script src="js/nav.js?v=58"></script>
-<script src="js/map.js?v=58"></script>
-<script src="js/photos.js?v=58"></script>
-<script src="js/list.js?v=58"></script>
-<script src="js/stats.js?v=58"></script>
-<script src="js/rank.js?v=58"></script>
-<script src="js/detail.js?v=58"></script>
-<script src="js/form.js?v=58"></script>
-<script src="js/boot.js?v=58"></script>
+<script src="js/config.js?v=59"></script>
+<script src="js/core.js?v=59"></script>
+<script src="js/storage.js?v=59"></script>
+<script src="js/sync.js?v=59"></script>
+<script src="js/nav.js?v=59"></script>
+<script src="js/map.js?v=59"></script>
+<script src="js/photos.js?v=59"></script>
+<script src="js/list.js?v=59"></script>
+<script src="js/stats.js?v=59"></script>
+<script src="js/rank.js?v=59"></script>
+<script src="js/detail.js?v=59"></script>
+<script src="js/form.js?v=59"></script>
+<script src="js/boot.js?v=59"></script>
 </body>
 </html>
