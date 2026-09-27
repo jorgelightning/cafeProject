@@ -588,6 +588,31 @@ actually executed against the one in the fetched page. Byte comparison stays as 
 `?v=` rewritten. Run against the old `boot.js`, four of its assertions fail — including that
 the old code did not even raise the bar in the offline-boot case.
 
+### The three defects from the 22 Sep review
+
+**One country count.** Go printed "6 countries" while Stats printed "5" for the same data at
+the same second — each screen had its own tally and only Stats knew that `"Other"` (the
+fallback for a cafe whose coordinates match no country box; six real ones) is not a country.
+`countryCount()` in map.js is now the only count, used by both, so they cannot disagree again.
+
+**The score pill stays whole.** `.scorebadge` is an inline span with a background; a long area
+name (Zen Gelato's is 44 characters) wrapped the meta line *through* it, painting the pill as
+two separate boxes. `white-space:nowrap` — it moves to the next line as one piece. The test
+pins the property, not just the rect count, because where the break lands depends on the exact
+text: a seed that wraps *before* the pill passes with or without the fix.
+
+**Stats stopped repeating itself.** The profile band added on 21 Sep duplicated the vitals
+cards 300px below it — 106 printed three times and 128 twice in the first screen. The "Cafes
+visited" and "Visits" cards are gone; the facts only they carried (days out since the first
+visit, the wishlist count) moved into the fact line under the band, and "N ranked head to
+head" went with nothing to replace it, since it repeated the cafe count. The four figures also
+sit on one row now (`flex:1 1 0`) instead of wrapping 3+1 with the last stretched alone.
+
+A test-harness find on the way: `tests/beli.js` had been running its post-form assertions
+against a hidden pane — the form widget block left the form dirty, and every later `show()`
+stalled on a discard-confirm that Playwright silently dismisses. Every existing assertion was
+DOM-only, so nothing noticed until the first geometry assertion returned an empty rect.
+
 ---
 
 ## Rejected, and why

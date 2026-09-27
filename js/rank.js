@@ -120,7 +120,7 @@ function renderBoard(){
   const h2h=Math.round(vis.reduce(function(s,c){ return s+matchCount(c); },0)/2);
   /* D: a visitor is told what the collection is; the owner is told how far the ranking has
      got. The second is a progress report on a chore only they can do. */
-  const countries=Object.keys(vis.reduce(function(o,c){ o[cafeCountryName(c)]=1; return o; },{})).length;
+  const countries=countryCount(vis);
   const sub=isAdmin
     ? board.length+' of '+vis.length+' cafes ranked'+(h2h?' \u00b7 '+h2h+' head-to-head'+(h2h===1?"":"s"):"")
     : vis.length+' cafes \u00b7 '+countries+' countr'+(countries===1?'y':'ies')+' \u00b7 best first';
