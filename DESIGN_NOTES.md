@@ -676,6 +676,50 @@ Pinned in `tests/sync-merge.js` (six edit-vs-delete cases, both directions, clea
 still clean) and `tests/sync-queue.js` (storage-full save neither throws nor stops the
 listener and still reaches the cloud; resolving with the cloud updates the remote mirror).
 
+### Fewer screens between you and the drink — 27 Sep 2026 (v58)
+
+Measured first: the two things done most are logging a visit at the counter and browsing the
+map to pick where to go, and both travelled further than they needed to.
+
+**The map kept its place, but only for the dropdown.** `mapJumped` (now `mapOwned`) was set
+by the location dropdown and nothing else, so dragging or zooming the map did not count as
+choosing a view — and every return from a cafe page snapped it back to where you stood. It is
+now set by any pointerdown, wheel or touch on the map, by the dropdown, and by a pin tap. The
+locate button still re-centres on purpose (it passes `force`) and hands the map back to
+following you. `tests/locate.js` has the four cases; the last two failed on v57.
+
+**A pin on a phone opens a card, not a page.** Tapping a pin swapped the whole screen for the
+cafe page, so looking at five pins was five trips there and back. `#peek` slides up over the
+map instead: position (`#N of M`, only once ranked), the verdict pill or "Want to try",
+area and distance, the most-ordered drink, and Directions / Open cafe. A map tap, another pin,
+the back button or any `show()` puts it away; the locate button lifts above it and the legend
+steps aside while it is up. **Laptop unchanged** — there the cafe page already opens in the
+side panel beside the map, which is exactly what the owner asked to keep on 27 Sep.
+`tests/peek.js`.
+
+**A new visit fits one phone screen.** The form was 2,424px (3.4 screens): drinks started
+1,180px down and "How was it?" 2,120px down, because a new cafe opened the details — map, area,
+brand, photo, tags — between the name and the drink, and picking the place from Google had
+already answered most of it. 71 of 85 dated cafes were visited once, so this was the common
+path. Now, in the order you know things at the counter:
+
+- **Cafe name**, then a **place line** (`#f-details` summary) that says what is known —
+  "Little Russia · from Google", "Tokyo · pinned by you", or "No location yet" — and opens
+  onto the pin and area only to change them. Shut for new and edited cafes alike.
+- **Drinks.** The first drink of a first visit is a **quick row**: name and price on one line,
+  with "Today · size, sweetness, ice, milk ▸" as the one tap to the full row. A second drink
+  folds the quick one to its normal header, never to nothing.
+- **How was it?**, **the note**, then **More** (`#f-more`): wishlist, private, brand, photo,
+  tags, favourite. Shut, its summary names whatever is set ("Favourite · Tadaima · 2 tags",
+  "Want to try"), so nothing ticked is ever out of sight.
+
+The cost, said to the owner up front: the wishlist tick is one tap further. Two things pay
+it back — adding from the **Want tab** ticks it and opens More (title "Add a place to try"),
+and editing a wishlist place opens More so it is plain why there are no drinks. The form is
+711–733px at 390×844. `tests/one-screen.js`; `audit-fixes.js`, `wishlist-form.js`,
+`wishlist-save.js` and `drink-taps.js` were updated where they pinned the old layout (each
+says why in place).
+
 ---
 
 ## Rejected, and why

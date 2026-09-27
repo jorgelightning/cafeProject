@@ -171,5 +171,8 @@ function cafeShareUrl(id){ const base=location.origin+location.pathname; return 
 /* Deliberately c.area and not areaOf(c): sharing sends this to someone else, so it must carry
    the public value even when the owner is the one tapping share. */
 function shareCafe(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const url=cafeShareUrl(c.id); const title=c.name+(c.area?' ('+c.area+')':''); const _b=bucketLabel(c); const text='Check out '+c.name+(c.area?' in '+c.area:'')+(_b?' \u2014 '+_b.toLowerCase():''); if(navigator.share){ navigator.share({title:title,text:text,url:url}).catch(e=>{ if(e&&e.name!=='AbortError'){ navigator.clipboard&&navigator.clipboard.writeText(url); toast('Link copied!'); } }); } else { navigator.clipboard&&navigator.clipboard.writeText(url); toast('Link copied! Share it to open this cafe on the map.'); } }
-function navigateTo(){ const c=cafes.find(x=>x.id===curId); if(!c)return; const _la=latOf(c),_ln=lngOf(c); const dest=(_la!=null&&_ln!=null)?(_la+","+_ln):encodeURIComponent(c.name+(areaOf(c)?" "+areaOf(c):"")); const url="https://www.google.com/maps/dir/?api=1&destination="+dest; if(window.innerWidth>=900){ window.open(url,"_blank"); } else { window.location.href=url; } }
+/* One builder for the cafe page and the map card, so the two can never send you to different places. */
+function directionsUrl(c){ const _la=latOf(c),_ln=lngOf(c); const dest=(_la!=null&&_ln!=null)?(_la+","+_ln):encodeURIComponent(c.name+(areaOf(c)?" "+areaOf(c):"")); return "https://www.google.com/maps/dir/?api=1&destination="+dest; }
+function goDirections(c){ const url=directionsUrl(c); if(window.innerWidth>=900){ window.open(url,"_blank"); } else { window.location.href=url; } }
+function navigateTo(){ const c=cafes.find(x=>x.id===curId); if(c)goDirections(c); }
 function editCurrent(){ openForm(curId); }

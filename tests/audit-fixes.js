@@ -128,28 +128,34 @@ const fs = require("fs"), path = require("path");
   eq(r, true, "a viewer is not shown a warning only the owner can act on");
 
   // ---- U1: the revisit path folds -------------------------------------
+  /* 16 Sep folded the details for a revisit and left them open for a new cafe. 27 Sep (v58)
+     folds them for a new cafe too: Google fills the pin, area and country when you pick the
+     place, so the open map was 1,180px of already-answered questions above the drink. */
   r = await pg.evaluate(() => {
     isAdmin = true;
     cafes = [{ id: "k1", name: "Kissaten HiFi", area: "Tokyo", lat: 35.6, lng: 139.7,
                tags: ["cozy"], drinks: [{ n: "Hojicha latte", orders: [{ date: "2026-09-01", p: "7" }] }] }];
-    const ids = ["f-coords", "f-area", "f-brand", "f-photodrop", "f-tags"];
+    const inPlace = ["f-coords", "f-area"].every(id => !!document.getElementById(id).closest("#f-details"));
+    const inMore = ["f-brand", "f-photodrop", "f-tags", "f-fav", "f-wish", "f-custom"].every(id => !!document.getElementById(id).closest("#f-more"));
     openForm();                                   // adding a cafe
-    const openNew = document.getElementById("f-details").open;
-    const inside = ids.every(id => { const el = document.getElementById(id); return !!(el && el.closest("#f-details")); });
+    const openNew = [document.getElementById("f-details").open, document.getElementById("f-more").open];
     openForm("k1");                               // revisiting one
-    const openEdit = document.getElementById("f-details").open;
-    return { openNew, openEdit, inside,
-             drinksOutside: !document.getElementById("f-drinks").closest("#f-details") };
+    const openEdit = [document.getElementById("f-details").open, document.getElementById("f-more").open];
+    const where = document.getElementById("f-where-text").textContent;
+    return { openNew, openEdit, inPlace, inMore, where,
+             drinksOutside: !document.getElementById("f-drinks").closest("#f-details, #f-more") };
   });
-  eq(r.inside, true, "location, area, brand, photo and tags all live in the disclosure");
+  eq(r.inPlace, true, "the pin and area live behind the place line");
+  eq(r.inMore, true, "brand, photo, tags, favourite, wishlist and private live under More");
   eq(r.drinksOutside, true, "…and the drinks do not — that is the part you came for");
-  eq(r.openNew, true, "adding a cafe opens it, because all of it needs filling in");
-  eq(r.openEdit, false, "revisiting one leaves it shut, because none of it changes");
+  eq(r.openNew, [false, false], "adding a cafe leaves both shut: Google answers the place, More is rarely needed");
+  eq(r.openEdit, [false, false], "revisiting one leaves them shut too, because none of it changes");
+  eq(r.where, "Tokyo · pinned by you", "shut, the place line still says where it is");
 
   const size = await pg.evaluate(() => {
     const pane = document.querySelector("#pane-form .scroll") || document.getElementById("pane-form");
     openForm("k1"); const shut = pane.scrollHeight;
-    document.getElementById("f-details").open = true; const open = pane.scrollHeight;
+    document.getElementById("f-details").open = true; document.getElementById("f-more").open = true; const open = pane.scrollHeight;
     return { shut, open };
   });
   eq(size.shut < size.open, true,
