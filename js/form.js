@@ -4,7 +4,9 @@
 /* ---------- form ---------- */
 function checkExisting(){ if(editId)return; const name=$("f-name").value.trim(); if(!name)return; const ex=findSameCafe(name,$("f-area").value.trim(),picked?picked.lat:null,picked?picked.lng:null); if(ex){ openForm(ex.id); toast("Found "+ex.name+" — loaded your notes to edit"); } }
 function fmtEdited(iso){ if(!iso)return ""; const d=new Date(iso); if(isNaN(d))return ""; return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+" · "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
-function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; formSyncBase=c?syncBaseFor(c.id):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?areaOf(c):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; syncWishMode(); formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; formCcy=c?(c.ccy||""):""; formPid=c?(c.pid||""):""; picked=c&&latOf(c)!=null?{lat:latOf(c),lng:lngOf(c)}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); renderUsuals(); syncCafeDetails(!editId); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
+function openForm(id){ editId=(typeof id==="string")?id:null; const c=editId?cafes.find(x=>x.id===editId):null; formSyncBase=c?syncBaseFor(c.id):null; $("form-title").textContent=c?"Edit visit":"Add a visit"; $("f-name").value=c?c.name:""; $("f-area").value=c?areaOf(c):""; if($("f-brand"))$("f-brand").value=c?(c.brand||""):""; $("f-review").value=c?(c.review||""):""; $("f-fav").checked=c?!!c.fav:false; if($("f-wish"))$("f-wish").checked=c?!!c.wish:false; if($("f-custom"))$("f-custom").checked=c?!!c.custom:false; syncWishMode(); formPhoto=c?(c.photo||null):null; formRating=c?(c.rating||0):0; formTags=c?(c.tags||[]).slice():[]; formCC=c?(c.cc||""):""; formCcy=c?(c.ccy||""):""; formPid=c?(c.pid||""):""; picked=c&&latOf(c)!=null?{lat:latOf(c),lng:lngOf(c)}:null; if($("f-photo-url"))$("f-photo-url").value=(formPhoto&&!String(formPhoto).startsWith("data:"))?formPhoto:""; renderPhoto(); renderRate(); renderTags(); renderDrinkRows(c?c.drinks:null); renderUsuals(); syncCafeDetails(false); /* Adding a cafe from the Want tab is almost always saving a place to try, and the
+    wishlist tick now lives under More — so tick it and open More, where it shows. */
+ if(!c&&listTab==="want"&&$("f-wish")){ $("f-wish").checked=true; syncWishMode(); } syncMore(!!($("f-wish")&&$("f-wish").checked)); syncWhere(); _formSnap=formSnapshot(); show("form"); setTimeout(initFormMap,90); }
 /* Unsaved-changes guard: snapshot the form on open, compare on any exit path (close button, back button, tab/nav via show(), page unload). Saving clears the snapshot so it never prompts. Pin coords are normalized to 5 decimals because setPicked rounds them. */
 let _formSnap=null, formSyncBase=null;
 function formSnapshot(){ const rows=[...document.querySelectorAll("#f-drinks .dr")].map(r=>{ const g=cl=>{ const el=r.querySelector(cl); return el?el.value:""; }; const gs=cl=>{ const el=r.querySelector(cl); return el?(el.value+":"+((el.dataset&&el.dataset.set)||"")):""; }; return [g(".dn"),g(".dp"),g(".dd"),g(".dqt"),gs(".dsz"),gs(".dsw"),gs(".dic"),g(".dmk"),g(".dre"),g(".dpc")].join("|"); }).filter(s=>s.split("|")[0].trim()).sort(); return JSON.stringify([formPid,$("f-name").value,$("f-area").value,$("f-brand")?$("f-brand").value:"",$("f-review").value,$("f-fav").checked,$("f-wish")?$("f-wish").checked:false,$("f-custom")?$("f-custom").checked:false,formPhoto,formRating,formTags,picked?[+(+picked.lat).toFixed(5),+(+picked.lng).toFixed(5)]:null,rows]); }
@@ -13,7 +15,7 @@ function formDirty(){ return _formSnap!==null && app.dataset.view==="form" && fo
    retaken after the row is appended, so backing out of an untouched row does not prompt. */
 function logDrinkHere(){ if(!curId)return; openForm(curId); /* logging a drink IS the visit, so it takes the cafe off the wishlist — and without
     this the drinks field focused just below is still hidden. */
- if($("f-wish")&&$("f-wish").checked){ $("f-wish").checked=false; syncWishMode(); } setTimeout(function(){ const row=addDrinkRow("","",localToday()); activateDrinkRow(row); const n=row.querySelector('.dn'); if(n)n.focus({preventScroll:true}); row.scrollIntoView({block:'start'}); _formSnap=formSnapshot(); },140); }
+ if($("f-wish")&&$("f-wish").checked){ $("f-wish").checked=false; syncWishMode(); syncMore(false); } setTimeout(function(){ const row=addDrinkRow("","",localToday()); activateDrinkRow(row); const n=row.querySelector('.dn'); if(n)n.focus({preventScroll:true}); row.scrollIntoView({block:'start'}); _formSnap=formSnapshot(); },140); }
 function closeForm(){ if(formDirty()&&!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; if(editId)show("detail"); else if(listTab==="want")show("wish"); else if(favOnly)show("list",true); else show(lastMain); }
 function initFormMap(){ if(!gReady)return; const start=picked?{lat:picked.lat,lng:picked.lng}:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]}; if(!fgmap){ fgmap=new google.maps.Map($("form-map"),{center:start,zoom:13,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); fgmap.addListener("click",e=>{ formPid=""; setPicked(e.latLng.lat(),e.latLng.lng()); }); try{ const ac=new google.maps.places.Autocomplete($("f-name"),{fields:["name","geometry","address_components","place_id"]}); ac.addListener("place_changed",()=>{ const p=ac.getPlace();
  /* Picking a different place is a relocation, so the area has to follow it. Keeping the
@@ -30,8 +32,8 @@ function initFormMap(){ if(!gReady)return; const start=picked?{lat:picked.lat,ln
  if(p.place_id)formPid=String(p.place_id); /* address_components was already being requested and already being walked for the area;
    the country component rides along on the same response. It is the authoritative answer
    to "which money is this", which no lat/lng rectangle can be. */
-if(p.address_components){ const co=p.address_components.find(x=>x.types.includes("country")); if(co&&co.short_name){ formCC=co.short_name.toUpperCase(); refreshRowCcy(); } if(!$("f-area").value||_moved){ const nb=p.address_components.find(x=>x.types.includes("neighborhood")||x.types.includes("sublocality")||x.types.includes("locality")); if(nb)$("f-area").value=nb.long_name; } } checkExisting(); }); }catch(e){ warn("form.js",e); } try{ const ac2=new google.maps.places.Autocomplete($("f-area"),{fields:["geometry","name"],types:["geocode"]}); ac2.addListener("place_changed",()=>{ const p=ac2.getPlace(); if(p.geometry&&p.geometry.location){ const loc=p.geometry.location; fgmap.setCenter(loc); fgmap.setZoom(15); if(!picked)setPicked(loc.lat(),loc.lng()); } if(p.name)$("f-area").value=p.name; }); }catch(e){ warn("form.js",e); } } google.maps.event.trigger(fgmap,"resize"); fgmap.setCenter(start); if(picked)setPicked(picked.lat,picked.lng); else if(fgmarker){ fgmarker.setMap(null); fgmarker=null; $("f-coords").textContent=""; } }
-function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; if(fgmarker)fgmarker.setMap(null); fgmarker=new google.maps.Marker({position:{lat:picked.lat,lng:picked.lng},map:fgmap}); $("f-coords").textContent=picked.lat+", "+picked.lng; }
+if(p.address_components){ const co=p.address_components.find(x=>x.types.includes("country")); if(co&&co.short_name){ formCC=co.short_name.toUpperCase(); refreshRowCcy(); } if(!$("f-area").value||_moved){ const nb=p.address_components.find(x=>x.types.includes("neighborhood")||x.types.includes("sublocality")||x.types.includes("locality")); if(nb)$("f-area").value=nb.long_name; } } syncWhere(); checkExisting(); }); }catch(e){ warn("form.js",e); } try{ const ac2=new google.maps.places.Autocomplete($("f-area"),{fields:["geometry","name"],types:["geocode"]}); ac2.addListener("place_changed",()=>{ const p=ac2.getPlace(); if(p.geometry&&p.geometry.location){ const loc=p.geometry.location; fgmap.setCenter(loc); fgmap.setZoom(15); if(!picked)setPicked(loc.lat(),loc.lng()); } if(p.name)$("f-area").value=p.name; syncWhere(); }); }catch(e){ warn("form.js",e); } } google.maps.event.trigger(fgmap,"resize"); fgmap.setCenter(start); if(picked)setPicked(picked.lat,picked.lng); else if(fgmarker){ fgmarker.setMap(null); fgmarker=null; $("f-coords").textContent=""; syncWhere(); } }
+function setPicked(lat,lng){ picked={lat:+lat.toFixed(5),lng:+lng.toFixed(5)}; if(fgmarker)fgmarker.setMap(null); fgmarker=new google.maps.Marker({position:{lat:picked.lat,lng:picked.lng},map:fgmap}); $("f-coords").textContent=picked.lat+", "+picked.lng; syncWhere(); }
 function formLocate(){ if(!navigator.geolocation){ toast("Location not available"); return; } navigator.geolocation.getCurrentPosition(p=>{ formPid=""; if(fgmap){ fgmap.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}); fgmap.setZoom(15); } setPicked(p.coords.latitude,p.coords.longitude); },()=>toast("Couldn't get location")); }
 function renderPhoto(){ const d=$("f-photodrop"); const icon=d.querySelector("div"); if(formPhoto){ d.style.backgroundImage='url("'+safeUrl(formPhoto)+'")'; if(icon)icon.style.display="none"; $("f-photolabel").textContent=""; } else { d.style.backgroundImage=""; if(icon)icon.style.display=""; $("f-photolabel").textContent="Paste an image link below to preview"; } }
 function onPhotoUrl(){ const v=$("f-photo-url").value.trim(); formPhoto=v||null; renderPhoto(); const s=$("f-photo-status"); if(!s)return; if(!v){ s.textContent=""; return; } s.textContent="Checking link…"; s.style.color="var(--soft)"; const t=new Image(); t.onload=()=>{ s.textContent="✓ Image loaded"; s.style.color="#3aa76d"; }; t.onerror=()=>{ s.textContent='⚠ Couldn\'t load this link — use the photo\'s "Copy image address" link, not the Share link.'; s.style.color="var(--acc2)"; }; t.src=v; }
@@ -45,7 +47,7 @@ function renderRate(){ const host=$("f-rate"); if(!host)return;
   }).join(""); }
 function setBucket(k){ formRating=(bucketOf({rating:formRating})===k)?0:bucketRating(k); renderRate(); }
 function renderTags(){ $("f-tags").innerHTML=ALL_TAGS.map(t=>'<span class="chip '+(formTags.includes(t)?"on":"")+'" role="button" tabindex="0" onclick="toggleTag(\''+t+'\')">'+t+'</span>').join(""); }
-function toggleTag(t){ formTags.includes(t)?formTags=formTags.filter(x=>x!==t):formTags.push(t); renderTags(); }
+function toggleTag(t){ formTags.includes(t)?formTags=formTags.filter(x=>x!==t):formTags.push(t); renderTags(); syncMoreSum(); }
 function drinkGroupPriceText(d){
   const r=drinkPriceRange(d); if(!r)return "No price";
   const f=function(n){ return r.code==="USD"?fmtPrice(n):fmtLocal(n,r.code); };
@@ -83,6 +85,10 @@ let _formIx=null;
 
    The map inside it is the catch: Google sizes it on creation, and a map created inside a
    closed <details> has no size to measure. Opening it re-triggers the resize and re-centres. */
+/* The form is laid out in the order you know things at the counter: the cafe, what you had,
+   how it was, a line. Where it is folds into one line (#f-details) that says what Google
+   filled in, and everything else a visit can carry folds under More (#f-more). Both used to
+   sit open between the name and the drink, 1,180px above it on a phone. */
 function syncCafeDetails(open){
   const d=$("f-details");
   if(!d)return;
@@ -90,14 +96,49 @@ function syncCafeDetails(open){
   if(d.dataset.wired)return;
   d.dataset.wired="1";
   d.addEventListener("toggle",function(){
-    const chev=d.querySelector(".cdchev");
-    if(chev)chev.textContent=d.open?"\u25be":"\u25b8";
+    syncWhere();
     if(!d.open)return;
     setTimeout(function(){
       try{ mapResize(); }catch(e){ warn("form.js",e); }
       if(fgmap&&picked)fgmap.setCenter({lat:picked.lat,lng:picked.lng});
     },60);
   });
+}
+/* The place line reads as a sentence about what is already known, so a Google pick is one
+   glance rather than a map to check; with nothing known it says so and opens onto the pin. */
+function syncWhere(){
+  const d=$("f-details"), t=$("f-where-text"), a=$("f-where-act"); if(!t)return;
+  const area=($("f-area").value||"").trim();
+  if(picked) t.innerHTML='<b>'+esc(area||"Pinned")+'</b> · '+(formPid?"from Google":"pinned by you");
+  else t.innerHTML=area?'<b>'+esc(area)+'</b> · no pin yet':'No location yet';
+  if(d)d.classList.toggle("located",!!picked);
+  if(a)a.textContent=(d&&d.open)?"Done":(picked?"Change":"Add pin");
+}
+function syncMore(open){
+  const m=$("f-more"); if(!m)return;
+  m.open=!!open;
+  if(!m.dataset.wired){
+    m.dataset.wired="1";
+    m.addEventListener("toggle",function(){ const ch=m.querySelector(".cdchev"); if(ch)ch.textContent=m.open?"\u25be":"\u25b8"; });
+    m.addEventListener("input",syncMoreSum);
+    m.addEventListener("change",syncMoreSum);
+  }
+  const ch=m.querySelector(".cdchev"); if(ch)ch.textContent=m.open?"\u25be":"\u25b8";
+  syncMoreSum();
+}
+/* Shut, More still says what it holds, so a favourite or a wishlist tick is never out of sight. */
+function syncMoreSum(){
+  const el=$("f-more-sum"); if(!el)return;
+  const ck=id=>!!($(id)&&$(id).checked);
+  const wish=ck("f-wish"), set=[];
+  if(wish)set.push("Want to try");
+  if(ck("f-custom"))set.push("Private");
+  if(!wish&&ck("f-fav"))set.push("Favourite");
+  const br=$("f-brand")?$("f-brand").value.trim():""; if(br)set.push(br);
+  if(!wish&&formPhoto)set.push("photo");
+  if(!wish&&formTags.length)set.push(formTags.length+(formTags.length===1?" tag":" tags"));
+  el.textContent=set.length?set.join(" · "):"photo, tags, brand, favourite, wishlist, private";
+  el.classList.toggle("set",set.length>0);
 }
 function renderUsuals(){
   const host=$("f-usuals");
@@ -132,7 +173,10 @@ function logUsual(btn){
 }
 function renderDrinkRows(drinks){
   const host=$("f-drinks"); host.innerHTML="";
-  if(!drinks||!drinks.length){ addDrinkRow("","",localToday()); return; }
+  /* The first drink of a first visit is a name and a price; size, sweetness, ice and milk
+     are one tap further, so they no longer stand 940px tall between you and "How was it?". */
+  if(!drinks||!drinks.length){ const r=addDrinkRow("","",localToday()); r.classList.add("quick");
+    r.insertAdjacentHTML("beforeend",'<button type="button" class="drmore" onclick="expandDrinkRow(this)">Today · size, sweetness, ice, milk<span aria-hidden="true"> ▸</span></button>'); return; }
   drinks.slice().sort(function(a,b){ const ad=(latestDrinkOrder(a)||{}).date||"", bd=(latestDrinkOrder(b)||{}).date||""; return bd.localeCompare(ad); }).forEach(function(d){
     const orders=drinkOrders(d).sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
     const qty=orders.reduce(function(t,o){ return t+orderQty(o); },0), latest=latestDrinkOrder(d)||{};
@@ -231,6 +275,8 @@ function syncWishMode(){
   pane.dataset.wish=on?"1":"";
   const lab=$("f-review-label"); if(lab)lab.textContent=on?"Notes":"Review / thoughts";
   const ta=$("f-review"); if(ta)ta.placeholder=on?"Why you want to go, what to order…":"Vibe, taste, service…";
+  const ti=$("form-title"); if(ti&&!editId)ti.textContent=on?"Add a place to try":"Add a visit";
+  syncMoreSum();
 }
 function drinkRowLabel(dr){ const g=cls=>{ const el=dr.querySelector(cls); return el?el.value:""; }; const q=parseInt(g(".dqt"),10)||1; const grouped=!!dr.closest(".drgroup"); const d=g(".dd"); const parts=[grouped?(d?fmtDate(d):"Undated order"):((g(".dn")||"").trim()||"New drink")]; const p=(g(".dp")||"").trim(); if(p)parts.push(rowPriceLabel(p,g(".dpc")||"USD")); if(q>1)parts.push("×"+q); if(!grouped&&d)parts.push(fmtDate(d)); return parts.join(" · "); }
 /* Quantity for ordering several of the same drink on one visit. Stored as the drink's
@@ -248,9 +294,10 @@ function arrangeOrderHistory(body,active){
   if(active)body.insertBefore(active,history);
   const count=history.querySelectorAll('.dr').length;history.querySelector('summary').textContent='Previous orders ('+count+')';history.hidden=!count;history.open=false;
 }
+function expandDrinkRow(btn){ const dr=btn.closest(".dr"); if(!dr)return; dr.classList.remove("quick"); const n=dr.querySelector(".dd"); if(n)n.focus({preventScroll:true}); }
 function activateDrinkRow(row){
   const group=row.closest('.drgroup');
-  document.querySelectorAll('#f-drinks .dr').forEach(function(other){if(other!==row){other.classList.add('collapsed');other.querySelector('.drchev').textContent='▸';other.querySelector('.drtitle').textContent=drinkRowLabel(other);}});
+  document.querySelectorAll('#f-drinks .dr').forEach(function(other){if(other!==row){other.classList.remove('quick');other.classList.add('collapsed');other.querySelector('.drchev').textContent='▸';other.querySelector('.drtitle').textContent=drinkRowLabel(other);}});
   document.querySelectorAll('#f-drinks .drgroup').forEach(function(g){if(g!==group){g.classList.remove('open');g.querySelector('.drghead').setAttribute('aria-expanded','false');g.querySelector('.drgchev').textContent='▸';}});
   if(group){$('f-drinks').prepend(group);arrangeOrderHistory(group.querySelector('.drgorders'),row);}else $('f-drinks').prepend(row);
   row.classList.remove('collapsed');row.querySelector('.drchev').textContent='▾';
