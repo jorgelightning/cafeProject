@@ -642,6 +642,38 @@ rule-warning dismiss (34) all sit at 44+ now. It cost 8px of List chrome (129 �
 the original 217) and the floor wins that trade; the budget in `tests/list-clean.js` says so
 in its own comment.
 
+### The sync audit — 27 Sep 2026
+
+Every interleaving of offline edit, cloud edit, reload mid-flush, re-edit mid-flight and
+conflict resolution was traced. Most of the engine held up under it: the per-entry base
+capture, the replay-safe transaction body ("the last run is the one that counts"), the
+mid-flight replacement rebase, and the form's `formSyncBase` are all correct as written.
+Five things were not.
+
+**Two silent data-loss paths in the merge** — both violations of the file's own contract
+("every doubt resolves to ask"). The removal rules were unconditional: `removal wins`, at the
+order level and the drink level alike. So a visit logged on this phone vanished, silently,
+when the other device had deleted the drink it was logged on; and a price corrected here
+vanished when the other device had deleted that order. Both reproduced live before fixing.
+The rule is now: **a removal beats an untouched copy, never an edited one** — an edited one is
+a question, and the provisional value keeps this phone's copy until it is answered.
+
+**A full localStorage broke instead of inconveniencing.** `syncPersist()` ran unguarded inside
+the Firebase snapshot callback, so a quota throw killed the rest of the handler and the screen
+silently stopped following the cloud; `queueCafe()` rethrew, aborting the caller mid-save; and
+`resolveSyncConflict()`'s `_localSave()` could die between deleting the pending entry and
+persisting. All three are guarded now: the entry stays in memory, the cloud write still goes
+out, and the banner says to keep the page open. The localStorage mirror is a cache, not the
+store — the outbox and the cloud are what protect an edit.
+
+**Choosing "use the cloud's" left `syncRemote` stale.** The resolution now records the cloud's
+copy as what the cloud has, refreshes an open detail page, and backs out of one that no longer
+exists.
+
+Pinned in `tests/sync-merge.js` (six edit-vs-delete cases, both directions, clean deletes
+still clean) and `tests/sync-queue.js` (storage-full save neither throws nor stops the
+listener and still reaches the cloud; resolving with the cloud updates the remote mirror).
+
 ---
 
 ## Rejected, and why
