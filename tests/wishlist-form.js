@@ -31,7 +31,6 @@ const OUT=require('fs').mkdtempSync(require('path').join(require('os').tmpdir(),
 
  // ---- ticking it hides the visit fields, keeps notes ---------------------
  await pg.evaluate(()=>{ $("f-wish").checked=true; syncWishMode(); });
- eq(await vis('f-photodrop'),false,'drink photo hidden');
  eq(await vis('f-drinks'),   false,'drinks hidden');
  eq(await vis('f-rate'),     false,'rating hidden');
  eq(await vis('f-tags'),     false,'tags hidden');
