@@ -720,6 +720,13 @@ and editing a wishlist place opens More so it is plain why there are no drinks. 
 `wishlist-save.js` and `drink-taps.js` were updated where they pinned the old layout (each
 says why in place).
 
+**The drink-photo box is gone (v59).** The owner never used the paste-an-image-link field:
+"junk … because I don't need to use it." Removed from More along with `renderPhoto()` and
+`onPhotoUrl()`. A photo already on a cafe (`c.photo`) is **kept**: `formPhoto` still carries it
+through the form, and it still wins over the Google photo on the card (`gphotoFor`). There is
+just no way to add a new one by hand; cards use the Google photo fetched by place id.
+`tests/one-screen.js` pins both halves.
+
 ---
 
 ## Rejected, and why
