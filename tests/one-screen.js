@@ -111,7 +111,7 @@ const { eq, done } = checker();
     toggleTag("cozy"); toggleTag("matcha");
     $("f-brand").value = "Tadaima"; $("f-brand").dispatchEvent(new Event("input", { bubbles: true }));
     return { blank, set: $("f-more-sum").textContent }; });
-  eq(r.blank, "photo, tags, brand, favourite, wishlist, private", "shut and empty, More lists what it holds");
+  eq(r.blank, "tags, brand, favourite, wishlist, private", "shut and empty, More lists what it holds");
   eq(r.set, "Favourite · Tadaima · 2 tags", "once anything is set, it says what — so a tick is never out of sight");
 
   r = await pg.evaluate(() => {
@@ -128,6 +128,21 @@ const { eq, done } = checker();
      "editing a wishlist place opens More, so it is plain why there are no drinks");
   eq([r.logged.open, r.logged.wish, r.logged.sum], [false, false, "1 tag"],
      "logging a drink there unticks it and folds More away again");
+
+  // ---- no drink-photo box ------------------------------------------------
+  /* The owner never used the paste-a-link photo field (27 Sep), so it is gone. A photo already
+     on a cafe must survive being edited — it still wins over the Google photo on its card. */
+  r = await pg.evaluate(() => {
+    const field = !!document.getElementById("f-photodrop") || !!document.getElementById("f-photo-url")
+                  || [...document.querySelectorAll("#pane-form label")].some(l => /photo/i.test(l.textContent));
+    cafes = [{ id: "p1", name: "Photo cafe", area: "Tokyo", lat: 35.6, lng: 139.7, photo: "https://example.com/latte.jpg",
+               drinks: [{ n: "Latte", orders: [{ date: "2026-09-01" }] }] }];
+    openForm("p1"); $("f-review").value = "still good"; saveForm();
+    return { field, kept: cafes[0].photo, card: gphotoFor(cafes[0]) };
+  });
+  eq(r.field, false, "there is no drink-photo field in the form");
+  eq([r.kept, r.card], ["https://example.com/latte.jpg", "https://example.com/latte.jpg"],
+     "a photo already on a cafe survives an edit, and its card still shows it");
 
   eq(errs, [], "no page errors");
   const ok = done();
