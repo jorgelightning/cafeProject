@@ -113,6 +113,42 @@ const { eq, done } = checker();
   eq(r.conflicts.length > 0, true,
      "orders with no id are never merged by guesswork — it asks instead");
 
+  // ---- a removal beats an untouched copy, never an edited one ----
+  /* The worst case this file exists for: a visit logged on this phone while the other device
+     deleted the drink it was logged on. The old rule was "removal wins", unconditionally —
+     the new order vanished, silently, with no question asked. */
+  const dk = (orders) => [{ n: "Hojicha latte", orders }];
+  r = await merge(cafe({ drinks: dk([{ id: "o1", date: "2026-09-01", p: "$6" }]) }),
+                  cafe({ drinks: dk([{ id: "o1", date: "2026-09-01", p: "$6" },
+                                     { id: "o2", date: "2026-09-25", p: "$7" }]) }),
+                  cafe({ drinks: [] }));
+  eq(r.conflicts, ["drinks"], "a deleted drink that this phone logged a NEW VISIT on is a question");
+  eq((r.value.drinks || []).some(d => (d.orders || []).some(o => o.id === "o2")), true,
+     "…and until it is answered, the logged visit is still there");
+
+  r = await merge(cafe({ drinks: dk([{ id: "o1", date: "2026-09-01", p: "$6" }]) }),
+                  cafe({ drinks: dk([{ id: "o1", date: "2026-09-01", p: "$6" }]) }),
+                  cafe({ drinks: [] }));
+  eq(r.conflicts, [], "…but deleting a drink this phone never touched merges clean");
+  eq((r.value.drinks || []).length, 0, "…and the deletion stands");
+
+  r = await merge(cafe({ drinks: dk([{ id: "a", date: "2026-09-01", p: "$8" }, { id: "b", date: "2026-09-05", p: "$9" }]) }),
+                  cafe({ drinks: dk([{ id: "a", date: "2026-09-01", p: "$8.50" }, { id: "b", date: "2026-09-05", p: "$9" }]) }),
+                  cafe({ drinks: dk([{ id: "b", date: "2026-09-05", p: "$9" }]) }));
+  eq(r.conflicts, ["drinks"], "an order deleted over there but price-corrected here is a question");
+
+  r = await merge(cafe({ drinks: dk([{ id: "a", date: "2026-09-01", p: "$8" }, { id: "b", date: "2026-09-05", p: "$9" }]) }),
+                  cafe({ drinks: dk([{ id: "a", date: "2026-09-01", p: "$8" }, { id: "b", date: "2026-09-05", p: "$9" }]) }),
+                  cafe({ drinks: dk([{ id: "b", date: "2026-09-05", p: "$9" }]) }));
+  eq(r.conflicts, [], "…while an order deleted over there and untouched here goes quietly");
+  eq(r.value.drinks[0].orders.map(o => o.id), ["b"], "…and stays deleted");
+
+  // ---- the same rule seen from the deleting side ----
+  r = await merge(cafe({ drinks: dk([{ id: "o1", date: "2026-09-01", p: "$6" }]) }),
+                  cafe({ drinks: [] }),
+                  cafe({ drinks: dk([{ id: "o1", date: "2026-09-01", p: "$6.50" }]) }));
+  eq(r.conflicts, ["drinks"], "deleting here while the other device edited is the same question, mirrored");
+
   // ---- a merge must not invent or drop fields ----
   r = await merge(cafe(), cafe({ brand: "Blue Bottle" }), cafe());
   eq(r.value.brand, "Blue Bottle", "a field only one side added is kept");
