@@ -605,16 +605,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mobile-topbar{ display:none; }
 .side-nav{ display:flex; flex-wrap:wrap; }
 .side-nav .navlog{ flex-basis:100%; background:var(--acc-strong); color:var(--on-acc); margin-top:4px; }
-/* Go, Stats and Settings are not about places on a map, so they take the whole window
-   instead of leaving two-thirds of it to one — every screen used to be 475px of content
-   beside 965px of map, charts included. Map, List and a cafe's page keep the split; that
-   pairing earns it. */
-#app[data-view="compare"] .mapwrap, #app[data-view="stats"] .mapwrap, #app[data-view="settings"] .mapwrap{ display:none !important; }
-#app[data-view="compare"] .sidebar, #app[data-view="stats"] .sidebar, #app[data-view="settings"] .sidebar{ width:100%; border-right:none; box-shadow:none; }
-/* The width is for breathing room, not a 1440px text measure. */
-#app[data-view="compare"] .compare > *, #app[data-view="stats"] .statwrap, #app[data-view="settings"] .setwrap{ width:100%; max-width:860px; margin-inline:auto; }
-#app[data-view="compare"] .side-head, #app[data-view="stats"] .side-head, #app[data-view="settings"] .side-head,
-#app[data-view="compare"] .side-nav, #app[data-view="stats"] .side-nav, #app[data-view="settings"] .side-nav{ width:100%; max-width:860px; margin-inline:auto; }
 .hero{ height:200px; }
 .dbody h2{ font-size:var(--fs-5); }
 }
