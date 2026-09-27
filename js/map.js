@@ -10,7 +10,13 @@ function mapResize(){ if(gmap)google.maps.event.trigger(gmap,"resize"); if(fgmap
 function fitPad(){ const w=window.innerWidth||0; if(w>=1400)return {top:60,right:60,bottom:60,left:480}; if(w>=900)return {top:60,right:60,bottom:60,left:440}; return 60; }
 function refitMap(){ if(!gmap)return; const pts=gmarkers.map(m=>m.getPosition()).filter(Boolean); if(userMarker)pts.push(userMarker.getPosition()); if(!pts.length)return; if(pts.length===1){ gmap.setCenter(pts[0]); } else { const b=new google.maps.LatLngBounds(); pts.forEach(p=>b.extend(p)); gmap.fitBounds(b,fitPad()); } }
 /* ---------- main map ---------- */
-function initMap(){ gmap=new google.maps.Map($("map"),{center:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); renderMarkers(); autoLocate(); gmap.addListener("click",()=>{ pendingMarkerId=null; if(gInfo)gInfo.close(); }); gmap.addListener("dragstart",()=>{ if($("btn-locate")&&$("btn-locate").dataset.state==="on")setLocateState("idle"); }); }
+function initMap(){ gmap=new google.maps.Map($("map"),{center:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); renderMarkers(); autoLocate(); gmap.addListener("click",()=>{ pendingMarkerId=null; if(gInfo)gInfo.close(); closePeek(); }); gmap.addListener("dragstart",()=>{ if($("btn-locate")&&$("btn-locate").dataset.state==="on")setLocateState("idle"); });
+  /* Any touch on the map — a drag, a pinch, a wheel, a tap on a pin — means the person is
+     looking at THIS view. Only the location dropdown used to count, so panning to another
+     neighbourhood, tapping a pin and coming back snapped the map to where you were standing,
+     on every pin. DOM events rather than map events, because a pinch fires no dragstart. */
+  const _mapEl=$("map"); if(_mapEl)["pointerdown","wheel","touchstart"].forEach(function(ev){
+    _mapEl.addEventListener(ev,function(){ mapOwned=true; },{passive:true}); }); }
 /* One colour per bucket now, not five steps: 4 and 5 were two names for "loved" and read as
    two different judgements on the map. Takes a rating so every existing caller still works. */
 function ratingColor(r){ r=r||0; return r>=4?BUCKET_HEX.loved:r>=3?BUCKET_HEX.fine:r>=1?BUCKET_HEX.meh:BUCKET_HEX[""]; }
@@ -27,11 +33,50 @@ function cafeCountryLabel(c){ const t=countryTerms(c); const info=COUNTRY_INFO[t
 function cafeStateName(c){ const m=/,\s*([A-Za-z]{2})\b/.exec(c.area||""); if(m){ const ab=m[1].toUpperCase(); if(STATE_NAMES[ab])return STATE_NAMES[ab]; } if(c.lat!=null&&c.lng!=null){ const lat=c.lat,lng=c.lng; if(lng<-150&&lat>18&&lat<23)return "Hawaii"; if(lng>=-125&&lng<=-117&&lat>=32&&lat<=42.5)return "California"; if(lng>-117&&lng<=-114&&lat>=35&&lat<=37.5)return "Nevada"; } return ""; }
 function buildLocationIndex(){ const groups={}; cafes.forEach(c=>{ if(c.lat==null)return; const name=cafeCountryName(c); const label=cafeCountryLabel(c); const st=cafeStateName(c); const city=(c.area||"").trim(); if(!groups[name])groups[name]={label:label,states:{},cities:{},isUS:name==="United States"}; if(st){ if(!groups[name].states[st])groups[name].states[st]={cities:{}}; if(groups[name].isUS&&city)groups[name].states[st].cities[city]=true; } else if(groups[name].isUS&&city){ groups[name].cities[city]=true; } }); return groups; }
 function renderLocationSelect(){ const sel=$("locsel"); if(!sel)return; const prev=sel.value; const groups=buildLocationIndex(); const names=Object.keys(groups).sort((a,b)=>a==="Other"?1:(b==="Other"?-1:a.localeCompare(b))); let html='<option value="">📍 All locations</option>'; names.forEach(name=>{ const g=groups[name]; html+='<optgroup label="'+esc(g.label)+'">'; html+='<option value="country:'+encodeURIComponent(name)+'">All of '+esc(name)+'</option>'; const states=Object.keys(g.states).sort(); states.forEach(s=>{ html+='<option value="state:'+encodeURIComponent(name)+'|'+encodeURIComponent(s)+'">'+esc(s)+'</option>'; if(g.isUS){ const cities=Object.keys(g.states[s].cities).sort(); cities.forEach(ct=>{ html+='<option value="city:'+encodeURIComponent(name)+'|'+encodeURIComponent(s)+'|'+encodeURIComponent(ct)+'"> '+esc(ct)+'</option>'; }); } }); if(g.isUS){ const loose=Object.keys(g.cities).sort(); loose.forEach(ct=>{ html+='<option value="city:'+encodeURIComponent(name)+'||'+encodeURIComponent(ct)+'">'+esc(ct)+'</option>'; }); } html+='</optgroup>'; }); sel.innerHTML=html; if(prev&&[].slice.call(sel.options).some(o=>o.value===prev))sel.value=prev; }
-function jumpToLocation(val){ if(!gmap){ if(app.dataset.view!=="map")show("map"); return; } mapJumped=!!val; let list; if(!val)list=cafes.filter(c=>c.lat!=null); else if(val.slice(0,8)==="country:"){ const name=decodeURIComponent(val.slice(8)); list=cafes.filter(c=>c.lat!=null&&cafeCountryName(c)===name); } else if(val.slice(0,6)==="state:"){ const parts=val.slice(6).split("|"); const name=decodeURIComponent(parts[0]); const st=decodeURIComponent(parts[1]||""); list=cafes.filter(c=>c.lat!=null&&cafeCountryName(c)===name&&cafeStateName(c)===st); } else if(val.slice(0,5)==="city:"){ const parts=val.slice(5).split("|"); const name=decodeURIComponent(parts[0]); const st=decodeURIComponent(parts[1]||""); const ct=decodeURIComponent(parts[2]||""); list=cafes.filter(c=>c.lat!=null&&cafeCountryName(c)===name&&(c.area||"").trim()===ct&&(st?cafeStateName(c)===st:true)); } else list=cafes.filter(c=>c.lat!=null); if(app.dataset.view!=="map")show("map"); if(!list||!list.length)return; const _sel=$("locsel"); if(_sel&&val)setTimeout(()=>{ try{ _sel.value=""; }catch(e){ warn("map.js",e); } },350); setTimeout(()=>{ if(list.length===1){ gmap.setCenter({lat:list[0].lat,lng:list[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); list.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); } },0); }
-let userLoc=null; let mapJumped=false;
+function jumpToLocation(val){ if(!gmap){ if(app.dataset.view!=="map")show("map"); return; } /* any choice here is you placing the map, "All locations" included */ mapOwned=true; let list; if(!val)list=cafes.filter(c=>c.lat!=null); else if(val.slice(0,8)==="country:"){ const name=decodeURIComponent(val.slice(8)); list=cafes.filter(c=>c.lat!=null&&cafeCountryName(c)===name); } else if(val.slice(0,6)==="state:"){ const parts=val.slice(6).split("|"); const name=decodeURIComponent(parts[0]); const st=decodeURIComponent(parts[1]||""); list=cafes.filter(c=>c.lat!=null&&cafeCountryName(c)===name&&cafeStateName(c)===st); } else if(val.slice(0,5)==="city:"){ const parts=val.slice(5).split("|"); const name=decodeURIComponent(parts[0]); const st=decodeURIComponent(parts[1]||""); const ct=decodeURIComponent(parts[2]||""); list=cafes.filter(c=>c.lat!=null&&cafeCountryName(c)===name&&(c.area||"").trim()===ct&&(st?cafeStateName(c)===st:true)); } else list=cafes.filter(c=>c.lat!=null); if(app.dataset.view!=="map")show("map"); if(!list||!list.length)return; const _sel=$("locsel"); if(_sel&&val)setTimeout(()=>{ try{ _sel.value=""; }catch(e){ warn("map.js",e); } },350); setTimeout(()=>{ if(list.length===1){ gmap.setCenter({lat:list[0].lat,lng:list[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); list.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); } },0); }
+let userLoc=null; let mapOwned=false;   /* the person has positioned the map themselves */
 let gInfo=null, pendingMarkerId=null;
 function mapInfo(){ if(!gInfo)gInfo=new google.maps.InfoWindow(); return gInfo; }
-function onMarkerClick(c,m){ if(gInfo)gInfo.close(); openDetail(c.id,"map"); }
+/* ---------- the peek card ----------
+   On a phone a pin used to swap the whole screen for the cafe page, so looking at five pins
+   was five trips there and back — and each trip back re-centred the map. A pin now slides up
+   a card over the map: position, judgement, distance, what to order, Directions. The map
+   stays exactly where it was. The laptop keeps opening the page, because there it already
+   opens in the side panel beside the map. */
+let peekId=null;
+function onMarkerClick(c,m){ if(gInfo)gInfo.close(); mapOwned=true;
+  if(window.innerWidth>=900){ openDetail(c.id,"map"); return; }
+  openPeek(c.id); }
+function peekOpen(){ return !!peekId; }
+function openPeek(id){
+  const c=cafes.find(x=>x.id===id), el=$("peek"); if(!c||!el)return;
+  peekId=id;
+  const rk=(typeof rankOf==="function")?rankOf(c):null, rn=rk?rankMap()._n:0;
+  const dkm=(userLoc&&latOf(c)!=null)?distKm(userLoc.lat,userLoc.lng,latOf(c),lngOf(c)):null;
+  const where=[areaOf(c)?esc(areaOf(c)):"", dkm!=null?fmtDist(dkm):""].filter(Boolean).join(" \u00b7 ");
+  const top=(!c.wish&&typeof topDrinkAt==="function")?topDrinkAt(c):null;
+  const judge=c.wish?'<span class="bkpill"><i style="background:#5b9bd5"></i>Want to try</span>':bucketPill(c,"");
+  el.innerHTML='<div class="peekgrab" aria-hidden="true"></div>'
+    +'<div class="peekhead">'
+      +(rk?'<div class="dranktile"><b>#'+rk+'</b><span>of '+rn+'</span></div>':'')
+      +'<div class="peekmain"><div class="peekname">'+esc(c.name)+'</div>'
+        +'<div class="dsub">'+judge+(where?'<span class="darea">'+where+'</span>':'')+'</div>'
+        +(top?'<div class="peekorder">Order the '+esc(top.d.n)+(top.n>1?' \u00b7 '+top.n+'\u00d7':'')+'</div>':'')
+      +'</div>'
+    +'</div>'
+    +'<div class="peekbtns"><button type="button" class="btn" onclick="peekDirections()">Directions</button>'
+    +'<button type="button" class="btn ghost" onclick="peekOpenCafe()">Open cafe</button></div>';
+  el.hidden=false;
+  const box=el.closest(".mapbox");
+  if(box){ box.classList.add("peeking"); box.style.setProperty("--peekh",el.offsetHeight+"px"); }
+}
+function closePeek(){
+  const el=$("peek"); if(el){ el.hidden=true; el.innerHTML=""; }
+  const box=el&&el.closest(".mapbox"); if(box)box.classList.remove("peeking");
+  peekId=null;
+}
+function peekDirections(){ const c=cafes.find(x=>x.id===peekId); if(c)goDirections(c); }
+function peekOpenCafe(){ const id=peekId; closePeek(); if(id)openDetail(id,"map"); }
 function nearestCafe(pos){ let best=null,bd=Infinity; cafes.forEach(c=>{ if(c.lat==null)return; const d=distKm(pos.lat,pos.lng,c.lat,c.lng); if(d<bd){bd=d;best=c;} }); return best; }
 /* Switching to the map tab used to ask for your location, every single time. Now it only
    uses a permission you have already given; if you have not, the map just sits where it is
@@ -69,7 +114,7 @@ function drawUserLocation(pos,acc){
   }
 }
 
-function showUserLocation(center,done){
+function showUserLocation(center,done,force){
   if(!navigator.geolocation){ done&&done(false); return; }
   navigator.geolocation.getCurrentPosition(p=>{
     const pos={lat:p.coords.latitude,lng:p.coords.longitude};
@@ -79,7 +124,10 @@ function showUserLocation(center,done){
     else if(app.dataset.view==="compare"&&typeof renderBoard==="function")renderBoard();
     if(!gmap){ done&&done(true); return; }
     drawUserLocation(pos,p.coords.accuracy||0);
-    if(center&&!mapJumped){
+    /* `force` is the locate button: an explicit "show me where I am" always wins. Everything
+       else (launch, returning to the map tab) centres only on a view nobody has touched. */
+    if(center&&(force||!mapOwned)){
+      if(force)mapOwned=false;
       const near=nearestCafe(pos);
       if(near){
         const b=new google.maps.LatLngBounds();
@@ -103,10 +151,11 @@ function locate(){
   if(!navigator.geolocation){ toast("Location not available"); return; }
   if($("btn-locate")&&$("btn-locate").dataset.state==="busy")return;
   setLocateState("busy");
+  /* forced: the dropdown used to make this button stop re-centering */
   showUserLocation(true,function(ok){
     setLocateState(ok?"on":"idle");
     if(!ok)toast("Couldn't get your location");
-  });
+  },true);
 }
 /* The launch fix is silent and always has been. It now reports to the button as well, so a
    dot on the map and a hollow button can never disagree. */

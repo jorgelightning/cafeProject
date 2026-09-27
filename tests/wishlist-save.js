@@ -14,13 +14,14 @@ const { eq, done } = checker();
  // ---- field order --------------------------------------------------------
  let r=await pg.evaluate(()=>{
    isAdmin=true; cafes=[]; editId=null; picked=null; _formSnap=null; openForm();
-   const f=[...document.querySelectorAll("#pane-form .form .field")];
+   /* Since the one-screen form (v58) both live under More, first and second, side by side. */
+   const f=[...document.querySelectorAll("#f-more .field")];
    return {wish:f.findIndex(x=>x.querySelector("#f-wish")), custom:f.findIndex(x=>x.querySelector("#f-custom"))};
  });
- eq(r,{wish:1,custom:2},'name, then wishlist, then private spot');
+ eq(r,{wish:0,custom:1},'under More: wishlist, then private spot');
 
  await pg.evaluate(()=>{ $("f-wish").checked=true; syncWishMode(); });
- r=await pg.evaluate(()=>$("f-custom").closest(".field").getBoundingClientRect().height>0);
+ r=await pg.evaluate(()=>{ $("f-more").open=true; return $("f-custom").closest(".field").getBoundingClientRect().height>0; });
  eq(r,true,'private spot stays visible in wishlist mode (a friend\'s place can be unvisited too)');
 
  // ---- a new wishlist entry drops the visit data --------------------------

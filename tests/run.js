@@ -34,6 +34,8 @@ const SUITE = [
   ["settings",         "one home for the preferences, and a map error that stays in the map"],
   ["beli",             "three buckets, a position on every card, and the two lists up front"],
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
+  ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
+  ["one-screen",       "logging a new cafe fits one phone screen, in counter order"],
   ["offline",          "the app boots with the network pulled"],
   ["regression",       "101 real cafes still render exactly as before"]
 ];
