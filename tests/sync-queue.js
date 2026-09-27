@@ -38,5 +38,42 @@ const {serve,launch,checker}=require('./harness');const {eq,done}=checker();
  r=await p.evaluate(async()=>{armSync({});cafes=[{id:'new',name:'New'}];await saveCafe('new');return dbValue.new.name;});eq(r,'New','new cafe syncs into empty collection');
  r=await p.evaluate(async()=>{armSync({a:{id:'a',name:'A'}});failWrites=true;cafes[0].name='Edited';await saveCafe('a');return {queued:Object.keys(syncPending),dirty:localStorage.getItem(DIRTY_FLAG)};});eq(r,{queued:['a'],dirty:'1'},'network failure stays durably pending');
  r=await p.evaluate(async()=>{armSync({a:{id:'a',name:'A'}});fbAuth={currentUser:{email:'other@example.com'}};cafes[0].name='Edited';await saveCafe('a');return writePaths;});eq(r,[],'non-owner cannot write');
+ /* ---- a full localStorage must inconvenience, never break ----
+    syncPersist also runs inside the Firebase snapshot callback: a quota throw there used to
+    kill the rest of the handler, so the screen silently stopped following the cloud. And
+    queueCafe used to rethrow, aborting the caller mid-save. */
+ r=await p.evaluate(async()=>{
+  armSync({a:{id:'a',name:'A',rating:1}});
+  const realSet=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(){ throw new DOMException('QuotaExceededError'); };
+  let threw=false, overlayOk=false;
+  try{
+    cafes[0].rating=5;
+    try{ await saveCafe('a'); }catch(e){ threw=true; }
+    /* the edit has already flushed by now, so the overlay's job here is only to survive */
+    const out=syncOverlay({a:{id:'a',name:'A',rating:1},b:{id:'b',name:'B'}});
+    overlayOk=Array.isArray(out)&&out.length===2;
+  }finally{ Storage.prototype.setItem=realSet; }
+  return { threw, overlayOk, cloud:dbValue.a.rating, banner:/keep this page open/.test(syncFailure||'') };
+ });
+ eq(r.threw,false,'a save with storage full does not throw out of the caller');
+ eq(r.overlayOk,true,'…the snapshot overlay still runs, so the screen keeps following the cloud');
+ eq(r.cloud,5,'…and the edit still reaches the cloud — the outbox lives in memory');
+ eq(r.banner,true,'…while the banner says to keep the page open');
+
+ /* ---- taking the cloud's copy updates what "the cloud has" means ---- */
+ r=await p.evaluate(async()=>{
+  armSync({a:{id:'a',name:'A',rating:1}});
+  fbReady=false; cafes[0].rating=5; saveCafe('a');
+  dbValue.a.rating=3; dbValue.a.updated=new Date().toISOString(); fbReady=true; await flushSync();
+  const wasConflict=!!(syncPending.a&&syncPending.a.conflict);
+  resolveSyncConflict(false);
+  return { wasConflict, remote:(syncRemote.a||{}).rating, local:cafes.find(c=>c.id==='a').rating,
+           pending:Object.keys(syncPending).length };
+ });
+ eq(r.wasConflict,true,'the same-field clash asked first');
+ eq(r,{wasConflict:true,remote:3,local:3,pending:0},
+    'choosing the cloud updates the remote mirror too, so the next edit merges against the truth');
+
  process.exitCode=done()?0:1;
 }finally{await b.close();srv.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
