@@ -7,7 +7,17 @@ try{const saved=JSON.parse(localStorage.getItem(OUTBOX_KEY)||"{}");if(!saved||Ar
 function syncCopy(v){return v==null?null:JSON.parse(JSON.stringify(v));}
 function syncCanonical(v){if(Array.isArray(v))return '['+v.map(syncCanonical).join(',')+']';if(v&&typeof v==='object')return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+syncCanonical(v[k])).join(',')+'}';return JSON.stringify(v);}
 function syncEqual(a,b){return syncCanonical(a)==syncCanonical(b);}
-function syncPersist(){localStorage.setItem(OUTBOX_KEY,JSON.stringify(syncPending));if(Object.keys(syncPending).length)localStorage.setItem(DIRTY_FLAG,'1');else localStorage.removeItem(DIRTY_FLAG);renderSyncStatus();}
+/* Guarded, because this also runs inside the Firebase snapshot callback: a full localStorage
+   used to throw there, which killed the rest of the handler — the screen silently stopped
+   following the cloud. The entry still exists in memory, flushSync can still push it, and
+   the banner says to keep the page open. */
+function syncPersist(){
+  try{
+    localStorage.setItem(OUTBOX_KEY,JSON.stringify(syncPending));
+    if(Object.keys(syncPending).length)localStorage.setItem(DIRTY_FLAG,'1');else localStorage.removeItem(DIRTY_FLAG);
+  }catch(e){ syncFailure='Storage full — keep this page open'; warn('sync',e); }
+  renderSyncStatus();
+}
 function syncBaseFor(id){return syncCopy(Object.prototype.hasOwnProperty.call(syncRemote,id)?syncRemote[id]:cafes.find(c=>c.id===id)||null);}
 function syncOverlay(raw){
   syncLastConfirmed=true;
@@ -53,7 +63,14 @@ function syncMergeOrders(base,mine,theirs,note,label){
   ids.forEach(function(id){
     const inB=!!B[id], inM=!!M[id], inT=!!T[id];
     if(!inM&&!inT)return;                       /* gone from both */
-    if(inB&&(!inM||!inT))return;                /* one side removed it; removal wins */
+    if(inB&&(!inM||!inT)){
+      /* One side removed it. Removal wins only over an UNTOUCHED copy — a removal against an
+         edit is a question, or a price corrected on this phone vanishes because the iPad
+         deleted that order, silently and without one. */
+      const kept=inM?M[id]:T[id];
+      if(kept&&!syncEqual(kept,B[id])){ note(label,inM?M[id]:null,inT?T[id]:null); if(inM)out.push(M[id]); }
+      return;
+    }
     if(!inB&&inM&&!inT){ out.push(M[id]); return; }   /* mine added */
     if(!inB&&inT&&!inM){ out.push(T[id]); return; }   /* theirs added */
     if(syncEqual(M[id],T[id])){ out.push(M[id]); return; }
@@ -74,7 +91,14 @@ function syncMergeDrinks(base,mine,theirs,note){
   keys.forEach(function(k){
     const inB=!!B[k], inM=!!M[k], inT=!!T[k];
     if(!inM&&!inT)return;
-    if(inB&&(!inM||!inT))return;                /* one side deleted the drink */
+    if(inB&&(!inM||!inT)){
+      /* A deletion beats an untouched drink, never an edited one — the edit that matters
+         most here is a NEW ORDER logged on this phone while the other deleted the drink:
+         that is a logged visit, and it must never vanish without a question. */
+      const kept=inM?M[k]:T[k];
+      if(kept&&!syncEqual(kept,B[k])){ note("drinks",inM?M[k]:null,inT?T[k]:null); if(inM)out.push(syncDrinkSummaryFor(M[k])); }
+      return;
+    }
     if(!inB&&inM&&!inT){ out.push(M[k]); return; }
     if(!inB&&inT&&!inM){ out.push(T[k]); return; }
     if(syncEqual(M[k],T[k])){ out.push(M[k]); return; }
@@ -133,7 +157,10 @@ function queueCafe(id,value,base){
   if(!isAdmin)return;
   const old=syncPending[id];
   syncPending[id]={token:uid(),base:old?old.base:syncCopy(base===undefined?(syncRemote[id]||null):base),value:syncCopy(value)};
-  try{syncPersist();_localSave();}catch(e){syncFailure='Storage full — keep this page open';renderSyncStatus();throw e;}
+  syncPersist();
+  /* The local mirror is a cache, not the store — the outbox entry above and the cloud write
+     below are what protect the edit. Throwing here used to abort the caller mid-save. */
+  try{_localSave();}catch(e){syncFailure='Storage full — keep this page open';renderSyncStatus();warn('sync',e);}
   return flushSync();
 }
 async function flushSync(){
@@ -187,8 +214,16 @@ function resolveSyncConflict(useLocal){
   const id=Object.keys(syncPending).find(k=>syncPending[k].conflict);if(!id)return;
   const op=syncPending[id];
   if(useLocal){op.base=syncCopy(op.remote);delete op.conflict;delete op.remote;}
-  else{delete syncPending[id];cafes=cafes.filter(c=>c.id!==id);if(op.remote)cafes.push(op.remote);_localSave();}
-  syncPersist();flushSync();if(app.dataset.view==='list')renderList();
+  else{
+    delete syncPending[id];
+    /* the cloud's copy is now also what this device believes the cloud has */
+    if(op.remote)syncRemote[id]=syncCopy(op.remote); else delete syncRemote[id];
+    cafes=cafes.filter(c=>c.id!==id);if(op.remote)cafes.push(op.remote);
+    try{_localSave();}catch(e){syncFailure='Storage full — keep this page open';warn('sync',e);}
+  }
+  syncPersist();flushSync();
+  if(app.dataset.view==='list')renderList();
+  else if(app.dataset.view==='detail'&&curId===id){ if(cafes.some(c=>c.id===id))openDetail(id); else goBack(); }
 }
 /* ---------- telling the two versions apart ----------
    "Another device edited this cafe — choose which version to keep" is unanswerable while you
