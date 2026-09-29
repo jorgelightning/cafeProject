@@ -93,39 +93,75 @@ const fs = require("fs"), path = require("path");
   eq(r.hiddenAtRest, true, "…hidden until something is actually wrong");
   eq(r.probe, true, "…and a probe that decides it");
 
-  r = await pg.evaluate(() => {
-    /* A rule doing its job REJECTS an anonymous read; a missing one resolves. */
-    isAdmin = true; _ruleProbeDone = false; fbReady = true;
-    window.firebase = { apps: [], initializeApp: () => ({ name: "ruleprobe" }),
-                        database: () => ({ ref: () => ({ once: () => Promise.reject(new Error("PERMISSION_DENIED")) }) }) };
-    probePrivateRule();
-    return new Promise(res => setTimeout(() => res(document.getElementById("rule-warn").hidden), 90));
-  });
-  eq(r, true, "a rejected anonymous read is the good case and says nothing");
-
-  r = await pg.evaluate(() => {
-    isAdmin = true; _ruleProbeDone = false;
-    window.firebase = { apps: [], initializeApp: () => ({ name: "ruleprobe" }),
-                        database: () => ({ ref: () => ({ once: () => Promise.resolve({ val: () => null }) }) }) };
+  /* A stranger's view of the database, faked per case: which of the probe's questions the
+     "server" allows. Every call is recorded so the test can prove what the probe sends. */
+  const probeCase = (allow, admin) => pg.evaluate(([allow, admin]) => {
+    document.getElementById("rule-warn").hidden = true;
+    Object.keys(_ruleFindings).forEach(k => delete _ruleFindings[k]);
+    isAdmin = admin; _ruleProbeDone = false; fbReady = true;
+    const calls = [];
+    const verdict = key => allow.includes(key) ? Promise.resolve({ val: () => null }) : Promise.reject(new Error("PERMISSION_DENIED"));
+    window.firebase = { apps: [], initializeApp: (cfg, name) => ({ name }),
+      database: app => ({ ref: path => ({
+        once: () => { calls.push(["read", path, app.name]); return verdict("read"); },
+        set: v => { calls.push(["write", path, v, app.name]); return verdict(path.startsWith("cafes/") ? "map" : path.startsWith("private/") ? "private" : "root"); }
+      }) }) };
     probePrivateRule();
     return new Promise(res => setTimeout(() => res({
       shown: !document.getElementById("rule-warn").hidden,
-      text: document.getElementById("rule-warn").textContent
-    }), 90));
-  });
+      text: document.getElementById("rule-warn").textContent, calls }), 90));
+  }, [allow, admin]);
+
+  r = await probeCase([], true);
+  eq(r.shown, false, "every question refused is the good case and says nothing");
+  eq(r.calls.every(c => c[c.length - 1] === "ruleprobe"), true, "…and every question is asked by the signed-out probe app, not the owner's");
+  eq(r.calls.filter(c => c[0] === "write").every(c => c[2] === null && /(^|\/)__rulesprobe$/.test(c[1])), true,
+     "every write it sends deletes a __rulesprobe key that does not exist — never real data");
+  eq(r.calls.filter(c => c[0] === "write").map(c => c[1]).sort(), ["__rulesprobe", "cafes/__rulesprobe", "private/__rulesprobe"],
+     "…one inside the map, one inside private, one at the root");
+
+  r = await probeCase(["read"], true);
   eq(r.shown, true, "a read that RESOLVES means the path is world-readable — warn");
   eq(/readable by anyone/.test(r.text) && /private/.test(r.text), true,
      "…saying what is exposed and which rule is missing");
+  eq(/edit or delete/.test(r.text), false, "…and not claiming the map is open when it is not");
 
-  /* Even an empty private node resolving is proof the rule is absent, so null must warn too —
-     that is the case above. And a viewer must not be alarmed by something they cannot fix. */
+  r = await probeCase(["map", "root", "private"], true);
+  eq(/Anyone can edit or delete your map/.test(r.text), true, "a stranger's write to the map is the loudest warning");
+  eq(/Strangers can write/.test(r.text), false, "…and it does not repeat itself with the lesser one");
+  eq(/README/.test(r.text) && /Rules/.test(r.text), true, "…and says where the fix is");
+
+  r = await probeCase(["root"], true);
+  eq(/Strangers can write to your database/.test(r.text) && /map is locked/.test(r.text), true,
+     "an open root with a locked map is named as exactly that");
+
+  r = await probeCase(["read", "map"], true);
+  eq(/edit or delete/.test(r.text) && /readable by anyone/.test(r.text), true, "two problems, both named");
+
+  /* A viewer can do nothing about it, so a viewer's browser never asks at all. */
+  r = await probeCase(["read", "map"], false);
+  eq([r.shown, r.calls.length], [false, 0], "a viewer sends no probes and sees no warning");
+
+  /* The first sign-in on a device: the probe waited while this was a viewer, and runs now. */
   r = await pg.evaluate(() => {
+    Object.keys(_ruleFindings).forEach(k => delete _ruleFindings[k]);
     document.getElementById("rule-warn").hidden = true;
-    isAdmin = false; _ruleProbeDone = false;
-    probePrivateRule();
-    return new Promise(res => setTimeout(() => res(document.getElementById("rule-warn").hidden), 90));
+    isAdmin = false; _ruleProbeDone = false; probePrivateRule();
+    const waited = _ruleProbeDone === false;
+    let cb = null; const _load = load, _toast = toast;
+    fbAuth = { onAuthStateChanged: f => { cb = f; }, signOut: () => Promise.resolve() };
+    window.load = () => new Promise(() => {}); window.toast = () => {};
+    window.firebase = { apps: [], initializeApp: (cfg, name) => ({ name }),
+      database: () => ({ ref: path => ({ once: () => Promise.reject(new Error("no")),
+        set: () => path.startsWith("cafes/") ? Promise.resolve() : Promise.reject(new Error("no")) }) }) };
+    initAuth(); cb({ email: OWNER_EMAIL });
+    return new Promise(res => setTimeout(() => { window.load = _load; window.toast = _toast;
+      res({ waited, ran: _ruleProbeDone, text: document.getElementById("rule-warn").textContent,
+            shown: !document.getElementById("rule-warn").hidden }); }, 90));
   });
-  eq(r, true, "a viewer is not shown a warning only the owner can act on");
+  eq(r.waited, true, "before sign-in the probe waits");
+  eq([r.ran, r.shown, /edit or delete/.test(r.text)], [true, true, true], "signing in runs it, and its answer reaches the owner");
+  await pg.evaluate(() => { isAdmin = false; applyMode(); document.getElementById("rule-warn").hidden = true; });
 
   // ---- U1: the revisit path folds -------------------------------------
   /* 16 Sep folded the details for a revisit and left them open for a new cafe. 27 Sep (v58)

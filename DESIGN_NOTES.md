@@ -298,6 +298,8 @@ second, unauthenticated Firebase app reads `private/`. Auth state is per app ins
 poses the question as a stranger would even while the owner is signed in. A rule that works
 **rejects** that read; one that resolves — with data or with null — proves the path is
 world-readable. Read-only on purpose: proving the database is writable would mean writing to it.
+*(Superseded 29 Sep, v60 — see "Who can change the map" below: the probe now asks about writes
+too, without writing anything.)*
 
 ### The form folds to the part you came for
 Adding a cafe needs every field; revisiting one needs almost none of them. Location, area,
@@ -726,6 +728,36 @@ says why in place).
 through the form, and it still wins over the Google photo on the card (`gphotoFor`). There is
 just no way to add a new one by hand; cards use the Google photo fetched by place id.
 `tests/one-screen.js` pins both halves.
+
+### Who can change the map — 29 Sep 2026 (v60)
+
+The map is public to view and personal to edit, so the one thing that has to be true is that
+nobody but the owner can write. The README's rules say so; nothing checked that the *live*
+rules match. The container these changes are made in cannot reach the database host (network
+policy), so the check lives where it can: the owner's own browser.
+
+**The probe now asks about writes, without writing.** The earlier refusal — "proving the
+database is writable would mean writing to it" — was right about writing *data*, but deleting a
+key that does not exist is still a write the rules must judge, and when it is allowed it
+changes nothing: no data, no events on the owner's listener. The signed-out `ruleprobe` app
+now sends three: `cafes/__rulesprobe`, `private/__rulesprobe` and `__rulesprobe` at the root,
+each `set(null)`. A resolve is proof (RTDB resolves only on the server's acknowledgement); a
+rejection, or no connection, says nothing. The banner names the worst finding first — "Anyone
+can edit or delete your map", else "Strangers can write to your database" for an open root or
+private node — plus the private-read line when that also applies, and points at README → Rules.
+
+**Only the owner's browser probes.** It used to run at boot for every visitor, and only the
+banner was owner-gated — so visitors sent probes for nothing, and on a first sign-in the answer
+could land before `isAdmin` was set and be dropped. It now waits for `isAdmin`, and `initAuth()`
+runs it the moment the owner signs in.
+
+**What it cannot see:** a rule like `".write": "auth != null"` lets *any* signed-in Google account
+write; only a signed-out stranger is simulated here. That case needs the rules text itself,
+which the owner was asked to paste from Firebase console → Realtime Database → Rules.
+
+`tests/audit-fixes.js` pins every case: all refused is silent; every write is a `null` to a
+`__rulesprobe` key from the probe app; each finding's wording; a viewer sends nothing; first
+sign-in runs it. Nine of those failed on v59.
 
 ---
 
