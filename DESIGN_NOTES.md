@@ -788,7 +788,8 @@ just a toast. `tests/private.js` §10b replays the live rules; five of its check
 these notes; they are replaced with fictional ones (a Pacific point, an Evergreen Terrace
 address) that exercise the same code. They remain in git history — in `cafes.json` backups up
 to 28 Aug and in the fixtures until v61. Removing them from history means rewriting and
-force-pushing `main`; that is the owner's call, not done here.
+force-pushing `main`; that is the owner's call — **and on 29 Sep the owner chose to leave the
+history as it is.** Do not rewrite it or raise it again unless they ask.
 
 ---
 
