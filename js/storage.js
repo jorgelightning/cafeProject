@@ -154,20 +154,32 @@ function healPrivateSpots(){
     }).catch(function(e){ warn("storage.js",e); });
   });
 }
-/* ---------- is the private node actually private? ----------
-   The whole arrangement rests on a database rule nobody in the app could see, published by
-   hand in a console, and a missing one fails silently in both directions: reads come back
-   empty, writes are refused. So check it from the outside.
+/* ---------- can a stranger read your private spots, or change your map? ----------
+   The whole arrangement rests on database rules nobody in the app could see, published by
+   hand in a console, and a missing one fails silently: reads come back empty, writes are
+   refused, or — with the test-mode defaults — everything is quietly open to everyone. So
+   check from the outside.
 
-   A SECOND, unauthenticated Firebase app reads `private/`. Auth state is per app instance, so
-   this asks the question as a stranger would even while the owner is signed in on the main
-   one. A rule that is doing its job REJECTS that read. If it resolves — with data or with
-   null — then the path is world-readable and every private address on it is public.
+   A SECOND, unauthenticated Firebase app asks the questions. Auth state is per app instance,
+   so this is a stranger asking even while the owner is signed in on the main one.
 
-   Read-only on purpose: proving the database is writable would mean writing to it. */
+   Read: `private/` must REJECT it. If the read resolves — with data or with null — the path is
+   world-readable and every private address on it is public.
+
+   Write: this used to be left out ("proving the database is writable would mean writing to
+   it"). Deleting a key that does not exist answers the question without that cost: it is
+   still a write, so the rules judge it, but when it is allowed it changes nothing — no data,
+   no events on the owner's listener. The promise resolves only on the server's say-so, so a
+   resolve is proof, and a rejection (or no connection at all) says nothing.
+
+   Only the owner's browser asks: visitors never send the probes, and the answer is for the
+   one person who can fix it. It runs at boot when the device remembers the owner, and again
+   the moment the owner signs in, so a first sign-in is not missed. */
 let _ruleProbeDone=false;
+const RULE_PROBE_KEY="__rulesprobe";
+const _ruleFindings={};
 function probePrivateRule(){
-  if(_ruleProbeDone||!fbReady||!window.firebase||!FIREBASE_CONFIG)return;
+  if(_ruleProbeDone||!isAdmin||!fbReady||!window.firebase||!FIREBASE_CONFIG)return;
   _ruleProbeDone=true;
   let probe,db;
   try{
@@ -175,22 +187,33 @@ function probePrivateRule(){
           ||firebase.initializeApp(FIREBASE_CONFIG,"ruleprobe");
     db=firebase.database(probe);
   }catch(e){ warn("storage.js",e); return; }
-  db.ref(PRIVATE_PATH).once("value").then(function(){
-    showRuleWarning();
-  }).catch(function(){
-    /* Rejected. That is the good outcome and needs no announcement. */
-  });
+  const found=function(k){ _ruleFindings[k]=true; showRuleWarning(); };
+  const ask=function(run,k){ try{ Promise.resolve(run()).then(function(){ found(k); }).catch(function(){ /* refused: the good outcome */ }); }catch(e){ warn("storage.js",e); } };
+  ask(function(){ return db.ref(PRIVATE_PATH).once("value"); },"read");
+  ask(function(){ return db.ref("cafes/"+RULE_PROBE_KEY).set(null); },"map");
+  ask(function(){ return db.ref(PRIVATE_PATH+"/"+RULE_PROBE_KEY).set(null); },"db");
+  ask(function(){ return db.ref(RULE_PROBE_KEY).set(null); },"db");
 }
-/* Only the owner is told. A viewer can do nothing about it and the message would only
-   be alarming, so it is gated on the admin flag rather than shown to everyone. */
+/* Worst first. An open map outranks the rest; the private-read line is added when it applies,
+   since that one exposes addresses rather than risking edits. */
+const RULE_WARN_TEXT={
+  map:'<b>Anyone can edit or delete your map.</b> Your database accepts changes from people who are not signed in.',
+  db:'<b>Strangers can write to your database.</b> Your map is locked, but other parts of the database accept changes from people who are not signed in.',
+  read:'<b>Your private addresses are readable by anyone.</b> The <code>private</code> rule is missing.'
+};
 function showRuleWarning(){
-  const el=$("rule-warn");
+  const el=$("rule-warn"), txt=$("rule-warn-text");
   if(!el||!isAdmin)return;
+  const f=_ruleFindings, lines=[];
+  if(f.map)lines.push(RULE_WARN_TEXT.map); else if(f.db)lines.push(RULE_WARN_TEXT.db);
+  if(f.read)lines.push(RULE_WARN_TEXT.read);
+  if(!lines.length)return;
+  if(txt)txt.innerHTML=lines.join(" ")+' Copy the rules block in README.md into Firebase console → Realtime Database → Rules → Publish.';
   el.hidden=false;
 }
 function dismissRuleWarning(){ const el=$("rule-warn"); if(el)el.hidden=true; }
 function resyncDirty(){ return flushSync(); }
-function initAuth(){ if(!fbAuth)return; fbAuth.onAuthStateChanged(u=>{ const ok=!!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()); if(u&&!ok){ toast("That account can't edit this map"); fbAuth.signOut(); return; } if(ok){ if(!isAdmin){ isAdmin=true; lsSet(ADMIN_FLAG,"1"); applyMode(); toast("Admin mode - signed in"); } load().then(()=>{ if(gReady)renderMarkers(); renderList(); resyncDirty(); }); } else if(!ok&&isAdmin){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); }); toast("Viewer mode"); } }); }
+function initAuth(){ if(!fbAuth)return; fbAuth.onAuthStateChanged(u=>{ const ok=!!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()); if(u&&!ok){ toast("That account can't edit this map"); fbAuth.signOut(); return; } if(ok){ if(!isAdmin){ isAdmin=true; lsSet(ADMIN_FLAG,"1"); applyMode(); toast("Admin mode - signed in"); } probePrivateRule(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); resyncDirty(); }); } else if(!ok&&isAdmin){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ if(gReady)renderMarkers(); renderList(); }); toast("Viewer mode"); } }); }
 function toggleAdmin(){ if(fbAuth){ if(isAdmin){ if(confirm("Sign out of editing mode?"))fbAuth.signOut().then(()=>toast("Viewer mode")); } else { adminSignIn(); } return; } if(isAdmin){ if(confirm("Sign out of admin (editing) mode?")){ isAdmin=false; localStorage.removeItem(ADMIN_FLAG); applyMode(); load().then(()=>{ renderMarkers(); show(lastMain); }); toast("Viewer mode"); } return; } const p=prompt("Enter admin passphrase to edit:"); if(p===null)return; if(p===ADMIN_PASS){ isAdmin=true; lsSet(ADMIN_FLAG,"1"); applyMode(); load().then(()=>{ renderMarkers(); renderList(); }); toast("Admin mode — you can edit"); } else toast("Wrong passphrase"); }
 function importPublished(){ if(!isAdmin){ toast("Sign in to edit first"); return; } if(!fbReady){ toast("Cloud not connected"); return; } if(!confirm("Replace the cloud data with cafes.json from the site? This overwrites what's currently in the cloud."))return; fetch(DATA_URL+"?t="+Date.now()).then(r=>r.json()).then(d=>{ if(!Array.isArray(d)||!d.length){ toast("cafes.json looks empty"); return; } return fbDb.ref("cafes").set(d.reduce(function(o,c){ if(c&&c.id)o[c.id]=c; return o; },{})).then(()=>{ _cloudKeyed=true; cafes=adoptCafes(d); try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("storage.js",e); } localStorage.removeItem(DIRTY_FLAG); if(gReady)renderMarkers(); renderList(); toast("Imported "+d.length+" cafes \u2713"); }); }).catch(()=>toast("Couldn't load cafes.json")); }
 function exportJSON(){ const blob=new Blob([JSON.stringify(cafes,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="cafes.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); localStorage.removeItem(DIRTY_FLAG); toast("Backup downloaded ✓"); }
