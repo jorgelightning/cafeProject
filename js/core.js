@@ -123,8 +123,8 @@ function localToday(){ return new Date(Date.now()-new Date().getTimezoneOffset()
 const PRIVATE_DP=2;   /* 0.01° — about 1.1km of latitude, ~0.9km of longitude at mid-latitudes */
 function blurCoord(v){ return (v==null||isNaN(v))?null:+(+v).toFixed(PRIVATE_DP); }
 
-/* The area field is where a street address ends up — one of these really did read
-   "1800 Washington St #611". A locality never needs digits and a street address effectively
+/* The area field is where a street address ends up — one of these really did hold a street
+   address with an apartment number. A locality never needs digits and a street address effectively
    always has them, so digits are the test: "San Mateo" survives, anything numbered does not. */
 function privateArea(a){ return /\d/.test(a||"") ? "" : (a||""); }
 

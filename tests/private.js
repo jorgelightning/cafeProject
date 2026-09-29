@@ -1,6 +1,5 @@
 /* "Private spot 🏠" used to mean nothing but "skip Google photos". It kept the exact pin and
-   the free-text area, and one real record read "1800 Washington St #611" — a street address
-   with an apartment number, published in cafes.json and readable by anyone.
+   the free-text area, and one real record held a street address with an apartment number, published in cafes.json and readable by anyone.
 
    Everything this app writes is public: cafes.json is served from the repo, and the Firebase
    node is read without auth. So hiding a private spot in the UI would be theatre; the value
@@ -21,12 +20,12 @@ const fs = require("fs"), path = require("path");
 
   // --- 1. the blur itself ---
   let r = await pg.evaluate(() => ({
-    lat: blurCoord(37.79306), lng: blurCoord(-122.42298),
-    stable: blurCoord(blurCoord(37.79306)) === blurCoord(37.79306),
+    lat: blurCoord(30.12345), lng: blurCoord(-140.67891),
+    stable: blurCoord(blurCoord(30.12345)) === blurCoord(30.12345),
     nul: blurCoord(null), junk: blurCoord(undefined),
     neg: blurCoord(-0.004), dp: PRIVATE_DP
   }));
-  eq({ lat: r.lat, lng: r.lng }, { lat: 37.79, lng: -122.42 }, "coordinates round to a ~1km grid");
+  eq({ lat: r.lat, lng: r.lng }, { lat: 30.12, lng: -140.68 }, "coordinates round to a ~1km grid");
   eq(r.stable, true, "…and rounding again changes nothing, so re-saving cannot drift");
   eq([r.nul, r.junk], [null, null], "…a missing coordinate stays missing");
   eq(r.neg, -0, "…and a value near zero does not blow up");
@@ -36,14 +35,14 @@ const fs = require("fs"), path = require("path");
      averaging a few saves recovers the point the blur was meant to hide. */
   r = await pg.evaluate(() => {
     const out = new Set();
-    for (let i = 0; i < 50; i++) out.add(blurCoord(37.79306));
+    for (let i = 0; i < 50; i++) out.add(blurCoord(30.12345));
     return out.size;
   });
   eq(r, 1, "fifty saves of the same spot give one answer — averaging cannot undo it");
 
   // --- 2. the area field ---
   r = await pg.evaluate(() => ({
-    addr: privateArea("1800 Washington St #611"),
+    addr: privateArea("742 Evergreen Terrace #12"),
     apt:  privateArea("Apt 4B"),
     city: privateArea("San Mateo"),
     hood: privateArea("Outer Richmond"),
@@ -57,7 +56,7 @@ const fs = require("fs"), path = require("path");
 
   // --- 3. redactPrivate only touches private spots ---
   r = await pg.evaluate(() => {
-    const pub = { custom: false, lat: 37.79306, lng: -122.42298, area: "1800 Washington St #611" };
+    const pub = { custom: false, lat: 30.12345, lng: -140.67891, area: "742 Evergreen Terrace #12" };
     const before = JSON.stringify(pub);
     redactPrivate(pub);
     return { untouched: JSON.stringify(pub) === before };
@@ -71,10 +70,10 @@ const fs = require("fs"), path = require("path");
     save = function(){ window.__written.push(JSON.parse(JSON.stringify(cafes))); };
     saveCafe = function(id){ window.__written.push(JSON.parse(JSON.stringify(cafes.find(c => c.id === id)))); };
     openForm();
-    $("f-name").value = "Viv & Iv's Cafe";
-    $("f-area").value = "1800 Washington St #611";
+    $("f-name").value = "Friend's Place";
+    $("f-area").value = "742 Evergreen Terrace #12";
     $("f-custom").checked = true;
-    picked = { lat: 37.79306, lng: -122.42298 };
+    picked = { lat: 30.12345, lng: -140.67891 };
     saveForm();
   });
   await pg.waitForTimeout(120);
@@ -83,24 +82,24 @@ const fs = require("fs"), path = require("path");
     return { lat: c.lat, lng: c.lng, area: c.area, custom: c.custom,
              wrote: JSON.stringify(window.__written) };
   });
-  eq({ lat: r.lat, lng: r.lng }, { lat: 37.79, lng: -122.42 },
+  eq({ lat: r.lat, lng: r.lng }, { lat: 30.12, lng: -140.68 },
      "saving a private spot stores the blurred pin, not the exact one");
   eq(r.area, "", "…and drops the street address");
   eq(r.custom, true, "…while staying a private spot");
-  eq(/37\.79306|122\.42298|Washington/.test(r.wrote), false,
+  eq(/30\.12345|140\.67891|Evergreen/.test(r.wrote), false,
      "the exact position never appears in anything written to the cloud");
 
   // --- 5. re-saving an old precise record heals it ---
   r = await pg.evaluate(() => {
-    cafes = [{ id: "old", name: "Old Private", area: "1800 Washington St #611",
-               lat: 37.79306, lng: -122.42298, custom: true, tags: [], drinks: [] }];
+    cafes = [{ id: "old", name: "Old Private", area: "742 Evergreen Terrace #12",
+               lat: 30.12345, lng: -140.67891, custom: true, tags: [], drinks: [] }];
     openForm("old");
     $("f-custom").checked = true;
     saveForm();
     const c = cafes[0];
     return { lat: c.lat, lng: c.lng, area: c.area };
   });
-  eq({ lat: r.lat, lng: r.lng, area: r.area }, { lat: 37.79, lng: -122.42, area: "" },
+  eq({ lat: r.lat, lng: r.lng, area: r.area }, { lat: 30.12, lng: -140.68, area: "" },
      "opening and saving a private spot from before this fixes it in place");
 
   // --- 6. a public cafe saved through the same path is untouched ---
@@ -108,14 +107,14 @@ const fs = require("fs"), path = require("path");
     cafes = []; editId = null;
     openForm();
     $("f-name").value = "Real Cafe";
-    $("f-area").value = "1800 Washington St";
+    $("f-area").value = "742 Evergreen Terrace";
     $("f-custom").checked = false;
-    picked = { lat: 37.79306, lng: -122.42298 };
+    picked = { lat: 30.12345, lng: -140.67891 };
     saveForm();
     const c = cafes[0];
     return { lat: c.lat, lng: c.lng, area: c.area };
   });
-  eq(r, { lat: 37.79306, lng: -122.42298, area: "1800 Washington St" },
+  eq(r, { lat: 30.12345, lng: -140.67891, area: "742 Evergreen Terrace" },
      "a normal cafe still saves its exact location — a shop's address is not a secret");
 
   // --- 7. the published file itself carries no private address ---
@@ -156,20 +155,20 @@ const fs = require("fs"), path = require("path");
 
   r = await pg.evaluate(() => {
     /* what the public node holds after redaction */
-    cafes = adoptCafes([{ id: "p", name: "Viv & Iv's", custom: true,
-                          area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298,
+    cafes = adoptCafes([{ id: "p", name: "Friend's Place", custom: true,
+                          area: "742 Evergreen Terrace #12", lat: 30.12345, lng: -140.67891,
                           tags: [], drinks: [] }]);
-    privDetail = { p: { area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298 } };
+    privDetail = { p: { area: "742 Evergreen Terrace #12", lat: 30.12345, lng: -140.67891 } };
     const c = cafes[0];
     const asViewer = { area: areaOf(c), lat: latOf(c) };
     window.__signedIn = true;
     const asOwner = { area: areaOf(c), lat: latOf(c) };
     return { asViewer, asOwner, stored: { area: c.area, lat: c.lat, lng: c.lng } };
   });
-  eq(r.asViewer, { area: "", lat: 37.79 }, "a viewer sees the blurred pin and no address");
-  eq(r.asOwner, { area: "1800 Washington St #611", lat: 37.79306 },
+  eq(r.asViewer, { area: "", lat: 30.12 }, "a viewer sees the blurred pin and no address");
+  eq(r.asOwner, { area: "742 Evergreen Terrace #12", lat: 30.12345 },
      "the owner, signed in, sees the real address — the whole point of the gated node");
-  eq(r.stored, { area: "", lat: 37.79, lng: -122.42 },
+  eq(r.stored, { area: "", lat: 30.12, lng: -140.68 },
      "…while the record in `cafes` stays blurred, because save() publishes that array");
 
   /* Signing out must take it away again — the accessors key off auth, not off a flag that
@@ -182,11 +181,11 @@ const fs = require("fs"), path = require("path");
   r = await pg.evaluate(() => {
     _needsHeal = {}; privDetail = {};
     cafes = adoptCafes([{ id: "old", name: "Old", custom: true,
-                          area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298 }]);
+                          area: "742 Evergreen Terrace #12", lat: 30.12345, lng: -140.67891 }]);
     return { flagged: Object.keys(_needsHeal), remembered: _needsHeal.old };
   });
   eq(r.flagged, ["old"], "a precise record found in the public node is flagged to be moved");
-  eq(r.remembered, { area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298 },
+  eq(r.remembered, { area: "742 Evergreen Terrace #12", lat: 30.12345, lng: -140.67891 },
      "…with its exact values kept so nothing is lost in the move");
 
   r = await pg.evaluate(() => {
@@ -196,11 +195,56 @@ const fs = require("fs"), path = require("path");
   });
   eq(r, [], "an already-blurred record is not flagged, so the heal runs once and stops");
 
+  /* --- 10b. the heal under the rules that were actually live on 29 Sep ---
+     Those rules had a `cafes` block and no `private` block, so the database refused every
+     write to private/. The heal used to write private/ first and blur the public record only
+     if that worked — so under those rules it never blurred anything, and an exact location
+     stayed world-readable. Here private/ refuses and cafes/ accepts, as it did live. */
+  const healUnder = (admin) => pg.evaluate((admin) => {
+    const pub = [], toasts = [];
+    window.__signedIn = true; fbReady = true; isAdmin = admin;
+    fbDb = { ref: path => ({
+      set: v => { if (path.startsWith("cafes/")) { pub.push(JSON.parse(JSON.stringify(v))); return Promise.resolve(); }
+                  return Promise.reject(new Error("PERMISSION_DENIED")); },
+      remove: () => Promise.reject(new Error("PERMISSION_DENIED")),
+      once: () => Promise.reject(new Error("PERMISSION_DENIED")) }) };
+    const _save = saveCafe, _toast = toast;
+    window.saveCafe = id => { pub.push(JSON.parse(JSON.stringify(cafes.find(c => c.id === id)))); return Promise.resolve(); };
+    window.toast = m => toasts.push(m);
+    try { localStorage.removeItem(PRIV_MIRROR); localStorage.removeItem(PRIV_QUEUE); } catch (e) {}
+    privDetail = {}; privPending = {}; _privWarned = false; _needsHeal = {};
+    Object.keys(_ruleFindings).forEach(k => delete _ruleFindings[k]);
+    document.getElementById("rule-warn").hidden = true;
+    cafes = adoptCafes([{ id: "old", name: "Old", custom: true,
+                          area: "742 Evergreen Terrace #12", lat: 30.12345, lng: -140.67891 }]);
+    healPrivateSpots();
+    return new Promise(res => setTimeout(() => {
+      window.saveCafe = _save; window.toast = _toast;
+      res({ pub, toasts, left: Object.keys(_needsHeal),
+            kept: privPending.old, mirrored: JSON.parse(localStorage.getItem(PRIV_MIRROR) || "{}").old,
+            banner: document.getElementById("rule-warn").hidden ? "" : document.getElementById("rule-warn").textContent });
+    }, 120));
+  }, admin);
+
+  r = await healUnder(true);
+  eq(r.pub.map(c => ({ area: c.area, lat: c.lat, lng: c.lng })), [{ area: "", lat: 30.12, lng: -140.68 }],
+     "with private/ refused, the public record is still overwritten — blurred, with no address");
+  eq([r.kept && r.kept.area, r.mirrored && r.mirrored.area], ["742 Evergreen Terrace #12", "742 Evergreen Terrace #12"],
+     "…and the exact copy is kept on this device and queued for private/, so nothing is lost");
+  eq(r.toasts.some(t => /Hid Old's exact location/.test(t)), true, "…and it says it hid it");
+  eq(/not backed up/.test(r.banner) && /private/.test(r.banner), true,
+     "the refusal raises the rules banner — private spots are only on this device until the rule is fixed");
+
+  r = await healUnder(false);
+  eq([r.pub.length, r.left], [0, ["old"]],
+     "before editing mode is on, nothing is written and the heal waits rather than being dropped");
+  r = await pg.evaluate(() => { window.__signedIn = false; isAdmin = false; return true; });
+
   /* --- 11. sharing never leaks it, even for the owner --- */
   r = await pg.evaluate(() => {
     window.__signedIn = true;
-    cafes = [{ id: "s", name: "Viv & Iv's", custom: true, area: "", lat: 37.79, lng: -122.42, drinks: [], tags: [] }];
-    privDetail = { s: { area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298 } };
+    cafes = [{ id: "s", name: "Friend's Place", custom: true, area: "", lat: 30.12, lng: -140.68, drinks: [], tags: [] }];
+    privDetail = { s: { area: "742 Evergreen Terrace #12", lat: 30.12345, lng: -140.67891 } };
     curId = "s";
     let shared = null;
     navigator.share = (d) => { shared = d; return Promise.resolve(); };
@@ -208,7 +252,7 @@ const fs = require("fs"), path = require("path");
     window.__signedIn = false;
     return shared;
   });
-  eq(/Washington|37\.79306/.test(JSON.stringify(r)), false,
+  eq(/Evergreen|30\.12345/.test(JSON.stringify(r)), false,
      "sharing carries the public value even when the owner taps it — it goes to someone else");
 
   eq(errs, [], "no page errors");
