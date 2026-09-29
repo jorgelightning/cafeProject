@@ -97,6 +97,7 @@ function loadPrivateDetail(){
 }
 /* Said once a session. It names the cause, because there is really only one. */
 function privateWriteFailed(){
+  _ruleFindings.owner=true; showRuleWarning();
   if(_privWarned)return;
   _privWarned=true;
   toast("Private address kept on this device — the cloud refused it. Check the database rules (see README).");
@@ -134,23 +135,29 @@ function removePrivateDetail(id,force){
   flushPrivate();
 }
 /* A private spot saved before any of this still has its exact address sitting in the public
-   node. Move it. The precise copy is written first and the public record overwritten second,
-   so a failure between the two duplicates the address rather than losing it. Only the owner
-   can run this, because only the owner can write. */
+   node. Hide it. The precise copy is kept first — on this device (mirror + retry queue, the
+   same durable path as any private save) and in private/ as soon as the rules allow — and
+   the blurred record is published second, through the outbox.
+
+   It used to wait for private/ to accept the precise copy before blurring the public one.
+   Under rules with no private block that write is refused, so the blur never ran and the
+   exact address stayed world-readable with only a console line to say so — which is what
+   the live rules were doing on 29 Sep. The public copy no longer waits on anything.
+
+   Only the owner runs it, and only once in editing mode: the entry stays queued until then,
+   so a heal found before sign-in is not dropped. */
 function healPrivateSpots(){
   const ids=Object.keys(_needsHeal);
   if(!ids.length)return;
-  if(!fbReady||!ownerSignedIn())return;
+  if(!fbReady||!ownerSignedIn()||!isAdmin)return;
   ids.forEach(function(id){
     const exact=_needsHeal[id];
     delete _needsHeal[id];
     const c=cafes.find(function(x){ return x.id===id; });
     if(!c)return;
-    privDetail[id]=exact;
-    fbDb.ref(PRIVATE_PATH+"/"+id).set(exact).then(function(){
-      return fbDb.ref("cafes/"+id).set(JSON.parse(JSON.stringify(c)));
-    }).then(function(){
-      toast("Moved "+c.name+"'s address somewhere only you can read \u2713");
+    savePrivateDetail(id,exact);
+    Promise.resolve(saveCafe(id)).then(function(){
+      if(!syncPending[id])toast("Hid "+c.name+"'s exact location from the public map \u2713");
     }).catch(function(e){ warn("storage.js",e); });
   });
 }
@@ -199,6 +206,7 @@ function probePrivateRule(){
 const RULE_WARN_TEXT={
   map:'<b>Anyone can edit or delete your map.</b> Your database accepts changes from people who are not signed in.',
   db:'<b>Strangers can write to your database.</b> Your map is locked, but other parts of the database accept changes from people who are not signed in.',
+  owner:'<b>Your private spots are not backed up.</b> The <code>private</code> rule is missing, so the cloud refuses their exact locations — they are kept only on this device.',
   read:'<b>Your private addresses are readable by anyone.</b> The <code>private</code> rule is missing.'
 };
 function showRuleWarning(){
@@ -206,7 +214,7 @@ function showRuleWarning(){
   if(!el||!isAdmin)return;
   const f=_ruleFindings, lines=[];
   if(f.map)lines.push(RULE_WARN_TEXT.map); else if(f.db)lines.push(RULE_WARN_TEXT.db);
-  if(f.read)lines.push(RULE_WARN_TEXT.read);
+  if(f.read)lines.push(RULE_WARN_TEXT.read); else if(f.owner)lines.push(RULE_WARN_TEXT.owner);
   if(!lines.length)return;
   if(txt)txt.innerHTML=lines.join(" ")+' Copy the rules block in README.md into Firebase console → Realtime Database → Rules → Publish.';
   el.hidden=false;
