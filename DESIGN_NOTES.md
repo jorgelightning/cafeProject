@@ -33,6 +33,11 @@ Companion to `README.md`, which covers structure and deployment.
 
 ## Traps that have already caused bugs
 
+- **Firebase `set()` THROWS synchronously on an `undefined` anywhere in the value** — it is not
+  a rejected promise, so `.catch()` does not see it. And Firebase stores no nulls, so a missing
+  field comes back absent (`undefined`), not `null`. Normalise before comparing, strip before
+  writing. This blanked the map on 29 Sep (v61).
+
 - **`saveForm()`'s edit branch does `Object.assign(c, data)`**, and `data.drinks` is rebuilt
   from the form rows. Anything stored on a drink row that the form does not know about is
   destroyed. This silently erased drink Elo for months. `elo`/`matches` are now explicitly
@@ -790,6 +795,18 @@ address) that exercise the same code. They remain in git history — in `cafes.j
 to 28 Aug and in the fixtures until v61. Removing them from history means rewriting and
 force-pushing `main`; that is the owner's call — **and on 29 Sep the owner chose to leave the
 history as it is.** Do not rewrite it or raise it again unless they ask.
+
+**v61 blanked the map for the owner — fixed in v62, same day.** Publishing the private rule
+made the owner's private read succeed for the first time, which reached code no test had run
+with Firebase connected. A private spot with no pin arrives from Firebase with *no* lat/lng
+keys (it stores no nulls); `adoptCafes()` compared `undefined !== null`, flagged it as an exact
+record, and the heal passed `lat: undefined` to `set()` — which Firebase **throws on
+synchronously**. The throw escaped `load()`, and boot had no `.catch`, so everything after it
+(the map, the live sync, editing mode) was skipped on every device. Three layers now: missing
+reads as null in the heal check; private values are stripped of `undefined` and each private
+write is guarded; and `load().catch(...).then(...)` so no failure in loading can cost the map.
+`tests/boot-firebase.js` boots against a fake that behaves like the real database in exactly
+those two ways; eight of its checks failed on v61.
 
 ---
 

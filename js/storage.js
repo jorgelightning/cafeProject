@@ -4,7 +4,7 @@
 /* ---------- storage ---------- */
 async function load(){
 isAdmin = localStorage.getItem(ADMIN_FLAG)==="1";
-if(await loadCloud()){ await loadPrivateDetail(); healPrivateSpots(); return; }
+if(await loadCloud()){ await _privateSteps(); return; }
 let published=null;
 try{ const ctrl=new AbortController(); const _to=setTimeout(()=>ctrl.abort(),8000); const r=await fetch(DATA_URL+"?t="+Date.now(),{signal:ctrl.signal}); clearTimeout(_to); if(r.ok)published=await r.json(); }catch(e){ warn("storage.js",e); }
 if(isAdmin){
@@ -16,8 +16,13 @@ else { cafes=adoptCafes((local&&local.length)?local:seed()); }
 } else {
 let _lc=null; try{ _lc=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ warn("storage.js",e); } cafes=adoptCafes((published&&published.length)?published:((Array.isArray(_lc)&&_lc.length)?_lc:seed()));
 }
-await loadPrivateDetail();
-healPrivateSpots();
+await _privateSteps();
+}
+/* The private side is a refinement on top of the map, so nothing it does may stop the map
+   loading. */
+async function _privateSteps(){
+  try{ await loadPrivateDetail(); }catch(e){ warn("storage.js",e); }
+  try{ healPrivateSpots(); }catch(e){ warn("storage.js",e); }
 }
 /* Writes used to be one shape: the entire array, every time, from every caller. Two devices
    each writing everything meant the second silently erased whatever the first had added,
@@ -108,14 +113,21 @@ function flushPrivate(){
   if(!fbReady||!ownerSignedIn())return;
   ids.forEach(function(id){
     const exact=privPending[id];
-    const write=(exact===null)?fbDb.ref(PRIVATE_PATH+"/"+id).remove()
-                              :fbDb.ref(PRIVATE_PATH+"/"+id).set(exact);
+    /* Firebase THROWS (synchronously, not a rejected promise) on an undefined anywhere in the
+       value, so strip them, and keep any throw to this one entry. */
+    let write;
+    try{
+      write=(exact===null)?fbDb.ref(PRIVATE_PATH+"/"+id).remove()
+                          :fbDb.ref(PRIVATE_PATH+"/"+id).set(_privClean(exact));
+    }catch(e){ warn("storage.js",e); return; }
     write.then(function(){
       if(privPending[id]===exact){ delete privPending[id]; persistPrivate(); }
     }).catch(function(e){ warn("storage.js",e); privateWriteFailed(); });
   });
 }
+function _privClean(v){ return (v&&typeof v==="object")?JSON.parse(JSON.stringify(v)):v; }
 function savePrivateDetail(id,exact){
+  exact=_privClean(exact);
   privDetail[id]=exact;
   privPending[id]=exact;
   persistPrivate();
@@ -150,7 +162,7 @@ function healPrivateSpots(){
   const ids=Object.keys(_needsHeal);
   if(!ids.length)return;
   if(!fbReady||!ownerSignedIn()||!isAdmin)return;
-  ids.forEach(function(id){
+  ids.forEach(function(id){ try{
     const exact=_needsHeal[id];
     delete _needsHeal[id];
     const c=cafes.find(function(x){ return x.id===id; });
@@ -159,7 +171,7 @@ function healPrivateSpots(){
     Promise.resolve(saveCafe(id)).then(function(){
       if(!syncPending[id])toast("Hid "+c.name+"'s exact location from the public map \u2713");
     }).catch(function(e){ warn("storage.js",e); });
-  });
+  }catch(e){ warn("storage.js",e); } });
 }
 /* ---------- can a stranger read your private spots, or change your map? ----------
    The whole arrangement rests on database rules nobody in the app could see, published by
