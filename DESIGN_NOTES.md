@@ -318,7 +318,7 @@ for the same reason: it sends the value to someone else.
 
 ### A private spot is blurred, not hidden
 "Private spot 🏠" used to mean only "skip Google photos", while still publishing an exact pin
-and a free-text area — one real record read `1800 Washington St #611`. Coordinates now round
+and a free-text area — one real record held a street address with an apartment number. Coordinates now round
 to a 0.01° grid (~1km) and a numbered area field is dropped, at save time. Rounding rather
 than random jitter is deliberate: a grid cell is stable, so re-saving lands on the same point,
 where jitter moves every save and averaging a few of them recovers the location it was meant
@@ -758,6 +758,37 @@ which the owner was asked to paste from Firebase console → Realtime Database �
 `tests/audit-fixes.js` pins every case: all refused is silent; every write is a `null` to a
 `__rulesprobe` key from the probe app; each finding's wording; a viewer sends nothing; first
 sign-in runs it. Nine of those failed on v59.
+
+**The live rules, reviewed — 29 Sep 2026 (v61).** The owner pasted them. `cafes` is readable
+by all and writable only by the owner's email: strangers and other accounts cannot change the
+map, and the v60 probe agrees (it stays silent). Two gaps:
+
+- **No `private` block.** This is the pre-private rule set the "must stay identical" trap above
+  warns about. Realtime Database denies what no rule grants, so every private/ read and write —
+  the owner's included — is refused. Private spots' exact locations were living only on the
+  device that entered them.
+- **No `email_verified` check.** Low risk with Google as the only sign-in provider, but it is the
+  documented guard and costs one clause.
+
+The first gap had a worse consequence than lost backups. `healPrivateSpots()` wrote private/
+first and only then blurred the public record, so under these rules **it never blurred
+anything**. Two private spots saved before v30-Aug's blurring had not been edited since
+(`updated` July/August), so their precise records — one with a street address and unit number
+in `area` — were most likely still world-readable in `cafes/`. The backup could not show it,
+because the backup workflow blurs on the way in.
+
+Fixed in the app regardless of the rules: the heal now keeps the exact copy through
+`savePrivateDetail()` (device mirror + retry queue, pushed to private/ once the rule exists)
+and publishes the blurred record through `saveCafe()` without waiting. It runs only in
+editing mode, and waits rather than dropping the heal if found earlier. A refused private
+read or write now also raises the rules banner ("Your private spots are not backed up"), not
+just a toast. `tests/private.js` §10b replays the live rules; five of its checks failed on v60.
+
+**The repo is public.** The address and exact coordinates were also in the test fixtures and
+these notes; they are replaced with fictional ones (a Pacific point, an Evergreen Terrace
+address) that exercise the same code. They remain in git history — in `cafes.json` backups up
+to 28 Aug and in the fixtures until v61. Removing them from history means rewriting and
+force-pushing `main`; that is the owner's call, not done here.
 
 ---
 

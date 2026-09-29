@@ -44,7 +44,7 @@ const fs = require("fs"), path = require("path");
     }; } };
     try{ localStorage.removeItem(PRIV_MIRROR); localStorage.removeItem(PRIV_QUEUE); }catch(e){}
     privDetail = {}; privPending = {}; _privWarned = false;
-    savePrivateDetail("viv", { area: "1800 Washington St #611", lat: 37.79306, lng: -122.42298 });
+    savePrivateDetail("viv", { area: "742 Evergreen Terrace #12", lat: 30.12345, lng: -140.67891 });
   });
   await pg.waitForTimeout(140);
   let r = await pg.evaluate(() => ({
@@ -53,8 +53,8 @@ const fs = require("fs"), path = require("path");
     mirrored: JSON.parse(localStorage.getItem(PRIV_MIRROR) || "{}").viv,
     said: window.__toasts.join(" | ")
   }));
-  eq(r.inMemory.area, "1800 Washington St #611", "a refused write keeps the address in memory");
-  eq(r.mirrored.area, "1800 Washington St #611",
+  eq(r.inMemory.area, "742 Evergreen Terrace #12", "a refused write keeps the address in memory");
+  eq(r.mirrored.area, "742 Evergreen Terrace #12",
      "…and on this device, so a reload does not lose the only precise copy that is left");
   eq(r.stillQueued, true, "…queued for retry rather than dropped");
   eq(/database rules/.test(r.said), true, "…and it says so, naming the cause");
@@ -64,7 +64,7 @@ const fs = require("fs"), path = require("path");
     privDetail = {}; privPending = {};
     return loadPrivateDetail().then(() => ({ area: (privDetail.viv || {}).area, queued: privPending.viv !== undefined }));
   });
-  eq(r.area, "1800 Washington St #611", "reloading with the cloud still refusing restores it from the device");
+  eq(r.area, "742 Evergreen Terrace #12", "reloading with the cloud still refusing restores it from the device");
   eq(r.queued, true, "…and it is still queued");
 
   r = await pg.evaluate(() => {
@@ -84,13 +84,19 @@ const fs = require("fs"), path = require("path");
   eq(r.queuedNull, true, "…and queues the removal, so a refused delete is retried too");
 
   // ---- S2: the app checks the rule as a stranger would -----------------
-  r = await pg.evaluate(() => {
+  r = await pg.evaluate(async () => {
     const el = document.getElementById("rule-warn");
-    return { exists: !!el, hiddenAtRest: el ? el.hidden : null,
-             probe: typeof probePrivateRule === "function" };
+    /* The refused private writes above now raise it (v61) — so "at rest" is read from the
+       markup a fresh load starts with, not from this page. */
+    const fresh = new DOMParser().parseFromString(await (await fetch("index.html")).text(), "text/html");
+    const f = fresh.getElementById("rule-warn");
+    return { exists: !!el, hiddenAtRest: f ? f.hasAttribute("hidden") : null, raised: !el.hidden,
+             said: el.textContent, probe: typeof probePrivateRule === "function" };
   });
   eq(r.exists, true, "there is a warning banner for a missing rule");
   eq(r.hiddenAtRest, true, "…hidden until something is actually wrong");
+  eq(r.raised && /not backed up/.test(r.said), true,
+     "a private write the cloud refused raises it, not just a toast — the owner's own spots are at stake");
   eq(r.probe, true, "…and a probe that decides it");
 
   /* A stranger's view of the database, faked per case: which of the probe's questions the
