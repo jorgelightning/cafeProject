@@ -163,9 +163,13 @@ function adoptCafes(list){
   const out=Array.isArray(list)?list:[];
   out.forEach(function(c){
     if(!c||!c.custom)return;
-    const exact={area:c.area||"",lat:c.lat,lng:c.lng};
+    /* Firebase stores no nulls, so a spot with no pin arrives with no lat/lng at all. Read
+       missing as null on both sides, or "undefined !== null" flags a pinless spot as exact,
+       and the heal hands Firebase an undefined it refuses outright (29 Sep). */
+    const n=function(v){ return v==null?null:v; };
+    const exact={area:c.area||"",lat:n(c.lat),lng:n(c.lng)};
     redactPrivate(c);
-    if(exact.area!==(c.area||"")||exact.lat!==c.lat||exact.lng!==c.lng)_needsHeal[c.id]=exact;
+    if(exact.area!==(c.area||"")||exact.lat!==n(c.lat)||exact.lng!==n(c.lng))_needsHeal[c.id]=exact;
   });
   return out;
 }
