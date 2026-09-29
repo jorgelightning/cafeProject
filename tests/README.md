@@ -59,6 +59,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `one-screen.js` | A new visit is name, place line, drink and price, verdict, note, More, Save — one phone screen instead of 3.4. The place line says what Google filled in; More says what it holds even when shut. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `locate.js` | The locate button, its three states, the user dot — which was never being drawn — and that **nothing but the button raises the permission prompt**. |
+| `boot-firebase.js` | The app starts against a connected Firebase that behaves like the real one — no nulls stored, `set()` throws on `undefined` — as owner (early and late sign-in) and visitor; nothing the private side does can stop the map or editing mode. |
 | `offline.js` | The app boots with the network pulled. |
 | `regression.js` | Legacy drink prices render identically; a form round-trip adds order history without changing existing summary fields. |
 
