@@ -2551,13 +2551,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1488,
+    "elo": 1492,
     "emoji": "☕",
     "fav": false,
     "id": "mu4k0lxjyzze",
     "lat": 37.78562,
     "lng": -122.39638,
-    "matches": 2,
+    "matches": 3,
     "name": "Paper Son Coffee",
     "pid": "ChIJXVRIc9aBhYARDuJoNx2IVAg",
     "rating": 4,
@@ -3231,6 +3231,39 @@
     "custom": false,
     "drinks": [
       {
+        "count": 2,
+        "dates": [
+          "2026-02-13",
+          "2026-09-29"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-02-13",
+            "ice": "Warm",
+            "id": "mu57bei65453",
+            "p": "6.75",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-29",
+            "ice": "Warm",
+            "id": "mungfbdeyru9",
+            "milk": "Oat",
+            "p": "6.75",
+            "reorder": "yes",
+            "size": "14 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.75",
+        "reorder": "yes",
+        "size": "14 oz",
+        "sweet": "0%"
+      },
+      {
         "dates": [
           "2026-07-29"
         ],
@@ -3273,33 +3306,15 @@
         "reorder": "yes",
         "size": "16 oz",
         "sweet": "0%"
-      },
-      {
-        "dates": [
-          "2026-02-13"
-        ],
-        "ice": "Warm",
-        "n": "Hojicha latte",
-        "orders": [
-          {
-            "date": "2026-02-13",
-            "ice": "Warm",
-            "id": "mu57bei65453",
-            "p": "6.75",
-            "sweet": "0%"
-          }
-        ],
-        "p": "6.75",
-        "sweet": "0%"
       }
     ],
-    "elo": 1596,
+    "elo": 1592,
     "emoji": "☕",
     "fav": true,
     "id": "tea-komeya",
     "lat": 37.80007,
     "lng": -122.43134,
-    "matches": 7,
+    "matches": 8,
     "name": "Komeya No Bento",
     "rating": 4,
     "review": "Surprisingly good hojicha latte alongside the bento.",
@@ -3307,7 +3322,7 @@
       "matcha",
       "to-go"
     ],
-    "updated": "2026-09-17T07:21:41.062Z",
+    "updated": "2026-09-30T01:57:35.487Z",
     "wish": false
   },
   {
