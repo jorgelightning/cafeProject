@@ -1897,13 +1897,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1469,
+    "elo": 1457,
     "emoji": "☕",
     "fav": false,
     "id": "msvag8ahm8ih",
     "lat": 37.33693,
     "lng": -122.04031,
-    "matches": 2,
+    "matches": 3,
     "name": "Shang Yu Lin-Cupertino上宇林",
     "rating": 3,
     "review": "First impression it was okay, the way the milk and the black tea combination, the milk over powers but the tea caffeine hits hard.",
@@ -2619,10 +2619,12 @@
     "custom": false,
     "drinks": [
       {
+        "count": 2,
         "dates": [
-          "2026-09-26"
+          "2026-09-26",
+          "2026-09-30"
         ],
-        "ice": "Warm",
+        "ice": "Less ice",
         "milk": "Oat",
         "n": "Oya",
         "orders": [
@@ -2630,6 +2632,16 @@
             "date": "2026-09-26",
             "ice": "Warm",
             "id": "muj9ggc3rs9y",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-30",
+            "ice": "Less ice",
+            "id": "muorlubu6agg",
             "milk": "Oat",
             "p": "5",
             "reorder": "yes",
@@ -2667,18 +2679,18 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1531,
+    "elo": 1543,
     "emoji": "☕",
     "fav": false,
     "id": "mugj206txj1r",
     "lat": 37.78001,
     "lng": -122.48168,
-    "matches": 2,
+    "matches": 3,
     "name": "HI NRG",
     "pid": "ChIJYXSOVACHhYAREXl6l-Jr_-w",
     "rating": 5,
     "review": "Vibes are super good, the coffee is strong here, and by default they don't add sugar!",
-    "updated": "2026-09-27T03:30:44.856Z",
+    "updated": "2026-09-30T23:57:34.873Z",
     "wish": false
   },
   {
