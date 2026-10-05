@@ -1141,6 +1141,30 @@
     "drinks": [
       {
         "dates": [
+          "2026-10-05"
+        ],
+        "ice": "Regular ice",
+        "milk": "Oat",
+        "n": "Matcha Einspanner Latte",
+        "orders": [
+          {
+            "date": "2026-10-05",
+            "ice": "Regular ice",
+            "id": "muvjqt22b901",
+            "milk": "Oat",
+            "p": "9.60",
+            "reorder": "yes",
+            "size": "14 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "9.60",
+        "reorder": "yes",
+        "size": "14 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
           "2026-09-28"
         ],
         "ice": "Less ice",
@@ -1162,22 +1186,6 @@
         "reorder": "yes",
         "size": "12 oz",
         "sweet": "0%"
-      },
-      {
-        "dates": [
-          "2026-07-03"
-        ],
-        "milk": "Oat",
-        "n": "Matcha Einspanner",
-        "orders": [
-          {
-            "date": "2026-07-03",
-            "id": "mublzqzbwtz7",
-            "milk": "Oat",
-            "reorder": "yes"
-          }
-        ],
-        "reorder": "yes"
       },
       {
         "count": 2,
@@ -1214,6 +1222,22 @@
         "reorder": "yes",
         "size": "10 oz",
         "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-07-03"
+        ],
+        "milk": "Oat",
+        "n": "Matcha Einspanner",
+        "orders": [
+          {
+            "date": "2026-07-03",
+            "id": "mublzqzbwtz7",
+            "milk": "Oat",
+            "reorder": "yes"
+          }
+        ],
+        "reorder": "yes"
       }
     ],
     "elo": 1475,
@@ -1229,7 +1253,7 @@
     "tags": [
       "cozy"
     ],
-    "updated": "2026-09-28T19:13:31.027Z",
+    "updated": "2026-10-05T17:52:11.130Z",
     "wish": false
   },
   {
@@ -1623,13 +1647,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1504,
+    "elo": 1503,
     "emoji": "🏠",
     "fav": true,
     "id": "mscep73jjytf",
     "lat": 37.79,
     "lng": -122.42,
-    "matches": 2,
+    "matches": 3,
     "name": "Viv & Iv's Cafe",
     "rating": 5,
     "review": "The matcha made well and thoughtful, amazing work from the host! The wifi tho \n\nHouse warming cafe, great interior decor, amazing food especially the kasama in chicago inspired one!",
@@ -2125,7 +2149,7 @@
     "id": "mt8cljabnbff",
     "lat": 49.18438,
     "lng": -123.13574,
-    "matches": 1,
+    "matches": 2,
     "name": "Choo Tea",
     "rating": 4,
     "review": "The combination of tea and fruit were great! Felt fresh for the taste!",
@@ -2691,6 +2715,50 @@
     "rating": 5,
     "review": "Vibes are super good, the coffee is strong here, and by default they don't add sugar!",
     "updated": "2026-09-30T23:57:34.873Z",
+    "wish": false
+  },
+  {
+    "area": "Southside",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-04"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "HeartSteel: Honey Cassia Black Tea Latte",
+        "orders": [
+          {
+            "date": "2026-10-04",
+            "ice": "Less ice",
+            "id": "muvh7lrolgri",
+            "milk": "Oat",
+            "p": "10.17",
+            "size": "18 oz"
+          }
+        ],
+        "p": "10.17",
+        "size": "18 oz"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "muvhd025f4na",
+    "lat": 37.86831,
+    "lng": -122.26123,
+    "matches": 1,
+    "name": "Chicha San Chen 吃茶三千",
+    "pid": "ChIJCyrJNwB9hYAR8R-0FdNBW9Q",
+    "rating": 5,
+    "review": "It's so busy and the wait is long as usual at at Chicha, but I love the drinks tho! The cafe vibes is good here, but need to wait to seat down.",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-10-05T16:44:51.725Z",
     "wish": false
   },
   {
