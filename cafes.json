@@ -1240,13 +1240,13 @@
         "reorder": "yes"
       }
     ],
-    "elo": 1475,
+    "elo": 1476,
     "emoji": "☕",
     "fav": false,
     "id": "mqm06fjnsrlj",
     "lat": 37.74313,
     "lng": -122.47803,
-    "matches": 7,
+    "matches": 8,
     "name": "Jandii Cafe",
     "rating": 4,
     "review": "I like the taste of hojicha and I like it! Great for study!",
@@ -2760,6 +2760,23 @@
     ],
     "updated": "2026-10-05T16:44:51.725Z",
     "wish": false
+  },
+  {
+    "area": "Lower Nob Hill",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "muwyp04dhkja",
+    "lat": 37.78928,
+    "lng": -122.42024,
+    "name": "Le Mil's Coffee",
+    "pid": "ChIJtzoq9mF9j4ARTv5k3P0nZfw",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-06T17:37:51.325Z",
+    "wish": true
   },
   {
     "area": "San Francisco, CA",
