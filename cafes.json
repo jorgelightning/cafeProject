@@ -1526,13 +1526,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1484,
+    "elo": 1500,
     "emoji": "☕",
     "fav": false,
     "id": "mrsr6rvphhm7",
     "lat": 37.36752,
     "lng": -122.03358,
-    "matches": 2,
+    "matches": 3,
     "name": "TANING - Sunnyvale",
     "rating": 4,
     "review": "Great lemon taste but the drink are very hot and it'll take a while before drinking it and the cups leaks a lot.",
@@ -2766,6 +2766,32 @@
     "brand": "",
     "cc": "US",
     "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-09"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Sofi",
+        "orders": [
+          {
+            "date": "2026-10-09",
+            "ice": "Warm",
+            "id": "mv1e7mkasufi",
+            "milk": "Oat",
+            "p": "6.75",
+            "reorder": "neutral",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.75",
+        "reorder": "neutral",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
     "emoji": "☕",
     "fav": false,
     "id": "muwyp04dhkja",
@@ -2773,10 +2799,10 @@
     "lng": -122.42024,
     "name": "Le Mil's Coffee",
     "pid": "ChIJtzoq9mF9j4ARTv5k3P0nZfw",
-    "rating": 0,
-    "review": "",
-    "updated": "2026-10-06T17:37:51.325Z",
-    "wish": true
+    "rating": 3,
+    "review": "The vibes seems okay for me, the interior is clean but design could be better in my opinion, the style of coffee is different but good, but there is a lot of materials at the end of the drink tho.",
+    "updated": "2026-10-09T20:05:12.214Z",
+    "wish": false
   },
   {
     "area": "San Francisco, CA",
