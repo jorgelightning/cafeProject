@@ -2002,13 +2002,13 @@
         "sweet": "10%"
       }
     ],
-    "elo": 1499,
+    "elo": 1484,
     "emoji": "☕",
     "fav": false,
     "id": "mswvf0lujqg3",
     "lat": 37.32913,
     "lng": -121.8841,
-    "matches": 2,
+    "matches": 3,
     "name": "Academic Coffee",
     "rating": 0,
     "review": "",
@@ -2527,13 +2527,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1520,
+    "elo": 1519,
     "emoji": "☕",
     "fav": false,
     "id": "mtysqdqaqnhq",
     "lat": 34.05757,
     "lng": -118.24085,
-    "matches": 2,
+    "matches": 3,
     "name": "Archives Of Us",
     "pid": "ChIJ7SJdEwbHwoARbK8FgtY2QxM",
     "rating": 5,
@@ -2792,16 +2792,61 @@
         "sweet": "0%"
       }
     ],
+    "elo": 1484,
     "emoji": "☕",
     "fav": false,
     "id": "muwyp04dhkja",
     "lat": 37.78928,
     "lng": -122.42024,
+    "matches": 1,
     "name": "Le Mil's Coffee",
     "pid": "ChIJtzoq9mF9j4ARTv5k3P0nZfw",
     "rating": 3,
     "review": "The vibes seems okay for me, the interior is clean but design could be better in my opinion, the style of coffee is different but good, but there is a lot of materials at the end of the drink tho.",
     "updated": "2026-10-09T20:05:12.214Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-11"
+        ],
+        "milk": "Oat",
+        "n": "Snowy Ube Matcha",
+        "orders": [
+          {
+            "date": "2026-10-11",
+            "id": "mv4esjo5f6ce",
+            "milk": "Oat",
+            "p": "9.35",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "25%"
+          }
+        ],
+        "p": "9.35",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "25%"
+      }
+    ],
+    "elo": 1516,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mv4ev4a0383t",
+    "lat": 37.57926,
+    "lng": -122.34571,
+    "matches": 2,
+    "name": "Ceré Tea",
+    "pid": "ChIJM-AUAwCdj4AROCJkrp2UFJ0",
+    "rating": 5,
+    "review": "The vibes are cool and clean setup! They have ube as an seasonal option!",
+    "updated": "2026-10-11T22:51:28.351Z",
     "wish": false
   },
   {
