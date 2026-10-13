@@ -33,7 +33,7 @@ const { eq, done } = checker();
                            this.getPosition = () => o.position; },
       Circle: function(o){ this.o = o; window.__circles.push(o); this.setMap = m => { this.o.map = m; }; },
       LatLngBounds: function(){ this.extend = () => {}; },
-      SymbolPath: { CIRCLE: "circle" },
+      SymbolPath: { CIRCLE: "circle" }, Size: function(w, h){ this.width = w; this.height = h; }, Point: function(x, y){ this.x = x; this.y = y; },
       event: { trigger: function(){}, addListenerOnce: function(){} },
       places: { Autocomplete: function(){ this.addListener = function(){}; this.getPlace = () => ({}); } }
     } };

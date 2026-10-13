@@ -808,6 +808,36 @@ write is guarded; and `load().catch(...).then(...)` so no failure in loading can
 `tests/boot-firebase.js` boots against a fake that behaves like the real database in exactly
 those two ways; eight of its checks failed on v61.
 
+### Want-to-try on the map — 13 Oct 2026 (v63)
+
+"It's hard to see wishlist location." Measured: the pin was a 20px pale-blue ring at a quarter
+fill, no white edge, `zIndex` 1, and folded into the orange clusters with everything else. On
+Google's ground it stood out 2.0–3.0:1 (the fill 1.2:1), in the same blue as water, transit
+and the you-are-here dot; De Matcha, 130m from 8 Grams Matcha, disappeared into it. The Want
+tab's map button zoomed to the wishlist but left all 107 visited pins around it.
+
+- **The pin** (`WISH_HEX` #6B3FBF, `wishPinIcon()`): a visited pin's size, white edge, white
+  bookmark — 4.6–6.8:1 on streets, roads, parks and water, a hue nothing else on the map uses,
+  and readable without colour. An SVG data-URL icon because a `SymbolPath` cannot carry a
+  second colour for the mark.
+- **The layer:** `MAX_ZINDEX+500` — above cluster bubbles (`MAX+n`), below the you-are-here
+  dot (`MAX+1000`) — and never clustered; only visited pins go to the clusterer.
+- **The switch** (`#btn-want`, `toggleWantOnly()`): hides visited pins and shows a bar, "Only
+  want to try · 3 here, 7 in all" with Show all. It **shows and hides the existing markers**
+  instead of calling `renderMarkers()`, which refits to every pin it draws — on a wishlist
+  spanning the Bay Area and Vancouver that would throw you out to half a continent per tap.
+  It moves the map only when none are in view. The Want tab's map button turns it on; Been's
+  turns it off. Hidden when nothing is on the wishlist. On a phone the search row now spans
+  the width so the place picker gives way to it.
+- **Trap found on the way:** the pressed switch first used a translucent violet in dark mode.
+  The chip floats over Google's map, which stays light in dark mode, so it read 1.3:1 while a
+  test judging it against the dark page passed. Fills over the map are solid; the test now
+  requires that.
+
+The mock's enlarged "tapped" pin was left out: no pin grows on tap today, visited ones
+included, and the card already says which cafe it is. `tests/want-pins.js`; on v62 its pin
+and layer checks fail and the switch does not exist.
+
 ---
 
 ## Rejected, and why
