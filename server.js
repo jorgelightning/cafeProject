@@ -35,8 +35,11 @@ const server = http.createServer((req, res) => {
 
   const filePath = path.join(ROOT, pathname);
 
-  // Security check: ensure file path does not escape ROOT
-  if (!filePath.startsWith(ROOT)) {
+  // Security check: ensure file path does not escape ROOT, and never serve hidden
+  // files or folders (.git holds the repository's history and settings, and this
+  // server listens on every network interface, not just this machine).
+  if (!filePath.startsWith(ROOT + path.sep) && filePath !== ROOT ||
+      pathname.split('/').some((seg) => seg.startsWith('.'))) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('403 Forbidden');
     return;
