@@ -59,6 +59,7 @@ function initials(c){ const n=((c&&c.name)||"").trim(); if(!n)return "?"; const 
    as loved, 3 as fine, 1 and 2 as not-for-me, and new saves land on the canonical 5 / 3 / 1. */
 const BUCKETS=[["loved",5,"Loved it"],["fine",3,"It was fine"],["meh",1,"Not for me"]];
 const BUCKET_HEX={loved:"#2e9e5b",fine:"#f0a93b",meh:"#c0374b","":"#9aa0a6"};
+const WISH_HEX="#6b3fbf";   /* want to try: a hue no other pin, nor Google's water or you-are-here, uses */
 function bucketOf(c){ const r=(c&&c.rating)||0; return r>=4?"loved":(r===3?"fine":(r>=1?"meh":"")); }
 function bucketRating(k){ for(let i=0;i<BUCKETS.length;i++)if(BUCKETS[i][0]===k)return BUCKETS[i][1]; return 0; }
 function bucketLabel(c){ const k=bucketOf(c); for(let i=0;i<BUCKETS.length;i++)if(BUCKETS[i][0]===k)return BUCKETS[i][2]; return ""; }
