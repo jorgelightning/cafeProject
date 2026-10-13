@@ -56,6 +56,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `beli.js` | The ranking is the spine: three buckets instead of five stars, a position on every card, been/want as the two lists, and Stats opening with the collection. |
 | `updates.js` | A new build reloads itself before anything is touched, waits behind the bar when you are mid-use or mid-form, and can never loop. |
 | `peek.js` | On a phone a pin slides up a card — rank, verdict, what to order, Directions — without leaving the map; the back button and a map tap put it away. On a laptop a pin still opens the page beside the map. |
+| `want-pins.js` | Want-to-try pins are violet with a white edge and a bookmark, sit above visited pins and cluster bubbles, and are never clustered; the map's Want to try switch hides visited pins without refitting the map, and the Want tab's map button turns it on. |
 | `one-screen.js` | A new visit is name, place line, drink and price, verdict, note, More, Save — one phone screen instead of 3.4. The place line says what Google filled in; More says what it holds even when shut. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `locate.js` | The locate button, its three states, the user dot — which was never being drawn — and that **nothing but the button raises the permission prompt**. |

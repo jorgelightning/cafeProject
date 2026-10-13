@@ -3,9 +3,9 @@
    and [data-theme="dark"] = manually chosen dark. Keep any new colour in all three.
    --acc stays the identity orange for fills/pins/underlines; --acc-strong is the only
    one that may sit under white text (--acc is 3.01:1 there, --acc-strong is 4.94:1). */
-:root{ --acc:#d5803b; --acc-strong:#a8551a; --on-acc:#fff; --acc2:#c0374b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#706860; --faint:#726a63; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d9d3cc; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); --glass:rgba(255,255,255,.93); --glass-strong:rgba(248,246,244,.88); }
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#968b83; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); } }
-:root[data-theme="dark"]{ --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#968b83; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); }
+:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a8551a; --on-acc:#fff; --acc2:#c0374b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#706860; --faint:#726a63; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d9d3cc; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); --glass:rgba(255,255,255,.93); --glass-strong:rgba(248,246,244,.88); }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#968b83; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); } }
+:root[data-theme="dark"]{ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#968b83; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); }
 /* ---------- the scale ----------
    Colour was tokenised; nothing dimensional was, so the stylesheet grew 23 font sizes, 18
    corner radii and 13 gap values — seven of the font sizes inside three pixels, which nobody
@@ -95,6 +95,21 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 }
 .search .iconbtn{ width:44px; height:44px; flex:0 0 44px; font-size:var(--fs-3); }
 .mapsearch select{ font-family:inherit; max-width:62vw; appearance:none; -webkit-appearance:none; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--border); border-radius:var(--r-3); padding:10px 34px 10px 14px; font-size:var(--fs-3); font-weight:600; color:var(--text); box-shadow:var(--shadow); cursor:pointer; outline:none; background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%); background-position:calc(100% - 17px) calc(50% - 2px),calc(100% - 12px) calc(50% - 2px); background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
+/* The Want to try switch. On a phone the row spans the width so the place picker gives way
+   to it (and truncates) rather than pushing the gear off the screen. */
+.wantchip{ flex:none; display:inline-flex; align-items:center; gap:var(--sp-2); height:44px; padding:0 12px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:700; white-space:nowrap; cursor:pointer; }
+.wantchip[hidden]{ display:none; }
+.wantchip .bm{ width:15px; height:15px; fill:var(--want); flex:none; }
+.wantchip .wantn{ min-width:20px; height:20px; padding:0 5px; box-sizing:border-box; border-radius:var(--r-pill); background:var(--surface2); color:var(--text); font-size:var(--fs-1); display:inline-flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
+.wantchip[aria-pressed="true"]{ background:var(--want-bg); border-color:var(--want); color:var(--want-ink); }
+.wantchip[aria-pressed="true"] .wantn{ background:var(--want); color:#fff; }
+@media (max-width:899px){ .mapsearch{ right:12px; } .mapsearch select{ flex:1 1 auto; min-width:0; max-width:none; } }
+.wantbar{ position:absolute; z-index:6; top:calc(64px + env(safe-area-inset-top)); left:12px; display:flex; align-items:center; gap:var(--sp-1); padding-left:12px; border-radius:var(--r-pill); background:rgba(29,26,23,.86); color:#f6f5f3; font-size:var(--fs-2); font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,.15); }
+.wantbar[hidden]{ display:none; }
+.wantbar button{ min-height:44px; padding:0 14px; border:none; border-radius:var(--r-pill); background:transparent; color:#f3c79f; font:inherit; font-weight:700; cursor:pointer; }
+@media (min-width:900px){ .wantbar{ left:calc(var(--sidebar) + 12px); top:66px; } }
+.bkpill.wantpill{ background:var(--want-bg); color:var(--want-ink); }
+.bkpill.wantpill i{ background:var(--want); }
 .mapsearch select:focus{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); }
 @media (min-width:900px){ .mapsearch{ left:calc(var(--sidebar) + 12px); } .mapsearch select{ max-width:300px; } }
 
@@ -293,7 +308,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .chiprow .chip.on{ background:var(--acc-strong); color:var(--on-acc); border-color:transparent; }
 .maplegend{ position:absolute; right:12px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:6; display:flex; gap:var(--sp-3); align-items:center; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--border); border-radius:var(--r-4); padding:6px 12px; font-size:var(--fs-1); color:var(--soft); white-space:nowrap; }
 .maplegend i{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; }
-.maplegend i.wl{ width:5px; height:5px; background:transparent; border:2px solid #5b9bd5; }
+.maplegend svg.wl{ width:11px; height:11px; margin-right:4px; vertical-align:-1px; }
+.maplegend svg.wl circle{ fill:#6b3fbf; } .maplegend svg.wl path{ fill:#fff; }
 @media (min-width:900px){ .maplegend{ bottom:26px; } }
 /* Every other piece of map chrome is offset past the browse column on a laptop — .mapsearch
    (left), .maplegend and .locbtn (right-anchored). The full-pane map message and the rule
