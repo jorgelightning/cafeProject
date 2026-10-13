@@ -1,0 +1,6 @@
+{
+  "name": "JL Cafe Project",
+  "description": "Cafe tracker and visit log with map, rankings, drink history, and stats",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
