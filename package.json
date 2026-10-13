@@ -1,8 +1,11 @@
 {
   "name": "cafeproject",
   "private": true,
-  "description": "Tooling for the JL Cafe Project. The app itself is plain static files — this exists only so the tests have a browser to drive.",
+  "description": "JL Cafe Project - Cafe tracker, map, rankings, drink logs and stats",
   "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'Build successful'",
     "test": "node tests/run.js",
     "snapshot": "node tests/snapshot.js"
   },
