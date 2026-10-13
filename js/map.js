@@ -8,21 +8,93 @@ function gm_authFailure(){ showMapError("Google rejected the API key. Check the 
 function showMapError(msg){ const el=$("map-msg"); el.innerHTML='<div class="big">🗺️</div><div>'+msg+'</div>'; el.classList.add("show"); if($("map-sub"))$("map-sub").textContent="Map unavailable"; }
 function mapResize(){ if(gmap)google.maps.event.trigger(gmap,"resize"); if(fgmap)google.maps.event.trigger(fgmap,"resize"); }
 function fitPad(){ const w=window.innerWidth||0; if(w>=1400)return {top:60,right:60,bottom:60,left:480}; if(w>=900)return {top:60,right:60,bottom:60,left:440}; return 60; }
-function refitMap(){ if(!gmap)return; const pts=gmarkers.map(m=>m.getPosition()).filter(Boolean); if(userMarker)pts.push(userMarker.getPosition()); if(!pts.length)return; if(pts.length===1){ gmap.setCenter(pts[0]); } else { const b=new google.maps.LatLngBounds(); pts.forEach(p=>b.extend(p)); gmap.fitBounds(b,fitPad()); } }
+function refitMap(){ if(!gmap)return; const pts=gmarkers.filter(_pinShown).map(m=>m.getPosition()).filter(Boolean); if(userMarker)pts.push(userMarker.getPosition()); if(!pts.length)return; if(pts.length===1){ gmap.setCenter(pts[0]); } else { const b=new google.maps.LatLngBounds(); pts.forEach(p=>b.extend(p)); gmap.fitBounds(b,fitPad()); } }
 /* ---------- main map ---------- */
 function initMap(){ gmap=new google.maps.Map($("map"),{center:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); renderMarkers(); autoLocate(); gmap.addListener("click",()=>{ pendingMarkerId=null; if(gInfo)gInfo.close(); closePeek(); }); gmap.addListener("dragstart",()=>{ if($("btn-locate")&&$("btn-locate").dataset.state==="on")setLocateState("idle"); });
   /* Any touch on the map — a drag, a pinch, a wheel, a tap on a pin — means the person is
      looking at THIS view. Only the location dropdown used to count, so panning to another
      neighbourhood, tapping a pin and coming back snapped the map to where you were standing,
      on every pin. DOM events rather than map events, because a pinch fires no dragstart. */
+  gmap.addListener("idle",function(){ if(mapWantOnly)updateWantBar(); });
   const _mapEl=$("map"); if(_mapEl)["pointerdown","wheel","touchstart"].forEach(function(ev){
     _mapEl.addEventListener(ev,function(){ mapOwned=true; },{passive:true}); }); }
 /* One colour per bucket now, not five steps: 4 and 5 were two names for "loved" and read as
    two different judgements on the map. Takes a rating so every existing caller still works. */
 function ratingColor(r){ r=r||0; return r>=4?BUCKET_HEX.loved:r>=3?BUCKET_HEX.fine:r>=1?BUCKET_HEX.meh:BUCKET_HEX[""]; }
 let gclusterer=null;
+/* ---------- want-to-try pins ----------
+   They used to be a 20px pale-blue ring at a quarter-strength fill, with no white edge, drawn
+   under every visited pin and folded into the same orange clusters. Measured against the
+   map they stood out 2.0–3.0:1 (the fill 1.2:1), shared their blue with water, transit and the
+   you-are-here dot, and De Matcha vanished into 8 Grams Matcha 130m away.
+   Now: the size of a visited pin, a white edge, violet (a hue nothing else on the map uses,
+   4.6–6.8:1 on streets, parks and water) and a bookmark, so it reads without colour too. They
+   sit above the cluster bubbles (but under the you-are-here dot, MAX+1000), and are never
+   clustered — there are a handful, and a want-to-try is the pin you are looking for. */
+const WISH_PIN_SVG='<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">'
+  +'<circle cx="15" cy="15" r="12" fill="'+WISH_HEX+'" stroke="#ffffff" stroke-width="3"/>'
+  +'<path d="M11.4 9.4h7.2v11.2l-3.6-2.9-3.6 2.9z" fill="#ffffff"/></svg>';
+function wishPinIcon(){ return { url:"data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(WISH_PIN_SVG),
+  scaledSize:new google.maps.Size(30,30), anchor:new google.maps.Point(15,15) }; }
+function wishPinZ(){ return (google.maps.Marker.MAX_ZINDEX||1000000)+500; }
+
+/* The Want to try switch. Toggling shows and hides the pins that exist rather than redrawing
+   them, because renderMarkers() refits the map to every pin it draws — and a want-to-try list
+   spanning the Bay Area and Vancouver would throw you out to half a continent each tap. */
+let mapWantOnly=false;
+function _pinShown(m){ return !mapWantOnly||!!m._wish; }
+function _showPins(){
+  if(!gmap)return;
+  if(gclusterer){ try{ gclusterer.clearMarkers(); gclusterer.setMap(null); }catch(e){ warn("map.js",e); } gclusterer=null; }
+  const been=gmarkers.filter(function(m){ return !m._wish; }), want=gmarkers.filter(function(m){ return m._wish; });
+  been.forEach(function(m){ m.setMap(null); });
+  if(!mapWantOnly){
+    if(window.markerClusterer&&markerClusterer.MarkerClusterer&&been.length){ gclusterer=new markerClusterer.MarkerClusterer({ map:gmap, markers:been, renderer:_clusterRenderer }); }
+    else been.forEach(function(m){ m.setMap(gmap); });
+  }
+  want.forEach(function(m){ m.setMap(gmap); });
+}
+function wishPinCount(){ return gmarkers.filter(function(m){ return m._wish; }).length; }
+function _wishInView(){
+  const bds=(gmap&&typeof gmap.getBounds==="function")?gmap.getBounds():null;
+  if(!bds)return null;
+  return gmarkers.filter(function(m){ return m._wish&&bds.contains(m.getPosition()); }).length;
+}
+function _fitWish(){
+  const pts=gmarkers.filter(function(m){ return m._wish; }).map(function(m){ return m.getPosition(); });
+  if(!gmap||!pts.length)return;
+  if(pts.length===1){ gmap.setCenter(pts[0]); gmap.setZoom(15); return; }
+  const b=new google.maps.LatLngBounds(); pts.forEach(function(p){ b.extend(p); }); gmap.fitBounds(b,fitPad());
+}
+function syncWantUI(){
+  const n=wishPinCount(), chip=$("btn-want");
+  if(!n&&mapWantOnly)mapWantOnly=false;
+  if(chip){
+    chip.hidden=!n;
+    chip.setAttribute("aria-pressed",String(mapWantOnly));
+    const c=$("want-n"); if(c)c.textContent=String(n);
+    chip.setAttribute("aria-label",(mapWantOnly?"Showing only want to try":"Show only want to try")+", "+n+" place"+(n===1?"":"s"));
+  }
+  updateWantBar();
+}
+function updateWantBar(){
+  const bar=$("wantbar"); if(!bar)return;
+  bar.hidden=!mapWantOnly;
+  if(!mapWantOnly)return;
+  const n=wishPinCount(), here=_wishInView(), t=$("wantbar-text");
+  if(t)t.textContent="Only want to try · "+(here==null?(n+" place"+(n===1?"":"s")):(here+" here, "+n+" in all"));
+}
+function toggleWantOnly(on){
+  mapWantOnly=(on===undefined)?!mapWantOnly:!!on;
+  if(!wishPinCount())mapWantOnly=false;
+  /* the card may belong to a pin that is about to disappear */
+  if(mapWantOnly&&typeof peekOpen==="function"&&peekOpen()){ const pc=cafes.find(function(x){ return x.id===peekId; }); if(!pc||!pc.wish)closePeek(); }
+  _showPins();
+  if(mapWantOnly&&gmap){ mapOwned=true; if(_wishInView()===0)_fitWish(); }
+  syncWantUI();
+}
 const _clusterRenderer={ render:function(cluster){ const n=cluster.count; return new google.maps.Marker({ position:cluster.position, icon:{ path:google.maps.SymbolPath.CIRCLE, scale:14+Math.min(12,n), fillColor:"#d5803b", fillOpacity:.92, strokeColor:"#ffffff", strokeWeight:3 }, label:{ text:String(n), color:"#ffffff", fontSize:"12px", fontWeight:"700" }, zIndex:google.maps.Marker.MAX_ZINDEX+n }); } };
-function renderMarkers(){ if(!gmap)return; if(gclusterer){ try{ gclusterer.clearMarkers(); gclusterer.setMap(null); }catch(e){ warn("map.js",e); } gclusterer=null; } gmarkers.forEach(m=>m.setMap(null)); gmarkers=[]; const b=new google.maps.LatLngBounds(); let n=0; const dups=dupNameKeys(); cafes.forEach(c=>{ if(c.lat==null)return; const opt={position:{lat:latOf(c),lng:lngOf(c)},title:(dups[(c.name||"").trim().toLowerCase()]&&c.area)?(c.name+" — "+c.area):c.name,icon:c.wish?{path:google.maps.SymbolPath.CIRCLE,scale:10,fillColor:"#5b9bd5",fillOpacity:0.25,strokeColor:"#5b9bd5",strokeWeight:3}:{path:google.maps.SymbolPath.CIRCLE,scale:c.fav?15:12,fillColor:ratingColor(c.rating),fillOpacity:1,strokeColor:c.fav?"#e0556b":"#ffffff",strokeWeight:c.fav?4:3},zIndex:c.wish?1:(c.fav?5:3)}; const m=new google.maps.Marker(opt); m.addListener("click",()=>onMarkerClick(c,m)); gmarkers.push(m); b.extend(opt.position); n++; }); if(window.markerClusterer&&markerClusterer.MarkerClusterer&&gmarkers.length){ gclusterer=new markerClusterer.MarkerClusterer({ map:gmap, markers:gmarkers, renderer:_clusterRenderer }); } else { gmarkers.forEach(m=>m.setMap(gmap)); } if($("map-sub"))$("map-sub").textContent=cafes.length+" cafe"+(cafes.length===1?"":"s")+" · tap a pin"; renderLocationSelect(); if(n===1){ gmap.setCenter(gmarkers[0].getPosition()); gmap.setZoom(14); } else if(n>1){ gmap.fitBounds(b,fitPad()); } }
+function renderMarkers(){ if(!gmap)return; if(gclusterer){ try{ gclusterer.clearMarkers(); gclusterer.setMap(null); }catch(e){ warn("map.js",e); } gclusterer=null; } gmarkers.forEach(m=>m.setMap(null)); gmarkers=[]; const b=new google.maps.LatLngBounds(); let n=0; const dups=dupNameKeys(); cafes.forEach(c=>{ if(c.lat==null)return; const opt={position:{lat:latOf(c),lng:lngOf(c)},title:(dups[(c.name||"").trim().toLowerCase()]&&c.area)?(c.name+" — "+c.area):c.name,icon:c.wish?wishPinIcon():{path:google.maps.SymbolPath.CIRCLE,scale:c.fav?15:12,fillColor:ratingColor(c.rating),fillOpacity:1,strokeColor:c.fav?"#e0556b":"#ffffff",strokeWeight:c.fav?4:3},zIndex:c.wish?wishPinZ():(c.fav?5:3)}; const m=new google.maps.Marker(opt); m._wish=!!c.wish; m.addListener("click",()=>onMarkerClick(c,m)); gmarkers.push(m); if(_pinShown(m)){ b.extend(opt.position); n++; } }); _showPins(); syncWantUI(); if($("map-sub"))$("map-sub").textContent=cafes.length+" cafe"+(cafes.length===1?"":"s")+" · tap a pin"; renderLocationSelect(); if(n===1){ gmap.setCenter(gmarkers.filter(_pinShown)[0].getPosition()); gmap.setZoom(14); } else if(n>1){ gmap.fitBounds(b,fitPad()); } }
 const COUNTRY_INFO={"United States USA America":{flag:"🇺🇸",name:"United States"},"South Korea Korea":{flag:"🇰🇷",name:"South Korea"},"Japan":{flag:"🇯🇵",name:"Japan"},"Taiwan":{flag:"🇹🇼",name:"Taiwan"},"Hong Kong China":{flag:"🇭🇰",name:"Hong Kong"},"Singapore":{flag:"🇸🇬",name:"Singapore"},"Australia":{flag:"🇦🇺",name:"Australia"},"United Kingdom UK England":{flag:"🇬🇧",name:"United Kingdom"},"France":{flag:"🇫🇷",name:"France"}};
 function cafeCountryName(c){ const t=countryTerms(c); return (COUNTRY_INFO[t]&&COUNTRY_INFO[t].name)||"Other"; }
 /* The one country count, used by Stats and the Go board — they printed 5 and 6 for the same
@@ -55,7 +127,7 @@ function openPeek(id){
   const dkm=(userLoc&&latOf(c)!=null)?distKm(userLoc.lat,userLoc.lng,latOf(c),lngOf(c)):null;
   const where=[areaOf(c)?esc(areaOf(c)):"", dkm!=null?fmtDist(dkm):""].filter(Boolean).join(" \u00b7 ");
   const top=(!c.wish&&typeof topDrinkAt==="function")?topDrinkAt(c):null;
-  const judge=c.wish?'<span class="bkpill"><i style="background:#5b9bd5"></i>Want to try</span>':bucketPill(c,"");
+  const judge=c.wish?'<span class="bkpill wantpill"><i></i>Want to try</span>':bucketPill(c,"");
   el.innerHTML='<div class="peekgrab" aria-hidden="true"></div>'
     +'<div class="peekhead">'
       +(rk?'<div class="dranktile"><b>#'+rk+'</b><span>of '+rn+'</span></div>':'')
@@ -89,9 +161,8 @@ function focusNearest(){ if(!gmap)return; ifLocationAlreadyAllowed(function(){ s
    from you — without ever showing you. Both halves are here now. */
 function setLocateState(s){ const b=$("btn-locate"); if(b)b.dataset.state=s; }
 
-/* Blue, filled and above everything. Wishlist pins are also blue (#5b9bd5), so this is
-   separated from them by more than hue: they are hollow rings at 25% fill, this is solid and
-   saturated, and it carries an accuracy halo they never have. The halo is the real radius the
+/* Blue, filled and above everything — want-to-try pins are violet with a bookmark (v63), so
+   nothing else on the map shares this blue. It also carries an accuracy halo no pin has. The halo is the real radius the
    device reported, so a vague fix looks vague instead of pretending to be a doorstep. */
 function drawUserLocation(pos,acc){
   if(!gmap)return;

@@ -35,6 +35,7 @@ const SUITE = [
   ["beli",             "three buckets, a position on every card, and the two lists up front"],
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
+  ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],
   ["one-screen",       "logging a new cafe fits one phone screen, in counter order"],
   ["boot-firebase",    "the app starts against a connected, real-shaped Firebase"],
   ["offline",          "the app boots with the network pulled"],
