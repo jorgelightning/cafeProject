@@ -98,7 +98,7 @@ function nophotoBg(c){
 }
 /* background and a legible ink together, since they always travel as a pair */
 function nophotoStyle(c){ return 'background:'+nophotoBg(c)+';color:'+inkOn(tintFor(c)); }
-function nophotoHTML(c){ return '<span class="em">'+esc((c&&c.emoji)||"☕")+'</span><span>'+initials(c)+'</span>'; }
+function nophotoHTML(c){ return '<span class="em">'+esc((c&&c.emoji)||"☕")+'</span><span>'+esc(initials(c))+'</span>'; }
 /* Local calendar date. Plain toISOString() would hand back yesterday (or tomorrow) when
    logging from Hawaii or Taipei, so shift by the timezone offset before slicing. */
 /* prices[len/2] is the upper-middle value, which reads high on every even-length set. */
@@ -160,8 +160,17 @@ function lngOf(c){ const p=privFor(c); return (p&&p.lng!=null)?p.lng:(c?c.lng:nu
 /* The one door stored data walks through to become `cafes`. Two jobs: nothing precise about a
    private spot may enter the array, and a precise record found in the public node is
    remembered so healPrivateSpots() can move it somewhere only the owner can read. */
+/* Ids end up inside inline handlers, onclick="openDetail('<id>')", where HTML-escaping does not
+   help (the browser decodes the entities before the JavaScript runs). So instead of escaping
+   them everywhere, nothing with an odd id gets in: ids the app makes are letters, digits, "_"
+   and "-". Only the owner can write cafes, so this is defence in depth, not a live hole. */
+const SAFE_ID=/^[A-Za-z0-9_-]{1,64}$/;
 function adoptCafes(list){
-  const out=Array.isArray(list)?list:[];
+  let out=Array.isArray(list)?list:[];
+  if(out.some(function(c){ return c&&!SAFE_ID.test(String(c.id)); })){
+    warn("core.js","ignoring "+out.filter(function(c){ return c&&!SAFE_ID.test(String(c.id)); }).length+" record(s) with an unusual id");
+    out=out.filter(function(c){ return !c||SAFE_ID.test(String(c.id)); });
+  }
   out.forEach(function(c){
     if(!c||!c.custom)return;
     /* Firebase stores no nulls, so a spot with no pin arrives with no lat/lng at all. Read
@@ -401,5 +410,5 @@ let _cardRanks=null;
    of been, so it still separates. */
 function phInner(c,hasPhoto){ let h=hasPhoto?"":nophotoHTML(c); if(c&&c.fav)h+='<span class="favbadge">❤️</span>';
   return h+((typeof rankBadge==="function")?rankBadge(c,_cardRanks):""); }
-function verifyCardPhoto(id,url){ if(!url)return; const probe=new Image(); probe.onload=function(){ _imgFail[id]=0; }; probe.onerror=function(){ _imgFail[id]=1; const c=cafes.find(x=>x.id===id); if(c&&c.gphoto)delete c.gphoto; if(gphotoCache[id]!==undefined){ delete gphotoCache[id]; saveGphotoCache(); } const el=document.querySelector('.card[data-id="'+id+'"] .ph'); if(el){ el.style.backgroundImage=""; el.classList.remove("loaded","loading"); el.classList.add("nophoto"); el.style.cssText=c?nophotoStyle(c):"background:#caa472"; el.innerHTML=c?phInner(c,false):"?"; } if(c&&!c.photo&&!_photoRetried[id]&&gReady&&c.lat!=null&&!gphotoInflight[id]){ _photoRetried[id]=1; gphotoInflight[id]=1; fetchPlacePhoto(c,function(u){ delete gphotoInflight[id]; if(u)applyCardPhoto(id,u); }); } }; probe.src=safeUrl(url); }
+function verifyCardPhoto(id,url){ if(!url)return; const probe=new Image(); probe.onload=function(){ _imgFail[id]=0; }; probe.onerror=function(){ _imgFail[id]=1; const c=cafes.find(x=>x.id===id); if(c&&c.gphoto)delete c.gphoto; if(gphotoCache[id]!==undefined){ delete gphotoCache[id]; saveGphotoCache(); } const el=document.querySelector('.card[data-id="'+CSS.escape(String(id))+'"] .ph'); if(el){ el.style.backgroundImage=""; el.classList.remove("loaded","loading"); el.classList.add("nophoto"); el.style.cssText=c?nophotoStyle(c):"background:#caa472"; el.innerHTML=c?phInner(c,false):"?"; } if(c&&!c.photo&&!_photoRetried[id]&&gReady&&c.lat!=null&&!gphotoInflight[id]){ _photoRetried[id]=1; gphotoInflight[id]=1; fetchPlacePhoto(c,function(u){ delete gphotoInflight[id]; if(u)applyCardPhoto(id,u); }); } }; probe.src=safeUrl(url); }
 function fmtDate(s){ if(!s)return ""; const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); if(!m)return s; const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2]-1]; return mo+" "+(+m[3])+", "+m[1]; }
