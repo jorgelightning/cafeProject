@@ -3,30 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#f6f5f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#15110e" media="(prefers-color-scheme: dark)">
 <title>JL Cafe Project</title>
+<meta name="description" content="A personal cafe tracker: every place I have been or want to try, ranked on a map, with drink history, prices and stats.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="JL Cafe Project">
+<meta property="og:title" content="JL Cafe Project">
+<meta property="og:description" content="Cafes I have been to and want to try, ranked on a map, with drink history and stats.">
+<meta property="og:url" content="https://jorgelightning.github.io/cafeProject/">
+<meta property="og:image" content="https://jorgelightning.github.io/cafeProject/icon-512.png">
+<meta name="twitter:card" content="summary">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=63">
+<link rel="stylesheet" href="styles.css?v=64">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
 <div id="app" data-view="map" data-mode="viewer">
 <aside class="sidebar">
-<div class="side-head"><div style="flex:1"><h1>☕ JL Cafe Project</h1></div></div>
+<div class="side-head"><div style="flex:1"><p class="apptitle">☕ JL Cafe Project</p></div></div>
 <div class="side-nav">
-<button id="n-list" onclick="show('list')">☰ List</button>
-<button id="n-rank" onclick="openRank()">🏆 Go</button>
-<button id="n-stats" onclick="show('stats')">📊 Stats</button>
-<button id="n-settings" class="setdoor" onclick="show('settings')">⚙︎ Settings<span class="gcount" hidden></span></button>
-<button id="n-add" class="admin-only navlog" onclick="openForm()">＋ Log a visit</button>
+<button id="n-list" onclick="show('list')"><span aria-hidden="true">☰</span> List</button>
+<button id="n-rank" onclick="openRank()"><span aria-hidden="true">🏆</span> Go</button>
+<button id="n-stats" onclick="show('stats')"><span aria-hidden="true">📊</span> Stats</button>
+<button id="n-settings" class="setdoor" onclick="show('settings')"><span aria-hidden="true">⚙︎</span> Settings<span class="gcount" hidden></span></button>
+<button id="n-add" class="admin-only navlog" onclick="openForm()"><span aria-hidden="true">＋</span> Log a visit</button>
 </div>
 <div id="sync-status" class="sync-status admin-only" role="status" hidden><span class="sync-label"></span><button class="sync-retry" onclick="flushSync()">Retry sync</button><div class="sync-review" hidden></div></div>
 <div class="panes">
@@ -65,7 +71,7 @@
 </div>
 </section>
 <section class="pane" id="pane-form">
-<div class="form-top"><button class="iconbtn" onclick="closeForm()" aria-label="Back">‹</button><h1 id="form-title" style="flex:1; font-size:18px; margin:0">Add a visit</h1></div>
+<div class="form-top"><button class="iconbtn" onclick="closeForm()" aria-label="Back">‹</button><h2 id="form-title" style="flex:1; font-size:18px; margin:0">Add a visit</h2></div>
 <div class="scroll"><div class="form">
 <div class="field"><label>Cafe name *</label><input type="text" id="f-name" placeholder="Search a place or type a name…" autocomplete="off" onblur="checkExisting()"></div>
 <!-- Where it is: one line saying what Google filled in, opening onto the pin and area only when they need changing. -->
@@ -122,7 +128,8 @@
 </div>
 </aside>
 <main class="mapwrap">
-<div class="mobile-topbar"><div style="flex:1"><h1>☕ JL Cafe Project</h1><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
+<h1 class="sr-only">JL Cafe Project</h1>
+<div class="mobile-topbar"><div style="flex:1"><p class="apptitle">☕ JL Cafe Project</p><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
 <div class="mapbox">
 <div id="map"></div>
 <div class="mapsearch"><select id="locsel" aria-label="Jump to a country or state" onchange="jumpToLocation(this.value)"></select><button type="button" class="wantchip" id="btn-want" aria-pressed="false" onclick="toggleWantOnly()" hidden><svg class="bm" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3h12v18l-6-4.6L6 21z"/></svg><span class="wantlbl">Want to try</span><span class="wantn" id="want-n">0</span></button><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
@@ -135,12 +142,12 @@
 </div>
 </main>
 <nav class="tabbar">
-<button class="tab on" id="t-map" onclick="show('map')"><span class="ti">🗺️</span>Map</button>
-<button class="tab" id="t-list" onclick="show('list')"><span class="ti">☰</span>List</button>
-<button class="tab primary admin-only" id="t-log" onclick="openForm()"><span class="plus">＋</span>Log</button>
-<button class="tab primary viewer-only" id="t-find" onclick="show('list');document.getElementById('q').focus()"><span class="plus">🔍</span>Find</button>
-<button class="tab" id="t-rank" onclick="openRank()"><span class="ti">🏆</span>Go</button>
-<button class="tab" id="t-stats" onclick="show('stats')"><span class="ti">📊</span>Stats</button>
+<button class="tab on" id="t-map" onclick="show('map')"><span class="ti" aria-hidden="true">🗺️</span>Map</button>
+<button class="tab" id="t-list" onclick="show('list')"><span class="ti" aria-hidden="true">☰</span>List</button>
+<button class="tab primary admin-only" id="t-log" onclick="openForm()"><span class="plus" aria-hidden="true">＋</span>Log</button>
+<button class="tab primary viewer-only" id="t-find" onclick="show('list');document.getElementById('q').focus()"><span class="plus" aria-hidden="true">🔍</span>Find</button>
+<button class="tab" id="t-rank" onclick="openRank()"><span class="ti" aria-hidden="true">🏆</span>Go</button>
+<button class="tab" id="t-stats" onclick="show('stats')"><span class="ti" aria-hidden="true">📊</span>Stats</button>
 </nav>
 <div id="d-chaser"></div>
 <div class="updatebar" id="updatebar" role="button" tabindex="0" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
@@ -149,23 +156,24 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://unpkg.com/@googlemaps/markerclusterer@2.5.3/dist/index.min.js"></script>
+<!-- Self-hosted (Apache-2.0, see vendor/): the same file unpkg served, minus a third-party host that could change under us and that the offline shell could not cache. -->
+<script src="vendor/markerclusterer-2.5.3.min.js"></script>
 <!-- App code, split by feature. IMPORTANT: when you change ANY js/ or css file,
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=63"></script>
-<script src="js/core.js?v=63"></script>
-<script src="js/storage.js?v=63"></script>
-<script src="js/sync.js?v=63"></script>
-<script src="js/nav.js?v=63"></script>
-<script src="js/map.js?v=63"></script>
-<script src="js/photos.js?v=63"></script>
-<script src="js/list.js?v=63"></script>
-<script src="js/stats.js?v=63"></script>
-<script src="js/rank.js?v=63"></script>
-<script src="js/detail.js?v=63"></script>
-<script src="js/form.js?v=63"></script>
-<script src="js/boot.js?v=63"></script>
+<script src="js/config.js?v=64"></script>
+<script src="js/core.js?v=64"></script>
+<script src="js/storage.js?v=64"></script>
+<script src="js/sync.js?v=64"></script>
+<script src="js/nav.js?v=64"></script>
+<script src="js/map.js?v=64"></script>
+<script src="js/photos.js?v=64"></script>
+<script src="js/list.js?v=64"></script>
+<script src="js/stats.js?v=64"></script>
+<script src="js/rank.js?v=64"></script>
+<script src="js/detail.js?v=64"></script>
+<script src="js/form.js?v=64"></script>
+<script src="js/boot.js?v=64"></script>
 </body>
 </html>

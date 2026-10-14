@@ -838,6 +838,37 @@ The mock's enlarged "tapped" pin was left out: no pin grows on tap today, visite
 included, and the card already says which cafe it is. `tests/want-pins.js`; on v62 its pin
 and layer checks fail and the switch does not exist.
 
+### The 14 Oct audit, built — Stage 2 (v64)
+
+An overnight read-only audit (`overnight-cafe-audit.html`, kept out of git) produced ten items; the
+owner picked all of them. This is the head, accessibility and security half.
+
+- **Head.** A description and Open Graph/Twitter tags (the app has a Share button and links used to
+  preview blank; `og:image` is the 512px icon at its absolute Pages URL), `mobile-web-app-capable`
+  beside the deprecated apple tag, and the `Cache-Control/Pragma/Expires` metas removed (browsers
+  ignore them; the service worker and `?v=` are the real strategy).
+- **One heading.** Phones hide *both* visible titles (the map screen has no top bar), so a
+  screen-reader user had no `<h1>` at all. One `sr-only` `<h1>` in `<main>`; the two visible titles
+  are `.apptitle` paragraphs; the form title is an `<h2>`. Emoji on tab and nav buttons are
+  `aria-hidden`, so a button's name is "List", not "☰ List".
+- **No shared passphrase.** `ADMIN_PASS` sat in `js/config.js`, served to every visitor, and was used
+  only when Firebase auth was unavailable; the rules never honoured it. Removed; without Google
+  sign-in `toggleAdmin()` now says so and changes nothing.
+- **The clusterer is vendored** (`vendor/markerclusterer-2.5.3.min.js` + its Apache-2.0 licence): the
+  same file unpkg served, taken from the npm registry. One fewer third-party host, and the offline
+  shell caches it. **Not done: SRI on the three Firebase scripts.** The audit environment could not
+  reach gstatic to hash them, and a wrong integrity value would stop the app loading, so none was
+  guessed. Do it from a machine that can `curl` the files.
+- **XSS pass.** Every value spliced into an HTML string was traced (a script listed all
+  `'+expr+'` operands outside `esc()`). All free text — names, areas, drinks, notes, sync dialogs —
+  is escaped. Findings: cafe ids go into inline `onclick="openDetail('<id>')"`, where HTML-escaping
+  does *not* help (entities decode before the JS runs), so `adoptCafes()` now refuses any id that is
+  not `[A-Za-z0-9_-]{1,64}`; `initials()` was inserted raw (two characters, so not exploitable,
+  now escaped); and `applyCardPhoto()` built a selector from an id (now `CSS.escape`d). Only the
+  owner can write cafes, so none of these was a live hole. **The 100+ inline handlers remain**, so a
+  strict CSP is still not possible without `unsafe-inline`.
+- Pinned by `tests/hardening.js`.
+
 ---
 
 ## Rejected, and why
