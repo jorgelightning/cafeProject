@@ -776,3 +776,23 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .emptyart .ea-bg{ fill:var(--surface2); } .emptyart .ea-fg{ fill:var(--want); } .emptyart.been .ea-fg{ fill:var(--acc); }
 .emptyart .ea-ln{ stroke:#fff; stroke-width:3; stroke-linecap:round; fill:none; }
 .emptyart .ea-ln2{ stroke:var(--soft); stroke-width:3; stroke-linecap:round; fill:none; }
+
+/* ---------- v67: the World view ---------- */
+.worldsheet{ position:absolute; left:0; right:0; bottom:0; z-index:7; max-height:46%; overflow-y:auto; overscroll-behavior:contain; background:var(--surface); border-radius:var(--r-4) var(--r-4) 0 0; box-shadow:0 -2px 30px rgba(0,0,0,.18); padding:10px 16px 8px; }
+.worldsheet[hidden]{ display:none; }
+.wgrab{ width:40px; height:5px; border-radius:var(--r-pill); background:var(--star-off); margin:0 auto var(--sp-2); }
+.whead{ font-size:var(--fs-1); font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--soft); padding:0 4px var(--sp-1); }
+.wrow{ display:grid; grid-template-columns:minmax(0,1fr) auto auto 14px; align-items:center; gap:var(--sp-3); width:100%; min-height:60px; padding:0 4px; border:0; border-top:1px solid var(--border); background:none; color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+.wmain{ min-width:0; display:flex; flex-direction:column; gap:var(--sp-1); }
+.wmain b{ font-size:var(--fs-4); font-weight:800; letter-spacing:-.01em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wmain small{ font-size:var(--fs-2); color:var(--soft); }
+.wbar{ display:flex; width:64px; height:8px; border-radius:var(--r-pill); overflow:hidden; background:var(--surface2); }
+.wbar i{ display:block; height:100%; }
+.wn{ min-width:24px; text-align:right; font-size:var(--fs-4); font-weight:800; font-variant-numeric:tabular-nums; }
+.wchev{ color:var(--soft); font-size:var(--fs-4); }
+.mapbox.worlding .locbtn{ bottom:calc(var(--worldh, 260px) + 22px); }
+.mapbox.worlding .maplegend{ display:none; }
+@media (min-width:900px){
+  .worldsheet{ left:calc(var(--sidebar) + 12px); right:auto; bottom:26px; width:min(380px, calc(100% - var(--sidebar) - 24px)); max-height:50%; border-radius:var(--r-4); }
+  .mapbox.worlding .locbtn{ bottom:calc(114px + env(safe-area-inset-bottom)); }
+}
