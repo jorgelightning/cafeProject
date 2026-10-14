@@ -22,6 +22,49 @@ function fmtEdited(iso) {
     d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
   );
 }
+/* Brand detection fills the box only while the person has not decided it: once they type in it, or
+   open a cafe that already has one, the detector leaves it alone. */
+let brandTouched = false;
+let brandAuto = null; /* what the detector last put in the box */
+function showBrandHint(r) {
+  const h = $("f-brand-hint");
+  if (!h) return;
+  h.hidden = !r;
+  h.textContent = r ? "Detected: " + r.brand : "";
+}
+function autoBrand() {
+  const f = $("f-brand"),
+    n = $("f-name");
+  if (!f || !n || brandTouched) return;
+  const cur = f.value.trim();
+  if (cur && cur !== brandAuto) return;
+  const r = inferBrand(n.value, cafes, editId, KNOWN_BRANDS);
+  f.value = r ? r.brand : "";
+  brandAuto = r ? r.brand : null;
+  showBrandHint(r);
+  syncMoreSum();
+}
+function fillBrands() {
+  if (!isAdmin) return toast("Sign in to edit first");
+  const plan = backfillBrands(true);
+  if (!plan.length) {
+    toast("Nothing to fill in ✓");
+    return updateBrandBtn();
+  }
+  if (!confirm("Set the brand on " + plan.length + " cafe" + (plan.length === 1 ? "" : "s") + " whose names show a chain?\n\nOnly empty brands are filled; none you set are changed."))
+    return;
+  backfillBrands(false);
+  renderList();
+  updateBrandBtn();
+  toast("Brands filled in for " + plan.length);
+}
+function updateBrandBtn() {
+  const b = $("ab-brand");
+  if (!b) return;
+  const n = isAdmin ? backfillBrands(true).length : 0;
+  b.style.display = n ? "" : "none";
+  if (n) b.textContent = "🏷 Fill in " + n + " brand" + (n === 1 ? "" : "s");
+}
 function openForm(id) {
   editId = typeof id === "string" ? id : null;
   const c = editId ? cafes.find(x => x.id === editId) : null;
@@ -30,6 +73,9 @@ function openForm(id) {
   $("f-name").value = c ? c.name : "";
   $("f-area").value = c ? areaOf(c) : "";
   if ($("f-brand")) $("f-brand").value = c ? c.brand || "" : "";
+  brandTouched = !!(c && (c.brand || "").trim());
+  brandAuto = null;
+  showBrandHint(null);
   $("f-review").value = c ? c.review || "" : "";
   $("f-fav").checked = c ? !!c.fav : false;
   if ($("f-wish")) $("f-wish").checked = c ? !!c.wish : false;
@@ -194,6 +240,7 @@ function initFormMap() {
           }
         }
         syncWhere();
+        autoBrand();
         checkExisting();
       });
     } catch (e) {
@@ -444,6 +491,12 @@ function syncMore(open) {
       if (ch) ch.textContent = m.open ? "\u25be" : "\u25b8";
     });
     m.addEventListener("input", syncMoreSum);
+    const fb = $("f-brand");
+    if (fb)
+      fb.addEventListener("input", () => {
+        brandTouched = true;
+        showBrandHint(null);
+      });
     m.addEventListener("change", syncMoreSum);
   }
   const ch = m.querySelector(".cdchev");
