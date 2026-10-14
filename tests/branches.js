@@ -53,71 +53,110 @@ const { eq, done } = checker();
   eq(r.slice().sort(), ["Sunset", "Sunset 2", r.find(x => x.length > 10 && x !== "Sunset 2")].sort(), "branches that still clash get a number, and a long label is cut with an ellipsis");
   eq(r.every(x => x.length <= 18), true, "no label is longer than 16 characters plus a number");
 
-  // ---- the row in the detail page ----
+  // ---- the chip and list in the detail page ----
   const eight = [];
   ["Mission", "Marina", "Sunset", "Richmond", "Hayes Valley", "Ferry Building", "Union Square", "Noe Valley"].forEach((p, i) =>
-    eight.push({ id: "m" + i, name: "Molly Tea (" + p + ")", area: p, brand: "Molly Tea" })
+    eight.push({ id: "m" + i, name: "Molly Tea (" + p + ")", area: p, brand: "Molly Tea", rating: 4 })
   );
-  eight.push({ id: "solo", name: "Hermit Cafe", area: "Nowhere", brand: "Hermit" }, { id: "plain", name: "Plain Cafe", area: "Elsewhere" });
+  eight.push(
+    { id: "long", name: "Molly Tea (The Very Long Name Of A Shopping Centre Branch)", area: "", brand: "Molly Tea" },
+    { id: "solo", name: "Hermit Cafe", area: "Nowhere", brand: "Hermit" },
+    { id: "plain", name: "Plain Cafe", area: "Elsewhere" }
+  );
   await set(eight);
   r = await pg.evaluate(() => {
     openDetail("m0", "list");
-    const row = $("d-locs"),
-      pills = [...row.querySelectorAll(".locpill:not(.add)")];
-    const tops = new Set(pills.map(p => Math.round(p.getBoundingClientRect().top)));
+    const w = $("d-where"),
+      l = $("d-locs");
     return {
-      n: pills.length,
-      tag: pills[0].tagName,
-      cur: pills.filter(p => p.getAttribute("aria-current") === "true").map(p => p.textContent),
-      oneLine: tops.size,
-      minH: Math.min(...pills.map(p => p.getBoundingClientRect().height)),
-      scrolls: row.scrollWidth > row.clientWidth,
-      pageOver: document.documentElement.scrollWidth - innerWidth,
-      add: !!row.querySelector(".add"),
+      chip: w.textContent.replace(/\s+/g, " ").trim(),
+      chipShown: !w.hidden,
+      metaHidden: $("d-meta").hidden,
+      listHidden: l.hidden,
+      expanded: w.getAttribute("aria-expanded"),
+      chipH: w.getBoundingClientRect().height,
     };
   });
-  eq([r.n, r.tag, r.cur], [8, "BUTTON", ["Mission"]], "eight pills, real buttons, the current one marked");
-  eq([r.oneLine, r.scrolls, r.pageOver <= 0], [1, true, true], "at 375px they stay on one line and scroll inside the row; the page does not scroll sideways");
-  eq(r.minH >= 44, true, "each is at least 44px tall (" + r.minH + ")");
-  eq(r.add, true, "the owner gets a + Branch");
+  eq(r.chip, "📍 Mission · 9 branches ▾", "the area under the title becomes a chip that says how many branches");
+  eq([r.chipShown, r.metaHidden, r.listHidden, r.expanded], [true, true, true, "false"], "the plain area line steps aside and the list starts shut");
+  eq(r.chipH >= 44, true, "the chip is a 44px target (" + r.chipH + ")");
 
   r = await pg.evaluate(() => {
-    const p = [...$("d-locs").querySelectorAll(".locpill")].find(x => x.textContent === "Marina");
-    p.click();
-    return { cur: curId, name: $("d-name").textContent, on: $("d-locs").querySelector(".on").textContent };
+    $("d-where").click();
+    const l = $("d-locs"),
+      rows = [...l.querySelectorAll(".br:not(.add)")];
+    const longRow = rows.find(x => /Shopping Centre/.test(x.textContent));
+    return {
+      open: !l.hidden,
+      expanded: $("d-where").getAttribute("aria-expanded"),
+      n: rows.length,
+      tag: rows[0].tagName,
+      cur: rows.filter(x => x.getAttribute("aria-current") === "true").map(x => x.querySelector(".t").textContent),
+      minH: Math.min(...rows.map(x => x.getBoundingClientRect().height)),
+      boxH: l.getBoundingClientRect().height,
+      scrolls: l.scrollHeight > l.clientHeight,
+      pageOver: document.documentElement.scrollWidth - innerWidth,
+      add: !!l.querySelector(".add"),
+      full: longRow ? longRow.querySelector(".t").textContent : null,
+      order: rows.slice(0, 3).map(x => x.querySelector(".t").textContent),
+    };
   });
-  eq([r.cur, r.on], ["m1", "Marina"], "tapping a pill opens that branch");
+  eq([r.open, r.expanded, r.n, r.tag], [true, "true", 9, "BUTTON"], "tapping the chip opens a list of real buttons, one per branch");
+  eq(r.cur, ["Mission"], "the current branch is marked");
+  eq(r.minH >= 44, true, "every row is at least 44px tall (" + r.minH + ")");
+  eq([r.boxH <= 290, r.scrolls, r.pageOver <= 0], [true, true, true], "nine branches stay a compact list that scrolls inside itself (" + r.boxH + "px); the page does not scroll sideways");
+  eq(r.full, "The Very Long Name Of A Shopping Centre Branch", "a long branch name is shown whole, not cut");
+  eq(r.add, true, "the owner gets ＋ Add branch at the bottom");
+
+  r = await pg.evaluate(() => {
+    openDetail("m0", "list"); /* what the cloud echo does after a save */
+    const same = !$("d-locs").hidden;
+    [...$("d-locs").querySelectorAll(".br")].find(x => x.querySelector(".t").textContent === "Marina").click();
+    return { same, cur: curId, shut: $("d-locs").hidden, chip: $("d-where").textContent.replace(/\s+/g, " ").trim() };
+  });
+  eq(r.same, true, "a repaint of the same cafe leaves the list open");
+  eq([r.cur, r.shut], ["m1", true], "tapping a branch opens it, and the list closes");
+  eq(r.chip.indexOf("Marina") >= 0, true, "…and the chip now names that branch");
 
   r = await pg.evaluate(() => {
     isAdmin = false;
     applyMode();
     openDetail("m0", "list");
+    $("d-where").click();
     const add = $("d-locs").querySelector(".add");
     const vis = add ? getComputedStyle(add).display !== "none" : false;
-    const n = $("d-locs").querySelectorAll(".locpill:not(.add)").length;
-    $("d-locs").querySelectorAll(".locpill:not(.add)")[2].click();
+    const n = $("d-locs").querySelectorAll(".br:not(.add)").length;
+    $("d-locs").querySelectorAll(".br:not(.add)")[2].click();
     const out = { vis, n, switched: curId !== "m0" };
+    openDetail("solo", "list");
+    out.soloChip = $("d-where").hidden;
+    out.soloMeta = $("d-meta").hidden;
     isAdmin = true;
     applyMode();
     return out;
   });
-  eq(r, { vis: false, n: 8, switched: true }, "a viewer can switch branches but never sees + Branch");
+  eq(r, { vis: false, n: 9, switched: true, soloChip: true, soloMeta: false }, "a viewer can switch branches but never sees ＋ Add branch; a lone cafe keeps its plain area line");
 
   r = await pg.evaluate(() => {
     openDetail("solo", "list");
-    const a = getComputedStyle($("d-locs")).display + "|" + $("d-locs").textContent.trim();
+    const chip = $("d-where").textContent.replace(/\s+/g, " ").trim();
+    $("d-where").click();
+    const rows = [...$("d-locs").querySelectorAll(".br")].map(x => x.textContent.replace(/\s+/g, " ").trim());
     openDetail("plain", "list");
-    return { solo: a, plain: getComputedStyle($("d-locs")).display };
+    return { chip, rows, plain: $("d-where").hidden };
   });
-  eq(r, { solo: "flex|＋ Branch", plain: "none" }, "a lone cafe with a brand offers only + Branch to the owner; one with no brand shows nothing");
+  eq(r.chip, "📍 Nowhere · ＋ Branch ▾", "a lone cafe with a brand offers ＋ Branch to the owner");
+  eq(r.rows, ["Nowhere", "＋ Add branch"], "…and opening it lists itself and the add row");
+  eq(r.plain, true, "a lone cafe with no brand shows no chip");
 
   // ---- + Branch ----
+  let r2;
   await set([
     { id: "s1", name: "Molly Tea (San Mateo)", area: "San Mateo", brand: "Molly tea", lat: 37.56, lng: -122.32, pid: "P1", cc: "US", ccy: "USD", rating: 5, review: "great", photo: null, tags: ["cozy"], fav: true, drinks: [] },
   ]);
   r = await pg.evaluate(() => {
     openDetail("s1", "list");
-    $("d-locs").querySelector(".add").click();
+    $("d-locs").querySelector(".br.add").click();
     return {
       view: app.dataset.view,
       title: $("form-title").textContent,
@@ -137,6 +176,8 @@ const { eq, done } = checker();
   });
   eq([r.view, r.title, r.name, r.brand], ["form", "Add a branch", "Molly Tea", "Molly tea"], "+ Branch opens a new form with the brand and the name");
   eq([r.cc, r.ccy], ["US", "USD"], "…and the country and currency");
+  r2 = await pg.evaluate(() => ({ badge: $("f-link").textContent.trim(), boxHidden: $("f-brand").closest(".field").hidden }));
+  eq(r2, { badge: "🔗 New branch of Molly tea", boxHidden: true }, "the brand shows as a locked badge, and the brand box is out of the way");
   eq([r.area, r.pid, r.pin, r.rating, r.review, r.fav, r.tags, r.editing], ["", "", null, 0, "", false, 0, null], "…but not the place, pin, place id, rating, review, favourite, tags — it is a new cafe");
 
   r = await pg.evaluate(() => {
@@ -202,6 +243,35 @@ const { eq, done } = checker();
     return { lbl: document.querySelector("#f-usuals .usuallbl").textContent, first: document.querySelector("#f-usuals .uchip").firstChild.textContent };
   });
   eq([r.lbl, r.first], ["Log again · Molly tea", "Brown Sugar Boba"], "typing a chain's name switches the suggestions to that chain");
+
+  // ---- the chip's own buttons ----
+  r = await pg.evaluate(() => {
+    openForm();
+    $("f-name").value = "Molly Tea - Fremont";
+    autoBrand();
+    const out = { linked: $("f-link").textContent.replace(/\s+/g, " ").trim(), boxHidden: $("f-brand").closest(".field").hidden };
+    const btns = [...$("f-link").querySelectorAll("button")];
+    out.btnH = Math.min(...btns.map(x => x.getBoundingClientRect().height));
+    editBrand();
+    out.editShown = !$("f-brand").closest(".field").hidden;
+    out.editOpen = $("f-more").open;
+    $("f-brand").dispatchEvent(new Event("blur"));
+    out.after = $("f-link").textContent.replace(/\s+/g, " ").trim();
+    unlinkBrand();
+    out.unlinked = { brand: $("f-brand").value, chip: $("f-link").textContent.replace(/\s+/g, " ").trim(), boxShown: !$("f-brand").closest(".field").hidden };
+    $("f-name").value = "Molly Tea - Palo Alto";
+    autoBrand();
+    out.stays = $("f-brand").value;
+    relinkBrand();
+    out.relinked = $("f-brand").value;
+    return out;
+  });
+  eq(r.linked, "🔗 Linked to Molly tea (2 spots)EditUnlink", "an unlinked-looking form shows a chip: the brand and how many spots, with Edit and Unlink");
+  eq([r.boxHidden, r.btnH >= 44], [true, true], "the brand box is hidden and the chip's buttons are 44px");
+  eq([r.editShown, r.editOpen, r.after], [true, true, "🔗 Linked to Molly tea (2 spots)EditUnlink"], "Edit brings the box back under More, and leaving it returns to the chip");
+  eq(r.unlinked, { brand: "", chip: "Link to Molly tea", boxShown: true }, "Unlink clears the brand, shows the box, and offers to link again");
+  eq(r.stays, "", "an unlinked cafe is not re-linked by the detector as you keep typing");
+  eq(r.relinked, "Molly tea", "Link again puts the brand back");
 
   eq(errs, [], "no page errors");
   const ok = done();

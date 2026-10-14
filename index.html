@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=71">
+<link rel="stylesheet" href="styles.css?v=72">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -59,13 +59,13 @@
 <div class="dranktile" id="d-rank" hidden></div>
 <div class="dheadmain">
 <h2 id="d-name"></h2>
-<div class="dsub"><span id="d-stars"></span><span class="darea" id="d-meta"></span></div>
+<div class="dsub"><span id="d-stars"></span><span class="darea" id="d-meta"></span><button type="button" class="where" id="d-where" aria-expanded="false" aria-controls="d-locs" onclick="toggleBranches()" hidden></button></div>
+<div class="branches" id="d-locs" hidden></div>
 <div class="dscoreline" id="d-score" hidden></div>
 </div>
 </div>
 <div class="orderagain" id="d-orderagain" hidden></div>
 <div class="reorder-rollup" id="d-reorder" style="display:none"></div>
-<div class="locpills" id="d-locs"></div>
 <div class="chips" id="d-tags"></div>
 <div class="lab drinklab"><span>Drinks I had</span><small>Tap for order history</small></div><div id="d-drinks"></div>
 <div class="lab">My thoughts</div><div class="review" id="d-review"></div>
@@ -78,6 +78,7 @@
 <div class="form-top"><button class="iconbtn" onclick="closeForm()" aria-label="Back">‹</button><h2 id="form-title" style="flex:1; font-size:18px; margin:0">Add a visit</h2></div>
 <div class="scroll"><div class="form">
 <div class="field"><label>Cafe name *</label><input type="text" id="f-name" placeholder="Search a place or type a name…" autocomplete="off" oninput="autoBrand()" onblur="checkExisting()"></div>
+<div class="linkrow" id="f-link" hidden></div>
 <!-- Where it is: one line saying what Google filled in, opening onto the pin and area only when they need changing. -->
 <details class="cafedetails wherebox" id="f-details"><summary class="cdsum wheresum" id="f-where"><svg class="wherepin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span class="wheretext" id="f-where-text">No location yet</span><span class="whereact" id="f-where-act">Add pin</span></summary><div class="cdbody"><div class="field"><label>Location — tap map to drop a pin</label><div id="form-map"></div><button class="hintbtn" onclick="formLocate()">📍 Use my current location</button> <span id="f-coords" style="font-size:12px; color:var(--soft)"></span></div>
 <div class="field"><label>Area / neighborhood</label><input type="text" id="f-area" placeholder="e.g. Manoa" autocomplete="off" oninput="syncWhere()"></div></div></details>
@@ -87,7 +88,7 @@
 <!-- Everything a visit can carry but rarely needs at the counter. -->
 <details class="cafedetails" id="f-more"><summary class="cdsum"><span class="cdchev">▸</span><span class="cdmain"><b>More</b><small id="f-more-sum">tags, brand, favourite, wishlist, private</small></span></summary><div class="cdbody"><div class="field"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-wish" onchange="syncWishMode()"> Add to wishlist 🔖 <span style="font-size:var(--fs-1);color:var(--soft);font-weight:400">(haven’t visited yet)</span></label></div>
 <div class="field"><label class="checkwrap" style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-custom"> Private spot 🏠 <span style="font-size:var(--fs-1);color:var(--soft);font-weight:400">(friend's place, pop-up, event — the saved pin is rounded to about a kilometre and a street address is dropped, so this never publishes someone's door)</span></label></div>
-<div class="field"><label>Brand / chain (optional)</label><input type="text" id="f-brand" placeholder="e.g. Tadaima — groups locations together" autocomplete="off"><small class="setnote" id="f-brand-hint" hidden></small></div>
+<div class="field"><label>Brand / chain (optional)</label><input type="text" id="f-brand" placeholder="e.g. Tadaima — groups locations together" autocomplete="off"></div>
 <div class="field visit-only"><label>Tags</label><div class="tagpick" id="f-tags"></div></div>
 <div class="field visit-only"><label style="display:flex; align-items:center; gap:8px; font-weight:600"><input type="checkbox" id="f-fav"> Mark as favorite ❤️</label></div></div></details>
 <div class="savebar"><button class="btn" onclick="saveForm()">Save visit</button></div>
@@ -168,18 +169,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=71"></script>
-<script src="js/core.js?v=71"></script>
-<script src="js/storage.js?v=71"></script>
-<script src="js/sync.js?v=71"></script>
-<script src="js/nav.js?v=71"></script>
-<script src="js/map.js?v=71"></script>
-<script src="js/photos.js?v=71"></script>
-<script src="js/list.js?v=71"></script>
-<script src="js/stats.js?v=71"></script>
-<script src="js/rank.js?v=71"></script>
-<script src="js/detail.js?v=71"></script>
-<script src="js/form.js?v=71"></script>
-<script src="js/boot.js?v=71"></script>
+<script src="js/config.js?v=72"></script>
+<script src="js/core.js?v=72"></script>
+<script src="js/storage.js?v=72"></script>
+<script src="js/sync.js?v=72"></script>
+<script src="js/nav.js?v=72"></script>
+<script src="js/map.js?v=72"></script>
+<script src="js/photos.js?v=72"></script>
+<script src="js/list.js?v=72"></script>
+<script src="js/stats.js?v=72"></script>
+<script src="js/rank.js?v=72"></script>
+<script src="js/detail.js?v=72"></script>
+<script src="js/form.js?v=72"></script>
+<script src="js/boot.js?v=72"></script>
 </body>
 </html>
