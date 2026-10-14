@@ -1,29 +1,167 @@
 "use strict";
 /* core.js — App state, DOM/format helpers, Firebase init and cloud sync.
    Loaded by index.html; script order matters (config first, boot last). */
-let cafes=[], curId=null, editId=null, picked=null, formPhoto=null, formRating=0, formTags=[], formCC="", formCcy="", formPid="", favOnly=false, lastMain="map";
-let gReady=false, gmap=null, fgmap=null, fgmarker=null, gmarkers=[], userMarker=null, userAccuracy=null;
-let gphotoCache={}; try{ gphotoCache=JSON.parse(localStorage.getItem("cafemap.gphotos"))||{}; }catch(e){ warn("core.js",e); }
-let isAdmin=false;
-const $=id=>document.getElementById(id);
+let cafes = [],
+  curId = null,
+  editId = null,
+  picked = null,
+  formPhoto = null,
+  formRating = 0,
+  formTags = [],
+  formCC = "",
+  formCcy = "",
+  formPid = "",
+  favOnly = false,
+  lastMain = "map";
+let gReady = false,
+  gmap = null,
+  fgmap = null,
+  fgmarker = null,
+  gmarkers = [],
+  userMarker = null,
+  userAccuracy = null;
+let gphotoCache = {};
+try {
+  gphotoCache = JSON.parse(localStorage.getItem("cafemap.gphotos")) || {};
+} catch (e) {
+  warn("core.js", e);
+}
+let isAdmin = false;
+/** The one DOM lookup. Typed `any` on purpose: it returns inputs, selects, <details> and plain
+ *  elements depending on the id, and a wrong narrow guess would flag every `.value` and `.open`.
+ *  @param {string} id
+ *  @returns {any} */
+const $ = id => document.getElementById(id);
 /* Failures used to be invisible: 32 catch blocks discarded the error, so a photo that never
    resolved, a cloud write that failed and correct behaviour all looked identical from the
    outside. The error object carries its own stack, so the prefix only has to say where. */
-function warn(where,e){ try{ console.warn("[cafemap] "+where,e); }catch(_){ warn("core.js",_); } }
+function warn(where, e) {
+  try {
+    console.warn("[cafemap] " + where, e);
+  } catch (_) {
+    warn("core.js", _);
+  }
+}
 /* Every localStorage write can throw on a full quota — only one of them used to survive it. */
-function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ warn("localStorage "+k,e); return false; } }
-let fbReady=false, fbDb=null, fbAuth=null;
+function lsSet(k, v) {
+  try {
+    localStorage.setItem(k, v);
+    return true;
+  } catch (e) {
+    warn("localStorage " + k, e);
+    return false;
+  }
+}
+let fbReady = false,
+  fbDb = null,
+  fbAuth = null;
 /* True once the cloud node is an object keyed by cafe id rather than a JSON array. Writing to
    cafes/<id> while it is still an array would add a string key beside the numeric ones and
    duplicate the cafe, so per-cafe writes wait for the first full write to reshape it. */
-let _cloudKeyed=false;
-function cafesById(){ const o={}; cafes.forEach(function(c){ if(c&&c.id)o[c.id]=c; }); return o; }
-function noteCloudShape(raw){ _cloudKeyed=!!raw&&!Array.isArray(raw); }
-function asArray(v){ return Array.isArray(v)?v:(v&&typeof v==="object"?Object.values(v):[]); }
-function initFirebase(){ try{ if(!window.firebase||!FIREBASE_CONFIG||!FIREBASE_CONFIG.databaseURL||/PASTE_/.test(FIREBASE_CONFIG.databaseURL))return false; firebase.initializeApp(FIREBASE_CONFIG); fbDb=firebase.database(); try{ fbAuth=firebase.auth(); }catch(e){ warn("core.js",e); } fbReady=true; return true; }catch(e){ console.warn("Firebase init failed",e); return false; } }
-function subscribeCloud(){ if(!fbReady)return; fbDb.ref("cafes").on("value",snap=>{ noteCloudShape(snap.val()); const val=syncOverlay(snap.val()); cafes=adoptCafes(val); healPrivateSpots(); try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("core.js",e); } if(gReady)renderMarkers(); const v=app.dataset.view; if(v==="list"||v==="map")renderList(); else if(v==="detail"&&curId){ if(cafes.find(x=>x.id===curId))openDetail(curId); } else if(v==="stats")renderStats(); }); }
-async function loadCloud(){ if(!fbReady)return false; try{ const snap=await Promise.race([fbDb.ref("cafes").once("value"),new Promise((_,rej)=>setTimeout(()=>rej(new Error("cloud-timeout")),6000))]); noteCloudShape(snap.val()); const val=syncOverlay(snap.val()); const dirty=localStorage.getItem(DIRTY_FLAG)==="1"; let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ warn("core.js",e); } if(dirty&&Array.isArray(local)&&local.length){ cafes=adoptCafes(val); resyncDirty(); return true; } if(val.length){ cafes=adoptCafes(val); try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("core.js",e); } localStorage.removeItem(DIRTY_FLAG); return true; } }catch(e){ console.warn("Cloud load slow/failed — using cached data",e); let local=null; try{ local=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(_e){ warn("core.js",_e); } if(Array.isArray(local)&&local.length){ cafes=adoptCafes(local); return true; } } return false; }
-const app=$("app");
+let _cloudKeyed = false;
+function cafesById() {
+  const o = {};
+  cafes.forEach(function (c) {
+    if (c && c.id) o[c.id] = c;
+  });
+  return o;
+}
+function noteCloudShape(raw) {
+  _cloudKeyed = !!raw && !Array.isArray(raw);
+}
+function asArray(v) {
+  return Array.isArray(v) ? v : v && typeof v === "object" ? Object.values(v) : [];
+}
+function initFirebase() {
+  try {
+    if (
+      !window.firebase ||
+      !FIREBASE_CONFIG ||
+      !FIREBASE_CONFIG.databaseURL ||
+      /PASTE_/.test(FIREBASE_CONFIG.databaseURL)
+    )
+      return false;
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb = firebase.database();
+    try {
+      fbAuth = firebase.auth();
+    } catch (e) {
+      warn("core.js", e);
+    }
+    fbReady = true;
+    return true;
+  } catch (e) {
+    console.warn("Firebase init failed", e);
+    return false;
+  }
+}
+function subscribeCloud() {
+  if (!fbReady) return;
+  fbDb.ref("cafes").on("value", snap => {
+    noteCloudShape(snap.val());
+    const val = syncOverlay(snap.val());
+    cafes = adoptCafes(val);
+    healPrivateSpots();
+    try {
+      lsSet(KEY, JSON.stringify(cafes));
+    } catch (e) {
+      warn("core.js", e);
+    }
+    if (gReady) renderMarkers();
+    const v = app.dataset.view;
+    if (v === "list" || v === "map") renderList();
+    else if (v === "detail" && curId) {
+      if (cafes.find(x => x.id === curId)) openDetail(curId);
+    } else if (v === "stats") renderStats();
+  });
+}
+async function loadCloud() {
+  if (!fbReady) return false;
+  try {
+    const snap = await Promise.race([
+      fbDb.ref("cafes").once("value"),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("cloud-timeout")), 6000)),
+    ]);
+    noteCloudShape(snap.val());
+    const val = syncOverlay(snap.val());
+    const dirty = localStorage.getItem(DIRTY_FLAG) === "1";
+    let local = null;
+    try {
+      local = JSON.parse(localStorage.getItem(KEY) || "null");
+    } catch (e) {
+      warn("core.js", e);
+    }
+    if (dirty && Array.isArray(local) && local.length) {
+      cafes = adoptCafes(val);
+      resyncDirty();
+      return true;
+    }
+    if (val.length) {
+      cafes = adoptCafes(val);
+      try {
+        lsSet(KEY, JSON.stringify(cafes));
+      } catch (e) {
+        warn("core.js", e);
+      }
+      localStorage.removeItem(DIRTY_FLAG);
+      return true;
+    }
+  } catch (e) {
+    console.warn("Cloud load slow/failed — using cached data", e);
+    let local = null;
+    try {
+      local = JSON.parse(localStorage.getItem(KEY) || "null");
+    } catch (_e) {
+      warn("core.js", _e);
+    }
+    if (Array.isArray(local) && local.length) {
+      cafes = adoptCafes(local);
+      return true;
+    }
+  }
+  return false;
+}
+const app = $("app");
 /* Keyboard access for the 17 elements that carry an onclick but are not buttons. They keep
    their tags — a <button> cannot hold the card's block layout, and swapping the others would
    mean re-checking every .chip and .locpill rule for the browser's own button styling — so
@@ -31,25 +169,49 @@ const app=$("app");
    button would have given for free. One listener covers all of them, and any added later.
    The comparison sheet's backdrop is deliberately NOT focusable: a scrim is not a control.
    Escape closes that sheet, matching what the back button already does via chaserOpen(). */
-document.addEventListener("keydown",function(e){
-  if(e.key==="Escape"){
-    if(typeof chaserOpen==="function"&&chaserOpen()&&typeof chaserDismiss==="function")chaserDismiss();
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    if (typeof chaserOpen === "function" && chaserOpen() && typeof chaserDismiss === "function") chaserDismiss();
     return;
   }
-  if(e.key!=="Enter"&&e.key!==" ")return;
-  const el=(e.target&&e.target.closest)?e.target.closest('[role="button"][tabindex="0"]'):null;
-  if(!el)return;
-  e.preventDefault();   /* Space would otherwise scroll the page */
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const el = e.target && e.target.closest ? e.target.closest('[role="button"][tabindex="0"]') : null;
+  if (!el) return;
+  e.preventDefault(); /* Space would otherwise scroll the page */
   el.click();
 });
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function toast(m) {
+  const t = $("toast");
+  t.textContent = m;
+  t.classList.add("show");
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove("show"), 1800);
+}
 /* The apostrophe matters: 17 inline handlers pass arguments inside single-quoted JS
    strings, so a cafe called Joe's would otherwise break out of one. */
-function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
-function safeUrl(u){ u=(u==null?"":String(u)).trim(); if(!u)return ""; if(!/^(https?:|data:image\/)/i.test(u))return ""; return u.replace(/["'()<>\s\\]/g,encodeURIComponent); }
-const _imgFail={}; let _photoRetried={};
-function initials(c){ const n=((c&&c.name)||"").trim(); if(!n)return "?"; const w=n.split(/\s+/).filter(Boolean); let s=(w[0]&&w[0][0])||""; if(w.length>1&&w[1][0])s+=w[1][0]; return s.toUpperCase(); }
+function esc(s) {
+  return (s == null ? "" : String(s)).replace(
+    /[&<>"']/g,
+    m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[m]
+  );
+}
+function safeUrl(u) {
+  u = (u == null ? "" : String(u)).trim();
+  if (!u) return "";
+  if (!/^(https?:|data:image\/)/i.test(u)) return "";
+  return u.replace(/["'()<>\s\\]/g, encodeURIComponent);
+}
+const _imgFail = {};
+let _photoRetried = {};
+function initials(c) {
+  const n = ((c && c.name) || "").trim();
+  if (!n) return "?";
+  const w = n.split(/\s+/).filter(Boolean);
+  let s = (w[0] && w[0][0]) || "";
+  if (w.length > 1 && w[1][0]) s += w[1][0];
+  return s.toUpperCase();
+}
 /* ---------- how much you liked it ----------
    Five stars had stopped separating anything: 75 of the 90 rated cafes sat on 4 or 5, and only
    five on 1-2. So the input is now the three-way call a comparison ranking wants — it says
@@ -57,54 +219,95 @@ function initials(c){ const n=((c&&c.name)||"").trim(); if(!n)return "?"; const 
 
    It is still STORED as a rating, which is why nothing had to be migrated: 4 and 5 both read
    as loved, 3 as fine, 1 and 2 as not-for-me, and new saves land on the canonical 5 / 3 / 1. */
-const BUCKETS=[["loved",5,"Loved it"],["fine",3,"It was fine"],["meh",1,"Not for me"]];
-const BUCKET_HEX={loved:"#2e9e5b",fine:"#f0a93b",meh:"#c0374b","":"#9aa0a6"};
-const WISH_HEX="#6b3fbf";   /* want to try: a hue no other pin, nor Google's water or you-are-here, uses */
-function bucketOf(c){ const r=(c&&c.rating)||0; return r>=4?"loved":(r===3?"fine":(r>=1?"meh":"")); }
-function bucketRating(k){ for(let i=0;i<BUCKETS.length;i++)if(BUCKETS[i][0]===k)return BUCKETS[i][1]; return 0; }
-function bucketLabel(c){ const k=bucketOf(c); for(let i=0;i<BUCKETS.length;i++)if(BUCKETS[i][0]===k)return BUCKETS[i][2]; return ""; }
+const BUCKETS = [
+  ["loved", 5, "Loved it"],
+  ["fine", 3, "It was fine"],
+  ["meh", 1, "Not for me"],
+];
+const BUCKET_HEX = { loved: "#2e9e5b", fine: "#f0a93b", meh: "#c0374b", "": "#9aa0a6" };
+const WISH_HEX = "#6b3fbf"; /* want to try: a hue no other pin, nor Google's water or you-are-here, uses */
+/** @param {Cafe|{rating?:number}|null|undefined} c @returns {"loved"|"fine"|"meh"|""} */
+function bucketOf(c) {
+  const r = (c && c.rating) || 0;
+  return r >= 4 ? "loved" : r === 3 ? "fine" : r >= 1 ? "meh" : "";
+}
+/** @param {string} k @returns {number} */
+function bucketRating(k) {
+  for (let i = 0; i < BUCKETS.length; i++) if (BUCKETS[i][0] === k) return BUCKETS[i][1];
+  return 0;
+}
+function bucketLabel(c) {
+  const k = bucketOf(c);
+  for (let i = 0; i < BUCKETS.length; i++) if (BUCKETS[i][0] === k) return BUCKETS[i][2];
+  return "";
+}
 /* A pill rather than a run of glyphs: there is one value now, and it deserves a word. */
-function bucketPill(c,cls){ const k=bucketOf(c); if(!k)return "";
-  return '<span class="bkpill '+(cls||"")+'"><i style="background:'+BUCKET_HEX[k]+'"></i>'+bucketLabel(c)+'</span>'; }
+function bucketPill(c, cls) {
+  const k = bucketOf(c);
+  if (!k) return "";
+  return (
+    '<span class="bkpill ' +
+    (cls || "") +
+    '"><i style="background:' +
+    BUCKET_HEX[k] +
+    '"></i>' +
+    bucketLabel(c) +
+    "</span>"
+  );
+}
 /* ---------- the placeholder tint ----------
    Every card without a photo — which is every card, since photos are only fetched when a cafe
    is opened — used to get one of eight saturated hues hashed off its name. The hue meant
    nothing: two cafes with nothing in common came out the same colour. It carries the bucket
    now, on the same scale the map pins use, so the two screens agree — and the rank badge on
    the tile, not the colour, is what separates one loved cafe from another. */
-function tintFor(c){
+function tintFor(c) {
   /* ratingColor lives in map.js, which loads after this file; by the time anything renders it
      is defined. The guard keeps core.js usable on its own. */
-  if(typeof ratingColor==="function")return ratingColor(c&&c.rating);
+  if (typeof ratingColor === "function") return ratingColor(c && c.rating);
   return "#9aa0a6";
 }
 /* The monogram sits on top of the tint, and the amber step is far too light to carry white
    text — 1.98:1 against a 3:1 floor. The ink follows the tint's luminance instead of being
    fixed. */
-function inkOn(hex){
-  const m=/^#?([0-9a-f]{6})$/i.exec(String(hex||""));
-  if(!m)return "#fff";
-  const v=parseInt(m[1],16), ch=[(v>>16)&255,(v>>8)&255,v&255].map(function(x){
-    x/=255; return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);
-  });
-  const L=0.2126*ch[0]+0.7152*ch[1]+0.0722*ch[2];
+function inkOn(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ""));
+  if (!m) return "#fff";
+  const v = parseInt(m[1], 16),
+    ch = [(v >> 16) & 255, (v >> 8) & 255, v & 255].map(function (x) {
+      x /= 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    });
+  const L = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
   /* White clears the 3:1 large-text floor only while L <= 0.30 — 1.05/(L+0.05) >= 3. Above
      that the ink has to be dark, which on every tint here is 9:1 or better. */
-  return L>0.30?"rgba(0,0,0,.72)":"#fff";
+  return L > 0.3 ? "rgba(0,0,0,.72)" : "#fff";
 }
-function nophotoBg(c){
-  const t=tintFor(c);
-  return 'linear-gradient(140deg,rgba(255,255,255,.18),rgba(0,0,0,.26)) '+t;
+function nophotoBg(c) {
+  const t = tintFor(c);
+  return "linear-gradient(140deg,rgba(255,255,255,.18),rgba(0,0,0,.26)) " + t;
 }
 /* background and a legible ink together, since they always travel as a pair */
-function nophotoStyle(c){ return 'background:'+nophotoBg(c)+';color:'+inkOn(tintFor(c)); }
-function nophotoHTML(c){ return '<span class="em">'+esc((c&&c.emoji)||"☕")+'</span><span>'+esc(initials(c))+'</span>'; }
+function nophotoStyle(c) {
+  return "background:" + nophotoBg(c) + ";color:" + inkOn(tintFor(c));
+}
+function nophotoHTML(c) {
+  return '<span class="em">' + esc((c && c.emoji) || "☕") + "</span><span>" + esc(initials(c)) + "</span>";
+}
 /* Local calendar date. Plain toISOString() would hand back yesterday (or tomorrow) when
    logging from Hawaii or Taipei, so shift by the timezone offset before slicing. */
 /* prices[len/2] is the upper-middle value, which reads high on every even-length set. */
-function median(a){ if(!a||!a.length)return 0; const s=a.slice().sort(function(x,y){ return x-y; }); const m=s.length>>1;
-  return (s.length%2)?s[m]:(s[m-1]+s[m])/2; }
-function localToday(){ return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function median(a) {
+  if (!a || !a.length) return 0;
+  const s = a.slice().sort(function (x, y) {
+    return x - y;
+  });
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+function localToday() {
+  return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
 /* ---------- currency ----------
    A price is stored twice: drink.p is always US dollars (every reader downstream — Stats
    totals, the medians, fmtPrice — has always been able to assume that, and still can), and
@@ -121,22 +324,27 @@ function localToday(){ return new Date(Date.now()-new Date().getTimezoneOffset()
    Rounding to a fixed grid rather than adding random jitter. A grid cell is stable, so
    re-saving the same spot lands on the same point; jitter would move on every save, and
    averaging a handful of saves would recover the true location it was meant to hide. */
-const PRIVATE_DP=2;   /* 0.01° — about 1.1km of latitude, ~0.9km of longitude at mid-latitudes */
-function blurCoord(v){ return (v==null||isNaN(v))?null:+(+v).toFixed(PRIVATE_DP); }
+const PRIVATE_DP = 2; /* 0.01° — about 1.1km of latitude, ~0.9km of longitude at mid-latitudes */
+function blurCoord(v) {
+  return v == null || isNaN(v) ? null : +(+v).toFixed(PRIVATE_DP);
+}
 
 /* The area field is where a street address ends up — one of these really did hold a street
    address with an apartment number. A locality never needs digits and a street address effectively
    always has them, so digits are the test: "San Mateo" survives, anything numbered does not. */
-function privateArea(a){ return /\d/.test(a||"") ? "" : (a||""); }
+function privateArea(a) {
+  return /\d/.test(a || "") ? "" : a || "";
+}
 
 /* The single place a record is made safe to publish. Called on save, and mirrored in
    .github/workflows/backup.yml so a precise value already sitting in Firebase still cannot
    reach the published file. */
-function redactPrivate(c){
-  if(!c||!c.custom)return c;
-  c.lat=blurCoord(c.lat);
-  c.lng=blurCoord(c.lng);
-  c.area=privateArea(c.area);
+/** @param {Cafe} c */
+function redactPrivate(c) {
+  if (!c || !c.custom) return c;
+  c.lat = blurCoord(c.lat);
+  c.lng = blurCoord(c.lng);
+  c.area = privateArea(c.area);
   return c;
 }
 /* The exact address of a private spot, keyed by cafe id. Deliberately NOT merged into
@@ -145,17 +353,33 @@ function redactPrivate(c){
    real address while everyone else sees a blurred pin. Populated only when the owner is
    signed in; for anyone else it stays empty and every accessor below falls back to the
    public value. */
-let privDetail={}, _needsHeal={};
-function ownerSignedIn(){
-  const u=(typeof fbAuth!=="undefined"&&fbAuth)?fbAuth.currentUser:null;
-  return !!(u&&u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase());
+let privDetail = {},
+  _needsHeal = {};
+function ownerSignedIn() {
+  const u = typeof fbAuth !== "undefined" && fbAuth ? fbAuth.currentUser : null;
+  return !!(u && u.email && u.email.toLowerCase() === OWNER_EMAIL.toLowerCase());
 }
-function privFor(c){ return (c&&c.custom&&ownerSignedIn())?(privDetail[c.id]||null):null; }
+/** @param {Cafe|null|undefined} c @returns {PrivateDetail|null} */
+function privFor(c) {
+  return c && c.custom && ownerSignedIn() ? privDetail[c.id] || null : null;
+}
 /* Read a private spot's location through these, never off the record directly, or the screen
    shows a blurred pin to the one person entitled to the real one. */
-function areaOf(c){ const p=privFor(c); return (p&&p.area)||((c&&c.area)||""); }
-function latOf(c){ const p=privFor(c); return (p&&p.lat!=null)?p.lat:(c?c.lat:null); }
-function lngOf(c){ const p=privFor(c); return (p&&p.lng!=null)?p.lng:(c?c.lng:null); }
+/** @param {Cafe|null|undefined} c @returns {string} */
+function areaOf(c) {
+  const p = privFor(c);
+  return (p && p.area) || (c && c.area) || "";
+}
+/** @param {Cafe|null|undefined} c @returns {number|null|undefined} */
+function latOf(c) {
+  const p = privFor(c);
+  return p && p.lat != null ? p.lat : c ? c.lat : null;
+}
+/** @param {Cafe|null|undefined} c @returns {number|null|undefined} */
+function lngOf(c) {
+  const p = privFor(c);
+  return p && p.lng != null ? p.lng : c ? c.lng : null;
+}
 
 /* The one door stored data walks through to become `cafes`. Two jobs: nothing precise about a
    private spot may enter the array, and a precise record found in the public node is
@@ -164,32 +388,50 @@ function lngOf(c){ const p=privFor(c); return (p&&p.lng!=null)?p.lng:(c?c.lng:nu
    help (the browser decodes the entities before the JavaScript runs). So instead of escaping
    them everywhere, nothing with an odd id gets in: ids the app makes are letters, digits, "_"
    and "-". Only the owner can write cafes, so this is defence in depth, not a live hole. */
-const SAFE_ID=/^[A-Za-z0-9_-]{1,64}$/;
-function adoptCafes(list){
-  let out=Array.isArray(list)?list:[];
-  if(out.some(function(c){ return c&&!SAFE_ID.test(String(c.id)); })){
-    warn("core.js","ignoring "+out.filter(function(c){ return c&&!SAFE_ID.test(String(c.id)); }).length+" record(s) with an unusual id");
-    out=out.filter(function(c){ return !c||SAFE_ID.test(String(c.id)); });
+const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+/** @param {Cafe[]} list @returns {Cafe[]} */
+function adoptCafes(list) {
+  let out = Array.isArray(list) ? list : [];
+  if (
+    out.some(function (c) {
+      return c && !SAFE_ID.test(String(c.id));
+    })
+  ) {
+    warn(
+      "core.js",
+      "ignoring " +
+        out.filter(function (c) {
+          return c && !SAFE_ID.test(String(c.id));
+        }).length +
+        " record(s) with an unusual id"
+    );
+    out = out.filter(function (c) {
+      return !c || SAFE_ID.test(String(c.id));
+    });
   }
-  out.forEach(function(c){
-    if(!c||!c.custom)return;
+  out.forEach(function (c) {
+    if (!c || !c.custom) return;
     /* Firebase stores no nulls, so a spot with no pin arrives with no lat/lng at all. Read
        missing as null on both sides, or "undefined !== null" flags a pinless spot as exact,
        and the heal hands Firebase an undefined it refuses outright (29 Sep). */
-    const n=function(v){ return v==null?null:v; };
-    const exact={area:c.area||"",lat:n(c.lat),lng:n(c.lng)};
+    const n = function (v) {
+      return v == null ? null : v;
+    };
+    const exact = { area: c.area || "", lat: n(c.lat), lng: n(c.lng) };
     redactPrivate(c);
-    if(exact.area!==(c.area||"")||exact.lat!==n(c.lat)||exact.lng!==n(c.lng))_needsHeal[c.id]=exact;
+    if (exact.area !== (c.area || "") || exact.lat !== n(c.lat) || exact.lng !== n(c.lng)) _needsHeal[c.id] = exact;
   });
   return out;
 }
-function ccyFor(c){
-  const own=((c&&c.ccy)||"").trim().toUpperCase();
-  if(own&&CCY_META[own])return own;
-  const cc=((c&&c.cc)||"").trim().toUpperCase();
-  return (cc&&CCY_BY_CC[cc])||"USD";
+function ccyFor(c) {
+  const own = ((c && c.ccy) || "").trim().toUpperCase();
+  if (own && CCY_META[own]) return own;
+  const cc = ((c && c.cc) || "").trim().toUpperCase();
+  return (cc && CCY_BY_CC[cc]) || "USD";
 }
-function ccyMeta(code){ return CCY_META[(code||"USD").toUpperCase()]||{sym:"",dec:2}; }
+function ccyMeta(code) {
+  return CCY_META[(code || "USD").toUpperCase()] || { sym: "", dec: 2 };
+}
 /* Units of `code` per 1 USD, or 0 when we have no rate — callers treat 0 as "can't convert
    yet" rather than as a number. Swap the body for a cached fetch to go live; the frozen
    drink.pr means everything already recorded is unaffected either way. */
@@ -199,174 +441,285 @@ function ccyMeta(code){ return CCY_META[(code||"USD").toUpperCase()]||{sym:"",de
    wished we had. A stored drink.pr/.pd always wins over this — nothing re-rates on read. */
 /* Fetched rates outrank both tables. A historical rate is a settled fact — it cannot change
    after the fact — so once fetched it is cached permanently rather than expiring. */
-let _fxCache={}; try{ _fxCache=JSON.parse(localStorage.getItem("cafemap.fx"))||{}; }catch(e){ warn("core.js",e); }
-const _fxTried={};
-function _fxKey(code,date){ return (code||"")+"@"+String(date||"").slice(0,10); }
-function fxPut(code,date,rate,asof){
-  if(!(rate>0))return;
-  _fxCache[_fxKey(code,date)]={r:rate,d:asof||String(date).slice(0,10)};
-  try{ lsSet("cafemap.fx",JSON.stringify(_fxCache)); }catch(e){ warn("core.js",e); }
+let _fxCache = {};
+try {
+  _fxCache = JSON.parse(localStorage.getItem("cafemap.fx")) || {};
+} catch (e) {
+  warn("core.js", e);
+}
+const _fxTried = {};
+function _fxKey(code, date) {
+  return (code || "") + "@" + String(date || "").slice(0, 10);
+}
+function fxPut(code, date, rate, asof) {
+  if (!(rate > 0)) return;
+  _fxCache[_fxKey(code, date)] = { r: rate, d: asof || String(date).slice(0, 10) };
+  try {
+    lsSet("cafemap.fx", JSON.stringify(_fxCache));
+  } catch (e) {
+    warn("core.js", e);
+  }
 }
 /* Asks the network for a rate we do not have, once per currency-and-date, and calls back
    only when it actually learned something. Failure is silent and permanent for the session:
    the caller already has a usable fallback and a save must never wait on this. */
-function fxEnsure(code,date,done){
-  code=(code||"USD").toUpperCase();
-  if(code==="USD"||!date||typeof FX_API!=="string"||!FX_API)return;
-  const k=_fxKey(code,date);
-  if(_fxCache[k]||_fxTried[k]||typeof fetch!=="function")return;
-  _fxTried[k]=1;
-  try{
-    fetch(FX_API+String(date).slice(0,10)+"?from=USD&to="+encodeURIComponent(code))
-      .then(function(r){ return r.ok?r.json():null; })
-      .then(function(j){
-        const rate=j&&j.rates&&j.rates[code];
-        if(!(rate>0))return;
-        fxPut(code,date,rate,(j&&j.date)||String(date).slice(0,10));
-        if(done)done();
+function fxEnsure(code, date, done) {
+  code = (code || "USD").toUpperCase();
+  if (code === "USD" || !date || typeof FX_API !== "string" || !FX_API) return;
+  const k = _fxKey(code, date);
+  if (_fxCache[k] || _fxTried[k] || typeof fetch !== "function") return;
+  _fxTried[k] = 1;
+  try {
+    fetch(FX_API + String(date).slice(0, 10) + "?from=USD&to=" + encodeURIComponent(code))
+      .then(function (r) {
+        return r.ok ? r.json() : null;
       })
-      .catch(function(){});
-  }catch(e){ warn("core.js",e); }
-}
-function fxRateAt(code,date){
-  code=(code||"USD").toUpperCase();
-  if(code==="USD")return {rate:1,asof:date||FX_ASOF};
-  const hit=_fxCache[_fxKey(code,date)];
-  if(hit&&hit.r>0)return {rate:hit.r,asof:hit.d};
-  const key=String(date||"").slice(0,7);
-  if(key&&typeof FX_HISTORY==="object"&&FX_HISTORY){
-    const months=Object.keys(FX_HISTORY).filter(function(m){ return m<=key&&FX_HISTORY[m]&&FX_HISTORY[m][code]>0; }).sort();
-    if(months.length){ const m=months[months.length-1]; return {rate:FX_HISTORY[m][code],asof:m+"-01"}; }
+      .then(function (j) {
+        const rate = j && j.rates && j.rates[code];
+        if (!(rate > 0)) return;
+        fxPut(code, date, rate, (j && j.date) || String(date).slice(0, 10));
+        if (done) done();
+      })
+      .catch(function () {});
+  } catch (e) {
+    warn("core.js", e);
   }
-  const r=FX_PER_USD[code];
-  return {rate:(typeof r==="number"&&r>0)?r:0,asof:FX_ASOF};
 }
-function fxRate(code,date){ return fxRateAt(code,date).rate; }
-function daysBetween(a,b){ const x=Date.parse(a),y=Date.parse(b); return (isNaN(x)||isNaN(y))?0:Math.round(Math.abs(x-y)/86400000); }
-function ccyNum(v){ const n=parseFloat(String(v==null?"":v).replace(/[^0-9.]/g,"")); return isNaN(n)?null:n; }
-function fmtLocal(amt,code){ const n=ccyNum(amt); if(n==null)return ""; const m=ccyMeta(code); return m.sym+n.toFixed(m.dec); }
+function fxRateAt(code, date) {
+  code = (code || "USD").toUpperCase();
+  if (code === "USD") return { rate: 1, asof: date || FX_ASOF };
+  const hit = _fxCache[_fxKey(code, date)];
+  if (hit && hit.r > 0) return { rate: hit.r, asof: hit.d };
+  const key = String(date || "").slice(0, 7);
+  if (key && typeof FX_HISTORY === "object" && FX_HISTORY) {
+    const months = Object.keys(FX_HISTORY)
+      .filter(function (m) {
+        return m <= key && FX_HISTORY[m] && FX_HISTORY[m][code] > 0;
+      })
+      .sort();
+    if (months.length) {
+      const m = months[months.length - 1];
+      return { rate: FX_HISTORY[m][code], asof: m + "-01" };
+    }
+  }
+  const r = FX_PER_USD[code];
+  return { rate: typeof r === "number" && r > 0 ? r : 0, asof: FX_ASOF };
+}
+function fxRate(code, date) {
+  return fxRateAt(code, date).rate;
+}
+function daysBetween(a, b) {
+  const x = Date.parse(a),
+    y = Date.parse(b);
+  return isNaN(x) || isNaN(y) ? 0 : Math.round(Math.abs(x - y) / 86400000);
+}
+function ccyNum(v) {
+  const n = parseFloat(String(v == null ? "" : v).replace(/[^0-9.]/g, ""));
+  return isNaN(n) ? null : n;
+}
+function fmtLocal(amt, code) {
+  const n = ccyNum(amt);
+  if (n == null) return "";
+  const m = ccyMeta(code);
+  return m.sym + n.toFixed(m.dec);
+}
 /* The one place local money becomes dollars. Returns null when there is no usable amount or
    no rate, which is what puts a drink into the "needs rate" state instead of inventing one. */
-function toUSD(amt,code,rate){ const n=ccyNum(amt); if(n==null)return null; const r=(typeof rate==="number"&&rate>0)?rate:fxRate(code); if(!r)return null; return n/r; }
+function toUSD(amt, code, rate) {
+  const n = ccyNum(amt);
+  if (n == null) return null;
+  const r = typeof rate === "number" && rate > 0 ? rate : fxRate(code);
+  if (!r) return null;
+  return n / r;
+}
 /* Builds the price half of a stored drink from what the form row held. USD rows keep the
    exact legacy shape ({p} only, no extra keys) so nothing in cafes.json changes for the 60
    dollar-priced drinks already there. */
-function priceFields(amt,code,rate,date){
-  code=(code||"USD").toUpperCase();
-  const raw=String(amt==null?"":amt).trim();
-  if(!raw)return {p:""};
-  if(code==="USD")return {p:raw};
-  const usd=toUSD(raw,code,rate);
-  const o={p:usd==null?"":usd.toFixed(2), pl:raw, pc:code};
-  const r=(typeof rate==="number"&&rate>0)?rate:fxRate(code);
-  if(r){ o.pr=r; o.pd=date||FX_ASOF; }
+function priceFields(amt, code, rate, date) {
+  code = (code || "USD").toUpperCase();
+  const raw = String(amt == null ? "" : amt).trim();
+  if (!raw) return { p: "" };
+  if (code === "USD") return { p: raw };
+  const usd = toUSD(raw, code, rate);
+  const o = { p: usd == null ? "" : usd.toFixed(2), pl: raw, pc: code };
+  const r = typeof rate === "number" && rate > 0 ? rate : fxRate(code);
+  if (r) {
+    o.pr = r;
+    o.pd = date || FX_ASOF;
+  }
   return o;
 }
 /* A drink is the thing ordered; orders are the individual dated purchases. Older records
    only have one set of price/options beside dates + count, so this adapter expands them
    without changing the stored object. Once a cafe is saved, syncDrinkSummary() keeps the
    old top-level shape as a compatibility summary while `orders` becomes the source of truth. */
-const DRINK_ORDER_FIELDS=["p","pl","pc","pr","pd","size","sweet","ice","milk","reorder"];
-function orderQty(o){ return Math.max(1,Math.min(99,parseInt(o&&o.qty,10)||1)); }
-function drinkOrders(d){
-  if(!d)return [];
-  if(Array.isArray(d.orders)&&d.orders.length){
-    return d.orders.map(function(src){
-      const o={}; if(src.id)o.id=src.id;
-      DRINK_ORDER_FIELDS.forEach(function(k){ if(src[k]!==undefined&&src[k]!=="")o[k]=src[k]; });
-      if(src.date)o.date=src.date;
-      const q=orderQty(src); if(q>1)o.qty=q;
+const DRINK_ORDER_FIELDS = ["p", "pl", "pc", "pr", "pd", "size", "sweet", "ice", "milk", "reorder"];
+/** @param {Order|null|undefined} o @returns {number} */
+function orderQty(o) {
+  return Math.max(1, Math.min(99, parseInt(String(o && o.qty), 10) || 1));
+}
+/** @param {Drink} d @returns {Order[]} */
+function drinkOrders(d) {
+  if (!d) return [];
+  if (Array.isArray(d.orders) && d.orders.length) {
+    return d.orders.map(function (src) {
+      const o = {};
+      if (src.id) o.id = src.id;
+      DRINK_ORDER_FIELDS.forEach(function (k) {
+        if (src[k] !== undefined && src[k] !== "") o[k] = src[k];
+      });
+      if (src.date) o.date = src.date;
+      const q = orderQty(src);
+      if (q > 1) o.qty = q;
       return o;
     });
   }
-  const base={};
-  DRINK_ORDER_FIELDS.forEach(function(k){ if(d[k]!==undefined&&d[k]!=="")base[k]=d[k]; });
-  const dates=[...new Set((d.dates||[]).filter(Boolean))].sort();
-  const cnt=Math.max(parseInt(d.count,10)||0,dates.length,1);
-  const out=dates.length?dates.map(function(dt){ return Object.assign({},base,{date:dt}); }):[Object.assign({},base)];
-  const extra=cnt-out.length;
-  if(extra>0)out[out.length-1].qty=1+extra;
+  /** @type {Record<string, any>} */
+  const base = {};
+  DRINK_ORDER_FIELDS.forEach(function (k) {
+    if (d[k] !== undefined && d[k] !== "") base[k] = d[k];
+  });
+  const dates = [...new Set((d.dates || []).filter(Boolean))].sort();
+  const cnt = Math.max(parseInt(d.count, 10) || 0, dates.length, 1);
+  /** @type {Order[]} */
+  const out = dates.length
+    ? dates.map(function (dt) {
+        return Object.assign({}, base, { date: dt });
+      })
+    : [Object.assign({}, base)];
+  const extra = cnt - out.length;
+  if (extra > 0) out[out.length - 1].qty = 1 + extra;
   return out;
 }
-function latestDrinkOrder(d){
-  const a=drinkOrders(d);
-  if(!a.length)return null;
-  return a.slice().sort(function(x,y){ return (x.date||"0000-00-00").localeCompare(y.date||"0000-00-00"); }).slice(-1)[0];
+/** @param {Drink} d @returns {Order|undefined} */
+function latestDrinkOrder(d) {
+  const a = drinkOrders(d);
+  if (!a.length) return null;
+  return a
+    .slice()
+    .sort(function (x, y) {
+      return (x.date || "0000-00-00").localeCompare(y.date || "0000-00-00");
+    })
+    .slice(-1)[0];
 }
-function syncDrinkSummary(d){
-  if(!d)return d;
-  const orders=drinkOrders(d).sort(function(x,y){ return (x.date||"0000-00-00").localeCompare(y.date||"0000-00-00"); });
-  d.orders=orders;
-  const dates=[...new Set(orders.map(function(o){ return o.date||""; }).filter(Boolean))].sort();
-  if(dates.length)d.dates=dates; else delete d.dates;
-  const cnt=orders.reduce(function(t,o){ return t+orderQty(o); },0);
-  if(cnt>1)d.count=cnt; else delete d.count;
-  DRINK_ORDER_FIELDS.forEach(function(k){ delete d[k]; });
-  const latest=latestDrinkOrder(d)||{};
-  DRINK_ORDER_FIELDS.forEach(function(k){ if(latest[k]!==undefined&&latest[k]!=="")d[k]=latest[k]; });
+function syncDrinkSummary(d) {
+  if (!d) return d;
+  const orders = drinkOrders(d).sort(function (x, y) {
+    return (x.date || "0000-00-00").localeCompare(y.date || "0000-00-00");
+  });
+  d.orders = orders;
+  const dates = [
+    ...new Set(
+      orders
+        .map(function (o) {
+          return o.date || "";
+        })
+        .filter(Boolean)
+    ),
+  ].sort();
+  if (dates.length) d.dates = dates;
+  else delete d.dates;
+  const cnt = orders.reduce(function (t, o) {
+    return t + orderQty(o);
+  }, 0);
+  if (cnt > 1) d.count = cnt;
+  else delete d.count;
+  DRINK_ORDER_FIELDS.forEach(function (k) {
+    delete d[k];
+  });
+  const latest = latestDrinkOrder(d) || {};
+  DRINK_ORDER_FIELDS.forEach(function (k) {
+    if (latest[k] !== undefined && latest[k] !== "") d[k] = latest[k];
+  });
   return d;
 }
 /* ---------- what you usually order ----------
    Built across every cafe, not the one on screen. That is the whole point: the same drink is
    ordered everywhere, so an index scoped to this cafe would be empty at exactly the moment it
    helps most — the first time you log something at a place you have never been. */
-function topKey(tally){
-  let best=null,bn=0;
-  Object.keys(tally||{}).forEach(function(k){ if(tally[k]>bn){ bn=tally[k]; best=k; } });
+function topKey(tally) {
+  let best = null,
+    bn = 0;
+  Object.keys(tally || {}).forEach(function (k) {
+    if (tally[k] > bn) {
+      bn = tally[k];
+      best = k;
+    }
+  });
   return best;
 }
-const USUAL_FIELDS=["size","sweet","ice","milk"];
-function drinkIndex(){
-  const ix={};
-  (cafes||[]).forEach(function(c){
-    (c.drinks||[]).forEach(function(d){
-      const n=(d.n||"").trim();
-      if(!n)return;
-      const k=n.toLowerCase();
-      if(!ix[k])ix[k]={n:n,key:k,count:0,spell:{},size:{},sweet:{},ice:{},milk:{}};
-      const e=ix[k];
-      const orders=drinkOrders(d);
-      const cups=orders.reduce(function(t,o){ return t+orderQty(o); },0)||1;
-      e.count+=cups;
-      e.spell[n]=(e.spell[n]||0)+cups;
-      orders.forEach(function(o){
-        USUAL_FIELDS.forEach(function(f){ if(o[f])e[f][o[f]]=(e[f][o[f]]||0)+1; });
+const USUAL_FIELDS = ["size", "sweet", "ice", "milk"];
+function drinkIndex() {
+  const ix = {};
+  (cafes || []).forEach(function (c) {
+    (c.drinks || []).forEach(function (d) {
+      const n = (d.n || "").trim();
+      if (!n) return;
+      const k = n.toLowerCase();
+      if (!ix[k]) ix[k] = { n: n, key: k, count: 0, spell: {}, size: {}, sweet: {}, ice: {}, milk: {} };
+      const e = ix[k];
+      const orders = drinkOrders(d);
+      const cups =
+        orders.reduce(function (t, o) {
+          return t + orderQty(o);
+        }, 0) || 1;
+      e.count += cups;
+      e.spell[n] = (e.spell[n] || 0) + cups;
+      orders.forEach(function (o) {
+        USUAL_FIELDS.forEach(function (f) {
+          if (o[f]) e[f][o[f]] = (e[f][o[f]] || 0) + 1;
+        });
       });
     });
   });
   /* Display it the way you most often write it, so the shortcut never teaches a new casing. */
-  Object.keys(ix).forEach(function(k){ ix[k].n=topKey(ix[k].spell)||ix[k].n; });
+  Object.keys(ix).forEach(function (k) {
+    ix[k].n = topKey(ix[k].spell) || ix[k].n;
+  });
   return ix;
 }
-function usualSpec(entry){
-  const out={};
-  if(entry)USUAL_FIELDS.forEach(function(f){ const v=topKey(entry[f]); if(v)out[f]=v; });
+function usualSpec(entry) {
+  const out = {};
+  if (entry)
+    USUAL_FIELDS.forEach(function (f) {
+      const v = topKey(entry[f]);
+      if (v) out[f] = v;
+    });
   return out;
 }
-function topUsuals(ix,limit){
-  return Object.keys(ix||{}).map(function(k){ return ix[k]; })
-    .filter(function(e){ return e.count>1; })   /* a one-off is not a usual */
-    .sort(function(a,b){ return b.count-a.count || a.n.localeCompare(b.n); })
-    .slice(0,limit||3);
+function topUsuals(ix, limit) {
+  return Object.keys(ix || {})
+    .map(function (k) {
+      return ix[k];
+    })
+    .filter(function (e) {
+      return e.count > 1;
+    }) /* a one-off is not a usual */
+    .sort(function (a, b) {
+      return b.count - a.count || a.n.localeCompare(b.n);
+    })
+    .slice(0, limit || 3);
 }
 
 /* Levenshtein, bailing out as soon as the distance exceeds what the caller cares about —
    this runs against every name you have ever logged, on every save. */
-function editDistance(a,b,max){
-  a=String(a||""); b=String(b||"");
-  if(a===b)return 0;
-  if(Math.abs(a.length-b.length)>max)return max+1;
-  let prev=[],cur=[];
-  for(let j=0;j<=b.length;j++)prev[j]=j;
-  for(let i=1;i<=a.length;i++){
-    cur[0]=i;
-    let best=cur[0];
-    for(let j=1;j<=b.length;j++){
-      cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
-      if(cur[j]<best)best=cur[j];
+function editDistance(a, b, max) {
+  a = String(a || "");
+  b = String(b || "");
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = [],
+    cur = [];
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    cur[0] = i;
+    let best = cur[0];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (cur[j] < best) best = cur[j];
     }
-    if(best>max)return max+1;
-    prev=cur.slice();
+    if (best > max) return max + 1;
+    prev = cur.slice();
   }
   return prev[b.length];
 }
@@ -374,32 +727,51 @@ function editDistance(a,b,max){
    hurry. Deliberately strict: a proportional cap as well as an absolute one, so short names
    need an exact-ish match and "Hojicha latte (Snoopy version)" never collides with
    "Hojicha latte". Returns null for anything genuinely new. */
-function nearestDrinkName(ix,name){
-  const q=(name||"").trim().toLowerCase();
-  if(q.length<5)return null;
-  if(ix[q])return null;                         /* already a drink you log */
-  let best=null;
-  Object.keys(ix).forEach(function(k){
-    const cap=Math.min(2,Math.floor(k.length*0.2)||1);
-    const d=editDistance(q,k,cap);
-    if(d>cap)return;
-    if(!best||d<best.dist||(d===best.dist&&ix[k].count>best.count))
-      best={n:ix[k].n,key:k,count:ix[k].count,dist:d};
+function nearestDrinkName(ix, name) {
+  const q = (name || "").trim().toLowerCase();
+  if (q.length < 5) return null;
+  if (ix[q]) return null; /* already a drink you log */
+  let best = null;
+  Object.keys(ix).forEach(function (k) {
+    const cap = Math.min(2, Math.floor(k.length * 0.2) || 1);
+    const d = editDistance(q, k, cap);
+    if (d > cap) return;
+    if (!best || d < best.dist || (d === best.dist && ix[k].count > best.count))
+      best = { n: ix[k].n, key: k, count: ix[k].count, dist: d };
   });
   return best;
 }
-function drinkPriceRange(d){
-  const a=drinkOrders(d).filter(function(o){ return ccyNum(o.p)!=null||ccyNum(o.pl)!=null; });
-  if(!a.length)return null;
-  const localCodes=[...new Set(a.map(function(o){ return (o.pc||"USD").toUpperCase(); }))];
-  const useLocal=localCodes.length===1&&localCodes[0]!=="USD"&&a.every(function(o){ return ccyNum(o.pl)!=null; });
-  const vals=a.map(function(o){ return ccyNum(useLocal?o.pl:o.p); }).filter(function(n){ return n!=null; });
-  if(!vals.length)return null;
-  return {min:Math.min.apply(null,vals),max:Math.max.apply(null,vals),code:useLocal?localCodes[0]:"USD"};
+function drinkPriceRange(d) {
+  const a = drinkOrders(d).filter(function (o) {
+    return ccyNum(o.p) != null || ccyNum(o.pl) != null;
+  });
+  if (!a.length) return null;
+  const localCodes = [
+    ...new Set(
+      a.map(function (o) {
+        return (o.pc || "USD").toUpperCase();
+      })
+    ),
+  ];
+  const useLocal =
+    localCodes.length === 1 &&
+    localCodes[0] !== "USD" &&
+    a.every(function (o) {
+      return ccyNum(o.pl) != null;
+    });
+  const vals = a
+    .map(function (o) {
+      return ccyNum(useLocal ? o.pl : o.p);
+    })
+    .filter(function (n) {
+      return n != null;
+    });
+  if (!vals.length) return null;
+  return { min: Math.min.apply(null, vals), max: Math.max.apply(null, vals), code: useLocal ? localCodes[0] : "USD" };
 }
 /* Same glyph for both halves — ☆ is optically lighter and a different advance width, so a
    filled/hollow mix reads as decoration rather than a proportion. */
-let _cardRanks=null;
+let _cardRanks = null;
 /* Single source of truth for what lives inside a card's .ph tile. Three call sites rebuild
    it (renderList, verifyCardPhoto, applyCardPhoto) — routing them all through here is what
    keeps a resolving photo from silently wiping the star pill and wish badge. */
@@ -408,7 +780,48 @@ let _cardRanks=null;
 /* No wishbadge: since been and want-to-try became separate tabs, every card that would
    carry one sits on the tab that already says it. The heart stays — favourites are a subset
    of been, so it still separates. */
-function phInner(c,hasPhoto){ let h=hasPhoto?"":nophotoHTML(c); if(c&&c.fav)h+='<span class="favbadge">❤️</span>';
-  return h+((typeof rankBadge==="function")?rankBadge(c,_cardRanks):""); }
-function verifyCardPhoto(id,url){ if(!url)return; const probe=new Image(); probe.onload=function(){ _imgFail[id]=0; }; probe.onerror=function(){ _imgFail[id]=1; const c=cafes.find(x=>x.id===id); if(c&&c.gphoto)delete c.gphoto; if(gphotoCache[id]!==undefined){ delete gphotoCache[id]; saveGphotoCache(); } const el=document.querySelector('.card[data-id="'+CSS.escape(String(id))+'"] .ph'); if(el){ el.style.backgroundImage=""; el.classList.remove("loaded","loading"); el.classList.add("nophoto"); el.style.cssText=c?nophotoStyle(c):"background:#caa472"; el.innerHTML=c?phInner(c,false):"?"; } if(c&&!c.photo&&!_photoRetried[id]&&gReady&&c.lat!=null&&!gphotoInflight[id]){ _photoRetried[id]=1; gphotoInflight[id]=1; fetchPlacePhoto(c,function(u){ delete gphotoInflight[id]; if(u)applyCardPhoto(id,u); }); } }; probe.src=safeUrl(url); }
-function fmtDate(s){ if(!s)return ""; const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); if(!m)return s; const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2]-1]; return mo+" "+(+m[3])+", "+m[1]; }
+function phInner(c, hasPhoto) {
+  let h = hasPhoto ? "" : nophotoHTML(c);
+  if (c && c.fav) h += '<span class="favbadge">❤️</span>';
+  return h + (typeof rankBadge === "function" ? rankBadge(c, _cardRanks) : "");
+}
+function verifyCardPhoto(id, url) {
+  if (!url) return;
+  const probe = new Image();
+  probe.onload = function () {
+    _imgFail[id] = 0;
+  };
+  probe.onerror = function () {
+    _imgFail[id] = 1;
+    const c = cafes.find(x => x.id === id);
+    if (c && c.gphoto) delete c.gphoto;
+    if (gphotoCache[id] !== undefined) {
+      delete gphotoCache[id];
+      saveGphotoCache();
+    }
+    const el = document.querySelector('.card[data-id="' + CSS.escape(String(id)) + '"] .ph');
+    if (el) {
+      el.style.backgroundImage = "";
+      el.classList.remove("loaded", "loading");
+      el.classList.add("nophoto");
+      el.style.cssText = c ? nophotoStyle(c) : "background:#caa472";
+      el.innerHTML = c ? phInner(c, false) : "?";
+    }
+    if (c && !c.photo && !_photoRetried[id] && gReady && c.lat != null && !gphotoInflight[id]) {
+      _photoRetried[id] = 1;
+      gphotoInflight[id] = 1;
+      fetchPlacePhoto(c, function (u) {
+        delete gphotoInflight[id];
+        if (u) applyCardPhoto(id, u);
+      });
+    }
+  };
+  probe.src = safeUrl(url);
+}
+function fmtDate(s) {
+  if (!s) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (!m) return s;
+  const mo = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+m[2] - 1];
+  return mo + " " + +m[3] + ", " + m[1];
+}

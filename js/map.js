@@ -2,26 +2,112 @@
 /* map.js — Google Maps loading, markers, location index and geolocation.
    Loaded by index.html; script order matters (config first, boot last). */
 /* ---------- google maps loader ---------- */
-function startMaps(){ if(!GMAPS_KEY_ENC||/PASTE|HERE/.test(GMAPS_KEY_ENC)){ showMapError("Add your encoded Google Maps API key near the top of this file (the GMAPS_KEY_ENC line), then reload."); return; } const s=document.createElement("script"); s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(GMAPS_KEY)+"&libraries=places&loading=async&callback=onGoogleReady"; s.async=true; s.onerror=()=>showMapError("Couldn't load Google Maps. Check your connection and API key."); document.head.appendChild(s); }
-function onGoogleReady(){ gReady=true; $("map-msg").classList.remove("show"); initMap(); if(app.dataset.view==="list")renderList(); }
-function gm_authFailure(){ showMapError("Google rejected the API key. Check the key is correct, billing is enabled, and this site is allowed in the key's HTTP-referrer restrictions."); }
-function showMapError(msg){ const el=$("map-msg"); el.innerHTML='<div class="big">🗺️</div><div>'+msg+'</div>'; el.classList.add("show"); if($("map-sub"))$("map-sub").textContent="Map unavailable"; }
-function mapResize(){ if(gmap)google.maps.event.trigger(gmap,"resize"); if(fgmap)google.maps.event.trigger(fgmap,"resize"); }
-function fitPad(){ const w=window.innerWidth||0; if(w>=1400)return {top:60,right:60,bottom:60,left:480}; if(w>=900)return {top:60,right:60,bottom:60,left:440}; return 60; }
-function refitMap(){ if(!gmap)return; const pts=gmarkers.filter(_pinShown).map(m=>m.getPosition()).filter(Boolean); if(userMarker)pts.push(userMarker.getPosition()); if(!pts.length)return; if(pts.length===1){ gmap.setCenter(pts[0]); } else { const b=new google.maps.LatLngBounds(); pts.forEach(p=>b.extend(p)); gmap.fitBounds(b,fitPad()); } }
+function startMaps() {
+  if (!GMAPS_KEY_ENC || /PASTE|HERE/.test(GMAPS_KEY_ENC)) {
+    showMapError(
+      "Add your encoded Google Maps API key near the top of this file (the GMAPS_KEY_ENC line), then reload."
+    );
+    return;
+  }
+  const s = document.createElement("script");
+  s.src =
+    "https://maps.googleapis.com/maps/api/js?key=" +
+    encodeURIComponent(GMAPS_KEY) +
+    "&libraries=places&loading=async&callback=onGoogleReady";
+  s.async = true;
+  s.onerror = () => showMapError("Couldn't load Google Maps. Check your connection and API key.");
+  document.head.appendChild(s);
+}
+function onGoogleReady() {
+  gReady = true;
+  $("map-msg").classList.remove("show");
+  initMap();
+  if (app.dataset.view === "list") renderList();
+}
+function gm_authFailure() {
+  showMapError(
+    "Google rejected the API key. Check the key is correct, billing is enabled, and this site is allowed in the key's HTTP-referrer restrictions."
+  );
+}
+function showMapError(msg) {
+  const el = $("map-msg");
+  el.innerHTML = '<div class="big">🗺️</div><div>' + msg + "</div>";
+  el.classList.add("show");
+  if ($("map-sub")) $("map-sub").textContent = "Map unavailable";
+}
+function mapResize() {
+  if (gmap) google.maps.event.trigger(gmap, "resize");
+  if (fgmap) google.maps.event.trigger(fgmap, "resize");
+}
+function fitPad() {
+  const w = window.innerWidth || 0;
+  if (w >= 1400) return { top: 60, right: 60, bottom: 60, left: 480 };
+  if (w >= 900) return { top: 60, right: 60, bottom: 60, left: 440 };
+  return 60;
+}
+function refitMap() {
+  if (!gmap) return;
+  const pts = gmarkers
+    .filter(_pinShown)
+    .map(m => m.getPosition())
+    .filter(Boolean);
+  if (userMarker) pts.push(userMarker.getPosition());
+  if (!pts.length) return;
+  if (pts.length === 1) {
+    gmap.setCenter(pts[0]);
+  } else {
+    const b = new google.maps.LatLngBounds();
+    pts.forEach(p => b.extend(p));
+    gmap.fitBounds(b, fitPad());
+  }
+}
 /* ---------- main map ---------- */
-function initMap(){ gmap=new google.maps.Map($("map"),{center:{lat:DEFAULT_CENTER[0],lng:DEFAULT_CENTER[1]},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,clickableIcons:false,gestureHandling:"greedy"}); renderMarkers(); autoLocate(); gmap.addListener("click",()=>{ pendingMarkerId=null; if(gInfo)gInfo.close(); closePeek(); }); gmap.addListener("dragstart",()=>{ if($("btn-locate")&&$("btn-locate").dataset.state==="on")setLocateState("idle"); });
+function initMap() {
+  gmap = new google.maps.Map($("map"), {
+    center: { lat: DEFAULT_CENTER[0], lng: DEFAULT_CENTER[1] },
+    zoom: 12,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    clickableIcons: false,
+    gestureHandling: "greedy",
+  });
+  renderMarkers();
+  autoLocate();
+  gmap.addListener("click", () => {
+    pendingMarkerId = null;
+    if (gInfo) gInfo.close();
+    closePeek();
+  });
+  gmap.addListener("dragstart", () => {
+    if ($("btn-locate") && $("btn-locate").dataset.state === "on") setLocateState("idle");
+  });
   /* Any touch on the map — a drag, a pinch, a wheel, a tap on a pin — means the person is
      looking at THIS view. Only the location dropdown used to count, so panning to another
      neighbourhood, tapping a pin and coming back snapped the map to where you were standing,
      on every pin. DOM events rather than map events, because a pinch fires no dragstart. */
-  gmap.addListener("idle",function(){ if(mapWantOnly)updateWantBar(); });
-  const _mapEl=$("map"); if(_mapEl)["pointerdown","wheel","touchstart"].forEach(function(ev){
-    _mapEl.addEventListener(ev,function(){ mapOwned=true; },{passive:true}); }); }
+  gmap.addListener("idle", function () {
+    if (mapWantOnly) updateWantBar();
+  });
+  const _mapEl = $("map");
+  if (_mapEl)
+    ["pointerdown", "wheel", "touchstart"].forEach(function (ev) {
+      _mapEl.addEventListener(
+        ev,
+        function () {
+          mapOwned = true;
+        },
+        { passive: true }
+      );
+    });
+}
 /* One colour per bucket now, not five steps: 4 and 5 were two names for "loved" and read as
    two different judgements on the map. Takes a rating so every existing caller still works. */
-function ratingColor(r){ r=r||0; return r>=4?BUCKET_HEX.loved:r>=3?BUCKET_HEX.fine:r>=1?BUCKET_HEX.meh:BUCKET_HEX[""]; }
-let gclusterer=null;
+function ratingColor(r) {
+  r = r || 0;
+  return r >= 4 ? BUCKET_HEX.loved : r >= 3 ? BUCKET_HEX.fine : r >= 1 ? BUCKET_HEX.meh : BUCKET_HEX[""];
+}
+let gclusterer = null;
 /* ---------- want-to-try pins ----------
    They used to be a 20px pale-blue ring at a quarter-strength fill, with no white edge, drawn
    under every visited pin and folded into the same orange clusters. Measured against the
@@ -31,202 +117,600 @@ let gclusterer=null;
    4.6–6.8:1 on streets, parks and water) and a bookmark, so it reads without colour too. They
    sit above the cluster bubbles (but under the you-are-here dot, MAX+1000), and are never
    clustered — there are a handful, and a want-to-try is the pin you are looking for. */
-const WISH_PIN_SVG='<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">'
-  +'<circle cx="15" cy="15" r="12" fill="'+WISH_HEX+'" stroke="#ffffff" stroke-width="3"/>'
-  +'<path d="M11.4 9.4h7.2v11.2l-3.6-2.9-3.6 2.9z" fill="#ffffff"/></svg>';
-function wishPinIcon(){ return { url:"data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(WISH_PIN_SVG),
-  scaledSize:new google.maps.Size(30,30), anchor:new google.maps.Point(15,15) }; }
-function wishPinZ(){ return (google.maps.Marker.MAX_ZINDEX||1000000)+500; }
+const WISH_PIN_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">' +
+  '<circle cx="15" cy="15" r="12" fill="' +
+  WISH_HEX +
+  '" stroke="#ffffff" stroke-width="3"/>' +
+  '<path d="M11.4 9.4h7.2v11.2l-3.6-2.9-3.6 2.9z" fill="#ffffff"/></svg>';
+function wishPinIcon() {
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(WISH_PIN_SVG),
+    scaledSize: new google.maps.Size(30, 30),
+    anchor: new google.maps.Point(15, 15),
+  };
+}
+function wishPinZ() {
+  return (google.maps.Marker.MAX_ZINDEX || 1000000) + 500;
+}
 
 /* The Want to try switch. Toggling shows and hides the pins that exist rather than redrawing
    them, because renderMarkers() refits the map to every pin it draws — and a want-to-try list
    spanning the Bay Area and Vancouver would throw you out to half a continent each tap. */
-let mapWantOnly=false;
-function _pinShown(m){ return !mapWantOnly||!!m._wish; }
-function _showPins(){
-  if(!gmap)return;
-  if(gclusterer){ try{ gclusterer.clearMarkers(); gclusterer.setMap(null); }catch(e){ warn("map.js",e); } gclusterer=null; }
-  const been=gmarkers.filter(function(m){ return !m._wish; }), want=gmarkers.filter(function(m){ return m._wish; });
-  been.forEach(function(m){ m.setMap(null); });
-  if(!mapWantOnly){
-    if(window.markerClusterer&&markerClusterer.MarkerClusterer&&been.length){ gclusterer=new markerClusterer.MarkerClusterer({ map:gmap, markers:been, renderer:_clusterRenderer }); }
-    else been.forEach(function(m){ m.setMap(gmap); });
+let mapWantOnly = false;
+function _pinShown(m) {
+  return !mapWantOnly || !!m._wish;
+}
+function _showPins() {
+  if (!gmap) return;
+  if (gclusterer) {
+    try {
+      gclusterer.clearMarkers();
+      gclusterer.setMap(null);
+    } catch (e) {
+      warn("map.js", e);
+    }
+    gclusterer = null;
   }
-  want.forEach(function(m){ m.setMap(gmap); });
+  const been = gmarkers.filter(function (m) {
+      return !m._wish;
+    }),
+    want = gmarkers.filter(function (m) {
+      return m._wish;
+    });
+  been.forEach(function (m) {
+    m.setMap(null);
+  });
+  if (!mapWantOnly) {
+    if (window.markerClusterer && markerClusterer.MarkerClusterer && been.length) {
+      gclusterer = new markerClusterer.MarkerClusterer({ map: gmap, markers: been, renderer: _clusterRenderer });
+    } else
+      been.forEach(function (m) {
+        m.setMap(gmap);
+      });
+  }
+  want.forEach(function (m) {
+    m.setMap(gmap);
+  });
 }
-function wishPinCount(){ return gmarkers.filter(function(m){ return m._wish; }).length; }
-function _wishInView(){
-  const bds=(gmap&&typeof gmap.getBounds==="function")?gmap.getBounds():null;
-  if(!bds)return null;
-  return gmarkers.filter(function(m){ return m._wish&&bds.contains(m.getPosition()); }).length;
+function wishPinCount() {
+  return gmarkers.filter(function (m) {
+    return m._wish;
+  }).length;
 }
-function _fitWish(){
-  const pts=gmarkers.filter(function(m){ return m._wish; }).map(function(m){ return m.getPosition(); });
-  if(!gmap||!pts.length)return;
-  if(pts.length===1){ gmap.setCenter(pts[0]); gmap.setZoom(15); return; }
-  const b=new google.maps.LatLngBounds(); pts.forEach(function(p){ b.extend(p); }); gmap.fitBounds(b,fitPad());
+function _wishInView() {
+  const bds = gmap && typeof gmap.getBounds === "function" ? gmap.getBounds() : null;
+  if (!bds) return null;
+  return gmarkers.filter(function (m) {
+    return m._wish && bds.contains(m.getPosition());
+  }).length;
 }
-function syncWantUI(){
-  const n=wishPinCount(), chip=$("btn-want");
-  if(!n&&mapWantOnly)mapWantOnly=false;
-  if(chip){
-    chip.hidden=!n;
-    chip.setAttribute("aria-pressed",String(mapWantOnly));
-    const c=$("want-n"); if(c)c.textContent=String(n);
-    chip.setAttribute("aria-label",(mapWantOnly?"Showing only want to try":"Show only want to try")+", "+n+" place"+(n===1?"":"s"));
+function _fitWish() {
+  const pts = gmarkers
+    .filter(function (m) {
+      return m._wish;
+    })
+    .map(function (m) {
+      return m.getPosition();
+    });
+  if (!gmap || !pts.length) return;
+  if (pts.length === 1) {
+    gmap.setCenter(pts[0]);
+    gmap.setZoom(15);
+    return;
+  }
+  const b = new google.maps.LatLngBounds();
+  pts.forEach(function (p) {
+    b.extend(p);
+  });
+  gmap.fitBounds(b, fitPad());
+}
+function syncWantUI() {
+  const n = wishPinCount(),
+    chip = $("btn-want");
+  if (!n && mapWantOnly) mapWantOnly = false;
+  if (chip) {
+    chip.hidden = !n;
+    chip.setAttribute("aria-pressed", String(mapWantOnly));
+    const c = $("want-n");
+    if (c) c.textContent = String(n);
+    chip.setAttribute(
+      "aria-label",
+      (mapWantOnly ? "Showing only want to try" : "Show only want to try") + ", " + n + " place" + (n === 1 ? "" : "s")
+    );
   }
   updateWantBar();
 }
-function updateWantBar(){
-  const bar=$("wantbar"); if(!bar)return;
-  bar.hidden=!mapWantOnly;
-  if(!mapWantOnly)return;
-  const n=wishPinCount(), here=_wishInView(), t=$("wantbar-text");
-  if(t)t.textContent="Only want to try · "+(here==null?(n+" place"+(n===1?"":"s")):(here+" here, "+n+" in all"));
+function updateWantBar() {
+  const bar = $("wantbar");
+  if (!bar) return;
+  bar.hidden = !mapWantOnly;
+  if (!mapWantOnly) return;
+  const n = wishPinCount(),
+    here = _wishInView(),
+    t = $("wantbar-text");
+  if (t)
+    t.textContent =
+      "Only want to try · " + (here == null ? n + " place" + (n === 1 ? "" : "s") : here + " here, " + n + " in all");
 }
-function toggleWantOnly(on){
-  mapWantOnly=(on===undefined)?!mapWantOnly:!!on;
-  if(!wishPinCount())mapWantOnly=false;
+function toggleWantOnly(on) {
+  mapWantOnly = on === undefined ? !mapWantOnly : !!on;
+  if (!wishPinCount()) mapWantOnly = false;
   /* the card may belong to a pin that is about to disappear */
-  if(mapWantOnly&&typeof peekOpen==="function"&&peekOpen()){ const pc=cafes.find(function(x){ return x.id===peekId; }); if(!pc||!pc.wish)closePeek(); }
+  if (mapWantOnly && typeof peekOpen === "function" && peekOpen()) {
+    const pc = cafes.find(function (x) {
+      return x.id === peekId;
+    });
+    if (!pc || !pc.wish) closePeek();
+  }
   _showPins();
-  if(mapWantOnly&&gmap){ mapOwned=true; if(_wishInView()===0)_fitWish(); }
+  if (mapWantOnly && gmap) {
+    mapOwned = true;
+    if (_wishInView() === 0) _fitWish();
+  }
   syncWantUI();
 }
-const _clusterRenderer={ render:function(cluster){ const n=cluster.count; return new google.maps.Marker({ position:cluster.position, icon:{ path:google.maps.SymbolPath.CIRCLE, scale:14+Math.min(12,n), fillColor:"#d5803b", fillOpacity:.92, strokeColor:"#ffffff", strokeWeight:3 }, label:{ text:String(n), color:"#ffffff", fontSize:"12px", fontWeight:"700" }, zIndex:google.maps.Marker.MAX_ZINDEX+n }); } };
-function renderMarkers(){ if(!gmap)return; if(gclusterer){ try{ gclusterer.clearMarkers(); gclusterer.setMap(null); }catch(e){ warn("map.js",e); } gclusterer=null; } gmarkers.forEach(m=>m.setMap(null)); gmarkers=[]; const b=new google.maps.LatLngBounds(); let n=0; const dups=dupNameKeys(); cafes.forEach(c=>{ if(c.lat==null)return; const opt={position:{lat:latOf(c),lng:lngOf(c)},title:(dups[(c.name||"").trim().toLowerCase()]&&c.area)?(c.name+" — "+c.area):c.name,icon:c.wish?wishPinIcon():{path:google.maps.SymbolPath.CIRCLE,scale:c.fav?15:12,fillColor:ratingColor(c.rating),fillOpacity:1,strokeColor:c.fav?"#e0556b":"#ffffff",strokeWeight:c.fav?4:3},zIndex:c.wish?wishPinZ():(c.fav?5:3)}; const m=new google.maps.Marker(opt); m._wish=!!c.wish; m.addListener("click",()=>onMarkerClick(c,m)); gmarkers.push(m); if(_pinShown(m)){ b.extend(opt.position); n++; } }); _showPins(); syncWantUI(); if($("map-sub"))$("map-sub").textContent=cafes.length+" cafe"+(cafes.length===1?"":"s")+" · tap a pin"; renderLocationSelect(); if(n===1){ gmap.setCenter(gmarkers.filter(_pinShown)[0].getPosition()); gmap.setZoom(14); } else if(n>1){ gmap.fitBounds(b,fitPad()); } }
-const COUNTRY_INFO={"United States USA America":{flag:"🇺🇸",name:"United States"},"South Korea Korea":{flag:"🇰🇷",name:"South Korea"},"Japan":{flag:"🇯🇵",name:"Japan"},"Taiwan":{flag:"🇹🇼",name:"Taiwan"},"Hong Kong China":{flag:"🇭🇰",name:"Hong Kong"},"Singapore":{flag:"🇸🇬",name:"Singapore"},"Australia":{flag:"🇦🇺",name:"Australia"},"United Kingdom UK England":{flag:"🇬🇧",name:"United Kingdom"},"France":{flag:"🇫🇷",name:"France"}};
-function cafeCountryName(c){ const t=countryTerms(c); return (COUNTRY_INFO[t]&&COUNTRY_INFO[t].name)||"Other"; }
+const _clusterRenderer = {
+  render: function (cluster) {
+    const n = cluster.count;
+    return new google.maps.Marker({
+      position: cluster.position,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 14 + Math.min(12, n),
+        fillColor: "#d5803b",
+        fillOpacity: 0.92,
+        strokeColor: "#ffffff",
+        strokeWeight: 3,
+      },
+      label: { text: String(n), color: "#ffffff", fontSize: "12px", fontWeight: "700" },
+      zIndex: google.maps.Marker.MAX_ZINDEX + n,
+    });
+  },
+};
+function renderMarkers() {
+  if (!gmap) return;
+  if (gclusterer) {
+    try {
+      gclusterer.clearMarkers();
+      gclusterer.setMap(null);
+    } catch (e) {
+      warn("map.js", e);
+    }
+    gclusterer = null;
+  }
+  gmarkers.forEach(m => m.setMap(null));
+  gmarkers = [];
+  const b = new google.maps.LatLngBounds();
+  let n = 0;
+  const dups = dupNameKeys();
+  cafes.forEach(c => {
+    if (c.lat == null) return;
+    const opt = {
+      position: { lat: latOf(c), lng: lngOf(c) },
+      title: dups[(c.name || "").trim().toLowerCase()] && c.area ? c.name + " — " + c.area : c.name,
+      icon: c.wish
+        ? wishPinIcon()
+        : {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: c.fav ? 15 : 12,
+            fillColor: ratingColor(c.rating),
+            fillOpacity: 1,
+            strokeColor: c.fav ? "#e0556b" : "#ffffff",
+            strokeWeight: c.fav ? 4 : 3,
+          },
+      zIndex: c.wish ? wishPinZ() : c.fav ? 5 : 3,
+    };
+    const m = new google.maps.Marker(opt);
+    m._wish = !!c.wish;
+    m.addListener("click", () => onMarkerClick(c, m));
+    gmarkers.push(m);
+    if (_pinShown(m)) {
+      b.extend(opt.position);
+      n++;
+    }
+  });
+  _showPins();
+  syncWantUI();
+  if ($("map-sub"))
+    $("map-sub").textContent = cafes.length + " cafe" + (cafes.length === 1 ? "" : "s") + " · tap a pin";
+  renderLocationSelect();
+  if (n === 1) {
+    gmap.setCenter(gmarkers.filter(_pinShown)[0].getPosition());
+    gmap.setZoom(14);
+  } else if (n > 1) {
+    gmap.fitBounds(b, fitPad());
+  }
+}
+const COUNTRY_INFO = {
+  "United States USA America": { flag: "🇺🇸", name: "United States" },
+  "South Korea Korea": { flag: "🇰🇷", name: "South Korea" },
+  Japan: { flag: "🇯🇵", name: "Japan" },
+  Taiwan: { flag: "🇹🇼", name: "Taiwan" },
+  "Hong Kong China": { flag: "🇭🇰", name: "Hong Kong" },
+  Singapore: { flag: "🇸🇬", name: "Singapore" },
+  Australia: { flag: "🇦🇺", name: "Australia" },
+  "United Kingdom UK England": { flag: "🇬🇧", name: "United Kingdom" },
+  France: { flag: "🇫🇷", name: "France" },
+};
+function cafeCountryName(c) {
+  const t = countryTerms(c);
+  return (COUNTRY_INFO[t] && COUNTRY_INFO[t].name) || "Other";
+}
 /* The one country count, used by Stats and the Go board — they printed 5 and 6 for the same
    data because only one of them knew that "Other" (the fallback for a cafe whose coordinates
    match no country box; six real ones) is not a country. */
-function countryCount(list){ const m={}; list.forEach(function(c){ const k=cafeCountryName(c); if(k&&k!=="Other")m[k]=1; }); return Object.keys(m).length; }
-function cafeCountryLabel(c){ const t=countryTerms(c); const info=COUNTRY_INFO[t]; return info?(info.flag+" "+info.name):"🌐 Other"; }
-function cafeStateName(c){ const m=/,\s*([A-Za-z]{2})\b/.exec(c.area||""); if(m){ const ab=m[1].toUpperCase(); if(STATE_NAMES[ab])return STATE_NAMES[ab]; } if(c.lat!=null&&c.lng!=null){ const lat=c.lat,lng=c.lng; if(lng<-150&&lat>18&&lat<23)return "Hawaii"; if(lng>=-125&&lng<=-117&&lat>=32&&lat<=42.5)return "California"; if(lng>-117&&lng<=-114&&lat>=35&&lat<=37.5)return "Nevada"; } return ""; }
-function buildLocationIndex(){ const groups={}; cafes.forEach(c=>{ if(c.lat==null)return; const name=cafeCountryName(c); const label=cafeCountryLabel(c); const st=cafeStateName(c); const city=(c.area||"").trim(); if(!groups[name])groups[name]={label:label,states:{},cities:{},isUS:name==="United States"}; if(st){ if(!groups[name].states[st])groups[name].states[st]={cities:{}}; if(groups[name].isUS&&city)groups[name].states[st].cities[city]=true; } else if(groups[name].isUS&&city){ groups[name].cities[city]=true; } }); return groups; }
-function renderLocationSelect(){ const sel=$("locsel"); if(!sel)return; const prev=sel.value; const groups=buildLocationIndex(); const names=Object.keys(groups).sort((a,b)=>a==="Other"?1:(b==="Other"?-1:a.localeCompare(b))); let html='<option value="">📍 All locations</option>'; names.forEach(name=>{ const g=groups[name]; html+='<optgroup label="'+esc(g.label)+'">'; html+='<option value="country:'+encodeURIComponent(name)+'">All of '+esc(name)+'</option>'; const states=Object.keys(g.states).sort(); states.forEach(s=>{ html+='<option value="state:'+encodeURIComponent(name)+'|'+encodeURIComponent(s)+'">'+esc(s)+'</option>'; if(g.isUS){ const cities=Object.keys(g.states[s].cities).sort(); cities.forEach(ct=>{ html+='<option value="city:'+encodeURIComponent(name)+'|'+encodeURIComponent(s)+'|'+encodeURIComponent(ct)+'"> '+esc(ct)+'</option>'; }); } }); if(g.isUS){ const loose=Object.keys(g.cities).sort(); loose.forEach(ct=>{ html+='<option value="city:'+encodeURIComponent(name)+'||'+encodeURIComponent(ct)+'">'+esc(ct)+'</option>'; }); } html+='</optgroup>'; }); sel.innerHTML=html; if(prev&&[].slice.call(sel.options).some(o=>o.value===prev))sel.value=prev; }
-function jumpToLocation(val){ if(!gmap){ if(app.dataset.view!=="map")show("map"); return; } /* any choice here is you placing the map, "All locations" included */ mapOwned=true; let list; if(!val)list=cafes.filter(c=>c.lat!=null); else if(val.slice(0,8)==="country:"){ const name=decodeURIComponent(val.slice(8)); list=cafes.filter(c=>c.lat!=null&&cafeCountryName(c)===name); } else if(val.slice(0,6)==="state:"){ const parts=val.slice(6).split("|"); const name=decodeURIComponent(parts[0]); const st=decodeURIComponent(parts[1]||""); list=cafes.filter(c=>c.lat!=null&&cafeCountryName(c)===name&&cafeStateName(c)===st); } else if(val.slice(0,5)==="city:"){ const parts=val.slice(5).split("|"); const name=decodeURIComponent(parts[0]); const st=decodeURIComponent(parts[1]||""); const ct=decodeURIComponent(parts[2]||""); list=cafes.filter(c=>c.lat!=null&&cafeCountryName(c)===name&&(c.area||"").trim()===ct&&(st?cafeStateName(c)===st:true)); } else list=cafes.filter(c=>c.lat!=null); if(app.dataset.view!=="map")show("map"); if(!list||!list.length)return; const _sel=$("locsel"); if(_sel&&val)setTimeout(()=>{ try{ _sel.value=""; }catch(e){ warn("map.js",e); } },350); setTimeout(()=>{ if(list.length===1){ gmap.setCenter({lat:list[0].lat,lng:list[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); list.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); } },0); }
-let userLoc=null; let mapOwned=false;   /* the person has positioned the map themselves */
-let gInfo=null, pendingMarkerId=null;
-function mapInfo(){ if(!gInfo)gInfo=new google.maps.InfoWindow(); return gInfo; }
+function countryCount(list) {
+  const m = {};
+  list.forEach(function (c) {
+    const k = cafeCountryName(c);
+    if (k && k !== "Other") m[k] = 1;
+  });
+  return Object.keys(m).length;
+}
+function cafeCountryLabel(c) {
+  const t = countryTerms(c);
+  const info = COUNTRY_INFO[t];
+  return info ? info.flag + " " + info.name : "🌐 Other";
+}
+function cafeStateName(c) {
+  const m = /,\s*([A-Za-z]{2})\b/.exec(c.area || "");
+  if (m) {
+    const ab = m[1].toUpperCase();
+    if (STATE_NAMES[ab]) return STATE_NAMES[ab];
+  }
+  if (c.lat != null && c.lng != null) {
+    const lat = c.lat,
+      lng = c.lng;
+    if (lng < -150 && lat > 18 && lat < 23) return "Hawaii";
+    if (lng >= -125 && lng <= -117 && lat >= 32 && lat <= 42.5) return "California";
+    if (lng > -117 && lng <= -114 && lat >= 35 && lat <= 37.5) return "Nevada";
+  }
+  return "";
+}
+function buildLocationIndex() {
+  const groups = {};
+  cafes.forEach(c => {
+    if (c.lat == null) return;
+    const name = cafeCountryName(c);
+    const label = cafeCountryLabel(c);
+    const st = cafeStateName(c);
+    const city = (c.area || "").trim();
+    if (!groups[name]) groups[name] = { label: label, states: {}, cities: {}, isUS: name === "United States" };
+    if (st) {
+      if (!groups[name].states[st]) groups[name].states[st] = { cities: {} };
+      if (groups[name].isUS && city) groups[name].states[st].cities[city] = true;
+    } else if (groups[name].isUS && city) {
+      groups[name].cities[city] = true;
+    }
+  });
+  return groups;
+}
+function renderLocationSelect() {
+  const sel = $("locsel");
+  if (!sel) return;
+  const prev = sel.value;
+  const groups = buildLocationIndex();
+  const names = Object.keys(groups).sort((a, b) => (a === "Other" ? 1 : b === "Other" ? -1 : a.localeCompare(b)));
+  let html = '<option value="">📍 All locations</option>';
+  names.forEach(name => {
+    const g = groups[name];
+    html += '<optgroup label="' + esc(g.label) + '">';
+    html += '<option value="country:' + encodeURIComponent(name) + '">All of ' + esc(name) + "</option>";
+    const states = Object.keys(g.states).sort();
+    states.forEach(s => {
+      html +=
+        '<option value="state:' + encodeURIComponent(name) + "|" + encodeURIComponent(s) + '">' + esc(s) + "</option>";
+      if (g.isUS) {
+        const cities = Object.keys(g.states[s].cities).sort();
+        cities.forEach(ct => {
+          html +=
+            '<option value="city:' +
+            encodeURIComponent(name) +
+            "|" +
+            encodeURIComponent(s) +
+            "|" +
+            encodeURIComponent(ct) +
+            '"> ' +
+            esc(ct) +
+            "</option>";
+        });
+      }
+    });
+    if (g.isUS) {
+      const loose = Object.keys(g.cities).sort();
+      loose.forEach(ct => {
+        html +=
+          '<option value="city:' +
+          encodeURIComponent(name) +
+          "||" +
+          encodeURIComponent(ct) +
+          '">' +
+          esc(ct) +
+          "</option>";
+      });
+    }
+    html += "</optgroup>";
+  });
+  sel.innerHTML = html;
+  if (prev && [].slice.call(sel.options).some(o => o.value === prev)) sel.value = prev;
+}
+function jumpToLocation(val) {
+  if (!gmap) {
+    if (app.dataset.view !== "map") show("map");
+    return;
+  }
+  /* any choice here is you placing the map, "All locations" included */ mapOwned = true;
+  let list;
+  if (!val) list = cafes.filter(c => c.lat != null);
+  else if (val.slice(0, 8) === "country:") {
+    const name = decodeURIComponent(val.slice(8));
+    list = cafes.filter(c => c.lat != null && cafeCountryName(c) === name);
+  } else if (val.slice(0, 6) === "state:") {
+    const parts = val.slice(6).split("|");
+    const name = decodeURIComponent(parts[0]);
+    const st = decodeURIComponent(parts[1] || "");
+    list = cafes.filter(c => c.lat != null && cafeCountryName(c) === name && cafeStateName(c) === st);
+  } else if (val.slice(0, 5) === "city:") {
+    const parts = val.slice(5).split("|");
+    const name = decodeURIComponent(parts[0]);
+    const st = decodeURIComponent(parts[1] || "");
+    const ct = decodeURIComponent(parts[2] || "");
+    list = cafes.filter(
+      c =>
+        c.lat != null &&
+        cafeCountryName(c) === name &&
+        (c.area || "").trim() === ct &&
+        (st ? cafeStateName(c) === st : true)
+    );
+  } else list = cafes.filter(c => c.lat != null);
+  if (app.dataset.view !== "map") show("map");
+  if (!list || !list.length) return;
+  const _sel = $("locsel");
+  if (_sel && val)
+    setTimeout(() => {
+      try {
+        _sel.value = "";
+      } catch (e) {
+        warn("map.js", e);
+      }
+    }, 350);
+  setTimeout(() => {
+    if (list.length === 1) {
+      gmap.setCenter({ lat: list[0].lat, lng: list[0].lng });
+      gmap.setZoom(15);
+    } else {
+      const b = new google.maps.LatLngBounds();
+      list.forEach(c => b.extend({ lat: c.lat, lng: c.lng }));
+      gmap.fitBounds(b, fitPad());
+    }
+  }, 0);
+}
+let userLoc = null;
+let mapOwned = false; /* the person has positioned the map themselves */
+let gInfo = null,
+  pendingMarkerId = null;
+function mapInfo() {
+  if (!gInfo) gInfo = new google.maps.InfoWindow();
+  return gInfo;
+}
 /* ---------- the peek card ----------
    On a phone a pin used to swap the whole screen for the cafe page, so looking at five pins
    was five trips there and back — and each trip back re-centred the map. A pin now slides up
    a card over the map: position, judgement, distance, what to order, Directions. The map
    stays exactly where it was. The laptop keeps opening the page, because there it already
    opens in the side panel beside the map. */
-let peekId=null;
-function onMarkerClick(c,m){ if(gInfo)gInfo.close(); mapOwned=true;
-  if(window.innerWidth>=900){ openDetail(c.id,"map"); return; }
-  openPeek(c.id); }
-function peekOpen(){ return !!peekId; }
-function openPeek(id){
-  const c=cafes.find(x=>x.id===id), el=$("peek"); if(!c||!el)return;
-  peekId=id;
-  const rk=(typeof rankOf==="function")?rankOf(c):null, rn=rk?rankMap()._n:0;
-  const dkm=(userLoc&&latOf(c)!=null)?distKm(userLoc.lat,userLoc.lng,latOf(c),lngOf(c)):null;
-  const where=[areaOf(c)?esc(areaOf(c)):"", dkm!=null?fmtDist(dkm):""].filter(Boolean).join(" \u00b7 ");
-  const top=(!c.wish&&typeof topDrinkAt==="function")?topDrinkAt(c):null;
-  const judge=c.wish?'<span class="bkpill wantpill"><i></i>Want to try</span>':bucketPill(c,"");
-  el.innerHTML='<div class="peekgrab" aria-hidden="true"></div>'
-    +'<div class="peekhead">'
-      +(rk?'<div class="dranktile"><b>#'+rk+'</b><span>of '+rn+'</span></div>':'')
-      +'<div class="peekmain"><div class="peekname">'+esc(c.name)+'</div>'
-        +'<div class="dsub">'+judge+(where?'<span class="darea">'+where+'</span>':'')+'</div>'
-        +(top?'<div class="peekorder">Order the '+esc(top.d.n)+(top.n>1?' \u00b7 '+top.n+'\u00d7':'')+'</div>':'')
-      +'</div>'
-    +'</div>'
-    +'<div class="peekbtns"><button type="button" class="btn" onclick="peekDirections()">Directions</button>'
-    +'<button type="button" class="btn ghost" onclick="peekOpenCafe()">Open cafe</button></div>';
-  el.hidden=false;
-  const box=el.closest(".mapbox");
-  if(box){ box.classList.add("peeking"); box.style.setProperty("--peekh",el.offsetHeight+"px"); }
+let peekId = null;
+function onMarkerClick(c, m) {
+  if (gInfo) gInfo.close();
+  mapOwned = true;
+  if (window.innerWidth >= 900) {
+    openDetail(c.id, "map");
+    return;
+  }
+  openPeek(c.id);
 }
-function closePeek(){
-  const el=$("peek"); if(el){ el.hidden=true; el.innerHTML=""; }
-  const box=el&&el.closest(".mapbox"); if(box)box.classList.remove("peeking");
-  peekId=null;
+function peekOpen() {
+  return !!peekId;
 }
-function peekDirections(){ const c=cafes.find(x=>x.id===peekId); if(c)goDirections(c); }
-function peekOpenCafe(){ const id=peekId; closePeek(); if(id)openDetail(id,"map"); }
-function nearestCafe(pos){ let best=null,bd=Infinity; cafes.forEach(c=>{ if(c.lat==null)return; const d=distKm(pos.lat,pos.lng,c.lat,c.lng); if(d<bd){bd=d;best=c;} }); return best; }
+function openPeek(id) {
+  const c = cafes.find(x => x.id === id),
+    el = $("peek");
+  if (!c || !el) return;
+  peekId = id;
+  const rk = typeof rankOf === "function" ? rankOf(c) : null,
+    rn = rk ? rankMap()._n : 0;
+  const dkm = userLoc && latOf(c) != null ? distKm(userLoc.lat, userLoc.lng, latOf(c), lngOf(c)) : null;
+  const where = [areaOf(c) ? esc(areaOf(c)) : "", dkm != null ? fmtDist(dkm) : ""].filter(Boolean).join(" \u00b7 ");
+  const top = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
+  const judge = c.wish ? '<span class="bkpill wantpill"><i></i>Want to try</span>' : bucketPill(c, "");
+  el.innerHTML =
+    '<div class="peekgrab" aria-hidden="true"></div>' +
+    '<div class="peekhead">' +
+    (rk ? '<div class="dranktile"><b>#' + rk + "</b><span>of " + rn + "</span></div>" : "") +
+    '<div class="peekmain"><div class="peekname">' +
+    esc(c.name) +
+    "</div>" +
+    '<div class="dsub">' +
+    judge +
+    (where ? '<span class="darea">' + where + "</span>" : "") +
+    "</div>" +
+    (top
+      ? '<div class="peekorder">Order the ' + esc(top.d.n) + (top.n > 1 ? " \u00b7 " + top.n + "\u00d7" : "") + "</div>"
+      : "") +
+    "</div>" +
+    "</div>" +
+    '<div class="peekbtns"><button type="button" class="btn" onclick="peekDirections()">Directions</button>' +
+    '<button type="button" class="btn ghost" onclick="peekOpenCafe()">Open cafe</button></div>';
+  el.hidden = false;
+  const box = el.closest(".mapbox");
+  if (box) {
+    box.classList.add("peeking");
+    box.style.setProperty("--peekh", el.offsetHeight + "px");
+  }
+}
+function closePeek() {
+  const el = $("peek");
+  if (el) {
+    el.hidden = true;
+    el.innerHTML = "";
+  }
+  const box = el && el.closest(".mapbox");
+  if (box) box.classList.remove("peeking");
+  peekId = null;
+}
+function peekDirections() {
+  const c = cafes.find(x => x.id === peekId);
+  if (c) goDirections(c);
+}
+function peekOpenCafe() {
+  const id = peekId;
+  closePeek();
+  if (id) openDetail(id, "map");
+}
+function nearestCafe(pos) {
+  let best = null,
+    bd = Infinity;
+  cafes.forEach(c => {
+    if (c.lat == null) return;
+    const d = distKm(pos.lat, pos.lng, c.lat, c.lng);
+    if (d < bd) {
+      bd = d;
+      best = c;
+    }
+  });
+  return best;
+}
 /* Switching to the map tab used to ask for your location, every single time. Now it only
    uses a permission you have already given; if you have not, the map just sits where it is
    until you press the button. */
-function focusNearest(){ if(!gmap)return; ifLocationAlreadyAllowed(function(){ showUserLocation(true); }); }
+function focusNearest() {
+  if (!gmap) return;
+  ifLocationAlreadyAllowed(function () {
+    showUserLocation(true);
+  });
+}
 
 /* The button. `locate()` and the geolocation plumbing existed from the start, but nothing
    called them and nothing drew the result: showUserLocation() cleared userMarker and never
    built a new one, so the app has always known where you are — the list sorts by distance
    from you — without ever showing you. Both halves are here now. */
-function setLocateState(s){ const b=$("btn-locate"); if(b)b.dataset.state=s; }
+function setLocateState(s) {
+  const b = $("btn-locate");
+  if (b) b.dataset.state = s;
+}
 
 /* Blue, filled and above everything — want-to-try pins are violet with a bookmark (v63), so
    nothing else on the map shares this blue. It also carries an accuracy halo no pin has. The halo is the real radius the
    device reported, so a vague fix looks vague instead of pretending to be a doorstep. */
-function drawUserLocation(pos,acc){
-  if(!gmap)return;
-  if(userMarker){ userMarker.setMap(null); userMarker=null; }
-  if(userAccuracy){ userAccuracy.setMap(null); userAccuracy=null; }
-  userMarker=new google.maps.Marker({
-    position:pos, map:gmap, clickable:false, title:"You are here",
-    icon:{ path:google.maps.SymbolPath.CIRCLE, scale:7,
-           fillColor:"#1a73e8", fillOpacity:1, strokeColor:"#ffffff", strokeWeight:3 },
-    zIndex:google.maps.Marker.MAX_ZINDEX+1000
+function drawUserLocation(pos, acc) {
+  if (!gmap) return;
+  if (userMarker) {
+    userMarker.setMap(null);
+    userMarker = null;
+  }
+  if (userAccuracy) {
+    userAccuracy.setMap(null);
+    userAccuracy = null;
+  }
+  userMarker = new google.maps.Marker({
+    position: pos,
+    map: gmap,
+    clickable: false,
+    title: "You are here",
+    icon: {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 7,
+      fillColor: "#1a73e8",
+      fillOpacity: 1,
+      strokeColor: "#ffffff",
+      strokeWeight: 3,
+    },
+    zIndex: google.maps.Marker.MAX_ZINDEX + 1000,
   });
   /* Below the dot but above the pins, and only when the fix is loose enough to be worth
      drawing — a 5m circle at street zoom is a smudge under the marker. */
-  if(acc>25){
-    userAccuracy=new google.maps.Circle({
-      map:gmap, center:pos, radius:acc, clickable:false,
-      fillColor:"#1a73e8", fillOpacity:.10, strokeColor:"#1a73e8", strokeOpacity:.30, strokeWeight:1,
-      zIndex:google.maps.Marker.MAX_ZINDEX+999
+  if (acc > 25) {
+    userAccuracy = new google.maps.Circle({
+      map: gmap,
+      center: pos,
+      radius: acc,
+      clickable: false,
+      fillColor: "#1a73e8",
+      fillOpacity: 0.1,
+      strokeColor: "#1a73e8",
+      strokeOpacity: 0.3,
+      strokeWeight: 1,
+      zIndex: google.maps.Marker.MAX_ZINDEX + 999,
     });
   }
 }
 
-function showUserLocation(center,done,force){
-  if(!navigator.geolocation){ done&&done(false); return; }
-  navigator.geolocation.getCurrentPosition(p=>{
-    const pos={lat:p.coords.latitude,lng:p.coords.longitude};
-    userLoc=pos;
-    if(app.dataset.view==="list")renderList();
-    /* The guide regroups the moment we know where you are, rather than on the next navigation. */
-    else if(app.dataset.view==="compare"&&typeof renderBoard==="function")renderBoard();
-    if(!gmap){ done&&done(true); return; }
-    drawUserLocation(pos,p.coords.accuracy||0);
-    /* `force` is the locate button: an explicit "show me where I am" always wins. Everything
+function showUserLocation(center, done, force) {
+  if (!navigator.geolocation) {
+    done && done(false);
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    p => {
+      const pos = { lat: p.coords.latitude, lng: p.coords.longitude };
+      userLoc = pos;
+      if (app.dataset.view === "list") renderList();
+      /* The guide regroups the moment we know where you are, rather than on the next navigation. */
+      else if (app.dataset.view === "compare" && typeof renderBoard === "function") renderBoard();
+      if (!gmap) {
+        done && done(true);
+        return;
+      }
+      drawUserLocation(pos, p.coords.accuracy || 0);
+      /* `force` is the locate button: an explicit "show me where I am" always wins. Everything
        else (launch, returning to the map tab) centres only on a view nobody has touched. */
-    if(center&&(force||!mapOwned)){
-      if(force)mapOwned=false;
-      const near=nearestCafe(pos);
-      if(near){
-        const b=new google.maps.LatLngBounds();
-        b.extend(pos); b.extend({lat:near.lat,lng:near.lng});
-        gmap.fitBounds(b,fitPad());
-        google.maps.event.addListenerOnce(gmap,"idle",()=>{ if(gmap.getZoom()>16)gmap.setZoom(16); });
-      } else { gmap.setCenter(pos); gmap.setZoom(13); }
-    }
-    done&&done(true);
-  },()=>{
-    /* No toast here. This runs for the launch fix and the map-tab fix too, and a failure you
+      if (center && (force || !mapOwned)) {
+        if (force) mapOwned = false;
+        const near = nearestCafe(pos);
+        if (near) {
+          const b = new google.maps.LatLngBounds();
+          b.extend(pos);
+          b.extend({ lat: near.lat, lng: near.lng });
+          gmap.fitBounds(b, fitPad());
+          google.maps.event.addListenerOnce(gmap, "idle", () => {
+            if (gmap.getZoom() > 16) gmap.setZoom(16);
+          });
+        } else {
+          gmap.setCenter(pos);
+          gmap.setZoom(13);
+        }
+      }
+      done && done(true);
+    },
+    () => {
+      /* No toast here. This runs for the launch fix and the map-tab fix too, and a failure you
        did not ask for must not talk to you. The button owns the message, because the button
        is the only path you started. */
-    done&&done(false);
-  },{enableHighAccuracy:true,timeout:8000,maximumAge:0});
+      done && done(false);
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+  );
 }
 
 /* A fix can take the full 8s, so the button has to say it is working or the tap reads as
    dead. Refused or failed goes back to idle and lets the existing toast do the talking. */
-function locate(){
-  if(!navigator.geolocation){ toast("Location not available"); return; }
-  if($("btn-locate")&&$("btn-locate").dataset.state==="busy")return;
+function locate() {
+  if (!navigator.geolocation) {
+    toast("Location not available");
+    return;
+  }
+  if ($("btn-locate") && $("btn-locate").dataset.state === "busy") return;
   setLocateState("busy");
   /* forced: the dropdown used to make this button stop re-centering */
-  showUserLocation(true,function(ok){
-    setLocateState(ok?"on":"idle");
-    if(!ok)toast("Couldn't get your location");
-  },true);
+  showUserLocation(
+    true,
+    function (ok) {
+      setLocateState(ok ? "on" : "idle");
+      if (!ok) toast("Couldn't get your location");
+    },
+    true
+  );
 }
 /* The launch fix is silent and always has been. It now reports to the button as well, so a
    dot on the map and a hollow button can never disagree. */
@@ -238,18 +722,29 @@ function locate(){
    that matters) or the query throws, we do not know whether asking would prompt, so we do
    not ask. The cost is that distance sorting in the list stays idle until you press the
    button once — the whole point is that the choice is yours to make. */
-function ifLocationAlreadyAllowed(cb){
-  if(!navigator.geolocation)return;
-  if(!(navigator.permissions&&navigator.permissions.query))return;
+function ifLocationAlreadyAllowed(cb) {
+  if (!navigator.geolocation) return;
+  if (!(navigator.permissions && navigator.permissions.query)) return;
   let q;
-  try{ q=navigator.permissions.query({name:"geolocation"}); }catch(e){ warn("map.js",e); return; }
-  if(!q||!q.then)return;
-  q.then(function(r){ if(r&&r.state==="granted")cb(); }).catch(function(e){ warn("map.js",e); });
+  try {
+    q = navigator.permissions.query({ name: "geolocation" });
+  } catch (e) {
+    warn("map.js", e);
+    return;
+  }
+  if (!q || !q.then) return;
+  q.then(function (r) {
+    if (r && r.state === "granted") cb();
+  }).catch(function (e) {
+    warn("map.js", e);
+  });
 }
 
 /* Silent on launch, and silent about failing — no toast, because you did not ask for this. */
-function autoLocate(){
-  ifLocationAlreadyAllowed(function(){
-    showUserLocation(true,function(ok){ if(ok)setLocateState("on"); });
+function autoLocate() {
+  ifLocationAlreadyAllowed(function () {
+    showUserLocation(true, function (ok) {
+      if (ok) setLocateState("on");
+    });
   });
 }

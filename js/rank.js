@@ -2,21 +2,50 @@
 /* rank.js — Elo scoring, the board, and the post-save ranking sheet.
    Loaded by index.html; script order matters (config first, boot last). */
 /* ---------- Elo ---------- */
-const ELO_BASE=1500;
-function eloFor(c){ return (c&&typeof c.elo==="number")?c.elo:ELO_BASE; }
-function eloScoreNum(c){ const m=matchCount(c); const conf=m/(m+4); return Math.max(0,Math.min(10,5+((eloFor(c)-ELO_BASE)/45)*conf)); }
-function eloScore(c){ return eloScoreNum(c).toFixed(1); }
-function matchCount(c){ return (c&&c.matches)||0; }
-function pairKey(a,b){ return [a,b].sort().join("###"); }
-function normDrink(n){ return (n||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
+const ELO_BASE = 1500;
+function eloFor(c) {
+  return c && typeof c.elo === "number" ? c.elo : ELO_BASE;
+}
+function eloScoreNum(c) {
+  const m = matchCount(c);
+  const conf = m / (m + 4);
+  return Math.max(0, Math.min(10, 5 + ((eloFor(c) - ELO_BASE) / 45) * conf));
+}
+function eloScore(c) {
+  return eloScoreNum(c).toFixed(1);
+}
+function matchCount(c) {
+  return (c && c.matches) || 0;
+}
+function pairKey(a, b) {
+  return [a, b].sort().join("###");
+}
+function normDrink(n) {
+  return (n || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
 /* Drinks are no longer ranked head-to-head — the pairing rate was 26% and 120 of the 140
    possible pairs were the same drink — but 22 cafes carry scores from before that stopped,
    and the detail page still shows them. See DESIGN_NOTES.md. */
-function drinkElo(d){ return (d&&typeof d.elo==="number")?d.elo:ELO_BASE; }
-function drinkMatches(d){ return (d&&d.matches)||0; }
-function drinkScoreNum(d){ const m=drinkMatches(d); const conf=m/(m+12); return Math.max(0,Math.min(10,5+((drinkElo(d)-ELO_BASE)/80)*conf)); }
-function drinkScore(d){ return drinkScoreNum(d).toFixed(1); }
-function openRank(){ show("compare"); }
+function drinkElo(d) {
+  return d && typeof d.elo === "number" ? d.elo : ELO_BASE;
+}
+function drinkMatches(d) {
+  return (d && d.matches) || 0;
+}
+function drinkScoreNum(d) {
+  const m = drinkMatches(d);
+  const conf = m / (m + 12);
+  return Math.max(0, Math.min(10, 5 + ((drinkElo(d) - ELO_BASE) / 80) * conf));
+}
+function drinkScore(d) {
+  return drinkScoreNum(d).toFixed(1);
+}
+function openRank() {
+  show("compare");
+}
 
 /* ---------- the board ----------
    The tab used to open a matchup and hide the standing behind `if(!isAdmin)`, so the owner
@@ -25,13 +54,13 @@ function openRank(){ show("compare"); }
 /* Several ranked cafes have an empty or numeric area; fall back to state, then country,
    suppressing "Other" — COUNTRY_INFO has no entry for Vietnam or Indonesia, so printing it
    would be worse than printing nothing. */
-function boardArea(c){
-  const a=(c.area||"").trim();
-  if(a&&!/^\d+$/.test(a))return a;
-  const st=(typeof cafeStateName==="function")?cafeStateName(c):"";
-  if(st)return st;
-  const co=(typeof cafeCountryName==="function")?cafeCountryName(c):"";
-  return (co&&co!=="Other")?co:"";
+function boardArea(c) {
+  const a = (c.area || "").trim();
+  if (a && !/^\d+$/.test(a)) return a;
+  const st = typeof cafeStateName === "function" ? cafeStateName(c) : "";
+  if (st) return st;
+  const co = typeof cafeCountryName === "function" ? cafeCountryName(c) : "";
+  return co && co !== "Other" ? co : "";
 }
 /* ---------- a board row is a recommendation, not a position ----------
    The row used to read "#1 · Zen Gelato & Bar · 11 comparisons · <area> · 7.4". A visitor was
@@ -41,153 +70,305 @@ function boardArea(c){
    No photo here on purpose: photos are fetched lazily on the detail page so Places costs one
    lookup per cafe *viewed* rather than one per cafe *listed*, and 102 rows would invert that.
    The emoji tile the board already used stays. */
-function topDrinkAt(c){
-  const ds=((c&&c.drinks)||[]).map(function(d){
-    return { d:d, n:drinkOrders(d).reduce(function(t,o){ return t+orderQty(o); },0) };
-  }).filter(function(x){ return (x.d.n||"").trim(); });
-  if(!ds.length)return null;
-  ds.sort(function(a,b){ return b.n-a.n || (a.d.n||"").localeCompare(b.d.n||""); });
+/** @param {Cafe|null|undefined} c @returns {{d:Drink,n:number}|null} */
+function topDrinkAt(c) {
+  const ds = ((c && c.drinks) || [])
+    .map(function (d) {
+      return {
+        d: d,
+        n: drinkOrders(d).reduce(function (t, o) {
+          return t + orderQty(o);
+        }, 0),
+      };
+    })
+    .filter(function (x) {
+      return (x.d.n || "").trim();
+    });
+  if (!ds.length) return null;
+  ds.sort(function (a, b) {
+    return b.n - a.n || (a.d.n || "").localeCompare(b.d.n || "");
+  });
   return ds[0];
 }
 /* Trim on a word boundary — a note cut mid-word reads as broken rather than abbreviated. */
-function boardSnip(t,max){
-  t=String(t||"").replace(/\s+/g," ").trim();
-  if(t.length<=max)return t;
-  const cut=t.slice(0,max);
-  const sp=cut.lastIndexOf(" ");
-  return (sp>max*0.6?cut.slice(0,sp):cut).replace(/[\s,.;:\u2014-]+$/,"")+"\u2026";
+function boardSnip(t, max) {
+  t = String(t || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const sp = cut.lastIndexOf(" ");
+  return (sp > max * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s,.;:\u2014-]+$/, "") + "\u2026";
 }
 /* ---------- near you ----------
    A standing that opens with a cafe 2,400 miles away is a list of places you cannot go. When
    the app knows where you are, the same ranking is split by what you can actually reach: best
    nearby first, everything else still underneath. Ordering inside each group stays the
    standing — "the best places near you", not "the closest ones". */
-const NEAR_MI=25;
-function boardDistTo(c){
-  if(!userLoc||!c||c.lat==null||c.lng==null)return null;
-  return distKm(userLoc.lat,userLoc.lng,c.lat,c.lng);
+const NEAR_MI = 25;
+function boardDistTo(c) {
+  if (!userLoc || !c || c.lat == null || c.lng == null) return null;
+  return distKm(userLoc.lat, userLoc.lng, c.lat, c.lng);
 }
-function boardIsNear(c){
-  const d=boardDistTo(c);
-  return d!=null&&(d*0.621371)<=NEAR_MI;
+function boardIsNear(c) {
+  const d = boardDistTo(c);
+  return d != null && d * 0.621371 <= NEAR_MI;
 }
-function boardRow(c,pos,unique){
-  const rank=(pos<=3&&unique)?["\ud83e\udd47","\ud83e\udd48","\ud83e\udd49"][pos-1]:("#"+pos);
-  const ar=boardArea(c), m=matchCount(c);
+function boardRow(c, pos, unique) {
+  const rank = pos <= 3 && unique ? ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"][pos - 1] : "#" + pos;
+  const ar = boardArea(c),
+    m = matchCount(c);
   /* D: a comparison count and a score describe the ranking process, not the cafe. The owner
      still needs both; a visitor can act on neither. */
-  const dkm=boardDistTo(c);
-  const meta=[dkm!=null?fmtDist(dkm):"",ar?esc(ar):"",isAdmin?(m+" comparison"+(m===1?"":"s")):""].filter(Boolean).join(" \u00b7 ");
+  const dkm = boardDistTo(c);
+  const meta = [
+    dkm != null ? fmtDist(dkm) : "",
+    ar ? esc(ar) : "",
+    isAdmin ? m + " comparison" + (m === 1 ? "" : "s") : "",
+  ]
+    .filter(Boolean)
+    .join(" \u00b7 ");
   /* On a best-first list every top row said "Loved it" — 90 pills down the page, 3 of them
      distinct. The position already says it, so the pill appears only when a row BREAKS the
      pattern: a fine or a not-for-me sitting in the ranking. */
-  const stars=(bucketOf(c)==="loved")?"":bucketPill(c,"lbstars");
-  const top=topDrinkAt(c);
-  const order=top?'<div class="lborder">Order the '+esc(top.d.n)
-    +(top.n>1?' <span class="lbtimes">\u00b7 '+top.n+'\u00d7</span>':'')+'</div>':"";
-  const say=boardSnip(c.review,96);
-  const note=say?'<div class="lbsay">\u201c'+esc(say)+'\u201d</div>':"";
-  return '<div class="lbrow guide tap" role="button" tabindex="0" onclick="openDetail(\''+c.id+'\',\'compare\')">'
-    +'<span class="lbrank">'+rank+'</span>'
-    +'<div class="lbmain">'
-      +'<div class="lbname">'+esc(c.name)+stars+'</div>'
-      +(meta?'<div class="lbsub">'+meta+'</div>':'')
-      +order+note
-    +'</div>'
-    +(isAdmin?'<span class="lbscore soft">'+eloScore(c)+'</span>':'')
-    +'</div>';
+  const stars = bucketOf(c) === "loved" ? "" : bucketPill(c, "lbstars");
+  const top = topDrinkAt(c);
+  const order = top
+    ? '<div class="lborder">Order the ' +
+      esc(top.d.n) +
+      (top.n > 1 ? ' <span class="lbtimes">\u00b7 ' + top.n + "\u00d7</span>" : "") +
+      "</div>"
+    : "";
+  const say = boardSnip(c.review, 96);
+  const note = say ? '<div class="lbsay">\u201c' + esc(say) + "\u201d</div>" : "";
+  return (
+    '<div class="lbrow guide tap" role="button" tabindex="0" onclick="openDetail(\'' +
+    c.id +
+    "','compare')\">" +
+    '<span class="lbrank">' +
+    rank +
+    "</span>" +
+    '<div class="lbmain">' +
+    '<div class="lbname">' +
+    esc(c.name) +
+    stars +
+    "</div>" +
+    (meta ? '<div class="lbsub">' + meta + "</div>" : "") +
+    order +
+    note +
+    "</div>" +
+    (isAdmin ? '<span class="lbscore soft">' + eloScore(c) + "</span>" : "") +
+    "</div>"
+  );
 }
 /* Ten visible, the rest folded — the same shape whichever group it is. */
-function boardChunk(rows){
-  const html=rows.map(function(r){ return r.html; });
-  let h=html.slice(0,10).join("");
-  if(html.length>10)h+='<div class="foldbox">'+html.slice(10).join("")+'</div>'
-    +'<button class="morebtn" data-lab="Show all '+html.length+'" onclick="statFold(this)">Show all '+html.length+' ▾</button>';
+function boardChunk(rows) {
+  const html = rows.map(function (r) {
+    return r.html;
+  });
+  let h = html.slice(0, 10).join("");
+  if (html.length > 10)
+    h +=
+      '<div class="foldbox">' +
+      html.slice(10).join("") +
+      "</div>" +
+      '<button class="morebtn" data-lab="Show all ' +
+      html.length +
+      '" onclick="statFold(this)">Show all ' +
+      html.length +
+      " ▾</button>";
   return h;
 }
-function boardQueueRow(c){
-  const ar=boardArea(c), lv=chaserLast(c);
-  const sub=[ar?esc(ar):"",chaserWhen(lv)].filter(Boolean).join(" · ");
-  const right=isAdmin?'<span class="rank-lnk">Rank ›</span>':bucketPill(c,"gostar");
-  const act=isAdmin?("boardRank('"+c.id+"')"):("openDetail('"+c.id+"','compare')");
-  return '<div class="gorow" role="button" tabindex="0" onclick="'+act+'"><span class="gotile" style="background:'+tintFor(c)+'">'+esc(c.emoji||"☕")+'</span>'
-    +'<div class="lbmain"><div class="lbname">'+esc(c.name)+'</div><div class="lbsub">'+sub+'</div></div>'+right+'</div>';
+function boardQueueRow(c) {
+  const ar = boardArea(c),
+    lv = chaserLast(c);
+  const sub = [ar ? esc(ar) : "", chaserWhen(lv)].filter(Boolean).join(" · ");
+  const right = isAdmin ? '<span class="rank-lnk">Rank ›</span>' : bucketPill(c, "gostar");
+  const act = isAdmin ? "boardRank('" + c.id + "')" : "openDetail('" + c.id + "','compare')";
+  return (
+    '<div class="gorow" role="button" tabindex="0" onclick="' +
+    act +
+    '"><span class="gotile" style="background:' +
+    tintFor(c) +
+    '">' +
+    esc(c.emoji || "☕") +
+    "</span>" +
+    '<div class="lbmain"><div class="lbname">' +
+    esc(c.name) +
+    '</div><div class="lbsub">' +
+    sub +
+    "</div></div>" +
+    right +
+    "</div>"
+  );
 }
-function renderBoard(){
-  const host=$("cmp-body"); if(!host)return;
-  const vis=cafes.filter(function(c){ return !c.wish; });
-  const board=chaserBoard();
-  const never=vis.filter(function(c){ return matchCount(c)===0; })
-    .sort(function(a,b){ return (chaserLast(b)||"").localeCompare(chaserLast(a)||""); });
-  const h2h=Math.round(vis.reduce(function(s,c){ return s+matchCount(c); },0)/2);
+function renderBoard() {
+  const host = $("cmp-body");
+  if (!host) return;
+  const vis = cafes.filter(function (c) {
+    return !c.wish;
+  });
+  const board = chaserBoard();
+  const never = vis
+    .filter(function (c) {
+      return matchCount(c) === 0;
+    })
+    .sort(function (a, b) {
+      return (chaserLast(b) || "").localeCompare(chaserLast(a) || "");
+    });
+  const h2h = Math.round(
+    vis.reduce(function (s, c) {
+      return s + matchCount(c);
+    }, 0) / 2
+  );
   /* D: a visitor is told what the collection is; the owner is told how far the ranking has
      got. The second is a progress report on a chore only they can do. */
-  const countries=countryCount(vis);
-  const sub=isAdmin
-    ? board.length+' of '+vis.length+' cafes ranked'+(h2h?' \u00b7 '+h2h+' head-to-head'+(h2h===1?"":"s"):"")
-    : vis.length+' cafes \u00b7 '+countries+' countr'+(countries===1?'y':'ies')+' \u00b7 best first';
-  let h='<div class="cmp-head left"><div class="ct">\ud83c\udfc6 Where to go</div><div class="cs">'+sub+'</div></div>';
-  if(isAdmin&&vis.length>1)h+='<div class="handoff top" role="button" tabindex="0" onclick="boardRank()">⚖️ Rank a pair'+(never.length?' <span>· '+never.length+' never compared</span>':'')+'</div>';
-  if(!board.length){
-    h+='<div class="empty"><div class="big">🏆</div>Nothing ranked yet.'+(isAdmin?" Tap “Rank a pair”, or log a visit and answer the question that follows.":"")+'</div>';
+  const countries = countryCount(vis);
+  const sub = isAdmin
+    ? board.length +
+      " of " +
+      vis.length +
+      " cafes ranked" +
+      (h2h ? " \u00b7 " + h2h + " head-to-head" + (h2h === 1 ? "" : "s") : "")
+    : vis.length + " cafes \u00b7 " + countries + " countr" + (countries === 1 ? "y" : "ies") + " \u00b7 best first";
+  let h =
+    '<div class="cmp-head left"><div class="ct">\ud83c\udfc6 Where to go</div><div class="cs">' + sub + "</div></div>";
+  if (isAdmin && vis.length > 1)
+    h +=
+      '<div class="handoff top" role="button" tabindex="0" onclick="boardRank()">⚖️ Rank a pair' +
+      (never.length ? " <span>· " + never.length + " never compared</span>" : "") +
+      "</div>";
+  if (!board.length) {
+    h +=
+      '<div class="empty"><div class="big">🏆</div>Nothing ranked yet.' +
+      (isAdmin ? " Tap “Rank a pair”, or log a visit and answer the question that follows." : "") +
+      "</div>";
   } else {
     /* Competition ranking off the same helper the sheet quotes, so "#2 → #1" in the popup and
        "#1" here can never disagree. Genuine ties share a position. */
-    const pos=board.map(function(c){ return chaserRank(c,board); });
-    const uniq={}; pos.forEach(function(p){ uniq[p]=(uniq[p]||0)+1; });
-    const rows=board.map(function(c,i){ return {html:boardRow(c,pos[i],uniq[pos[i]]===1),near:boardIsNear(c),c:c}; });
-    const near=rows.filter(function(r){ return r.near; }), far=rows.filter(function(r){ return !r.near; });
-    if(!userLoc){
+    const pos = board.map(function (c) {
+      return chaserRank(c, board);
+    });
+    const uniq = {};
+    pos.forEach(function (p) {
+      uniq[p] = (uniq[p] || 0) + 1;
+    });
+    const rows = board.map(function (c, i) {
+      return { html: boardRow(c, pos[i], uniq[pos[i]] === 1), near: boardIsNear(c), c: c };
+    });
+    const near = rows.filter(function (r) {
+        return r.near;
+      }),
+      far = rows.filter(function (r) {
+        return !r.near;
+      });
+    if (!userLoc) {
       /* Nothing here may raise the location prompt on its own — only a tap may, which is the
          rule locate() exists to keep. */
-      h+='<div class="handoff top" role="button" tabindex="0" onclick="locate()">📍 Show what\u2019s near me <span>›</span></div>';
-      h+=boardChunk(rows);
-    } else if(!near.length){
-      const closest=rows.slice().sort(function(a,b){ return (boardDistTo(a.c)||1e9)-(boardDistTo(b.c)||1e9); })[0];
-      const cd=closest?boardDistTo(closest.c):null;
-      h+='<div class="statsec">Nothing within '+NEAR_MI+' miles'
-        +(closest&&cd!=null?' — nearest is '+esc(closest.c.name)+', '+fmtDist(cd)+' away':'')+'</div>';
-      h+=boardChunk(rows);
+      h +=
+        '<div class="handoff top" role="button" tabindex="0" onclick="locate()">📍 Show what\u2019s near me <span>›</span></div>';
+      h += boardChunk(rows);
+    } else if (!near.length) {
+      const closest = rows.slice().sort(function (a, b) {
+        return (boardDistTo(a.c) || 1e9) - (boardDistTo(b.c) || 1e9);
+      })[0];
+      const cd = closest ? boardDistTo(closest.c) : null;
+      h +=
+        '<div class="statsec">Nothing within ' +
+        NEAR_MI +
+        " miles" +
+        (closest && cd != null ? " — nearest is " + esc(closest.c.name) + ", " + fmtDist(cd) + " away" : "") +
+        "</div>";
+      h += boardChunk(rows);
     } else {
-      h+='<div class="statsec">📍 Near you — '+near.length+' within '+NEAR_MI+' miles</div>';
-      h+=boardChunk(near);
-      if(far.length){
-        h+='<div class="statsec">Further afield — '+far.length+'</div>';
-        h+=boardChunk(far);
+      h += '<div class="statsec">📍 Near you — ' + near.length + " within " + NEAR_MI + " miles</div>";
+      h += boardChunk(near);
+      if (far.length) {
+        h += '<div class="statsec">Further afield — ' + far.length + "</div>";
+        h += boardChunk(far);
       }
     }
-    if(isAdmin){
-      const thin=board.filter(function(c){ return matchCount(c)<3; }).length;
-      h+='<div class="statnote">Positions come from '+h2h+' head-to-head pick'+(h2h===1?"":"s")+', not from stars.'
-        +(thin?' '+thin+' cafe'+(thin===1?" has":"s have")+' fewer than three comparisons, so '+(thin===1?"its place is":"their places are")+' provisional.':"")+'</div>';
+    if (isAdmin) {
+      const thin = board.filter(function (c) {
+        return matchCount(c) < 3;
+      }).length;
+      h +=
+        '<div class="statnote">Positions come from ' +
+        h2h +
+        " head-to-head pick" +
+        (h2h === 1 ? "" : "s") +
+        ", not from stars." +
+        (thin
+          ? " " +
+            thin +
+            " cafe" +
+            (thin === 1 ? " has" : "s have") +
+            " fewer than three comparisons, so " +
+            (thin === 1 ? "its place is" : "their places are") +
+            " provisional."
+          : "") +
+        "</div>";
     }
   }
   /* D: "Never compared" is a queue of work only the owner can clear. */
-  if(isAdmin&&never.length){
-    const q=never.map(boardQueueRow);
-    h+='<div class="statsec">Never compared — '+never.length+'</div>'+q.slice(0,3).join("");
-    if(q.length>3)h+='<div class="foldbox">'+q.slice(3).join("")+'</div>'
-      +'<button class="morebtn" data-lab="Show all '+q.length+'" onclick="statFold(this)">Show all '+q.length+' ▾</button>';
+  if (isAdmin && never.length) {
+    const q = never.map(boardQueueRow);
+    h += '<div class="statsec">Never compared — ' + never.length + "</div>" + q.slice(0, 3).join("");
+    if (q.length > 3)
+      h +=
+        '<div class="foldbox">' +
+        q.slice(3).join("") +
+        "</div>" +
+        '<button class="morebtn" data-lab="Show all ' +
+        q.length +
+        '" onclick="statFold(this)">Show all ' +
+        q.length +
+        " ▾</button>";
   }
-  h+='<div class="handoff" role="button" tabindex="0" onclick="show(\'stats\')">📊 See the numbers behind this <span>›</span></div>';
-  host.innerHTML='<div class="boardwrap">'+h+'</div>';
+  h +=
+    '<div class="handoff" role="button" tabindex="0" onclick="show(\'stats\')">📊 See the numbers behind this <span>›</span></div>';
+  host.innerHTML = '<div class="boardwrap">' + h + "</div>";
 }
 /* On-demand ranking. Anchors on a never-compared cafe when there is one, so the button
    closes the coverage gap rather than re-testing the well-tested. */
-function boardRank(id){
-  if(!isAdmin){ toast("Sign in to rank"); return; }
-  const vis=cafes.filter(function(c){ return !c.wish; });
-  if(vis.length<2){ toast("Add another cafe first"); return; }
-  let anchor=id?cafes.find(function(c){ return c.id===id; }):null;
-  if(!anchor){
-    const never=vis.filter(function(c){ return matchCount(c)===0; });
-    const pool=never.length?never:vis.slice().sort(function(a,b){ return matchCount(a)-matchCount(b); }).slice(0,12);
-    anchor=pool[Math.floor(Math.random()*pool.length)];
+function boardRank(id) {
+  if (!isAdmin) {
+    toast("Sign in to rank");
+    return;
   }
-  if(!anchor)return;
+  const vis = cafes.filter(function (c) {
+    return !c.wish;
+  });
+  if (vis.length < 2) {
+    toast("Add another cafe first");
+    return;
+  }
+  let anchor = id
+    ? cafes.find(function (c) {
+        return c.id === id;
+      })
+    : null;
+  if (!anchor) {
+    const never = vis.filter(function (c) {
+      return matchCount(c) === 0;
+    });
+    const pool = never.length
+      ? never
+      : vis
+          .slice()
+          .sort(function (a, b) {
+            return matchCount(a) - matchCount(b);
+          })
+          .slice(0, 12);
+    anchor = pool[Math.floor(Math.random() * pool.length)];
+  }
+  if (!anchor) return;
   chaserArm(anchor.id);
-  if(!_chaser){ toast("No opponent available yet"); return; }
-  _chaser.board=true;
+  if (!_chaser) {
+    toast("No opponent available yet");
+    return;
+  }
+  _chaser.board = true;
   chaserPaint();
 }
 
@@ -197,188 +378,405 @@ function boardRank(id){
    existed only 26% of the time and drink scores cannot move at the observed match counts.
    Cafes pair 100% of the time and already spread 2.9-7.4. The drink just logged still does
    the work — it picks the opponent and justifies the pairing. See DESIGN_NOTES.md. */
-let _chaser=null, _chaserSeen=[];
+let _chaser = null,
+  _chaserSeen = [];
 /* Read-only: the drink is recovered from the SAVED cafe, never from the form or _formSnap, so
    it works identically on all three save branches and cannot couple to the unsaved guard. */
-function chaserFresh(c){
-  const T=localToday();
-  const today=(c.drinks||[]).filter(function(d){ return (d.dates||[]).indexOf(T)>=0; });
-  if(today.length)return today[today.length-1];
-  let best=null,bd="";
-  (c.drinks||[]).forEach(function(d){ (d.dates||[]).filter(Boolean).forEach(function(dt){ if(dt>bd){ bd=dt; best=d; } }); });
-  if(best&&(Date.now()-new Date(bd).getTime())/86400000<=3)return best;
+function chaserFresh(c) {
+  const T = localToday();
+  const today = (c.drinks || []).filter(function (d) {
+    return (d.dates || []).indexOf(T) >= 0;
+  });
+  if (today.length) return today[today.length - 1];
+  let best = null,
+    bd = "";
+  (c.drinks || []).forEach(function (d) {
+    (d.dates || []).filter(Boolean).forEach(function (dt) {
+      if (dt > bd) {
+        bd = dt;
+        best = d;
+      }
+    });
+  });
+  if (best && (Date.now() - new Date(bd).getTime()) / 86400000 <= 3) return best;
   return null;
 }
 /* Ordered: matcha before coffee so "Matcha Einspaner" is matcha, tea before coffee so
    "Dong Ding Oolong Latte" is tea. First match wins. */
-const CHASER_FAM=[
-  ["hojicha",/hojicha|houjicha|hojica|hoji/],
-  ["matcha",/matcha/],
-  ["milk tea",/milk tea|boba|bubble|pudding|brown sugar|taro|yakult|cheese foam/],
-  ["tea",/oolong|jasmine|osmanthus|genmai|earl ?grey|chai|yuzu|dong ?ding|tieguanyin|pu.?er|\btea\b|\bcha\b/],
-  ["coffee",/latte|espresso|americano|cappuccino|coffee|cortado|mocha|drip|pour.?over|cold ?brew|caphe|einspan|flat white|affogato/]
+const CHASER_FAM = [
+  ["hojicha", /hojicha|houjicha|hojica|hoji/],
+  ["matcha", /matcha/],
+  ["milk tea", /milk tea|boba|bubble|pudding|brown sugar|taro|yakult|cheese foam/],
+  ["tea", /oolong|jasmine|osmanthus|genmai|earl ?grey|chai|yuzu|dong ?ding|tieguanyin|pu.?er|\btea\b|\bcha\b/],
+  [
+    "coffee",
+    /latte|espresso|americano|cappuccino|coffee|cortado|mocha|drip|pour.?over|cold ?brew|caphe|einspan|flat white|affogato/,
+  ],
 ];
-function chaserFam(n){ const s=(n||"").toLowerCase(); for(let i=0;i<CHASER_FAM.length;i++)if(CHASER_FAM[i][1].test(s))return CHASER_FAM[i][0]; return null; }
-function chaserLast(c){ const ds=[]; (c.drinks||[]).forEach(function(d){ (d.dates||[]).filter(Boolean).forEach(function(x){ ds.push(x); }); }); return ds.sort().slice(-1)[0]||""; }
-function chaserWhen(iso){ if(!iso)return "no dates"; const dd=Math.floor((Date.now()-new Date(iso).getTime())/86400000); if(dd<=0)return "today"; if(dd===1)return "yesterday"; if(dd<7)return dd+"d ago"; if(dd<31)return Math.floor(dd/7)+"w ago"; if(dd<=120)return Math.floor(dd/30)+"mo ago"; return fmtDate(iso).replace(/ \d+,/,""); }
-function chaserArm(id){
-  _chaser=null;
-  if(!isAdmin)return;
-  const c=cafes.find(function(x){ return x.id===id; });
-  if(!c||c.wish)return;
-  const base=cafes.filter(function(x){ return !x.wish&&x.id!==c.id; });
-  if(!base.length)return;
-  const fresh=chaserFresh(c), fam=fresh?chaserFam(fresh.n):null;
-  let tier="C", cand=base;
-  if(fresh){
-    const twin=base.filter(function(x){ return (x.drinks||[]).some(function(od){ return normDrink(od.n)===normDrink(fresh.n); }); });
-    if(twin.length){ tier="A"; cand=twin; }
-    else if(fam){ const f=base.filter(function(x){ return (x.drinks||[]).some(function(od){ return chaserFam(od.n)===fam; }); }); if(f.length){ tier="B"; cand=f; } }
+function chaserFam(n) {
+  const s = (n || "").toLowerCase();
+  for (let i = 0; i < CHASER_FAM.length; i++) if (CHASER_FAM[i][1].test(s)) return CHASER_FAM[i][0];
+  return null;
+}
+function chaserLast(c) {
+  const ds = [];
+  (c.drinks || []).forEach(function (d) {
+    (d.dates || []).filter(Boolean).forEach(function (x) {
+      ds.push(x);
+    });
+  });
+  return ds.sort().slice(-1)[0] || "";
+}
+function chaserWhen(iso) {
+  if (!iso) return "no dates";
+  const dd = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (dd <= 0) return "today";
+  if (dd === 1) return "yesterday";
+  if (dd < 7) return dd + "d ago";
+  if (dd < 31) return Math.floor(dd / 7) + "w ago";
+  if (dd <= 120) return Math.floor(dd / 30) + "mo ago";
+  return fmtDate(iso).replace(/ \d+,/, "");
+}
+function chaserArm(id) {
+  _chaser = null;
+  if (!isAdmin) return;
+  const c = cafes.find(function (x) {
+    return x.id === id;
+  });
+  if (!c || c.wish) return;
+  const base = cafes.filter(function (x) {
+    return !x.wish && x.id !== c.id;
+  });
+  if (!base.length) return;
+  const fresh = chaserFresh(c),
+    fam = fresh ? chaserFam(fresh.n) : null;
+  let tier = "C",
+    cand = base;
+  if (fresh) {
+    const twin = base.filter(function (x) {
+      return (x.drinks || []).some(function (od) {
+        return normDrink(od.n) === normDrink(fresh.n);
+      });
+    });
+    if (twin.length) {
+      tier = "A";
+      cand = twin;
+    } else if (fam) {
+      const f = base.filter(function (x) {
+        return (x.drinks || []).some(function (od) {
+          return chaserFam(od.n) === fam;
+        });
+      });
+      if (f.length) {
+        tier = "B";
+        cand = f;
+      }
+    }
   }
   /* Coverage is the binding constraint — 18 cafes have never been compared and most were
      visited recently — so fewest-matches dominates the cost. */
-  const scored=cand.map(function(x){
-    let cost=0.35*matchCount(x);
-    const lv=chaserLast(x);
-    if(!lv)cost+=0.60; else if((Date.now()-new Date(lv).getTime())/86400000>180)cost+=1.20;
-    if(x.area&&c.area&&x.area.trim()===c.area.trim())cost-=0.40;
-    if(_chaserSeen.indexOf(pairKey(c.id,x.id))>=0)cost+=2.00;
-    return {x:x,cost:cost+Math.random()*0.30};
-  }).sort(function(a,b){ return a.cost-b.cost; });
-  const shortlist=scored.slice(0,5);
-  const pick=shortlist[Math.floor(Math.random()*shortlist.length)].x;
-  let theirDrink=null;
-  if(tier==="A"||tier==="B"){
-    const m=(pick.drinks||[]).filter(function(od){ return tier==="A"?normDrink(od.n)===normDrink(fresh.n):chaserFam(od.n)===fam; });
-    if(m.length)theirDrink=m[0].n;
+  const scored = cand
+    .map(function (x) {
+      let cost = 0.35 * matchCount(x);
+      const lv = chaserLast(x);
+      if (!lv) cost += 0.6;
+      else if ((Date.now() - new Date(lv).getTime()) / 86400000 > 180) cost += 1.2;
+      if (x.area && c.area && x.area.trim() === c.area.trim()) cost -= 0.4;
+      if (_chaserSeen.indexOf(pairKey(c.id, x.id)) >= 0) cost += 2.0;
+      return { x: x, cost: cost + Math.random() * 0.3 };
+    })
+    .sort(function (a, b) {
+      return a.cost - b.cost;
+    });
+  const shortlist = scored.slice(0, 5);
+  const pick = shortlist[Math.floor(Math.random() * shortlist.length)].x;
+  let theirDrink = null;
+  if (tier === "A" || tier === "B") {
+    const m = (pick.drinks || []).filter(function (od) {
+      return tier === "A" ? normDrink(od.n) === normDrink(fresh.n) : chaserFam(od.n) === fam;
+    });
+    if (m.length) theirDrink = m[0].n;
   }
-  _chaser={cafe:c.id,opp:pick.id,tier:tier,fam:fam,myDrink:fresh?fresh.n:null,theirDrink:theirDrink,flip:Math.random()<0.5,ts:Date.now(),res:null,board:false};
+  _chaser = {
+    cafe: c.id,
+    opp: pick.id,
+    tier: tier,
+    fam: fam,
+    myDrink: fresh ? fresh.n : null,
+    theirDrink: theirDrink,
+    flip: Math.random() < 0.5,
+    ts: Date.now(),
+    res: null,
+    board: false,
+  };
 }
-function chaserBoard(){ return cafes.filter(function(c){ return !c.wish&&matchCount(c)>0; }).sort(function(a,b){ return eloScoreNum(b)-eloScoreNum(a); }); }
+function chaserBoard() {
+  return cafes
+    .filter(function (c) {
+      return !c.wish && matchCount(c) > 0;
+    })
+    .sort(function (a, b) {
+      return eloScoreNum(b) - eloScoreNum(a);
+    });
+}
 /* Position, everywhere. chaserRank walks the whole board per cafe, which is fine for one
    detail page and quadratic across 113 cards, so the list builds the whole map in one sorted
    pass. Competition ranking, the same as chaserRank: a tie group shares the first position,
    so "#1" can be two cafes and the next is "#3". A cafe that has never been compared is NOT
    in here — sixteen of them share the untouched 5.0, and numbering that is a lie. */
-function rankMap(){
-  const board=chaserBoard(), m={_n:board.length};
-  let pos=0, prev=null;
-  board.forEach(function(c,i){ const s=eloScoreNum(c);
-    if(prev===null||s<prev){ pos=i+1; prev=s; }
-    m[c.id]=pos; });
+function rankMap() {
+  const board = chaserBoard(),
+    m = { _n: board.length };
+  let pos = 0,
+    prev = null;
+  board.forEach(function (c, i) {
+    const s = eloScoreNum(c);
+    if (prev === null || s < prev) {
+      pos = i + 1;
+      prev = s;
+    }
+    m[c.id] = pos;
+  });
   return m;
 }
-function rankOf(c,m){ if(!c)return null; return (m||rankMap())[c.id]||null; }
+function rankOf(c, m) {
+  if (!c) return null;
+  return (m || rankMap())[c.id] || null;
+}
 /* A badge on the tile, where the stars used to be — the tile colour already carries the
    bucket, so repeating it there said nothing twice. */
-function rankBadge(c,m){ const r=rankOf(c,m); return r?('<span class="rankbadge">#'+r+'</span>'):""; }
-function chaserRank(c,board){ let n=1; const s=eloScoreNum(c); board.forEach(function(x){ if(x.id!==c.id&&eloScoreNum(x)>s)n++; }); return n; }
+function rankBadge(c, m) {
+  const r = rankOf(c, m);
+  return r ? '<span class="rankbadge">#' + r + "</span>" : "";
+}
+function chaserRank(c, board) {
+  let n = 1;
+  const s = eloScoreNum(c);
+  board.forEach(function (x) {
+    if (x.id !== c.id && eloScoreNum(x) > s) n++;
+  });
+  return n;
+}
 /* Both cafes are re-resolved by id from the live array, so the Firebase echo that repaints a
    few hundred ms after every save can never orphan the vote. */
-function chaserApply(winId,loseId,draw){
-  const a=cafes.find(function(x){ return x.id===winId; }), b=cafes.find(function(x){ return x.id===loseId; });
-  if(!a||!b){ _chaser=null; return null; }
-  const pre=chaserBoard();
-  const preA=matchCount(a)?chaserRank(a,pre):null, preB=matchCount(b)?chaserRank(b,pre):null;
-  const Ra=eloFor(a), Rb=eloFor(b);
-  const Ea=1/(1+Math.pow(10,(Rb-Ra)/400));
-  const K=Math.max(16,32-matchCount(a));
-  const delta=draw?Math.round(K*(0.5-Ea)):Math.max(1,Math.round(K*(1-Ea)));
-  a.elo=Ra+delta; b.elo=Rb-delta;
-  a.matches=matchCount(a)+1; b.matches=matchCount(b)+1;
-  saveCafe(a.id); saveCafe(b.id);   /* a comparison moves exactly these two */
-  const post=chaserBoard();
-  return {a:a,b:b,draw:!!draw,preA:preA,preB:preB,postA:chaserRank(a,post),postB:chaserRank(b,post),postN:post.length};
+function chaserApply(winId, loseId, draw) {
+  const a = cafes.find(function (x) {
+      return x.id === winId;
+    }),
+    b = cafes.find(function (x) {
+      return x.id === loseId;
+    });
+  if (!a || !b) {
+    _chaser = null;
+    return null;
+  }
+  const pre = chaserBoard();
+  const preA = matchCount(a) ? chaserRank(a, pre) : null,
+    preB = matchCount(b) ? chaserRank(b, pre) : null;
+  const Ra = eloFor(a),
+    Rb = eloFor(b);
+  const Ea = 1 / (1 + Math.pow(10, (Rb - Ra) / 400));
+  const K = Math.max(16, 32 - matchCount(a));
+  const delta = draw ? Math.round(K * (0.5 - Ea)) : Math.max(1, Math.round(K * (1 - Ea)));
+  a.elo = Ra + delta;
+  b.elo = Rb - delta;
+  a.matches = matchCount(a) + 1;
+  b.matches = matchCount(b) + 1;
+  saveCafe(a.id);
+  saveCafe(b.id); /* a comparison moves exactly these two */
+  const post = chaserBoard();
+  return {
+    a: a,
+    b: b,
+    draw: !!draw,
+    preA: preA,
+    preB: preB,
+    postA: chaserRank(a, post),
+    postB: chaserRank(b, post),
+    postN: post.length,
+  };
 }
-function chaserSeen(l,r){ _chaserSeen.push(pairKey(l,r)); while(_chaserSeen.length>40)_chaserSeen.shift(); }
-function chaserPick(side){
-  if(!_chaser||_chaser.res)return;
-  const L=_chaser.flip?_chaser.opp:_chaser.cafe, R=_chaser.flip?_chaser.cafe:_chaser.opp;
-  chaserSeen(L,R);
-  _chaser.res=chaserApply(side===0?L:R,side===0?R:L,false);
+function chaserSeen(l, r) {
+  _chaserSeen.push(pairKey(l, r));
+  while (_chaserSeen.length > 40) _chaserSeen.shift();
+}
+function chaserPick(side) {
+  if (!_chaser || _chaser.res) return;
+  const L = _chaser.flip ? _chaser.opp : _chaser.cafe,
+    R = _chaser.flip ? _chaser.cafe : _chaser.opp;
+  chaserSeen(L, R);
+  _chaser.res = chaserApply(side === 0 ? L : R, side === 0 ? R : L, false);
   chaserRepaint();
 }
-function chaserEven(){
-  if(!_chaser||_chaser.res)return;
-  const L=_chaser.flip?_chaser.opp:_chaser.cafe, R=_chaser.flip?_chaser.cafe:_chaser.opp;
-  chaserSeen(L,R);
-  _chaser.res=chaserApply(L,R,true);
+function chaserEven() {
+  if (!_chaser || _chaser.res) return;
+  const L = _chaser.flip ? _chaser.opp : _chaser.cafe,
+    R = _chaser.flip ? _chaser.cafe : _chaser.opp;
+  chaserSeen(L, R);
+  _chaser.res = chaserApply(L, R, true);
   chaserRepaint();
 }
 /* One more pair without leaving the sheet — only offered from the board, where ranking is
    the task; after a save one question is the whole contract. */
-function chaserAgain(){
-  if(!_chaser)return;
-  const from=_chaser.cafe;
+function chaserAgain() {
+  if (!_chaser) return;
+  const from = _chaser.cafe;
   boardRank();
-  if(_chaser&&_chaser.cafe===from&&_chaser.opp)return;
+  if (_chaser && _chaser.cafe === from && _chaser.opp) return;
 }
-function chaserDismiss(){
-  const wasBoard=!!(_chaser&&_chaser.board);
-  _chaser=null;
-  const host=$("d-chaser"); if(host)host.innerHTML="";
-  if(wasBoard){ try{ renderBoard(); }catch(e){ warn("rank.js",e); } return; }
-  const c=cafes.find(function(x){ return x.id===curId; }); if(c)renderChaser(c);
-  try{ renderList(); }catch(e){ warn("rank.js",e); }
+function chaserDismiss() {
+  const wasBoard = !!(_chaser && _chaser.board);
+  _chaser = null;
+  const host = $("d-chaser");
+  if (host) host.innerHTML = "";
+  if (wasBoard) {
+    try {
+      renderBoard();
+    } catch (e) {
+      warn("rank.js", e);
+    }
+    return;
+  }
+  const c = cafes.find(function (x) {
+    return x.id === curId;
+  });
+  if (c) renderChaser(c);
+  try {
+    renderList();
+  } catch (e) {
+    warn("rank.js", e);
+  }
 }
-function chaserRepaint(){
-  if(_chaser&&_chaser.board){ chaserPaint(); try{ renderBoard(); }catch(e){ warn("rank.js",e); } return; }
-  const c=cafes.find(function(x){ return x.id===curId; }); if(c)renderChaser(c);
-  try{ renderList(); }catch(e){ warn("rank.js",e); }
+function chaserRepaint() {
+  if (_chaser && _chaser.board) {
+    chaserPaint();
+    try {
+      renderBoard();
+    } catch (e) {
+      warn("rank.js", e);
+    }
+    return;
+  }
+  const c = cafes.find(function (x) {
+    return x.id === curId;
+  });
+  if (c) renderChaser(c);
+  try {
+    renderList();
+  } catch (e) {
+    warn("rank.js", e);
+  }
 }
-function chaserOpt(c,drink,side){
-  const gp=(typeof gphotoFor==="function")?gphotoFor(c):null;
-  const th=(gp&&!_imgFail[c.id])
-    ? '<span class="ch-th" style="background-image:url(\'' + safeUrl(gp) + '\')"></span>'
-    : '<span class="ch-th" style="' + nophotoStyle(c) + '">' + esc(initials(c)) + '</span>';
-  const sub=[drink?esc(drink):"",chaserWhen(chaserLast(c))].filter(Boolean).join(" · ");
-  return '<button class="ch-opt" onclick="chaserPick(' + side + ')">' + th
-    + '<span class="ch-m"><span class="ch-n">' + esc(c.name) + '</span><span class="ch-s">' + sub + '</span></span></button>';
+function chaserOpt(c, drink, side) {
+  const gp = typeof gphotoFor === "function" ? gphotoFor(c) : null;
+  const th =
+    gp && !_imgFail[c.id]
+      ? '<span class="ch-th" style="background-image:url(\'' + safeUrl(gp) + "')\"></span>"
+      : '<span class="ch-th" style="' + nophotoStyle(c) + '">' + esc(initials(c)) + "</span>";
+  const sub = [drink ? esc(drink) : "", chaserWhen(chaserLast(c))].filter(Boolean).join(" · ");
+  return (
+    '<button class="ch-opt" onclick="chaserPick(' +
+    side +
+    ')">' +
+    th +
+    '<span class="ch-m"><span class="ch-n">' +
+    esc(c.name) +
+    '</span><span class="ch-s">' +
+    sub +
+    "</span></span></button>"
+  );
 }
 /* Bottom sheet. The scrim dismisses, matching every other sheet the app has had. */
-function chaserShell(inner){ return '<div class="ch-scrim" onclick="chaserDismiss()"></div><div class="ch-sheet" role="dialog" aria-modal="true" aria-label="Quick ranking"><div class="ch-grab"></div>'+inner+'</div>'; }
-function chaserOpen(){ const h=$("d-chaser"); return !!(h&&h.innerHTML); }
+function chaserShell(inner) {
+  return (
+    '<div class="ch-scrim" onclick="chaserDismiss()"></div><div class="ch-sheet" role="dialog" aria-modal="true" aria-label="Quick ranking"><div class="ch-grab"></div>' +
+    inner +
+    "</div>"
+  );
+}
+function chaserOpen() {
+  const h = $("d-chaser");
+  return !!(h && h.innerHTML);
+}
 /* Called from openDetail so the Firebase echo repaints the sheet instead of wiping it. The
    id + isAdmin + 3-minute guard covers every other openDetail caller: map pins, list cards,
    stats rows, board rows and the ?cafe= deep link. */
-function renderChaser(c){
-  const host=$("d-chaser"); if(!host)return;
-  if(_chaser&&_chaser.board)return;
-  if(!_chaser||_chaser.cafe!==c.id||!isAdmin||Date.now()-_chaser.ts>180000){ host.innerHTML=""; return; }
-  chaserPaint();
-}
-function chaserPaint(){
-  const host=$("d-chaser"); if(!host)return;
-  if(!_chaser){ host.innerHTML=""; return; }
-  const c=cafes.find(function(x){ return x.id===_chaser.cafe; });
-  const opp=cafes.find(function(x){ return x.id===_chaser.opp; });
-  if(!c||!opp){ host.innerHTML=""; return; }
-  const r=_chaser.res;
-  if(r){
-    const line=function(x,pre,post,n){
-      const nm=esc(x.name);
-      if(pre===null)return nm+' <b class="up">enters at #'+post+' of '+n+'</b>';
-      if(post<pre)return nm+' <b class="up">#'+pre+' → #'+post+'</b>';
-      if(post>pre)return nm+' <b class="dn">#'+pre+' → #'+post+'</b>';
-      return nm+' <b>stays #'+post+'</b>';
-    };
-    host.innerHTML=chaserShell('<div class="ch-rl">'+(r.draw?"🤝 Called it even":"👍 "+esc(r.a.name))+'</div>'
-      +'<div class="ch-mv"><span>'+line(r.a,r.preA,r.postA,r.postN)+'</span><span>'+line(r.b,r.preB,r.postB,r.postN)+'</span></div>'
-      +'<div class="ch-done">'+(_chaser.board
-        ? '<button class="ch-lnk" onclick="chaserAgain()">↻ Rank another</button>'
-        : '<button class="ch-lnk" onclick="chaserDismiss();openRank()">See where to go ›</button>')
-      +'<button class="ch-close" onclick="chaserDismiss()">Done</button></div>');
+function renderChaser(c) {
+  const host = $("d-chaser");
+  if (!host) return;
+  if (_chaser && _chaser.board) return;
+  if (!_chaser || _chaser.cafe !== c.id || !isAdmin || Date.now() - _chaser.ts > 180000) {
+    host.innerHTML = "";
     return;
   }
-  const eyebrow=_chaser.tier==="A"?("Both do "+esc(_chaser.myDrink)):(_chaser.tier==="B"?("Both do "+esc(_chaser.fam)):"");
-  const lv=chaserLast(opp);
-  const stale=!!lv&&(Date.now()-new Date(lv).getTime())/86400000>120;
-  const L=_chaser.flip?opp:c, R=_chaser.flip?c:opp;
-  const LD=_chaser.flip?_chaser.theirDrink:_chaser.myDrink, RD=_chaser.flip?_chaser.myDrink:_chaser.theirDrink;
-  host.innerHTML=chaserShell('<div class="ch-hd"><span class="ch-qwrap">'
-    +(eyebrow?'<span class="ch-why">'+eyebrow+'</span>':"")
-    +'<span class="ch-q">Which would you go back to?</span></span>'
-    +'<button class="ch-x" onclick="chaserDismiss()" aria-label="Not now">✕</button></div>'
-    +'<div class="ch-pair">'+chaserOpt(L,LD,0)+chaserOpt(R,RD,1)+'</div>'
-    +'<button class="ch-even" onclick="chaserEven()">'+(stale?"Too long ago to say":"Too close to call")+'</button>');
+  chaserPaint();
+}
+function chaserPaint() {
+  const host = $("d-chaser");
+  if (!host) return;
+  if (!_chaser) {
+    host.innerHTML = "";
+    return;
+  }
+  const c = cafes.find(function (x) {
+    return x.id === _chaser.cafe;
+  });
+  const opp = cafes.find(function (x) {
+    return x.id === _chaser.opp;
+  });
+  if (!c || !opp) {
+    host.innerHTML = "";
+    return;
+  }
+  const r = _chaser.res;
+  if (r) {
+    const line = function (x, pre, post, n) {
+      const nm = esc(x.name);
+      if (pre === null) return nm + ' <b class="up">enters at #' + post + " of " + n + "</b>";
+      if (post < pre) return nm + ' <b class="up">#' + pre + " → #" + post + "</b>";
+      if (post > pre) return nm + ' <b class="dn">#' + pre + " → #" + post + "</b>";
+      return nm + " <b>stays #" + post + "</b>";
+    };
+    host.innerHTML = chaserShell(
+      '<div class="ch-rl">' +
+        (r.draw ? "🤝 Called it even" : "👍 " + esc(r.a.name)) +
+        "</div>" +
+        '<div class="ch-mv"><span>' +
+        line(r.a, r.preA, r.postA, r.postN) +
+        "</span><span>" +
+        line(r.b, r.preB, r.postB, r.postN) +
+        "</span></div>" +
+        '<div class="ch-done">' +
+        (_chaser.board
+          ? '<button class="ch-lnk" onclick="chaserAgain()">↻ Rank another</button>'
+          : '<button class="ch-lnk" onclick="chaserDismiss();openRank()">See where to go ›</button>') +
+        '<button class="ch-close" onclick="chaserDismiss()">Done</button></div>'
+    );
+    return;
+  }
+  const eyebrow =
+    _chaser.tier === "A"
+      ? "Both do " + esc(_chaser.myDrink)
+      : _chaser.tier === "B"
+        ? "Both do " + esc(_chaser.fam)
+        : "";
+  const lv = chaserLast(opp);
+  const stale = !!lv && (Date.now() - new Date(lv).getTime()) / 86400000 > 120;
+  const L = _chaser.flip ? opp : c,
+    R = _chaser.flip ? c : opp;
+  const LD = _chaser.flip ? _chaser.theirDrink : _chaser.myDrink,
+    RD = _chaser.flip ? _chaser.myDrink : _chaser.theirDrink;
+  host.innerHTML = chaserShell(
+    '<div class="ch-hd"><span class="ch-qwrap">' +
+      (eyebrow ? '<span class="ch-why">' + eyebrow + "</span>" : "") +
+      '<span class="ch-q">Which would you go back to?</span></span>' +
+      '<button class="ch-x" onclick="chaserDismiss()" aria-label="Not now">✕</button></div>' +
+      '<div class="ch-pair">' +
+      chaserOpt(L, LD, 0) +
+      chaserOpt(R, RD, 1) +
+      "</div>" +
+      '<button class="ch-even" onclick="chaserEven()">' +
+      (stale ? "Too long ago to say" : "Too close to call") +
+      "</button>"
+  );
 }

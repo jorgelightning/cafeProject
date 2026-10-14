@@ -896,6 +896,35 @@ owner picked all of them. This is the head, accessibility and security half.
   when the floor is lowered.
 - Pinned by `tests/discovery.js` and `tests/overflow-375.js`.
 
+### The 14 Oct audit, built — Stage 4: performance and types (v66)
+
+- **The sign-in library loads on demand.** `firebase-auth-compat` was downloaded by every visitor, who
+  never sign in. `ensureAuth()` (storage.js) fetches it for a device that remembers the owner at boot,
+  when Settings opens, or when someone taps Sign in; `FIREBASE_AUTH_SRC` in config.js must stay the same
+  version as the two scripts left in `index.html`. Safe because auth arriving after the data was already
+  a supported path (the "late sign-in" case in `tests/boot-firebase.js`, which now also covers: a
+  visitor never requests it; the owner requests it once; a tap requests it and opens the popup). The
+  popup could be blocked if the script loads *after* the tap, which is why Settings preloads it and
+  `adminSignIn()` already falls back to a redirect.
+- **Photos load near the screen.** Cards put the URL in `data-bg` and an `IntersectionObserver`
+  (300px margin) sets it; each card also probed its URL with `new Image()` as it rendered, which
+  requested all 100+ photos up front, so verification moves into the same step. No observer: everything
+  loads at once, as before. `content-visibility:auto` was **not** added: at ~110 cards it buys little and
+  changes layout measurements. `tests/lazy-photos.js`.
+- **Types, as a ratchet.** `types/cafe.d.ts` describes `Cafe`, `Drink`, `Order` and `PrivateDetail`
+  (including the legacy `dates`/`count` drink shape the code still reads, and the note that Firebase
+  returns *missing* fields, not nulls). The core helpers carry JSDoc against them. TypeScript runs over
+  the plain JS (`tsconfig.json`, `checkJs`). It started at 93 errors, nearly all `querySelector()`
+  returning `Element`; the `$()` helper is `any` on purpose, and 32 remain, pinned in
+  `types/baseline.json`. `scripts/typecheck.js` fails if the count rises, so no new error can arrive.
+- **ESLint** found 9 things in the whole codebase (dead locals, a useless assignment) — all fixed. Its
+  config derives the app's cross-file globals from the files themselves.
+- **Prettier** reflowed `js/*.js`: lines over 400 characters went from 39 to 0 (files 3.5k -> 8k lines).
+  Layout only; the whole suite, including the regression tests that pin real-data output, is unchanged.
+  Expect `git blame` on those files to point at this commit; use `git blame -w` or `--ignore-rev`.
+  CSS, HTML and tests were left alone.
+- CI now runs lint and typecheck before the tests.
+
 ---
 
 ## Rejected, and why
