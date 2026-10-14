@@ -825,3 +825,74 @@ function fmtDate(s) {
   const mo = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+m[2] - 1];
   return mo + " " + +m[3] + ", " + m[1];
 }
+
+/* ---------- brand / chain detection ----------
+   A chain is the existing `brand` field; nothing new is stored. These are pure: they read the
+   list they are given and write nothing. */
+/** The name without its location: "Molly Tea (San Mateo)", "ChaHalo - Berkeley", "Tea @ Mall", "Cafe #12". @param {string} name */
+function brandBaseName(name) {
+  const raw = String(name || "").trim();
+  const cut = raw
+    .replace(/\s*\([^)]*\)\s*$/, "")
+    .replace(/\s+[-\u2013\u2014]\s+.*$/, "")
+    .replace(/\s*@\s*.*$/, "")
+    .replace(/\s*#\s*\d+\s*$/, "")
+    .trim();
+  return cut || raw;
+}
+/** Comparison form: lower case, no punctuation, one space between words. @param {string} name */
+function brandKey(name) {
+  return brandBaseName(name)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+/**
+ * The brand a cafe name belongs to, or null. In order: the spelling another cafe already uses for
+ * this brand, a name on the seed list, then a name two or more cafes share.
+ * @param {string} name
+ * @param {Cafe[]} list
+ * @param {string|null} [excludeId] the cafe being edited
+ * @param {string[]} [seeds]
+ * @returns {{brand:string, via:"existing"|"seed"|"shared"}|null}
+ */
+function inferBrand(name, list, excludeId, seeds) {
+  const key = brandKey(name);
+  if (!key) return null;
+  const others = (list || []).filter(x => x && x.id !== excludeId);
+  const used = {};
+  others.forEach(x => {
+    const b = (x.brand || "").trim();
+    if (b && (brandKey(x.name) === key || brandKey(b) === key)) used[b] = (used[b] || 0) + 1;
+  });
+  const top = Object.keys(used).sort((a, b) => used[b] - used[a] || a.localeCompare(b))[0];
+  if (top) return { brand: top, via: "existing" };
+  const hit = (seeds || []).find(sd => {
+    const k = brandKey(sd);
+    return k && (key === k || key.indexOf(k + " ") === 0);
+  });
+  if (hit) return { brand: hit, via: "seed" };
+  if (others.some(x => brandKey(x.name) === key)) return { brand: brandBaseName(name), via: "shared" };
+  return null;
+}
+/**
+ * Cafes with no brand that have one by inference. Writes nothing. Cafes that share a name get the
+ * same spelling. A brand already set is never in the plan.
+ * @param {Cafe[]} list
+ * @param {string[]} [seeds]
+ * @returns {{id:string, name:string, brand:string}[]}
+ */
+function brandBackfillPlan(list, seeds) {
+  const chosen = {},
+    out = [];
+  (list || []).forEach(c => {
+    if (!c || (c.brand || "").trim()) return;
+    const r = inferBrand(c.name, list, c.id, seeds);
+    if (!r) return;
+    const k = brandKey(c.name);
+    chosen[k] = chosen[k] || r.brand;
+    out.push({ id: c.id, name: c.name, brand: chosen[k] });
+  });
+  return out;
+}

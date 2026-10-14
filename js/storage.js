@@ -612,3 +612,17 @@ function seed() {
     },
   ];
 }
+
+/* Fill in brands that can be told from the names. Only empty brands are touched; `dry` writes nothing. */
+function backfillBrands(dry) {
+  const plan = brandBackfillPlan(cafes, KNOWN_BRANDS);
+  if (dry || !plan.length) return plan;
+  plan.forEach(p => {
+    const c = cafes.find(x => x.id === p.id);
+    if (c && !(c.brand || "").trim()) {
+      c.brand = p.brand;
+      saveCafe(c.id);
+    }
+  });
+  return plan;
+}

@@ -60,6 +60,28 @@ const ADMIN_FLAG = "cafemap.admin"; // remembers admin mode in this browser
 const DIRTY_FLAG = "cafemap.dirty"; // set on local edits, cleared on Export
 const OWNER_EMAIL = "jorgemarco.portillo@gmail.com"; // only this Google account can edit (real security)
 const DEFAULT_CENTER = [21.3, -157.83]; // Honolulu [lat,lng]
+/* Chains and brands recognised from a cafe's name alone. Add yours: a name that equals an entry, or
+   starts with it followed by a space ("Blue Bottle Coffee Oakland"), is filed under that spelling. */
+const KNOWN_BRANDS = [
+  "Blue Bottle",
+  "Philz",
+  "Peet's",
+  "Starbucks",
+  "Dutch Bros",
+  "Boba Guys",
+  "Gong Cha",
+  "Sharetea",
+  "Tiger Sugar",
+  "HeyTea",
+  "Chicha San Chen",
+  "Molly Tea",
+  "Sunright Tea Studio",
+  "Kiss of Matcha",
+  "Teapresso Bar",
+  "Coffee or Tea?",
+  "YiFang",
+  "Tadaima",
+];
 const ALL_TAGS = ["cozy", "good wifi", "oat milk", "outdoor", "quiet", "pastries", "specialty", "matcha", "to-go"];
 /* ---------- currency ----------
 A cafe's currency is a fact about its country, so it is keyed on the ISO 3166-1 alpha-2
