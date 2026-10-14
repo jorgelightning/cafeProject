@@ -34,6 +34,8 @@ const { eq, done } = checker();
         places: { Autocomplete: function(){ this.addListener = function(){}; this.getPlace = () => ({}); } }
       } };
       google.maps.Marker.MAX_ZINDEX = 1000;
+      /* the clusterer is a local file now and really loads; this stub Maps cannot host it, and these tests are not about clustering */
+      window.markerClusterer = undefined;
       navigator.geolocation.getCurrentPosition = () => {};
       isAdmin = false; applyMode();
       cafes = [

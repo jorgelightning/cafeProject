@@ -48,7 +48,6 @@ const PRIVATE_PATH="private";         // Firebase node holding private spots' ex
 const ADMIN_FLAG="cafemap.admin";     // remembers admin mode in this browser
 const DIRTY_FLAG="cafemap.dirty";     // set on local edits, cleared on Export
 const OWNER_EMAIL="jorgemarco.portillo@gmail.com"; // only this Google account can edit (real security)
-const ADMIN_PASS="cafeAdmin";         // change this — only hides editing UI (not real security)
 const DEFAULT_CENTER=[21.300,-157.830]; // Honolulu [lat,lng]
 const ALL_TAGS=["cozy","good wifi","oat milk","outdoor","quiet","pastries","specialty","matcha","to-go"];
 /* ---------- currency ----------
