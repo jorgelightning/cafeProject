@@ -1,0 +1,14 @@
+# Weekly checks for the two things this repo pulls from outside: the npm dev tooling (the app
+# itself has no runtime dependencies) and the GitHub Actions the workflows run.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3

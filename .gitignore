@@ -1,3 +1,19 @@
 node_modules/
 # snapshot baselines are scratch, not source of truth
 tests/*.snapshot.json
+
+# editor, OS and tool noise
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+.vscode/
+.idea/
+
+# secrets never belong here — the Maps and Firebase keys in js/config.js are public by design,
+# anything else (service accounts, .env files) is not
+.env
+.env.*
+*.pem
+*.key
+serviceAccount*.json
