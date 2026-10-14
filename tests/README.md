@@ -58,6 +58,8 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `peek.js` | On a phone a pin slides up a card — rank, verdict, what to order, Directions — without leaving the map; the back button and a map tap put it away. On a laptop a pin still opens the page beside the map. |
 | `want-pins.js` | Want-to-try pins are violet with a white edge and a bookmark, sit above visited pins and cluster bubbles, and are never clustered; the map's Want to try switch hides visited pins without refitting the map, and the Want tab's map button turns it on. |
 | `hardening.js` | Link-preview and PWA meta, one `<h1>` exposed on every device, emoji kept out of button names, no shared passphrase, ids that could break an inline handler never rendered, the map clusterer is a vendored file. |
+| `discovery.js` | Verdict and area filters that combine with the type chip and search, a live "N of M" line and one Clear, the map button sharing the same filter; empty states that explain and offer the next step; the list skeleton; "Order again" on the cafe page; the drawn tab bar. |
+| `overflow-375.js` | Every screen at 375px: no sideways scroll, no element past the edge, no text under 12px. |
 | `one-screen.js` | A new visit is name, place line, drink and price, verdict, note, More, Save — one phone screen instead of 3.4. The place line says what Google filled in; More says what it holds even when shut. |
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `locate.js` | The locate button, its three states, the user dot — which was never being drawn — and that **nothing but the button raises the permission prompt**. |

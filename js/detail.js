@@ -101,6 +101,16 @@ function openDetail(id,from){
     if(c.matches)bits.push(eloScore(c)+" from "+c.matches+(c.matches===1?" comparison":" comparisons"));
     if(isAdmin&&c.updated)bits.push("edited "+fmtEdited(c.updated));
     _scEl.textContent=bits.join(" · "); _scEl.hidden=!bits.length; }
+  /* What to order is the question you open a cafe to answer, so it sits under the name instead of
+     being something to work out from the drink list below. */
+  const _oa=$("d-orderagain");
+  if(_oa){
+    const td=(!c.wish&&typeof topDrinkAt==="function")?topDrinkAt(c):null;
+    if(td){ const last=(latestDrinkOrder(td.d)||{}).date;
+      _oa.innerHTML='Order again: <b>'+esc(td.d.n)+'</b> \u00b7 '+td.n+'\u00d7'+(last?' \u00b7 last '+esc(fmtDate(last)):"");
+      _oa.hidden=false; }
+    else { _oa.hidden=true; _oa.textContent=""; }
+  }
   try{ renderChaser(c); }catch(e){ warn("detail.js renderChaser",e); }
   $("d-fav").textContent=c.fav?"❤️":"🤍";
   if($("d-wish")){ $("d-wish").textContent="🔖"; $("d-wish").style.opacity=c.wish?"1":".45"; }
