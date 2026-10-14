@@ -224,7 +224,10 @@ async function fetchAllPhotos() {
       await new Promise(res =>
         fetchPlacePhoto(c, url => {
           if (url && !isSessionPhotoUrl(url)) {
-            c.gphoto = url;
+            /* A snapshot can replace every cafe object during the minutes this runs, so find the
+               live one by id; writing to the one captured at the start would be lost. */
+            const live = cafes.find(x => x.id === c.id);
+            if (live) live.gphoto = url;
             got++;
           }
           done++;

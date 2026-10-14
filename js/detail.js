@@ -260,7 +260,7 @@ function openDetail(id, from) {
     _wh.hidden = false;
     _mt.hidden = true;
     _wh.innerHTML =
-      "\u{1F4CD} <span class=\"wt\">" +
+      '\u{1F4CD} <span class="wt">' +
       esc(_here) +
       "</span> \u00b7 " +
       (_sibs.length ? _sibs.length + " branches" : "\uFF0B Branch") +
@@ -268,7 +268,10 @@ function openDetail(id, from) {
     _wh.setAttribute("aria-expanded", _branchOpen ? "true" : "false");
     _le.hidden = !_branchOpen;
     _le.innerHTML =
-      (_sibs.length ? _sibs : [{ id: c.id, label: _here, wish: !!c.wish, stars: c.rating || 0, current: true, full: c.name }])
+      (_sibs.length
+        ? _sibs
+        : [{ id: c.id, label: _here, wish: !!c.wish, stars: c.rating || 0, current: true, full: c.name }]
+      )
         .map(
           x =>
             '<button type="button" class="br' +
@@ -281,7 +284,7 @@ function openDetail(id, from) {
             esc(x.id) +
             "','" +
             esc(lastMain || "list") +
-            "')\"><span class=\"t\">" +
+            '\')"><span class="t">' +
             (x.wish ? "\u{1F516} " : "") +
             esc(x.label) +
             "</span><small>" +
@@ -290,7 +293,9 @@ function openDetail(id, from) {
         )
         .join("") +
       (_addBr
-        ? '<button type="button" class="br add admin-only" onclick="addBranch(\'' + esc(c.id) + "')\">\uFF0B Add branch</button>"
+        ? '<button type="button" class="br add admin-only" onclick="addBranch(\'' +
+          esc(c.id) +
+          "')\">\uFF0B Add branch</button>"
         : "");
   } else {
     _wh.hidden = true;
