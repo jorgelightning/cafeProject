@@ -37,6 +37,8 @@ const SUITE = [
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],
   ["hardening",        "the 14 Oct audit: head tags, one heading, no passphrase, safe ids, local clusterer"],
+  ["discovery",        "verdict and area filters, empty states, skeleton, order-again, SVG tab bar"],
+  ["overflow-375",     "nothing sticks out and nothing is under 12px on any screen at 375px"],
   ["one-screen",       "logging a new cafe fits one phone screen, in counter order"],
   ["boot-firebase",    "the app starts against a connected, real-shaped Firebase"],
   ["offline",          "the app boots with the network pulled"],
