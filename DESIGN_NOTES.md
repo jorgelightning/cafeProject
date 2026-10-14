@@ -1030,3 +1030,14 @@ Recorded so they are not re-proposed. Each was considered and turned down on evi
 - **Scale drift is now held by a test.** `tests/scale.js` fails on any literal corner radius
   or gap outside the scale, and on any font size outside it except on glyph selectors (emoji
   and icons are artwork being sized, not type being set). New CSS has to stay on the scale.
+
+## The map opens on home, not the world — 14 Oct 2026 (v68)
+
+v67 opened on the World view automatically when pins spread across continents. The owner preferred
+option A: the map opens on **home**, and the world is something you ask for.
+
+- Home is the region of the cafe nearest you (within 150 km), else the region with the most pins.
+  It is a fit, not a filter: every pin is still on the map.
+- The World view (bubbles per region plus the list sheet) now opens only from the dropdown's
+  "🌐 World". `_worldOn()` is just `mapWorld === true`.
+- The zoom floor, ocean background and pole limits from v67 stay.

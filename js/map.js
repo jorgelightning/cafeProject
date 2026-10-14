@@ -122,7 +122,7 @@ function ratingColor(r) {
    The world is now a place you ask for, drawn as one numbered bubble per region with a list under
    it. A region is a US state, or a country elsewhere (the same grouping as the dropdown). */
 const OCEAN = "#aad3df";
-let mapWorld = null; /* null: decide from the data; true/false: the person chose */
+let mapWorld = null; /* true once the person asks for the World view */
 let _focusVal = null; /* the dropdown value the map is currently showing, when it is a place */
 let gworld = [];
 let _worldList = [];
@@ -168,16 +168,38 @@ function worldRegions() {
     })
     .sort((a, b) => b.n - a.n || a.label.localeCompare(b.label));
 }
-/* On by itself when the pins are spread across regions far enough apart that one view cannot
-   show them as places; off for someone whose cafes all sit in one region. */
+/* The World view is something you ask for. */
 function _worldOn() {
-  if (mapWorld !== null) return mapWorld;
+  return mapWorld === true;
+}
+/* Pins spread too far for one view to show them as places. */
+function _spreadOut() {
   const pts = cafes.filter(c => c.lat != null);
   if (pts.length < 2) return false;
   const lngs = pts.map(c => c.lng);
   const lats = pts.map(c => c.lat);
   const spread = Math.max(...lngs) - Math.min(...lngs) > 60 || Math.max(...lats) - Math.min(...lats) > 25;
   return spread && worldRegions().length >= 2;
+}
+/* Where the map opens when the pins are spread out: the region of the cafe nearest you, if one is
+   within 150 km; otherwise the region with the most pins. null when everything is in one view. */
+function _homeVal() {
+  if (!_spreadOut()) return null;
+  if (userLoc) {
+    let best = null,
+      bd = 150;
+    cafes.forEach(c => {
+      if (c.lat == null) return;
+      const d = distKm(userLoc.lat, userLoc.lng, c.lat, c.lng);
+      if (d < bd) {
+        bd = d;
+        best = c;
+      }
+    });
+    if (best) return regionOf(best).val;
+  }
+  const r = worldRegions();
+  return r.length ? r[0].val : null;
 }
 function clearWorldBubbles() {
   gworld.forEach(m => m.setMap(null));
@@ -521,6 +543,7 @@ function renderMarkers() {
   renderLocationSelect();
   if (_worldOn()) fitWorld();
   else if (_focusVal) fitList(locationList(_focusVal));
+  else if (_homeVal()) fitList(locationList(_homeVal()));
   else if (n === 1) {
     gmap.setCenter(gmarkers.filter(_pinShown)[0].getPosition());
     gmap.setZoom(14);
