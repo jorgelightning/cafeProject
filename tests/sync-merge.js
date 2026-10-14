@@ -104,14 +104,33 @@ const { eq, done } = checker();
                   withOrders([{ id: "o1", date: "2026-09-01", p: "6" }]));
   eq(r.conflicts.length > 0, true, "the same order priced differently on each side must be asked about");
 
-  /* Legacy records predate order ids. Merging those by position would silently reshuffle
-     prices between dates, so the whole drinks list falls back to all-or-nothing. */
+  /* Legacy records predate order ids. Each gets one derived from what the order is, the same on
+     every device, so they merge by id like the rest instead of all-or-nothing. */
   const noId = { date: "2026-09-01", p: "7" };
   r = await merge(cafe({ drinks: [{ n: "Old", orders: [noId] }] }),
                   cafe({ drinks: [{ n: "Old", orders: [noId, { date: "2026-09-16", p: "8" }] }] }),
                   cafe({ drinks: [{ n: "Old", orders: [noId, { date: "2026-09-17", p: "9" }] }] }));
-  eq(r.conflicts.length > 0, true,
-     "orders with no id are never merged by guesswork — it asks instead");
+  eq(r.conflicts, [], "orders with no id merge: each device adding a different one is not a conflict");
+  eq(r.value.drinks[0].orders.map(o => o.p).sort(), ["7", "8", "9"], "…and all three survive");
+  const priced = p => cafe({ drinks: [{ n: "Old", orders: [{ date: "2026-09-01", p }] }] });
+  r = await merge(priced("7"), priced("7"), priced("8"));
+  eq(r.conflicts, [], "an id-less order only the cloud repriced takes the cloud's price without asking");
+  eq(r.value.drinks[0].orders[0].p, "8", "…the cloud's price");
+  r = await merge(priced("7"), priced("9"), priced("8"));
+  eq(r.conflicts.length > 0, true, "the same id-less order priced differently on both sides is still a question");
+
+  // ---- absent means absent (Firebase stores no nulls, drops [] and {}) ----
+  r = await merge({ id: "c1", name: "A" }, { id: "c1", name: "A", photo: null, review: "x" }, { id: "c1", name: "A", photo: "Y" });
+  eq(r.conflicts, [], "a null photo this device never touched does not clash with one added elsewhere");
+  eq(r.value.photo, "Y", "…the added photo is kept");
+  r = await merge({ id: "c1", name: "A", photo: "X" }, { id: "c1", name: "A", photo: null }, { id: "c1", name: "A" });
+  eq(r.conflicts, [], "both sides clearing the same photo is agreement");
+  r = await merge({ id: "c1", name: "A", tags: ["x"] }, { id: "c1", name: "A", tags: [] }, { id: "c1", name: "A" });
+  eq(r.conflicts, [], "…and so is both sides clearing the tags");
+  r = await merge({ id: "c1", name: "A", tags: ["x"] }, { id: "c1", name: "A", tags: [] }, { id: "c1", name: "A", tags: ["x"] });
+  eq(r.value.tags === undefined || r.value.tags.length === 0, true, "clearing tags here, untouched there, stays cleared");
+  r = await pg.evaluate(() => [syncEqual(null, undefined), syncEqual([], undefined), syncEqual({ a: null }, {}), syncEqual("", undefined), syncEqual(false, undefined), syncEqual(0, undefined)]);
+  eq(r, [true, true, true, false, false, false], "only null, undefined, [] and {} read as absent: an empty note, false and 0 are values");
 
   // ---- a removal beats an untouched copy, never an edited one ----
   /* The worst case this file exists for: a visit logged on this phone while the other device
@@ -170,6 +189,18 @@ const { eq, done } = checker();
   eq(r.hasHook, true, "there is a single place that reconciles on coming back");
   eq(r.flushes >= 1, true, "…which flushes whatever this device still owes the cloud");
   eq(r.privates >= 1, true, "…including a private address the cloud refused earlier");
+
+  // ---- legacy order ids ----
+  r = await pg.evaluate(() => {
+    const mk = () => ({ id: "kiss", name: "K", drinks: [
+      { n: "Matcha Latte", orders: [{ date: "2026-09-01", p: "7" }, { date: "2026-09-01", p: "8" }, { id: "keep-me", date: "2026-09-02" }] },
+      { n: "Old shape", dates: ["2026-01-01"], count: 1 }] });
+    const a = adoptCafes([mk()])[0], b = adoptCafes([mk()])[0];
+    const ids = a.drinks[0].orders.map(o => o.id);
+    return { same: JSON.stringify(a) === JSON.stringify(b), ids, unique: new Set(ids).size === 3, legacyShape: Object.keys(a.drinks[1]).sort() };
+  });
+  eq([r.same, r.unique, r.ids[2]], [true, true, "keep-me"], "adopting a cafe gives id-less orders the same ids on every device, distinct within a day, and never changes an id that exists");
+  eq(r.legacyShape, ["count", "dates", "n"], "…and leaves a drink in the oldest shape (dates and a count, no orders) alone");
 
   eq(errs, [], "no page errors");
   const ok = done();

@@ -40,6 +40,8 @@ const fs = require("fs"), path = require("path");
     fbDb = { ref: function(p){ return {
       set: function(){ return window.__denied ? Promise.reject(new Error("PERMISSION_DENIED")) : Promise.resolve(); },
       remove: function(){ return window.__denied ? Promise.reject(new Error("PERMISSION_DENIED")) : Promise.resolve(); },
+      transaction: function(fn){ if (window.__denied) return Promise.reject(new Error("PERMISSION_DENIED"));
+        const v = fn(null); return Promise.resolve({ committed: v !== undefined, snapshot: { val: () => null } }); },
       once: function(){ return window.__denied ? Promise.reject(new Error("PERMISSION_DENIED")) : Promise.resolve({ val: () => ({}) }); }
     }; } };
     try{ localStorage.removeItem(PRIV_MIRROR); localStorage.removeItem(PRIV_QUEUE); }catch(e){}

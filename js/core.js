@@ -107,13 +107,22 @@ function subscribeCloud() {
     } catch (e) {
       warn("core.js", e);
     }
+    repaintFromCloud();
+  });
+}
+/* Everything that has to redraw when the cafes changed under the screen: a snapshot, or a merge
+   that landed something this device did not write. */
+function repaintFromCloud() {
+  try {
     if (gReady) renderMarkers();
     const v = app.dataset.view;
     if (v === "list" || v === "map") renderList();
     else if (v === "detail" && curId) {
       if (cafes.find(x => x.id === curId)) openDetail(curId);
     } else if (v === "stats") renderStats();
-  });
+  } catch (e) {
+    warn("core.js", e);
+  }
 }
 async function loadCloud() {
   if (!fbReady) return false;
@@ -389,6 +398,28 @@ function lngOf(c) {
    them everywhere, nothing with an odd id gets in: ids the app makes are letters, digits, "_"
    and "-". Only the owner can write cafes, so this is defence in depth, not a live hole. */
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+/* Orders that predate ids get one that depends only on what the order is — cafe, drink, date, and
+   which of that day's orders it is — so every device derives the same one and the merge can tell
+   them apart. Only stored orders are touched; ones that already have an id never change. */
+function ensureOrderIds(c) {
+  if (!c || !Array.isArray(c.drinks)) return c;
+  const slug = function (t) {
+    return String(t || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "");
+  };
+  c.drinks.forEach(function (d) {
+    if (!d || !Array.isArray(d.orders)) return;
+    const seen = {};
+    d.orders.forEach(function (o) {
+      if (!o || o.id) return;
+      const k = slug(d.n) + "-" + (o.date || "nodate");
+      seen[k] = (seen[k] || 0) + 1;
+      o.id = "lg-" + slug(c.id) + "-" + k + "-" + seen[k];
+    });
+  });
+  return c;
+}
 /** @param {Cafe[]} list @returns {Cafe[]} */
 function adoptCafes(list) {
   let out = Array.isArray(list) ? list : [];
@@ -410,6 +441,7 @@ function adoptCafes(list) {
     });
   }
   out.forEach(function (c) {
+    ensureOrderIds(c);
     if (!c || !c.custom) return;
     /* Firebase stores no nulls, so a spot with no pin arrives with no lat/lng at all. Read
        missing as null on both sides, or "undefined !== null" flags a pinless spot as exact,
