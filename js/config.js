@@ -81,6 +81,8 @@ const KNOWN_BRANDS = [
   "Coffee or Tea?",
   "YiFang",
   "Tadaima",
+  "Odd One Out",
+  "Milksha",
 ];
 const ALL_TAGS = ["cozy", "good wifi", "oat milk", "outdoor", "quiet", "pastries", "specialty", "matcha", "to-go"];
 /* ---------- currency ----------
