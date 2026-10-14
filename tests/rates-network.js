@@ -108,7 +108,7 @@ const OUT=require('fs').mkdtempSync(require('path').join(require('os').tmpdir(),
      if(!u.startsWith(srv.origin))return route.abort();
      if(u.includes('js/config.js')){
        const src=fs.readFileSync(ROOT+'/js/config.js','utf8')
-                   .replace(/const FX_API="[^"]*";/,'const FX_API="";');
+                   .replace(/const FX_API\s*=\s*"[^"]*";/,"const FX_API=\"\";");
        return route.fulfill({status:200,contentType:'text/javascript',body:src});
      }
      return route.continue();

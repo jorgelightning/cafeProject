@@ -39,6 +39,7 @@ const SUITE = [
   ["hardening",        "the 14 Oct audit: head tags, one heading, no passphrase, safe ids, local clusterer"],
   ["discovery",        "verdict and area filters, empty states, skeleton, order-again, SVG tab bar"],
   ["overflow-375",     "nothing sticks out and nothing is under 12px on any screen at 375px"],
+  ["lazy-photos",      "a long list requests photos as cards near the screen, not all at once"],
   ["one-screen",       "logging a new cafe fits one phone screen, in counter order"],
   ["boot-firebase",    "the app starts against a connected, real-shaped Firebase"],
   ["offline",          "the app boots with the network pulled"],
