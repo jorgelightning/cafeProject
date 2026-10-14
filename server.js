@@ -27,7 +27,15 @@ const MIME_TYPES = {
 const server = http.createServer((req, res) => {
   // Parse URL safely
   const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  let pathname = decodeURIComponent(reqUrl.pathname);
+  let pathname;
+  try {
+    pathname = decodeURIComponent(reqUrl.pathname);
+  } catch (e) {
+    // a stray % in the URL makes decodeURIComponent throw, which would crash the server
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.end('400 Bad Request');
+    return;
+  }
 
   if (pathname === '/' || pathname === '') {
     pathname = '/index.html';

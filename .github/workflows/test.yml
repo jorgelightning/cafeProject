@@ -10,8 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      # Fail with the real reason. setup-node's cache and `npm ci` both need the lockfile, and
+      # without this guard a deleted one shows up as a cryptic cache error (13 Oct).
+      - name: Check the lockfile is present
+        run: |
+          test -f package-lock.json || { echo "::error::package-lock.json is missing. Restore it (git checkout <last good commit> -- package-lock.json); npm ci and the npm cache both need it."; exit 1; }
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
