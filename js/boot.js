@@ -88,6 +88,7 @@ function segOn(id, v) {
 function renderSettings() {
   if (typeof updateMilkBtn === "function") updateMilkBtn();
   if (typeof updateSpellBtn === "function") updateSpellBtn();
+  if (typeof updateBrandBtn === "function") updateBrandBtn();
   segOn("seg-theme", storedTheme());
   segOn("seg-layout", typeof listCompact !== "undefined" && listCompact ? "compact" : "grid");
   const m = $("set-mode"),

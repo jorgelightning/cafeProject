@@ -65,6 +65,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `keyboard.js` | Every control is reachable and activatable without a pointer, against all 101 real cafes. |
 | `locate.js` | The locate button, its three states, the user dot — which was never being drawn — and that **nothing but the button raises the permission prompt**. |
 | `world.js` | The map never opens on the whole globe: it opens on the region nearest you (or the biggest), with a zoom floor, an ocean-coloured background and no poles. "World" gives one numbered bubble per region with a list under it, on request. A row (or the dropdown) brings the pins back. |
+| `brand-auto.js` | A cafe's chain is told from its name — location suffix stripped, other cafes' spelling, a seed list, a shared name. The form fills the brand only while you have not decided it; the backfill only fills empty brands and has a dry run. |
 | `boot-firebase.js` | The app starts against a connected Firebase that behaves like the real one — no nulls stored, `set()` throws on `undefined` — as owner (early and late sign-in) and visitor; nothing the private side does can stop the map or editing mode. |
 | `offline.js` | The app boots with the network pulled. |
 | `regression.js` | Legacy drink prices render identically; a form round-trip adds order history without changing existing summary fields. |
