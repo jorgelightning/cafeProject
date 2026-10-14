@@ -146,3 +146,38 @@ stay current; everything else is served from cache.
 - **Viewer** (default): browse everything, edit nothing.
 - **Admin**: sign in with the owner Google account (🔒 button) to add/edit
   cafes. Public cafe changes are saved to a durable local queue, then synced to Firebase. The owner sees pending/failure/conflict status.
+
+## Owner checklist (things the code cannot check for you)
+
+The repo can't see Google Cloud, Firebase or GitHub settings, so these are yours to confirm. Tick them
+off once, then again after any key or hosting change.
+
+**Google Maps key** (Google Cloud console > APIs & Services > Credentials)
+- [ ] Application restriction: *Websites*, with `jorgelightning.github.io/*` (and `localhost` only if you
+      develop locally). The key in `js/config.js` is only Caesar-shifted, which is obfuscation, not secrecy.
+      Maps browser keys are public by design, so this restriction is the protection.
+- [ ] API restriction: *Maps JavaScript API* and *Places API* only.
+- [ ] Billing: a budget with an alert, and a daily quota cap on the Maps JavaScript API.
+
+**Firebase** (console > Realtime Database)
+- [ ] Rules match the block above, including the `private` section. The app probes this while you are
+      signed in and shows a red banner if strangers can write or read private spots.
+- [ ] A budget alert on the project, since `cafes` is world-readable by design.
+- [ ] Optional: App Check, to stop other sites using your database.
+
+**GitHub** (repo Settings)
+- [ ] Branches: a protection rule on `main` that requires the *App checks* workflow to pass.
+- [ ] Code security: secret scanning and push protection on; Dependabot alerts on (the version updates are
+      configured in `.github/dependabot.yml`).
+- [ ] **Gate the live site on the tests** (optional, two steps, both required):
+      Settings > Pages > Source: *GitHub Actions*, then Settings > Secrets and variables > Actions >
+      Variables: `PAGES_VIA_ACTIONS` = `true`. Until both are done `.github/workflows/deploy.yml` does
+      nothing and Pages keeps deploying straight from `main`, as it does today.
+- [ ] If your editing tool (for example Google AI Studio) syncs to this repo, check it did not delete
+      `package-lock.json`. The *App checks* workflow now fails with that exact message if it did.
+
+## Development
+
+- `npm start` serves the app on port 3000 (`server.js`; it refuses to serve dotfiles such as `.git`).
+- `npm test` runs every test in `tests/` in a headless browser.
+- `.editorconfig` sets indentation and line endings; most editors read it automatically.
