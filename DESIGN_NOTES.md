@@ -1041,3 +1041,18 @@ option A: the map opens on **home**, and the world is something you ask for.
 - The World view (bubbles per region plus the list sheet) now opens only from the dropdown's
   "🌐 World". `_worldOn()` is just `mapWorld === true`.
 - The zoom floor, ocean background and pole limits from v67 stay.
+
+## Brand / chain detection — 14 Oct 2026 (v69)
+
+`brand` already existed and already grouped a cafe's other locations on the detail page, but only
+10 of 121 cafes had one because it was typed by hand. No new field: the detector fills that one.
+
+- `brandBaseName` strips a trailing "(…)", " - …", "@ …" or "#12"; `brandKey` folds case and
+  punctuation. `inferBrand` tries, in order: the spelling another cafe already uses, `KNOWN_BRANDS`
+  (config.js — extend it), then a base name two cafes share. A one-off gets nothing.
+- Not handled on purpose: a suffix glued to the name with no spaces ("Lin-Cupertino上宇林"), since a
+  bare hyphen is also part of real names.
+- The form fills `#f-brand` only while the person has not decided it (`brandTouched`); a stored
+  brand, typing in the box, or clearing it all count as deciding.
+- `backfillBrands(dry)` fills only empty brands; Settings shows "Fill in N brands" with a confirm.
+  `cafes.json` itself is not rewritten — the owner's data syncs through Firebase.
