@@ -75,5 +75,89 @@ const {serve,launch,checker}=require('./harness');const {eq,done}=checker();
  eq(r,{wasConflict:true,remote:3,local:3,pending:0},
     'choosing the cloud updates the remote mirror too, so the next edit merges against the truth');
 
+ /* ---- v73 audit: what lands is what the screen shows ----
+    A fake that, like Firebase, fires the listener with a transaction's result BEFORE the promise
+    resolves — while the outbox entry still exists, so the overlay shows the queued value. */
+ await p.evaluate(()=>{
+  window.armEvt=function(raw){
+   armSync(raw);
+   const snap=v=>({val:()=>JSON.parse(JSON.stringify(v==null?null:v))});
+   fbDb={ref:path=>({
+    once:()=>Promise.resolve(snap(path==='cafes'?dbValue:(dbValue||{})[path.slice(6)])),
+    on:(e,fn)=>{syncCallback=fn;},remove:()=>Promise.resolve(),
+    transaction:async fn=>{
+     const cur=path==='cafes'?dbValue:(dbValue||{})[path.slice(6)]||null;
+     const next=fn(JSON.parse(JSON.stringify(cur)));
+     if(next===undefined)return{committed:false,snapshot:snap(cur)};
+     if(path==='cafes')dbValue=next;else if(next===null)delete dbValue[path.slice(6)];else dbValue[path.slice(6)]=next;
+     if(syncCallback)syncCallback(snap(dbValue));
+     return{committed:true,snapshot:snap(next)};
+    }})};
+  };
+  window.settle=async()=>{ for(let i=0;i<200&&(syncBusy||Object.keys(syncPending).some(k=>!syncPending[k].conflict));i++) await new Promise(r=>setTimeout(r,5)); };
+ });
+ r=await p.evaluate(async()=>{
+  armEvt({a:{id:'a',name:'A',rating:1,review:'old'}});
+  subscribeCloud();
+  fbReady=false; cafes[0].review='mine'; saveCafe('a');      /* edit made while the cloud was out of reach */
+  fbReady=true; dbValue.a.rating=5;                           /* meanwhile the other device rated it 5 */
+  await flushSync(); await settle();
+  const afterFlush={cloud:dbValue.a.rating,memory:cafes[0].rating,review:cafes[0].review};
+  cafes[0].fav=true; await saveCafe('a'); await settle();     /* any later, unrelated edit on this device */
+  return {afterFlush,cloudRating:dbValue.a.rating,fav:dbValue.a.fav,review:dbValue.a.review};
+ });
+ eq(r.afterFlush,{cloud:5,memory:5,review:'mine'},'after a merged flush the screen holds what landed, including the other device\'s change');
+ eq([r.cloudRating,r.fav,r.review],[5,true,'mine'],'…so a later edit on this device does not write the older rating back over it');
+
+ /* ---- a bulk save() before the cloud has answered ---- */
+ r=await p.evaluate(async()=>{
+  armEvt({a:{id:'a',name:'A',rating:1,review:'r'},b:{id:'b',name:'B',rating:1}});
+  syncLastConfirmed=false; syncRemote={}; syncBootBase=syncCopy(cafesById()); syncNeedsFullDiff=false;   /* started offline */
+  cafes[0].rating=5; save();
+  const before={queued:Object.keys(syncPending).length,flag:syncNeedsFullDiff};
+  const raw={a:{id:'a',name:'A',rating:1,review:'theirs'},b:{id:'b',name:'B',rating:9}};   /* the cloud answers, changed elsewhere */
+  dbValue=JSON.parse(JSON.stringify(raw));
+  syncOverlay(raw); await settle();
+  return {before,queuedAfter:Object.keys(syncPending).length,a:dbValue.a,b:dbValue.b,flag:syncNeedsFullDiff,conflict:Object.values(syncPending).some(o=>o.conflict)};
+ });
+ eq(r.before,{queued:0,flag:true},'a bulk save() before the cloud has answered queues nothing — it waits');
+ eq([r.a.rating,r.a.review,r.b.rating],[5,'theirs',9],'once it answers, only what this device changed is written, merged with what changed elsewhere');
+ eq([r.flag,r.conflict],[false,false],'…without a conflict, and the wait is over');
+ r=await p.evaluate(async()=>{
+  armEvt({a:{id:'a',name:'A',rating:1,review:'r'}});
+  syncLastConfirmed=false; syncRemote={}; syncBootBase=syncCopy(cafesById());
+  cafes[0].review='mine'; saveCafe('a');
+  const base=syncPending.a.base;
+  return {rating:base&&base.rating,review:base&&base.review};
+ });
+ eq(r,{rating:1,review:'r'},'an ordinary edit made before the cloud answers is based on how the cafe looked at startup, not on nothing');
+
+ /* ---- a read that never answers cannot jam the queue ---- */
+ r=await p.evaluate(async()=>{
+  armEvt({a:{id:'a',name:'A',rating:1}});
+  const real=fbDb; SYNC_ONCE_MS=40;
+  fbDb={ref:path=>Object.assign({},real.ref(path),{once:()=>new Promise(()=>{})})};
+  cafes[0].rating=5; saveCafe('a');
+  await new Promise(r=>setTimeout(r,150));
+  const stuck={busy:syncBusy,pending:Object.keys(syncPending).length,said:syncFailure};
+  fbDb=real; await flushSync(); await settle();
+  SYNC_ONCE_MS=15000;
+  return {stuck,cloud:dbValue.a.rating,pending:Object.keys(syncPending).length};
+ });
+ eq([r.stuck.busy,r.stuck.pending,/Waiting to sync/.test(r.stuck.said)],[false,1,true],'a cloud read that never answers times out: the queue is released, kept, and the banner says so');
+ eq([r.cloud,r.pending],[5,0],'…and the next flush delivers it');
+
+ /* ---- bulk photo fetch while snapshots replace the cafes ---- */
+ r=await p.evaluate(async()=>{
+  armEvt({a:{id:'a',name:'A',lat:1,lng:1},b:{id:'b',name:'B',lat:2,lng:2}});
+  gReady=true; isAdmin=true;
+  const real=window.fetchPlacePhoto;
+  window.fetchPlacePhoto=(c,cb)=>{ cafes=cafes.map(x=>Object.assign({},x)); setTimeout(()=>cb('https://lh3.googleusercontent.com/p/'+c.id),0); };
+  await fetchAllPhotos();
+  window.fetchPlacePhoto=real;
+  return cafes.map(c=>c.gphoto);
+ });
+ eq(r,['https://lh3.googleusercontent.com/p/a','https://lh3.googleusercontent.com/p/b'],'photos fetched while the cafe objects are replaced mid-run still land on the live ones');
+
  process.exitCode=done()?0:1;
 }finally{await b.close();srv.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

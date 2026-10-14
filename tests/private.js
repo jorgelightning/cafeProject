@@ -207,6 +207,7 @@ const fs = require("fs"), path = require("path");
       set: v => { if (path.startsWith("cafes/")) { pub.push(JSON.parse(JSON.stringify(v))); return Promise.resolve(); }
                   return Promise.reject(new Error("PERMISSION_DENIED")); },
       remove: () => Promise.reject(new Error("PERMISSION_DENIED")),
+      transaction: () => Promise.reject(new Error("PERMISSION_DENIED")),
       once: () => Promise.reject(new Error("PERMISSION_DENIED")) }) };
     const _save = saveCafe, _toast = toast;
     window.saveCafe = id => { pub.push(JSON.parse(JSON.stringify(cafes.find(c => c.id === id)))); return Promise.resolve(); };
@@ -221,7 +222,7 @@ const fs = require("fs"), path = require("path");
     return new Promise(res => setTimeout(() => {
       window.saveCafe = _save; window.toast = _toast;
       res({ pub, toasts, left: Object.keys(_needsHeal),
-            kept: privPending.old, mirrored: JSON.parse(localStorage.getItem(PRIV_MIRROR) || "{}").old,
+            kept: privPending.old && (privPending.old.value || privPending.old), mirrored: JSON.parse(localStorage.getItem(PRIV_MIRROR) || "{}").old,
             banner: document.getElementById("rule-warn").hidden ? "" : document.getElementById("rule-warn").textContent });
     }, 120));
   }, admin);
@@ -254,6 +255,108 @@ const fs = require("fs"), path = require("path");
   });
   eq(/Evergreen|30\.12345/.test(JSON.stringify(r)), false,
      "sharing carries the public value even when the owner taps it — it goes to someone else");
+
+
+  /* --- 12. the offline private-save audit (v73) ---
+     Owner remembered (admin flag) but not signed in — offline, or the auth script not loaded yet.
+     privFor() is empty then, so the form shows the BLURRED pin and area. Saving a review edit used
+     to queue those as "the exact address", overwriting the real one in private/ on the next
+     sign-in, and persist a mirror and queue holding only that one spot over everyone else's. */
+  r = await pg.evaluate(() => {
+    window.__signedIn = false; isAdmin = true; fbReady = false;
+    const exact = { area: "12 Oak Street", lat: 37.44123, lng: -122.14321 };
+    localStorage.setItem(PRIV_MIRROR, JSON.stringify({
+      a: { area: "1 A St", lat: 1.11111, lng: 2.22222 }, b: { area: "2 B St", lat: 3.33333, lng: 4.44444 },
+      pv: exact }));
+    localStorage.setItem(PRIV_QUEUE, JSON.stringify({ b: { area: "2 B St", lat: 3.33333, lng: 4.44444 } }));
+    return loadPrivateDetail().then(() => ({ mirrorInMemory: Object.keys(privDetail).sort(), queueInMemory: Object.keys(privPending) }));
+  });
+  eq(r, { mirrorInMemory: ["a", "b", "pv"], queueInMemory: ["b"] },
+     "the saved copies are loaded into memory even before the owner is signed in");
+  r = await pg.evaluate(() => {
+    const pub = { id: "pv", name: "Friend house", custom: true, emoji: "🏠", rating: 5, drinks: [],
+                  lat: blurCoord(37.44123), lng: blurCoord(-122.14321), area: "" };
+    cafes = [pub];
+    openForm("pv");
+    document.getElementById("f-review").value = "great porch";
+    saveForm();
+    return { queue: Object.keys(JSON.parse(localStorage.getItem(PRIV_QUEUE))).sort(),
+             mirror: Object.keys(JSON.parse(localStorage.getItem(PRIV_MIRROR))).sort(),
+             pv: JSON.parse(localStorage.getItem(PRIV_MIRROR)).pv };
+  });
+  eq(r.mirror, ["a", "b", "pv"], "saving one private spot leaves every other saved address on the device");
+  eq(r.queue, ["b"], "…and every other queued write");
+  eq(r.pv.lat, 37.44123, "…and a save that never touched the location keeps the real address, not its blurred copy");
+
+  r = await pg.evaluate(() => {
+    window.__signedIn = false;
+    openForm("pv");
+    privDetail = {};                                   /* as if the private side never loaded */
+    document.getElementById("f-area").value = "99 New Road";
+    picked = { lat: 40.12345, lng: -100.54321 };
+    document.getElementById("f-review").value = "moved";
+    saveForm();
+    return JSON.parse(localStorage.getItem(PRIV_MIRROR)).pv;
+  });
+  eq([r.area, r.lat], ["99 New Road", 40.12345], "…but when you really move the pin, the new address is saved");
+
+  r = await pg.evaluate(() => {
+    privDetail = { pv: { area: "99 New Road", lat: 40.12345, lng: -100.54321 } };
+    privPending = {};
+    const c = cafes.find(x => x.id === "pv");
+    savePrivateDetail("pv", { area: c.area, lat: c.lat, lng: c.lng });     /* the blurred copy */
+    return privDetail.pv.lat;
+  });
+  eq(r, 40.12345, "savePrivateDetail refuses to replace a saved address with its own blurred copy");
+
+  /* un-privating: the flag is read before the edit overwrites it */
+  r = await pg.evaluate(() => {
+    privDetail = {}; privPending = {};
+    cafes = [{ id: "up", name: "Was private", custom: true, emoji: "🏠", drinks: [], lat: 30.12, lng: -140.68, area: "" }];
+    openForm("up");
+    document.getElementById("f-custom").checked = false;
+    saveForm();
+    return privPending.up === null;
+  });
+  eq(r, true, "un-ticking Private on a spot this device never mirrored still queues removal of its private entry");
+
+  /* --- 13. a newer address from another device is not overwritten --- */
+  r = await pg.evaluate(async () => {
+    window.__signedIn = true; fbReady = true; isAdmin = true;
+    const store = { k: { area: "old", lat: 1, lng: 1 } };
+    const toasts = []; const _t = window.toast; window.toast = m => toasts.push(m);
+    fbDb = { ref: path => ({
+      once: () => Promise.resolve({ val: () => path === PRIVATE_PATH ? JSON.parse(JSON.stringify(store)) : store[path.split("/")[1]] || null }),
+      set: v => { store[path.split("/")[1]] = v; return Promise.resolve(); },
+      remove: () => { delete store[path.split("/")[1]]; return Promise.resolve(); },
+      transaction: async fn => { const id = path.split("/")[1], cur = store[id] === undefined ? null : JSON.parse(JSON.stringify(store[id]));
+        const nv = fn(cur); if (nv === undefined) return { committed: false, snapshot: { val: () => cur } };
+        store[id] = nv; return { committed: true, snapshot: { val: () => nv } }; } }) };
+    cafes = [{ id: "k", name: "K", custom: true, lat: 1, lng: 1, area: "", drinks: [] }];
+    privDetail = { k: { area: "old", lat: 1, lng: 1 } }; privPending = {};
+    savePrivateDetail("k", { area: "mine", lat: 2, lng: 2 });          /* queued, base = old */
+    privPending.k = privPending.k;                                       /* (still pending: not flushed yet) */
+    await new Promise(res => setTimeout(res, 30));
+    const landedWhenUnchanged = store.k.area;
+    /* now another device changes it while this one holds a pending edit */
+    store.k = { area: "theirs", lat: 3, lng: 3 };
+    privDetail.k = { area: "mine2", lat: 4, lng: 4 };
+    privPending.k = { base: { area: "old", lat: 1, lng: 1 }, value: { area: "mine2", lat: 4, lng: 4 } };
+    flushPrivate();
+    await new Promise(res => setTimeout(res, 30));
+    window.toast = _t;
+    return { landedWhenUnchanged, cloud: store.k.area, mirror: privDetail.k.area, queued: privPending.k !== undefined, said: toasts.join("|") };
+  });
+  eq(r.landedWhenUnchanged, "mine", "an edit whose base still matches the cloud is written");
+  eq([r.cloud, r.mirror, r.queued], ["theirs", "theirs", false],
+     "an edit made against an older address is dropped in favour of the newer one from another device");
+  eq(/Another device/.test(r.said), true, "…and says so");
+
+  r = await pg.evaluate(() => {
+    const e = _privOp({ area: "x", lat: 1, lng: 2 }), n = _privOp(null), w = _privOp({ base: null, value: { area: "y" } });
+    return [e.legacy === true, e.value.area, n.value === null && n.legacy === true, w.legacy === undefined && w.value.area];
+  });
+  eq(r, [true, "x", true, "y"], "queue entries saved by earlier versions (a bare value, or null) are still understood");
 
   eq(errs, [], "no page errors");
   const ok = done();

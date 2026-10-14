@@ -6,7 +6,10 @@ let syncPending = {},
   syncRemote = {},
   syncBusy = false,
   syncFailure = "",
-  syncLastConfirmed = false;
+  syncLastConfirmed = false,
+  syncNeedsFullDiff = false /* a bulk save() ran before the cloud was ever heard from */,
+  syncBootBase = null; /* the cafes as this device started, before any edit: the 3-way base while offline */
+let SYNC_ONCE_MS = 15000; /* how long a flush waits to read the cloud before giving up and letting a retry in */
 try {
   const saved = JSON.parse(localStorage.getItem(OUTBOX_KEY) || "{}");
   if (!saved || Array.isArray(saved) || typeof saved !== "object") throw Error("Invalid outbox");
@@ -17,18 +20,22 @@ try {
 function syncCopy(v) {
   return v == null ? null : JSON.parse(JSON.stringify(v));
 }
+/* Firebase stores no nulls and drops empty arrays and objects, so a field this device cleared (null,
+   [], {}) and the same field as the cloud returns it (missing) are the same value. Comparing them
+   as different raised a conflict whenever both sides cleared a photo or tags, or saveForm's
+   photo:null met a photo added elsewhere. All four read as absent here. */
 function syncCanonical(v) {
-  if (Array.isArray(v)) return "[" + v.map(syncCanonical).join(",") + "]";
-  if (v && typeof v === "object")
-    return (
-      "{" +
-      Object.keys(v)
-        .sort()
-        .map(k => JSON.stringify(k) + ":" + syncCanonical(v[k]))
-        .join(",") +
-      "}"
-    );
-  return JSON.stringify(v);
+  if (Array.isArray(v)) return v.length ? "[" + v.map(syncCanonical).join(",") + "]" : "null";
+  if (v && typeof v === "object") {
+    const parts = Object.keys(v)
+      .sort()
+      .map(k => [k, syncCanonical(v[k])])
+      .filter(p => p[1] !== "null")
+      .map(p => JSON.stringify(p[0]) + ":" + p[1]);
+    return parts.length ? "{" + parts.join(",") + "}" : "null";
+  }
+  const j = JSON.stringify(v);
+  return j === undefined ? "null" : j;
 }
 function syncEqual(a, b) {
   return syncCanonical(a) == syncCanonical(b);
@@ -48,6 +55,15 @@ function syncPersist() {
   }
   renderSyncStatus();
 }
+/* What this device last knew the cloud held for a cafe. Before any snapshot arrives that is how it
+   looked at startup, never null: a null base turns every field the cloud has since changed into a
+   conflict, and "keep this phone's" then overwrites it with a stale cache. */
+function syncKnownCloud(id) {
+  if (Object.prototype.hasOwnProperty.call(syncRemote, id)) return syncRemote[id];
+  if (!syncLastConfirmed && syncBootBase && Object.prototype.hasOwnProperty.call(syncBootBase, id))
+    return syncBootBase[id];
+  return null;
+}
 function syncBaseFor(id) {
   return syncCopy(
     Object.prototype.hasOwnProperty.call(syncRemote, id) ? syncRemote[id] : cafes.find(c => c.id === id) || null
@@ -61,6 +77,18 @@ function syncOverlay(raw) {
     if (c && c.id) map[c.id] = c;
   });
   syncRemote = syncCopy(map);
+  /* A bulk save() that ran before the cloud had answered. Now there is something real to compare
+     with: queue only what this device actually changed since it started, against the state it
+     started from, so edits made elsewhere in the meantime merge instead of being reverted. */
+  if (syncNeedsFullDiff) {
+    syncNeedsFullDiff = false;
+    const startBase = syncBootBase || {};
+    (cafes || []).forEach(c => {
+      if (!c || !c.id) return;
+      const b = Object.prototype.hasOwnProperty.call(startBase, c.id) ? startBase[c.id] : null;
+      if (!syncEqual(c, b)) queueCafe(c.id, c, b);
+    });
+  }
   /* Older releases retained only a whole-array dirty flag. Keep that data and require
      conflict review rather than guessing which remote records can be replaced. */
   if (!Object.keys(syncPending).length && localStorage.getItem(DIRTY_FLAG) === "1") {
@@ -241,6 +269,12 @@ function syncDrinkSummaryFor(d) {
     return d;
   }
 }
+function syncWithOrderIds(c) {
+  if (!c || typeof c !== "object") return c;
+  const copy = syncCopy(c);
+  ensureOrderIds(copy);
+  return copy;
+}
 function syncMerge(base, mine, theirs) {
   const conflicts = [];
   const note = function (field, m, t) {
@@ -258,6 +292,11 @@ function syncMerge(base, mine, theirs) {
     if (!syncEqual(live, base)) note("deleted", mine, theirs);
     return { value: mine === null ? null : mine, conflicts: conflicts };
   }
+  /* Legacy orders without an id get the same deterministic one on every side, so a drink that
+     holds one is merged by id like any other instead of all-or-nothing. */
+  base = syncWithOrderIds(base);
+  mine = syncWithOrderIds(mine);
+  theirs = syncWithOrderIds(theirs);
   const B = base || {},
     out = {};
   const keys = Object.keys(Object.assign({}, B, mine, theirs));
@@ -291,7 +330,7 @@ function queueCafe(id, value, base) {
   const old = syncPending[id];
   syncPending[id] = {
     token: uid(),
-    base: old ? old.base : syncCopy(base === undefined ? syncRemote[id] || null : base),
+    base: old ? old.base : syncCopy(base === undefined ? syncKnownCloud(id) : base),
     value: syncCopy(value),
   };
   syncPersist();
@@ -305,6 +344,15 @@ function queueCafe(id, value, base) {
     warn("sync", e);
   }
   return flushSync();
+}
+/* A read that never answers (a connection that looks up but is not) used to hold syncBusy for ever,
+   so every later retry returned at once. Now it fails, the banner says so, and the next trigger runs. */
+function syncWithin(p, ms) {
+  let t;
+  const timeout = new Promise((_, rej) => {
+    t = setTimeout(() => rej(new Error("sync-timeout")), ms);
+  });
+  return Promise.race([p, timeout]).finally(() => clearTimeout(t));
 }
 async function flushSync() {
   if (syncBusy) return;
@@ -322,7 +370,7 @@ async function flushSync() {
       if (op.conflict) continue;
       const keyed = _cloudKeyed,
         ref = fbDb.ref(keyed ? "cafes/" + id : "cafes");
-      await ref.once("value");
+      await syncWithin(ref.once("value"), SYNC_ONCE_MS);
       /* The transaction body can run more than once; the last run is the one that counts,
          so these record its outcome rather than accumulating. */
       let lastConflicts = null,
@@ -372,6 +420,10 @@ async function flushSync() {
         /* What landed may be a merge of both sides, not what this device queued. */
         syncRemote[id] = syncCopy(lastWritten !== undefined ? lastWritten : op.value);
         delete syncPending[id];
+        /* The merge may have folded in another device's change. The screen still holds what this
+           device queued, and a later save built from it would write that older value back over the
+           other device's edit. Take what landed. */
+        if (lastWritten && !syncEqual(lastWritten, op.value)) syncAdoptWritten(id, lastWritten);
         if (op.value === null) removePrivateDetail(id, true);
         if (!keyed) _cloudKeyed = true;
       } else {
@@ -392,6 +444,23 @@ async function flushSync() {
     syncBusy = false;
     renderSyncStatus();
     if (again) flushSync();
+  }
+}
+function syncAdoptWritten(id, written) {
+  try {
+    const rec = adoptCafes([syncCopy(written)])[0];
+    const i = cafes.findIndex(c => c.id === id);
+    if (!rec || i < 0) return;
+    cafes[i] = rec;
+    try {
+      _localSave();
+    } catch (e) {
+      syncFailure = "Storage full \u2014 keep this page open";
+      warn("sync", e);
+    }
+    repaintFromCloud();
+  } catch (e) {
+    warn("sync", e);
   }
 }
 function resolveSyncConflict(useLocal) {

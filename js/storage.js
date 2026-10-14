@@ -44,6 +44,7 @@ async function load() {
     cafes = adoptCafes(published && published.length ? published : Array.isArray(_lc) && _lc.length ? _lc : seed());
   }
   await _privateSteps();
+  if (!syncLastConfirmed && syncBootBase === null) syncBootBase = syncCopy(cafesById());
 }
 /* The private side is a refinement on top of the map, so nothing it does may stop the map
    loading. */
@@ -70,6 +71,18 @@ function _localSave() {
 /* Everything. Also the migration: this is what reshapes the node from array to keyed. */
 function save() {
   if (!isAdmin) return;
+  /* Before the cloud has answered there is nothing real to compare with: every cafe would be queued
+     against a null base and each one the cloud has since changed would turn into a conflict. Keep the
+     change on this device and let the first snapshot work out what differs. */
+  if (!syncLastConfirmed) {
+    syncNeedsFullDiff = true;
+    try {
+      _localSave();
+    } catch (e) {
+      warn("storage.js", e);
+    }
+    return;
+  }
   cafes.forEach(c => {
     if (!syncEqual(c, syncRemote[c.id])) queueCafe(c.id, c);
   });
@@ -155,15 +168,24 @@ function persistPrivate() {
   lsSet(PRIV_MIRROR, JSON.stringify(privDetail));
   lsSet(PRIV_QUEUE, JSON.stringify(privPending));
 }
+/* A queue entry is {base, value}: what this device last knew the cloud held, and what it wants
+   there. Older releases queued the bare value (or null for a removal), and those still work — they
+   just carry no base, so they write unconditionally as before. */
+function _privOp(e) {
+  if (e && typeof e === "object" && Object.prototype.hasOwnProperty.call(e, "value")) return e;
+  return { value: e === undefined ? null : e, legacy: true };
+}
+function _privSame(a, b) {
+  return syncEqual(a == null ? null : a, b == null ? null : b);
+}
 function loadPrivateDetail() {
-  if (!ownerSignedIn()) {
-    privDetail = {};
-    privPending = {};
-    return Promise.resolve();
-  }
-  /* Start from this device, so an address that never reached the cloud is still here. */
+  /* Start from this device whoever is looking, so the saved copies are in memory before anything can
+     persist over them. Showing them is gated elsewhere (privFor needs the owner), and a device that
+     was never the owner's has nothing stored. Emptying these in memory used to let the first private
+     save write a near-empty mirror and queue over the saved ones. */
   privDetail = _readPrivStore(PRIV_MIRROR);
   privPending = _readPrivStore(PRIV_QUEUE);
+  if (!ownerSignedIn()) return Promise.resolve();
   if (!fbReady) return Promise.resolve();
   return fbDb
     .ref(PRIVATE_PATH)
@@ -171,11 +193,12 @@ function loadPrivateDetail() {
     .then(function (s) {
       const cloud = s.val() || {};
       /* Cloud wins, except where this device still holds a write the cloud never accepted —
-       including a pending deletion, which the queue stores as null. */
+       including a pending deletion. */
       const merged = Object.assign({}, cloud);
       Object.keys(privPending).forEach(function (k) {
-        if (privPending[k] === null) delete merged[k];
-        else merged[k] = privPending[k];
+        const op = _privOp(privPending[k]);
+        if (op.value === null) delete merged[k];
+        else merged[k] = op.value;
       });
       privDetail = merged;
       persistPrivate();
@@ -201,28 +224,57 @@ function flushPrivate() {
   if (!ids.length) return;
   if (!fbReady || !ownerSignedIn()) return;
   ids.forEach(function (id) {
-    const exact = privPending[id];
+    const entry = privPending[id];
+    const op = _privOp(entry);
+    const ref = fbDb.ref(PRIVATE_PATH + "/" + id);
     /* Firebase THROWS (synchronously, not a rejected promise) on an undefined anywhere in the
        value, so strip them, and keep any throw to this one entry. */
     let write;
     try {
-      write =
-        exact === null
-          ? fbDb.ref(PRIVATE_PATH + "/" + id).remove()
-          : fbDb.ref(PRIVATE_PATH + "/" + id).set(_privClean(exact));
+      if (op.legacy || op.value === null) {
+        write = op.value === null ? ref.remove() : ref.set(_privClean(op.value));
+      } else {
+        /* Write only if the cloud still holds what this device last saw (or already holds what it
+           is about to write). Another device's newer address is kept, not overwritten. */
+        write = ref
+          .transaction(
+            function (cur) {
+              if (_privSame(cur, op.base) || _privSame(cur, op.value)) return _privClean(op.value);
+              return;
+            },
+            undefined,
+            false
+          )
+          .then(function (r) {
+            if (r && r.committed === false) {
+              const e = new Error("private-changed-elsewhere");
+              /** @type {any} */ (e).cloud = r.snapshot ? r.snapshot.val() : null;
+              throw e;
+            }
+          });
+      }
     } catch (e) {
       warn("storage.js", e);
       return;
     }
     write
       .then(function () {
-        if (privPending[id] === exact) {
+        if (privPending[id] === entry) {
           delete privPending[id];
           persistPrivate();
         }
       })
       .catch(function (e) {
         warn("storage.js", e);
+        if (e && e.message === "private-changed-elsewhere") {
+          if (privPending[id] !== entry) return;
+          delete privPending[id];
+          if (e.cloud == null) delete privDetail[id];
+          else privDetail[id] = e.cloud;
+          persistPrivate();
+          toast("Another device changed a private address — kept that one");
+          return;
+        }
         privateWriteFailed();
       });
   });
@@ -232,10 +284,32 @@ function _privClean(v) {
 }
 function savePrivateDetail(id, exact) {
   exact = _privClean(exact);
+  const have = Object.prototype.hasOwnProperty.call(privDetail, id) ? privDetail[id] : null;
+  /* Never replace a saved exact address with the blurred copy of it. That is what the form holds when
+     the private side had not loaded yet, and it would destroy the only precise copy there is. */
+  const c = cafes.find(function (x) {
+    return x && x.id === id;
+  });
+  if (have && c && c.custom && exact && _privSameLoc(exact, c) && !_privSameLoc(have, exact)) {
+    warn("storage.js", "kept the saved private address for " + id + " instead of its blurred copy");
+    return;
+  }
+  const prev = privPending[id] === undefined ? null : _privOp(privPending[id]);
+  const entry = { base: prev && !prev.legacy ? prev.base : have, value: exact };
   privDetail[id] = exact;
-  privPending[id] = exact;
+  privPending[id] = _privClean(entry);
   persistPrivate();
   flushPrivate();
+}
+/* Same place, to the precision a pin is stored at. */
+function _privSameLoc(a, b) {
+  const n = function (v) {
+    return v == null ? null : v;
+  };
+  const near = function (x, y) {
+    return x === y || (x !== null && y !== null && Math.abs(x - y) < 0.00002);
+  };
+  return (a.area || "") === (b.area || "") && near(n(a.lat), n(b.lat)) && near(n(a.lng), n(b.lng));
 }
 /* `force` spends a write even when we hold no local record of one. Deleting a cafe passes it,
    because an address left behind for a cafe that no longer exists is exactly the leak this is
