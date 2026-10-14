@@ -1056,3 +1056,7 @@ option A: the map opens on **home**, and the world is something you ask for.
   brand, typing in the box, or clearing it all count as deciding.
 - `backfillBrands(dry)` fills only empty brands; Settings shows "Fill in N brands" with a confirm.
   `cafes.json` itself is not rewritten — the owner's data syncs through Firebase.
+
+v70: "ODD ONE OUT Dunnan Shop" and "Odd One Out Tea San Mateo" were not grouped. The place follows the
+name with no separator, so their base names differ, and a bare shared first word is too weak to group
+on ("Moon & Back" is not "Moon Tea"). Chains like this go on `KNOWN_BRANDS`: added Odd One Out, Milksha.
