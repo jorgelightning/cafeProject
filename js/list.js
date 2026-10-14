@@ -42,6 +42,35 @@ function renderListTabs(){ const host=$("listtabs"); if(!host)return;
     const on=listTab===t[0];
     return '<button type="button" aria-pressed="'+(on?"true":"false")+'" onclick="setListTab(\''+t[0]+'\')">'
       +t[1]+' <span class="tabn">'+t[2]+'</span></button>'; }).join(""); }
+/* Verdict and area are filters in their own right, combinable with the type chip above
+   (the chip is single-select, so "loved, in Southside, matcha" was impossible). */
+let activeVerdict="", activeArea="";
+/* "Downtown Berkeley" and "Downtown Berkeley, CA" are one neighbourhood: group on the part
+   before the first comma. */
+function areaKey(c){ return (areaOf(c)||"").split(",")[0].trim(); }
+/* The one place a list is decided. renderList and the map button used to each carry their own
+   copy of this, so a new filter had to be added twice and the second copy was easy to forget. */
+function filteredCafes(q){
+  let items=cafes.filter(c=>listTab==="want"?!!c.wish:!c.wish);
+  if(favOnly)items=items.filter(c=>c.fav);
+  if(activeChip)items=items.filter(c=>chipMatch(c,activeChip));
+  if(activeVerdict&&listTab!=="want")items=items.filter(c=>bucketOf(c)===activeVerdict);
+  if(activeArea)items=items.filter(c=>areaKey(c)===activeArea);
+  if(q)items=items.filter(c=>matchSearch(c,q));
+  return items;
+}
+function setVerdict(v){ activeVerdict=(activeVerdict===v)?"":v; renderList(); }
+function setArea(a){ activeArea=(activeArea===a)?"":a; renderList(); }
+function filtersActive(){ return !!(activeChip||favOnly||activeVerdict||activeArea||($("q")&&$("q").value.trim())); }
+/* Everything, including the search box — what "Clear" means to a person looking at a short list. */
+function clearAll(){ if($("q"))$("q").value=""; clearFilters(); }
+function renderResultLine(n){
+  const el=$("resultline"); if(!el)return;
+  if(!filtersActive()){ el.hidden=true; el.textContent=""; return; }
+  const total=cafes.filter(c=>listTab==="want"?!!c.wish:!c.wish).length;
+  el.innerHTML='<span>'+n+' of '+total+(listTab==="want"?" to try":" places")+'</span><button type="button" onclick="clearAll()">Clear</button>';
+  el.hidden=false;
+}
 function renderFilterChips(){ const host=$("filterchips"); if(!host)return; const nFav=cafes.filter(c=>c.fav).length; const usedTags=ALL_TAGS.filter(t=>t!=="matcha"&&cafes.some(c=>(c.tags||[]).includes(t)));
  let h='<span class="chip'+((activeChip===""&&!favOnly)?" on":"")+'" role="button" tabindex="0" onclick="clearFilters()">All</span>';
  /* keep a lit chip on screen even if the set empties, or the list looks broken with
@@ -49,12 +78,29 @@ function renderFilterChips(){ const host=$("filterchips"); if(!host)return; cons
  if(nFav||favOnly)h+='<span class="chip'+(favOnly?" on":"")+'" role="button" tabindex="0" onclick="toggleFavFilter()">❤️ '+nFav+'</span>';
  CHIP_DEFS.forEach(d=>{ h+='<span class="chip'+(activeChip===d[0]?" on":"")+'" role="button" tabindex="0" onclick="setChip(\''+d[0]+'\')">'+d[1]+'</span>'; });
  if(usedTags.length)h+='<span class="chip'+(showTagRow?" on":"")+'" role="button" tabindex="0" onclick="toggleTagRow()"># Tags</span>';
- host.innerHTML=h;
+ host.innerHTML=h; renderVerdictAreaChips();
  const trow=$("tagchips"); if(trow){ if(showTagRow){ trow.style.display=""; trow.innerHTML=usedTags.map(t=>'<span class="chip'+(activeChip==="tag:"+t?" on":"")+'" role="button" tabindex="0" onclick="setChip(\'tag:'+esc(t)+'\')">'+esc(t)+'</span>').join(""); } else { trow.style.display="none"; trow.innerHTML=""; } } }
+function renderVerdictAreaChips(){
+  const vg=$("verdictgroup"), ag=$("areagroup"), vh=$("verdictchips"), ah=$("areachips"); if(!vh||!ah)return;
+  const tab=cafes.filter(c=>listTab==="want"?!!c.wish:!c.wish);
+  /* a place you have not been has no verdict */
+  vg.hidden=(listTab==="want");
+  vh.innerHTML=BUCKETS.map(function(b){
+    const n=tab.filter(c=>bucketOf(c)===b[0]).length;
+    return '<span class="chip'+(activeVerdict===b[0]?" on":"")+'" role="button" tabindex="0" onclick="setVerdict(\''+b[0]+'\')"><i class="vdot" style="background:'+BUCKET_HEX[b[0]]+'"></i>'+esc(b[2])+' <small>'+n+'</small></span>';
+  }).join("");
+  const count={}; tab.forEach(function(c){ const k=areaKey(c); if(k)count[k]=(count[k]||0)+1; });
+  /* only areas with company, biggest first — a chip per one-off place is just the list again — but a lit one always stays */
+  const keys=Object.keys(count).filter(k=>count[k]>=2||k===activeArea).sort((a,b)=>count[b]-count[a]||a.localeCompare(b)).slice(0,10);
+  ag.hidden=!keys.length;
+  ah.innerHTML=keys.map(function(k){
+    return '<span class="chip'+(activeArea===k?" on":"")+'" role="button" tabindex="0" data-area="'+esc(k)+'" onclick="setArea(this.dataset.area)">'+esc(k)+' <small>'+count[k]+'</small></span>';
+  }).join("");
+}
 /* The tab is not one of the things "All" clears — it is which list you are looking at. */
-function clearFilters(){ activeChip=""; favOnly=false; showTagRow=false; renderList(); }
+function clearFilters(){ activeChip=""; favOnly=false; showTagRow=false; activeVerdict=""; activeArea=""; renderList(); }
 function setChip(v){ activeChip=(activeChip===v)?"":v; if(activeChip.slice(0,4)==="tag:")showTagRow=true; renderList(); }
-function renderList(){ _cardRanks=(typeof rankMap==="function")?rankMap():null; const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); grid.classList.toggle("compact-list",listCompact); let items=cafes.filter(c=>listTab==="want"?!!c.wish:!c.wish); if(favOnly)items=items.filter(c=>c.fav); if(activeChip)items=items.filter(c=>chipMatch(c,activeChip)); renderListTabs(); renderFilterChips(); updateFilterBadge(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(typeof updateSpellBtn==="function")updateSpellBtn(); if(q)items=items.filter(c=>matchSearch(c,q)); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
+function renderList(){ _cardRanks=(typeof rankMap==="function")?rankMap():null; const q=($("q").value||"").toLowerCase().trim(); const grid=$("grid"); grid.classList.toggle("compact-list",listCompact); let items=filteredCafes(q); renderListTabs(); renderFilterChips(); updateFilterBadge(); if(typeof updateMilkBtn==="function")updateMilkBtn(); if(typeof updateSpellBtn==="function")updateSpellBtn(); items.sort((a,b)=>{ /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
    comparisons, which floated every unranked cafe above the 36 that were compared and lost —
    putting the most-compared cafe in the app in last place. */
   /* Ordering. Every branch ends on name so the list never jitters between equal items, and
@@ -92,16 +138,30 @@ function renderList(){ _cardRanks=(typeof rankMap==="function")?rankMap():null; 
 });
 
 
-if(!items.length){
-  grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="big">'
-    +(listTab==="want"?"\u{1F516}":"\u2615")+'</div>'
-    +(listTab==="want"
-      ? "No wishlist cafes yet — tap the bookmark on a cafe to save it for later."
-      : (favOnly
-        ? "No favorites yet — tap the heart on a cafe."
-        : (q ? "No matches." : "No cafes yet. Tap + to add your first visit!")))
-    +'</div>';
-  return;
+grid.removeAttribute("aria-busy"); grid.removeAttribute("aria-label");
+renderResultLine(items.length);
+if(!items.length){ grid.innerHTML=emptyStateHTML(q); return; }
+/* An empty list says why and offers the next step, rather than a line of grey text. The art
+   is drawn with tokens, so it follows the theme. */
+function emptyStateHTML(q){
+  const art=function(kind){
+    return kind==="want"
+      ? '<svg class="emptyart" viewBox="0 0 72 72" aria-hidden="true" focusable="false"><circle cx="36" cy="36" r="34" class="ea-bg"/><path d="M24 14h24v42l-12-9-12 9z" class="ea-fg"/><path d="M30 27h12M30 33h8" class="ea-ln"/></svg>'
+      : '<svg class="emptyart been" viewBox="0 0 72 72" aria-hidden="true" focusable="false"><circle cx="36" cy="36" r="34" class="ea-bg"/><path d="M20 28h28v14a12 12 0 0 1-12 12h-4a12 12 0 0 1-12-12z" class="ea-fg"/><path d="M48 31h4a6 6 0 0 1 0 12h-4" class="ea-ln2"/><path d="M28 18c0 3 3 3 3 6M36 18c0 3 3 3 3 6" class="ea-ln2"/></svg>';
+  };
+  const box=function(kind,title,body,btn){
+    return '<div class="emptyx" style="grid-column:1/-1">'+art(kind)+'<h3>'+title+'</h3><p>'+body+'</p>'+(btn||"")+'</div>';
+  };
+  const act=function(label,fn){ return '<button type="button" class="btn" onclick="'+fn+'">'+label+'</button>'; };
+  const typed=($("q")&&$("q").value.trim())||"";
+  if(filtersActive()){
+    if(favOnly&&!typed&&!activeChip&&!activeVerdict&&!activeArea)
+      return box("been","No favorites yet","Tap the heart on a cafe to keep it here.",act("Show everything","clearAll()"));
+    return box("been","No matches",typed?('Nothing matches \u201c'+esc(typed)+'\u201d with these filters.'):"No cafe fits these filters together.",act("Clear filters","clearAll()"));
+  }
+  if(listTab==="want")
+    return box("want","Nothing to try yet","Save places you hear about and they will show up here, and on the map.",isAdmin?act("Save a place","openForm()"):"");
+  return box("been","No cafes yet","Every cafe you log shows up here, ranked.",isAdmin?act("Log your first visit","openForm()"):"");
 }
 /* Card meta reads distance · area · time — shortest and most perishable token first, so
    only the time clips. The rating now lives in the tile pill, and the liked tally is gone:
@@ -125,6 +185,7 @@ grid.innerHTML=items.map(function(c){
   if(areaOf(c))M.push(esc(areaOf(c)));
   /* "No visit date" on a place you have not been is the definition of the want-to-try tab,
      and it was what truncated the area to "West San Jose · No vis…" seven times over. */
+  const _td=(!c.wish&&typeof topDrinkAt==="function")?topDrinkAt(c):null;
   const _lv=c.wish?"":lastVisitedStr(c,true);
   if(_lv)M.push(_lv);
 
@@ -133,6 +194,7 @@ grid.innerHTML=items.map(function(c){
     +'<div class="b">'
       +'<div class="n">'+esc(c.name)+'</div>'
       +'<div class="m">'+M.join(" · ")+'</div>'
+      +(_td?'<div class="cdrink">Order the '+esc(_td.d.n)+'</div>':'')
     +'</div>'
     +'<span class="compact-stars">'+(bucketLabel(c)||"Not rated yet")+'</span>'
   +'</div>';
@@ -167,6 +229,8 @@ function activeFilterCount(){
   let n=0;
   if(activeChip)n++;
   if(favOnly)n++;
+  if(activeVerdict)n++;
+  if(activeArea)n++;
   if(sortMode&&sortMode!=="recent")n++;
   return n;
 }
@@ -182,4 +246,4 @@ function updateFilterBadge(){
 function setSort(v){ sortMode=v; renderList(); if(v==="near"){ if(navigator.geolocation)showUserLocation(false); else toast("Location not available"); } }
 /* From the Want tab this opens the map with the Want to try switch on — it used to zoom to the
    wishlist but leave all the visited pins around it. From Been it turns the switch off. */
-function showFilteredOnMap(){ if(typeof toggleWantOnly==="function"){ if(listTab==="want")toggleWantOnly(true); else if(mapWantOnly)toggleWantOnly(false); } const q=($('q').value||"").toLowerCase().trim(); let items=cafes.filter(c=>listTab==="want"?!!c.wish:!c.wish); if(favOnly)items=items.filter(c=>c.fav); if(q)items=items.filter(c=>matchSearch(c,q)); const pts=items.filter(c=>c.lat!=null); show("map"); if(!gmap||!pts.length)return; setTimeout(()=>{ if(pts.length===1){ gmap.setCenter({lat:pts[0].lat,lng:pts[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); pts.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); }},100); }
+function showFilteredOnMap(){ if(typeof toggleWantOnly==="function"){ if(listTab==="want")toggleWantOnly(true); else if(mapWantOnly)toggleWantOnly(false); } const q=($('q').value||"").toLowerCase().trim(); const items=filteredCafes(q); const pts=items.filter(c=>c.lat!=null); show("map"); if(!gmap||!pts.length)return; setTimeout(()=>{ if(pts.length===1){ gmap.setCenter({lat:pts[0].lat,lng:pts[0].lng}); gmap.setZoom(15); } else { const b=new google.maps.LatLngBounds(); pts.forEach(c=>b.extend({lat:c.lat,lng:c.lng})); gmap.fitBounds(b,fitPad()); }},100); }

@@ -869,6 +869,33 @@ owner picked all of them. This is the head, accessibility and security half.
   strict CSP is still not possible without `unsafe-inline`.
 - Pinned by `tests/hardening.js`.
 
+### The 14 Oct audit, built — Stage 3: UI (v65)
+
+- **Filters you can combine (U1).** The filter panel gained **Verdict** (Loved it / It was fine / Not
+  for me, with counts) and **Area** chips beside the single-select Type chips, so "loved, in
+  Southside" is two taps. Area groups on the part before the first comma ("Downtown, CA" and
+  "Downtown" are one place), shows only areas with company (a chip per one-off is the list again),
+  and a lit one always stays visible. Verdict is hidden on the Want tab — a place you have not been
+  has no verdict. A **result line** ("78 of 110 places · Clear") appears only while something is
+  filtered, so the default chrome is unchanged (the `list-clean` budget still holds), and Clear
+  resets the search box too. `filteredCafes()` is now the one place a list is decided: the map
+  button used to carry its own copy of the filter, which is how a new filter would have drifted.
+  **Why not the mock's three always-visible rows?** They would cost about 190px before the first
+  cafe, which is what `list-clean` exists to prevent; the panel keeps that.
+- **Cards lead with what to order** — `Order the X` under the where line (not on wishlist places;
+  hidden in the compact layout).
+- **First paint, empty states, detail (U3).** The list starts as six placeholder cards at the real
+  card's dimensions (no layout shift) and `aria-busy`; the shimmer stops under reduced motion. Empty
+  states draw with tokens, say why, and offer one action: Save a place / Log your first visit (owner
+  only), Clear filters, Show everything. What you typed is echoed back as text, never markup. The cafe
+  page gets "Order again: Matcha latte · 11× · last Sep 27" under the name.
+- **Drawn tab bar and a 12px floor (U2).** Emoji tab icons became inline SVG in the tab's own colour.
+  `--fs-1` rose from 11px to 12px and the three literal 11px sizes now use the token. The sidebar nav
+  on laptops keeps its (now `aria-hidden`) emoji. `tests/overflow-375.js` walks every screen at 375px,
+  against the real cafes, for sideways scroll, elements past the edge, and text under 12px; it fails
+  when the floor is lowered.
+- Pinned by `tests/discovery.js` and `tests/overflow-375.js`.
+
 ---
 
 ## Rejected, and why

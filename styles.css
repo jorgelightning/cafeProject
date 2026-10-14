@@ -14,7 +14,7 @@
    Text only. Emoji and icon glyphs (the raised ＋, the star widget, the empty-state marks) are
    artwork being sized, not type being set, so they keep their own dimensions. */
 :root{
-  --fs-1:11px;  /* labels, captions, tab text */
+  --fs-1:12px;  /* labels, captions, tab text — 12px is the floor; it was 11 until v65 */
   --fs-2:13px;  /* secondary text, list subtitles */
   --fs-3:15px;  /* body */
   --fs-4:18px;  /* subheads */
@@ -119,7 +119,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .tabbar{ position:absolute; left:0; right:0; bottom:0; height:calc(64px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); display:flex; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); box-shadow:0 -3px 14px rgba(0,0,0,.07); z-index:50; }
 .tab{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-1); font-size:var(--fs-1); font-weight:600; color:var(--faint); background:none; border:none; cursor:pointer; }
 .tab.on::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%); width:26px; height:3px; border-radius:0 0 3px 3px; background:var(--acc); }
-.tab .ti{ font-size:22px; transition:transform .12s ease; }
+.tab .ti{ font-size:22px; transition:transform .12s ease; display:flex; }
+/* Drawn, not typed: emoji render differently on every OS and read inconsistently aloud. They
+   take the tab's own colour, so the active tab and both themes need no extra rules. */
+.tab .ti svg,.tab .plus svg{ width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.tab.primary .plus svg{ width:28px; height:28px; stroke-width:2.2; }
 .tab.on .ti{ transform:translateY(-1px) scale(1.08); }
 .tab.on{ color:var(--acc-strong); }   /* --acc is 2.79:1 here in light mode — fills only */
 /* The primary slot overhangs the bar; its label sits below the raised circle, so the
@@ -486,7 +490,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkrows .dr .convhint .usd{ font-size:var(--fs-3); font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
 /* NOT .rate — that name is already the 34px star widget below, and its letter-spacing:10px
    leaks into anything reusing the class. */
-.drinkrows .dr .convhint .fxrate{ font-size:11px; color:var(--faint); font-variant-numeric:tabular-nums; }
+.drinkrows .dr .convhint .fxrate{ font-size:var(--fs-1); color:var(--faint); font-variant-numeric:tabular-nums; }
 .drinkrows .dr .convhint .needs{ color:var(--mid); font-weight:600; }
 .drinkrows .dr .convhint .stale{ color:var(--mid); font-size:var(--fs-1); }
 .field{ margin-bottom:15px; }
@@ -741,3 +745,34 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .qbtn{width:44px;height:44px;}
 .qval{min-width:0;}
 .rbtn{min-height:44px;min-width:44px;}
+
+/* ---------- v65: list filters, result line, card drink line, skeleton, empty states, detail ---------- */
+.lp-group{ display:flex; flex-direction:column; gap:var(--sp-1); }
+.lp-group .chiprow{ padding-left:4px; }
+.lp-group[hidden]{ display:none; }
+.lp-label{ font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); padding:0 4px; }
+.chip .vdot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:var(--sp-2); flex:none; }
+.chip small{ margin-left:var(--sp-2); font-size:var(--fs-1); font-weight:700; opacity:.7; font-variant-numeric:tabular-nums; }
+.resultline{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin:0 16px var(--sp-2); font-size:var(--fs-2); color:var(--soft); }
+.resultline[hidden]{ display:none; }
+.resultline button{ min-height:44px; padding:0 var(--sp-3); border:0; background:none; color:var(--acc-strong); font:inherit; font-weight:700; cursor:pointer; }
+.card .cdrink{ margin-top:3px; font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.grid.compact-list .card .cdrink{ display:none; }
+.orderagain{ margin:var(--sp-3) 0; padding:var(--sp-3); border-radius:var(--r-2); background:var(--surface2); font-size:var(--fs-3); }
+.orderagain[hidden]{ display:none; }
+.orderagain b{ color:var(--acc-strong); }
+/* a first paint that is the shape of the list, at the card's own dimensions so nothing jumps */
+.skel-card{ border:1px solid var(--border); border-radius:var(--r-3); overflow:hidden; background:var(--surface); }
+.skel{ background:linear-gradient(90deg,var(--surface2) 25%,color-mix(in srgb,var(--surface2),var(--surface) 60%) 50%,var(--surface2) 75%); background-size:200% 100%; animation:skelpulse 1.4s linear infinite; border-radius:var(--r-1); }
+.skel-card .sk-ph{ height:104px; border-radius:0; }
+.skel-card .sk-b{ padding:8px 11px 11px; display:grid; gap:var(--sp-2); }
+.skel-card .sk-l1{ height:16px; width:72%; } .skel-card .sk-l2{ height:13px; width:48%; }
+@keyframes skelpulse{ to{ background-position:-200% 0; } }
+@media (prefers-reduced-motion:reduce){ .skel{ animation:none; } }
+.emptyx{ text-align:center; color:var(--soft); padding:var(--sp-5) var(--sp-5) 60px; display:flex; flex-direction:column; align-items:center; gap:var(--sp-2); }
+.emptyx h3{ margin:var(--sp-2) 0 0; font-size:var(--fs-4); color:var(--text); }
+.emptyx p{ margin:0 0 var(--sp-2); max-width:30ch; font-size:var(--fs-3); }
+.emptyart{ width:72px; height:72px; }
+.emptyart .ea-bg{ fill:var(--surface2); } .emptyart .ea-fg{ fill:var(--want); } .emptyart.been .ea-fg{ fill:var(--acc); }
+.emptyart .ea-ln{ stroke:#fff; stroke-width:3; stroke-linecap:round; fill:none; }
+.emptyart .ea-ln2{ stroke:var(--soft); stroke-width:3; stroke-linecap:round; fill:none; }
