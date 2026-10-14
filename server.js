@@ -1,44 +1,44 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
 
 const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';
+const HOST = "0.0.0.0";
 const ROOT = path.resolve(__dirname);
 
 const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.webp': 'image/webp',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.ttf': 'font/ttf',
-  '.map': 'application/json'
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".webp": "image/webp",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".map": "application/json",
 };
 
 const server = http.createServer((req, res) => {
   // Parse URL safely
-  const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const reqUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   let pathname;
   try {
     pathname = decodeURIComponent(reqUrl.pathname);
-  } catch (e) {
+  } catch {
     // a stray % in the URL makes decodeURIComponent throw, which would crash the server
-    res.writeHead(400, { 'Content-Type': 'text/plain' });
-    res.end('400 Bad Request');
+    res.writeHead(400, { "Content-Type": "text/plain" });
+    res.end("400 Bad Request");
     return;
   }
 
-  if (pathname === '/' || pathname === '') {
-    pathname = '/index.html';
+  if (pathname === "/" || pathname === "") {
+    pathname = "/index.html";
   }
 
   const filePath = path.join(ROOT, pathname);
@@ -46,25 +46,27 @@ const server = http.createServer((req, res) => {
   // Security check: ensure file path does not escape ROOT, and never serve hidden
   // files or folders (.git holds the repository's history and settings, and this
   // server listens on every network interface, not just this machine).
-  if (!filePath.startsWith(ROOT + path.sep) && filePath !== ROOT ||
-      pathname.split('/').some((seg) => seg.startsWith('.'))) {
-    res.writeHead(403, { 'Content-Type': 'text/plain' });
-    res.end('403 Forbidden');
+  if (
+    (!filePath.startsWith(ROOT + path.sep) && filePath !== ROOT) ||
+    pathname.split("/").some(seg => seg.startsWith("."))
+  ) {
+    res.writeHead(403, { "Content-Type": "text/plain" });
+    res.end("403 Forbidden");
     return;
   }
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
       // If requested file doesn't exist, fallback to index.html for SPA/PWA
-      const fallbackPath = path.join(ROOT, 'index.html');
+      const fallbackPath = path.join(ROOT, "index.html");
       fs.readFile(fallbackPath, (fallbackErr, fallbackData) => {
         if (fallbackErr) {
-          res.writeHead(404, { 'Content-Type': 'text/plain' });
-          res.end('404 Not Found');
+          res.writeHead(404, { "Content-Type": "text/plain" });
+          res.end("404 Not Found");
         } else {
           res.writeHead(200, {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-cache'
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-cache",
           });
           res.end(fallbackData);
         }
@@ -73,17 +75,17 @@ const server = http.createServer((req, res) => {
     }
 
     const ext = path.extname(filePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
     // Disable caching for HTML and dynamic resources in dev mode
     const headers = {
-      'Content-Type': contentType,
-      'Content-Length': stats.size,
-      'Access-Control-Allow-Origin': '*'
+      "Content-Type": contentType,
+      "Content-Length": stats.size,
+      "Access-Control-Allow-Origin": "*",
     };
 
-    if (ext === '.html' || ext === '.json') {
-      headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+    if (ext === ".html" || ext === ".json") {
+      headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
     }
 
     res.writeHead(200, headers);

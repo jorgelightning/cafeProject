@@ -21,5 +21,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: "Type check (ratchet, the error count may not rise)"
+        run: npm run typecheck
       - run: npx playwright install --with-deps chromium
       - run: npm test
