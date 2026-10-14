@@ -30,11 +30,62 @@ function fmtEdited(iso) {
 let branchSrc = null; /* the cafe a new branch is being added to; null otherwise */
 let brandTouched = false;
 let brandAuto = null; /* what the detector last put in the box */
-function showBrandHint(r) {
-  const h = $("f-brand-hint");
-  if (!h) return;
-  h.hidden = !r;
-  h.textContent = r ? "Detected: " + r.brand : "";
+let brandEdit = false; /* the brand box is showing, because Edit was tapped */
+let brandUnlinked = ""; /* the brand just unlinked, so it can be linked again */
+/* The brand box stays out of the way while there is a brand: a chip under the name says what the
+   cafe is linked to. Edit or Unlink bring the box back (it lives under More). */
+function syncBrandUI() {
+  const f = $("f-brand"),
+    host = $("f-link");
+  if (!f || !host) return;
+  const brand = f.value.trim(),
+    fld = f.closest(".field");
+  let html = "";
+  if (branchSrc && brand && !brandEdit) {
+    html = '<div class="branchbadge">\u{1F517} New branch of ' + esc(brand) + "</div>";
+  } else if (brand && !brandEdit) {
+    const n = brandMembers(brand, cafes).filter(x => x.id !== editId).length + 1;
+    html =
+      '<div class="linkchip">\u{1F517} ' +
+      (n > 1 ? "Linked to " + esc(brand) + " (" + n + " spots)" : "Brand: " + esc(brand)) +
+      '<button type="button" onclick="editBrand()">Edit</button><button type="button" onclick="unlinkBrand()">Unlink</button></div>';
+  } else if (!brand && brandUnlinked) {
+    html = '<button type="button" class="relink" onclick="relinkBrand()">Link to ' + esc(brandUnlinked) + "</button>";
+  }
+  host.innerHTML = html;
+  host.hidden = !html;
+  if (fld) fld.hidden = !!brand && !brandEdit;
+}
+function editBrand() {
+  brandEdit = true;
+  const m = $("f-more"),
+    f = $("f-brand");
+  if (m) m.open = true;
+  syncBrandUI();
+  if (f) f.focus();
+}
+function unlinkBrand() {
+  const f = $("f-brand");
+  if (!f) return;
+  brandUnlinked = f.value.trim();
+  f.value = "";
+  brandTouched = true;
+  brandAuto = null;
+  brandEdit = false;
+  syncBrandUI();
+  syncMoreSum();
+  renderUsuals();
+}
+function relinkBrand() {
+  const f = $("f-brand");
+  if (!f || !brandUnlinked) return;
+  f.value = brandUnlinked;
+  brandAuto = brandUnlinked;
+  brandTouched = false;
+  brandUnlinked = "";
+  syncBrandUI();
+  syncMoreSum();
+  renderUsuals();
 }
 function autoBrand() {
   const f = $("f-brand"),
@@ -45,7 +96,7 @@ function autoBrand() {
   const r = inferBrand(n.value, cafes, editId, KNOWN_BRANDS);
   f.value = r ? r.brand : "";
   brandAuto = r ? r.brand : null;
-  showBrandHint(r);
+  syncBrandUI();
   syncMoreSum();
   renderUsuals();
 }
@@ -82,7 +133,8 @@ function openForm(id) {
   if ($("f-brand")) $("f-brand").value = c ? c.brand || "" : branchSrc ? branchSrc.brand || brandBaseName(branchSrc.name) : "";
   brandTouched = !!(c && (c.brand || "").trim()) || !!branchSrc;
   brandAuto = null;
-  showBrandHint(null);
+  brandEdit = false;
+  brandUnlinked = "";
   $("f-review").value = c ? c.review || "" : "";
   $("f-fav").checked = c ? !!c.fav : false;
   if ($("f-wish")) $("f-wish").checked = c ? !!c.wish : false;
@@ -98,6 +150,7 @@ function openForm(id) {
   renderRate();
   renderTags();
   renderDrinkRows(c ? c.drinks : null);
+  syncBrandUI();
   renderUsuals();
   syncCafeDetails(false); /* Adding a cafe from the Want tab is almost always saving a place to try, and the
     wishlist tick now lives under More — so tick it and open More, where it shows. */
@@ -507,12 +560,18 @@ function syncMore(open) {
     });
     m.addEventListener("input", syncMoreSum);
     const fb = $("f-brand");
-    if (fb)
+    if (fb) {
       fb.addEventListener("input", () => {
         brandTouched = true;
-        showBrandHint(null);
+        brandEdit = true; /* typing keeps the box in front of you until you leave it */
+        brandUnlinked = "";
         renderUsuals();
       });
+      fb.addEventListener("blur", () => {
+        brandEdit = false;
+        syncBrandUI();
+      });
+    }
     m.addEventListener("change", syncMoreSum);
   }
   const ch = m.querySelector(".cdchev");

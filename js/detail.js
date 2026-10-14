@@ -129,6 +129,15 @@ function toggleDrinkHistory(btn) {
   const chev = btn.querySelector(".drinkchev");
   if (chev) chev.textContent = open ? "▾" : "▸";
 }
+let _branchOpen = false; /* the branch list is open; survives the cloud repaint, closes on another cafe */
+let _branchFor = null;
+function toggleBranches() {
+  _branchOpen = !_branchOpen;
+  const l = $("d-locs"),
+    w = $("d-where");
+  if (l) l.hidden = !_branchOpen;
+  if (w) w.setAttribute("aria-expanded", _branchOpen ? "true" : "false");
+}
 function openDetail(id, from) {
   const c = cafes.find(x => x.id === id);
   if (!c) return;
@@ -235,18 +244,34 @@ function openDetail(id, from) {
   renderReorderRollup(c);
   $("d-tags").innerHTML = (c.tags || []).map(t => '<span class="chip">' + esc(t) + "</span>").join("");
 
-  /* ---- the other branches of this brand: one scrolling row, inside openDetail so the cloud
-     repaint redraws it. Ids only, never object references. ---- */
-  const _sibs = getBrandSiblings(c);
-  const _le = $("d-locs");
-  const _addBr = isAdmin && (c.brand || "").trim() ? true : false;
+  /* ---- the branches of this brand: the area under the title becomes a chip that opens the list.
+     Drawn inside openDetail so the cloud repaint redraws it; ids only, never object references. ---- */
+  if (_branchFor !== c.id) {
+    _branchFor = c.id;
+    _branchOpen = false;
+  }
+  const _sibs = getBrandSiblings(c, undefined, 0);
+  const _addBr = isAdmin && (_sibs.length > 0 || !!(c.brand || "").trim());
+  const _le = $("d-locs"),
+    _wh = $("d-where"),
+    _mt = $("d-meta");
   if (_sibs.length || _addBr) {
-    _le.style.display = "flex";
+    const _here = areaOf(c) || (_sibs.find(x => x.current) || {}).label || c.name || "";
+    _wh.hidden = false;
+    _mt.hidden = true;
+    _wh.innerHTML =
+      "\u{1F4CD} <span class=\"wt\">" +
+      esc(_here) +
+      "</span> \u00b7 " +
+      (_sibs.length ? _sibs.length + " branches" : "\uFF0B Branch") +
+      ' <span class="car" aria-hidden="true">\u25be</span>';
+    _wh.setAttribute("aria-expanded", _branchOpen ? "true" : "false");
+    _le.hidden = !_branchOpen;
     _le.innerHTML =
-      _sibs
+      (_sibs.length ? _sibs : [{ id: c.id, label: _here, wish: !!c.wish, stars: c.rating || 0, current: true, full: c.name }])
         .map(
           x =>
-            '<button type="button" class="locpill' +
+            '<button type="button" class="br' +
             (x.current ? " on" : "") +
             '"' +
             (x.current ? ' aria-current="true"' : "") +
@@ -256,21 +281,21 @@ function openDetail(id, from) {
             esc(x.id) +
             "','" +
             esc(lastMain || "list") +
-            "')\">" +
+            "')\"><span class=\"t\">" +
             (x.wish ? "\u{1F516} " : "") +
             esc(x.label) +
-            "</button>"
+            "</span><small>" +
+            (x.wish ? "to try" : x.stars ? x.stars + "\u2605" : "") +
+            "</small></button>"
         )
         .join("") +
       (_addBr
-        ? '<button type="button" class="locpill add admin-only" onclick="addBranch(\'' +
-          esc(c.id) +
-          "')\">\uFF0B Branch</button>"
+        ? '<button type="button" class="br add admin-only" onclick="addBranch(\'' + esc(c.id) + "')\">\uFF0B Add branch</button>"
         : "");
-    const _on = _le.querySelector(".locpill.on");
-    if (_on) _le.scrollLeft = Math.max(0, _on.offsetLeft - (_le.clientWidth - _on.offsetWidth) / 2);
   } else {
-    _le.style.display = "none";
+    _wh.hidden = true;
+    _mt.hidden = false;
+    _le.hidden = true;
     _le.innerHTML = "";
   }
 

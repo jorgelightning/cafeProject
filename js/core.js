@@ -924,9 +924,10 @@ function branchSuffix(c) {
  * area (when it tells branches apart), else whatever is left of the name; clashes get a number.
  * @param {Cafe} c
  * @param {Cafe[]} [list]
- * @returns {{id:string, label:string, full:string, wish:boolean, current:boolean}[]}
+ * @param {number} [maxLen] longest label (default 16, cut with an ellipsis); 0 keeps them whole
+ * @returns {{id:string, label:string, full:string, wish:boolean, current:boolean, stars:number}[]}
  */
-function getBrandSiblings(c, list) {
+function getBrandSiblings(c, list, maxLen) {
   if (!c) return [];
   const group = (list || cafes || []).filter(x => x && brandGroupKey(x) === brandGroupKey(c));
   if (group.length < 2) return [];
@@ -935,7 +936,8 @@ function getBrandSiblings(c, list) {
     const a = (x.area || "").trim().toLowerCase();
     areaCount[a] = (areaCount[a] || 0) + 1;
   });
-  const short = t => (t.length > 16 ? t.slice(0, 15).trim() + "\u2026" : t);
+  const cap = maxLen === 0 ? 0 : maxLen || 16;
+  const short = t => (cap && t.length > cap ? t.slice(0, cap - 1).trim() + "\u2026" : t);
   const raw = group.map(x => {
     const a = (x.area || "").trim(),
       suf = branchSuffix(x);
@@ -951,6 +953,7 @@ function getBrandSiblings(c, list) {
       id: r.x.id,
       full: String(r.x.name || ""),
       wish: !!r.x.wish,
+      stars: r.x.rating || 0,
       current: r.x.id === c.id,
       label: seen[k] > 1 ? r.t + " " + seen[k] : r.t,
     };
