@@ -925,6 +925,40 @@ owner picked all of them. This is the head, accessibility and security half.
   CSS, HTML and tests were left alone.
 - CI now runs lint and typecheck before the tests.
 
+### The map's opening view — 14 Oct 2026 (v67)
+
+"I don't like the zoom out map and around it is gray." Measured: the pins run from Sydney to
+Vancouver (309° of longitude), and "All locations" fitted every one of them — the whole globe, 113
+dots over open water, and on a phone a map smaller than the screen with grey around it. 72 of 113 pins
+are in California; one pin in Sydney set the zoom for the other 112. Of the three mocked options
+(`Map Opening View` canvas), the owner chose **C: a World view that earns it**.
+
+- **`worldRegions()`** groups the pins the way the dropdown already does (`cafeCountryName` /
+  `cafeStateName`): US states by name, other places by country. `_worldOn()` turns the view on by
+  itself when the pins span more than 60° of longitude or 25° of latitude and fall in two or more
+  regions, and leaves it off for someone whose cafes are all in one region. The person's choice
+  (`mapWorld` true/false) overrides it; the dropdown's first entry is now **World**.
+- **What it draws:** one numbered bubble per region (an SVG data-URL icon sized by count, so it
+  needs no extra Maps layer), the 113 individual pins hidden, and a sheet under it (`#worldsheet`):
+  region, "N been · M to try", a loved/fine/not-for-me bar, the count. Tapping a row or a bubble
+  goes to the region, brings the pins back, and **stays there**: `_focusVal` makes the redraw after a
+  cloud update refit to that region instead of zooming back out to the world. Want to try recounts
+  the bubbles and rows to wishlist places only.
+- **The grey, fixed at the source** (in `initMap`): `minZoom` is the zoom at which the world is as
+  tall as the map (`_minZoom()`, refreshed on resize), `backgroundColor` is the ocean (`#aad3df`) so a
+  tile that has not loaded is blue, and `restriction` limits latitude to ±85°. **These three could
+  only be tested against a stand-in Google Maps here**, not the real one.
+- **Data fixes found on the way.** Vancouver (49.26°N) was inside the app's US bounding box, which runs
+  to 49.5°N, so it counted as the United States, and Canada was not a country at all; it is now
+  (checked before the US box). That also changes the country count on Stats and Go, correctly. The state
+  detection only knew CA/HI/NV when the area text had no ", XX", so four Seattle-area cafes sat under
+  "United States"; it now also reads Washington, New York, Texas and Utah from position.
+  **Left alone:** seven cafes in the Philippines, Vietnam, Indonesia and China show as "Other places".
+  The country table is crude boxes and guessing more of them would mislabel places.
+- **Not built:** options A (open on the home region) and B (region chips instead of the dropdown).
+  The World view is now the opening view for spread-out data; A and B would change what it opens on.
+- Pinned by `tests/world.js`; fails on the previous map code.
+
 ---
 
 ## Rejected, and why

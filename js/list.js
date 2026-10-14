@@ -10,6 +10,7 @@ const STATE_NAMES = {
   OR: "Oregon",
   TX: "Texas",
   AZ: "Arizona",
+  UT: "Utah",
 };
 function regionTerms(c) {
   const t = [];
@@ -43,6 +44,8 @@ function countryTerms(c) {
   const lat = c.lat,
     lng = c.lng;
   if (lat == null || lng == null) return "";
+  /* Before the US box, which runs to 49.5°N and so swallowed Vancouver (49.26°N). */
+  if (lat > 49 && lat <= 60 && lng >= -130 && lng <= -52) return "Canada";
   if (
     (lat >= 24 && lat <= 49.5 && lng >= -125 && lng <= -66.5) ||
     (lng <= -130 && lat >= 51 && lat <= 72) ||
