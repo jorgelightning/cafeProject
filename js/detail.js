@@ -235,28 +235,40 @@ function openDetail(id, from) {
   renderReorderRollup(c);
   $("d-tags").innerHTML = (c.tags || []).map(t => '<span class="chip">' + esc(t) + "</span>").join("");
 
-  /* ---- other locations of the same brand ---- */
-  const _bk = (c.brand || "").trim().toLowerCase() || (c.name || "").trim().toLowerCase();
-  const _sibs = cafes
-    .filter(x => ((x.brand || "").trim().toLowerCase() || (x.name || "").trim().toLowerCase()) === _bk)
-    .sort((a, b) => (a.area || "").localeCompare(b.area || ""));
+  /* ---- the other branches of this brand: one scrolling row, inside openDetail so the cloud
+     repaint redraws it. Ids only, never object references. ---- */
+  const _sibs = getBrandSiblings(c);
   const _le = $("d-locs");
-  if (_sibs.length > 1) {
+  const _addBr = isAdmin && (c.brand || "").trim() ? true : false;
+  if (_sibs.length || _addBr) {
     _le.style.display = "flex";
-    _le.innerHTML = _sibs
-      .map(
-        x =>
-          '<span class="locpill' +
-          (x.id === c.id ? " on" : "") +
-          '" role="button" tabindex="0" onclick="openDetail(\'' +
-          x.id +
-          "','" +
-          (lastMain || "list") +
-          "')\">📍 " +
-          esc(x.area || x.name || "Location") +
-          "</span>"
-      )
-      .join("");
+    _le.innerHTML =
+      _sibs
+        .map(
+          x =>
+            '<button type="button" class="locpill' +
+            (x.current ? " on" : "") +
+            '"' +
+            (x.current ? ' aria-current="true"' : "") +
+            ' title="' +
+            esc(x.full) +
+            '" onclick="openDetail(\'' +
+            esc(x.id) +
+            "','" +
+            esc(lastMain || "list") +
+            "')\">" +
+            (x.wish ? "\u{1F516} " : "") +
+            esc(x.label) +
+            "</button>"
+        )
+        .join("") +
+      (_addBr
+        ? '<button type="button" class="locpill add admin-only" onclick="addBranch(\'' +
+          esc(c.id) +
+          "')\">\uFF0B Branch</button>"
+        : "");
+    const _on = _le.querySelector(".locpill.on");
+    if (_on) _le.scrollLeft = Math.max(0, _on.offsetLeft - (_le.clientWidth - _on.offsetWidth) / 2);
   } else {
     _le.style.display = "none";
     _le.innerHTML = "";
@@ -434,6 +446,10 @@ function goDirections(c) {
 function navigateTo() {
   const c = cafes.find(x => x.id === curId);
   if (c) goDirections(c);
+}
+/** A new branch of c's brand: brand, name and country come along; place, photo and notes do not. @param {string} id */
+function addBranch(id) {
+  if (isAdmin) openForm({ branchOf: id });
 }
 function editCurrent() {
   openForm(curId);

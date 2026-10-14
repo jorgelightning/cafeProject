@@ -1060,3 +1060,17 @@ option A: the map opens on **home**, and the world is something you ask for.
 v70: "ODD ONE OUT Dunnan Shop" and "Odd One Out Tea San Mateo" were not grouped. The place follows the
 name with no separator, so their base names differ, and a bare shared first word is too weak to group
 on ("Moon & Back" is not "Moon Tea"). Chains like this go on `KNOWN_BRANDS`: added Odd One Out, Milksha.
+
+## Branches of a brand — 14 Oct 2026 (v71)
+
+- `getBrandSiblings(c)` (core.js) groups by `brandKey(brand)`, else `brandKey(name)`, so twins with no
+  brand still link. Label: the name's own place suffix, else a unique area, else the name; clashes get a
+  number. Visited first, wishlist last. Rendered inside `openDetail`, so the cloud repaint redraws it;
+  pills carry ids only. One scrolling row of 44px buttons, never wrapping.
+- `＋ Branch` is `admin-only`. `openForm({branchOf:id})` carries brand, name (base) and country/currency;
+  never area, pin, place id, photo, rating, review, tags or flags. `checkExisting()` does nothing for a
+  new branch until it has a pin, so the sibling it was copied from is not opened in its place.
+- "Log again" puts the brand's drinks first, counting a drink ordered once (a menu is small), then
+  fills from everywhere. Price stays blank.
+- Switching branches does not touch history: `openDetail` never pushed any, so Back still leaves the
+  pages. The map recentres as `openDetail` always has.
