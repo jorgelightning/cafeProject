@@ -126,6 +126,41 @@ const { eq, done } = checker();
   eq(r.bg, "#aad3df", "its own background is the ocean's colour, so an unloaded tile is blue rather than grey");
   eq([r.restrict.north, r.restrict.south], [85, -85], "the poles are never shown");
 
+  r = await ph.pg.evaluate(() => {
+    const f = window.__fits[window.__fits.length - 1] || [];
+    return {
+      worldOn: _worldOn(),
+      sheet: document.getElementById("worldsheet").hidden,
+      bubbles: gworld.length,
+      pins: gmarkers.filter(m => m.map).length,
+      fitLat: f.map(p => Math.round(p.lat)),
+    };
+  });
+  eq([r.worldOn, r.sheet, r.bubbles], [false, true, 0], "pins spread across the world do not open the World view: it is something you ask for");
+  eq(r.pins, 14, "every pin is still on the map");
+  eq(r.fitLat.every(l => l >= 37 && l <= 38), true, "the map opens on the region with the most pins (the Bay Area), not the globe");
+
+  r = await ph.pg.evaluate(() => {
+    userLoc = { lat: 49.27, lng: -123.12 };
+    window.__fits = [];
+    renderMarkers();
+    const f = window.__fits[window.__fits.length - 1] || [];
+    const out = f.map(p => Math.round(p.lat));
+    userLoc = { lat: 0, lng: -30 };
+    window.__fits = [];
+    renderMarkers();
+    const far = (window.__fits[window.__fits.length - 1] || []).map(p => Math.round(p.lat));
+    userLoc = null;
+    return { near: out, far };
+  });
+  eq(r.near.every(l => l === 49 || l === 50), true, "standing in Vancouver, it opens on Vancouver");
+  eq(r.far.every(l => l >= 37 && l <= 38), true, "standing nowhere near a cafe, it falls back to the biggest region");
+
+  // ---- ask for the world ----
+  await ph.pg.evaluate(() => {
+    jumpToLocation("");
+  });
+  await ph.pg.waitForTimeout(60);
   r = await ph.pg.evaluate(() => ({
     worldOn: _worldOn(),
     sheet: !document.getElementById("worldsheet").hidden,
@@ -133,7 +168,7 @@ const { eq, done } = checker();
     rows: [...document.querySelectorAll("#worldsheet .wrow")].map(x => x.querySelector("b").textContent + " " + x.querySelector(".wn").textContent),
     head: document.querySelector("#worldsheet .whead").textContent,
   }));
-  eq([r.worldOn, r.sheet, r.box], [true, true, true], "pins spread across the world open the World view by themselves");
+  eq([r.worldOn, r.sheet, r.box], [true, true, true], "choosing World opens the World view");
   eq(
     r.rows,
     ["California 6", "Canada 3", "Hawaii 2", "Australia 1", "Taiwan 1", "Washington 1"],
@@ -235,6 +270,8 @@ const { eq, done } = checker();
   // ================= laptop =================
   const lap = await open(1440, 900);
   await load(lap.pg);
+  await lap.pg.evaluate(() => jumpToLocation(""));
+  await lap.pg.waitForTimeout(60);
   r = await lap.pg.evaluate(() => {
     const sh = document.getElementById("worldsheet").getBoundingClientRect(),
       side = document.querySelector(".sidebar").getBoundingClientRect();
