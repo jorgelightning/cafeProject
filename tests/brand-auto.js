@@ -67,6 +67,11 @@ const { eq, done } = checker();
   eq([r.lone, r.loneSelf, r.empty, r.noSeedFor], [null, null, null, null], "a one-off cafe gets no brand, and a prefix is not a chain (Bluebird is not Blue Bottle)");
   eq(r.selfOnly, "shared", "a cafe is not matched against itself, only against its twin");
 
+  r = await pg.evaluate(() =>
+    ["ODD ONE OUT Dunnan Shop", "Odd One Out Tea San Mateo", "Milksha Taipei Ximending", "Milksha National Taiwan Normal University"].map(n => inferBrand(n, [], null, KNOWN_BRANDS).brand)
+  );
+  eq(r, ["Odd One Out", "Odd One Out", "Milksha", "Milksha"], "a branch whose place name follows with no separator is still found through the chain list");
+
   // ---- the form ----
   r = await pg.evaluate(() => {
     isAdmin = true;
