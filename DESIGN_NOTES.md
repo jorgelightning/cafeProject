@@ -1061,16 +1061,30 @@ v70: "ODD ONE OUT Dunnan Shop" and "Odd One Out Tea San Mateo" were not grouped.
 name with no separator, so their base names differ, and a bare shared first word is too weak to group
 on ("Moon & Back" is not "Moon Tea"). Chains like this go on `KNOWN_BRANDS`: added Odd One Out, Milksha.
 
-## Branches of a brand — 14 Oct 2026 (v71)
+## Branches of a brand — 14 Oct 2026 (v71, reworked v72)
 
-- `getBrandSiblings(c)` (core.js) groups by `brandKey(brand)`, else `brandKey(name)`, so twins with no
-  brand still link. Label: the name's own place suffix, else a unique area, else the name; clashes get a
-  number. Visited first, wishlist last. Rendered inside `openDetail`, so the cloud repaint redraws it;
-  pills carry ids only. One scrolling row of 44px buttons, never wrapping.
-- `＋ Branch` is `admin-only`. `openForm({branchOf:id})` carries brand, name (base) and country/currency;
-  never area, pin, place id, photo, rating, review, tags or flags. `checkExisting()` does nothing for a
-  new branch until it has a pin, so the sibling it was copied from is not opened in its place.
+Chosen from three mockups: B on the cafe page, A's chip in the form, C's question only for a real
+duplicate.
+
+- `getBrandSiblings(c, list, maxLen)` (core.js) groups by `brandKey(brand)`, else `brandKey(name)`, so
+  twins with no brand still link. Label: the name's own place suffix, else a unique area, else the
+  name; clashes get a number. Visited first, wishlist last. The default cuts labels at 16 characters;
+  the detail list asks for whole ones.
+- **Cafe page:** no extra row. The area under the title becomes a chip (`📍 San Mateo · 3 branches ▾`,
+  or `· ＋ Branch` for the owner on a lone branded cafe) that opens an inline list: 48px rows, whole
+  labels, scrolls inside `max-height:min(46vh,288px)`, `＋ Add branch` last (`admin-only`). All drawn
+  inside `openDetail`, so the cloud repaint redraws it; the list stays open across a repaint of the
+  same cafe and shuts on another. Buttons carry ids only. Viewers can switch, never add.
+- Switching does not touch history: `openDetail` never pushed any, so there is no entry to replace and
+  Back still leaves the pages.
+- **Form:** the brand box is hidden while there is a brand. A chip under the name says
+  `🔗 Linked to X (N spots)` with Edit and Unlink; from `＋ Add branch` it is a locked `New branch of X`
+  badge. Edit opens More on the box; Unlink clears it and offers `Link to X`. A cafe with no brand
+  shows no chip and the box sits under More as before, so the one-screen form is unchanged.
+  `openForm({branchOf:id})` carries brand, base name and country; never area, pin, place id, photo,
+  rating, review, tags or flags.
+- `checkExisting()` (the real-duplicate check, `findSameCafe`) does nothing for a new branch until it
+  has a pin, so the sibling it was copied from is not opened in its place. A pin on top of the
+  sibling is still the same place.
 - "Log again" puts the brand's drinks first, counting a drink ordered once (a menu is small), then
   fills from everywhere. Price stays blank.
-- Switching branches does not touch history: `openDetail` never pushed any, so Back still leaves the
-  pages. The map recentres as `openDetail` always has.
