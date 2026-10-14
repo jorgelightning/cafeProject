@@ -36,7 +36,10 @@ function showMapError(msg) {
   if ($("map-sub")) $("map-sub").textContent = "Map unavailable";
 }
 function mapResize() {
-  if (gmap) google.maps.event.trigger(gmap, "resize");
+  if (gmap) {
+    google.maps.event.trigger(gmap, "resize");
+    if (gmap.setOptions) gmap.setOptions({ minZoom: _minZoom() });
+  }
   if (fgmap) google.maps.event.trigger(fgmap, "resize");
 }
 function fitPad() {
@@ -71,6 +74,12 @@ function initMap() {
     fullscreenControl: false,
     clickableIcons: false,
     gestureHandling: "greedy",
+    /* Zoomed out far enough, the world is smaller than the screen and the rest is grey. The floor is
+       the zoom at which the world is as tall as the map; the background is the ocean's colour, so a
+       tile that has not loaded yet is blue, not grey; and the poles are never shown. */
+    minZoom: _minZoom(),
+    backgroundColor: OCEAN,
+    restriction: { latLngBounds: { north: 85, south: -85, west: -180, east: 180 }, strictBounds: false },
   });
   renderMarkers();
   autoLocate();
@@ -106,6 +115,192 @@ function initMap() {
 function ratingColor(r) {
   r = r || 0;
   return r >= 4 ? BUCKET_HEX.loved : r >= 3 ? BUCKET_HEX.fine : r >= 1 ? BUCKET_HEX.meh : BUCKET_HEX[""];
+}
+/* ---------- the World view ----------
+   "All locations" fitted every pin. Pins run from Sydney to Vancouver, so that was the whole globe:
+   113 dots over open water, and on a phone a map smaller than the screen with grey around it.
+   The world is now a place you ask for, drawn as one numbered bubble per region with a list under
+   it. A region is a US state, or a country elsewhere (the same grouping as the dropdown). */
+const OCEAN = "#aad3df";
+let mapWorld = null; /* null: decide from the data; true/false: the person chose */
+let _focusVal = null; /* the dropdown value the map is currently showing, when it is a place */
+let gworld = [];
+let _worldList = [];
+function _minZoom() {
+  const h = ($("map") && $("map").clientHeight) || window.innerHeight || 800;
+  return Math.max(2, Math.ceil(Math.log2(h / 256)));
+}
+function regionOf(c) {
+  const n = cafeCountryName(c);
+  if (n === "United States") {
+    const st = cafeStateName(c);
+    return st
+      ? { val: "state:United States|" + encodeURIComponent(st).replace(/%20/g, " "), label: st }
+      : { val: "country:United States", label: "United States" };
+  }
+  if (n === "Other") return { val: "other:", label: "Other places" };
+  return { val: "country:" + n, label: n };
+}
+function worldRegions() {
+  const by = {};
+  cafes.forEach(c => {
+    if (c.lat == null || (mapWantOnly && !c.wish)) return;
+    const r = regionOf(c);
+    const g =
+      by[r.val] ||
+      (by[r.val] = { val: r.val, label: r.label, n: 0, been: 0, wish: 0, loved: 0, fine: 0, meh: 0, lat: 0, lng: 0 });
+    g.n++;
+    g.lat += latOf(c);
+    g.lng += lngOf(c);
+    if (c.wish) g.wish++;
+    else {
+      g.been++;
+      const k = bucketOf(c);
+      if (k) g[k]++;
+    }
+  });
+  return Object.keys(by)
+    .map(k => {
+      const g = by[k];
+      g.lat /= g.n;
+      g.lng /= g.n;
+      return g;
+    })
+    .sort((a, b) => b.n - a.n || a.label.localeCompare(b.label));
+}
+/* On by itself when the pins are spread across regions far enough apart that one view cannot
+   show them as places; off for someone whose cafes all sit in one region. */
+function _worldOn() {
+  if (mapWorld !== null) return mapWorld;
+  const pts = cafes.filter(c => c.lat != null);
+  if (pts.length < 2) return false;
+  const lngs = pts.map(c => c.lng);
+  const lats = pts.map(c => c.lat);
+  const spread = Math.max(...lngs) - Math.min(...lngs) > 60 || Math.max(...lats) - Math.min(...lats) > 25;
+  return spread && worldRegions().length >= 2;
+}
+function clearWorldBubbles() {
+  gworld.forEach(m => m.setMap(null));
+  gworld = [];
+}
+function _bubbleIcon(n) {
+  const r = Math.round(12 + Math.min(14, Math.sqrt(n) * 2.2));
+  const d = 2 * r + 6;
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' +
+    d +
+    '" height="' +
+    d +
+    '" viewBox="0 0 ' +
+    d +
+    " " +
+    d +
+    '">' +
+    '<circle cx="' +
+    d / 2 +
+    '" cy="' +
+    d / 2 +
+    '" r="' +
+    r +
+    '" fill="#d5803b" fill-opacity=".95" stroke="#ffffff" stroke-width="3"/>' +
+    '<text x="' +
+    d / 2 +
+    '" y="' +
+    (d / 2 + 5) +
+    '" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="' +
+    (n > 99 ? 12 : 15) +
+    '" font-weight="700" fill="#ffffff">' +
+    n +
+    "</text></svg>";
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(d, d),
+    anchor: new google.maps.Point(d / 2, d / 2),
+  };
+}
+function drawWorldBubbles() {
+  clearWorldBubbles();
+  _worldList = worldRegions();
+  _worldList.forEach(function (g, i) {
+    const m = new google.maps.Marker({
+      position: { lat: g.lat, lng: g.lng },
+      map: gmap,
+      icon: _bubbleIcon(g.n),
+      title: g.label + " \u00b7 " + g.n + (g.n === 1 ? " place" : " places"),
+      zIndex: 4,
+    });
+    m.addListener("click", () => showRegionAt(i));
+    gworld.push(m);
+  });
+}
+function fitWorld() {
+  if (!gmap) return;
+  const rs = _worldList.length ? _worldList : worldRegions();
+  if (!rs.length) return;
+  const b = new google.maps.LatLngBounds();
+  rs.forEach(g => b.extend({ lat: g.lat, lng: g.lng }));
+  gmap.fitBounds(b, fitPad());
+}
+function showRegionAt(i) {
+  const g = _worldList[i];
+  if (!g) return;
+  mapOwned = true;
+  jumpToLocation(g.val);
+}
+function closePeekIfOpen() {
+  if (typeof peekOpen === "function" && peekOpen()) closePeek();
+}
+/* The list under the map: where you have been, biggest first, with how it went. */
+function syncWorldUI() {
+  const box = /** @type {HTMLElement|null} */ (document.querySelector(".mapbox")),
+    el = $("worldsheet");
+  if (!el || !box) return;
+  const on = !!gmap && _worldOn();
+  el.hidden = !on;
+  box.classList.toggle("worlding", on);
+  if (!on) return;
+  const rs = _worldList.length ? _worldList : worldRegions();
+  const total = rs.reduce((t, g) => t + g.n, 0);
+  el.innerHTML =
+    '<div class="wgrab"></div><div class="whead">' +
+    (mapWantOnly ? "Want to try" : "Where you have been") +
+    " \u00b7 " +
+    total +
+    (total === 1 ? " place" : " places") +
+    "</div>" +
+    rs
+      .map(function (g, i) {
+        const t = g.loved + g.fine + g.meh || 1;
+        const sub = g.been ? g.been + " been" + (g.wish ? " \u00b7 " + g.wish + " to try" : "") : g.wish + " to try";
+        return (
+          '<button type="button" class="wrow" onclick="showRegionAt(' +
+          i +
+          ')">' +
+          '<span class="wmain"><b>' +
+          esc(g.label) +
+          "</b><small>" +
+          sub +
+          "</small></span>" +
+          '<span class="wbar" aria-hidden="true"><i style="width:' +
+          (g.loved / t) * 100 +
+          "%;background:" +
+          BUCKET_HEX.loved +
+          '"></i><i style="width:' +
+          (g.fine / t) * 100 +
+          "%;background:" +
+          BUCKET_HEX.fine +
+          '"></i><i style="width:' +
+          (g.meh / t) * 100 +
+          "%;background:" +
+          BUCKET_HEX.meh +
+          '"></i></span>' +
+          '<span class="wn">' +
+          g.n +
+          '</span><span class="wchev" aria-hidden="true">\u203a</span></button>'
+        );
+      })
+      .join("");
+  box.style.setProperty("--worldh", el.offsetHeight + "px");
 }
 let gclusterer = null;
 /* ---------- want-to-try pins ----------
@@ -152,6 +347,14 @@ function _showPins() {
     }
     gclusterer = null;
   }
+  /* The World view shows one bubble per region instead of every pin: 113 dots across an ocean
+     are not tappable, and they were what made the opening view a blur. */
+  if (_worldOn()) {
+    gmarkers.forEach(m => m.setMap(null));
+    drawWorldBubbles();
+    return;
+  }
+  clearWorldBubbles();
   const been = gmarkers.filter(function (m) {
       return !m._wish;
     }),
@@ -220,6 +423,7 @@ function syncWantUI() {
     );
   }
   updateWantBar();
+  syncWorldUI();
 }
 function updateWantBar() {
   const bar = $("wantbar");
@@ -315,7 +519,9 @@ function renderMarkers() {
   if ($("map-sub"))
     $("map-sub").textContent = cafes.length + " cafe" + (cafes.length === 1 ? "" : "s") + " · tap a pin";
   renderLocationSelect();
-  if (n === 1) {
+  if (_worldOn()) fitWorld();
+  else if (_focusVal) fitList(locationList(_focusVal));
+  else if (n === 1) {
     gmap.setCenter(gmarkers.filter(_pinShown)[0].getPosition());
     gmap.setZoom(14);
   } else if (n > 1) {
@@ -332,6 +538,7 @@ const COUNTRY_INFO = {
   Australia: { flag: "🇦🇺", name: "Australia" },
   "United Kingdom UK England": { flag: "🇬🇧", name: "United Kingdom" },
   France: { flag: "🇫🇷", name: "France" },
+  Canada: { flag: "🇨🇦", name: "Canada" },
 };
 function cafeCountryName(c) {
   const t = countryTerms(c);
@@ -365,6 +572,12 @@ function cafeStateName(c) {
     if (lng < -150 && lat > 18 && lat < 23) return "Hawaii";
     if (lng >= -125 && lng <= -117 && lat >= 32 && lat <= 42.5) return "California";
     if (lng > -117 && lng <= -114 && lat >= 35 && lat <= 37.5) return "Nevada";
+    /* For places whose area text has no ", XX" to read a state from. Rough boxes, listed only for
+       states where cafes actually are; the order puts the smaller, more specific ones first. */
+    if (lng >= -124.8 && lng <= -116.9 && lat >= 45.55 && lat <= 49) return "Washington";
+    if (lng >= -79.8 && lng <= -71.8 && lat >= 40.4 && lat <= 45) return "New York";
+    if (lng >= -106.7 && lng <= -93.5 && lat >= 25.8 && lat <= 36.5) return "Texas";
+    if (lng >= -114.05 && lng <= -109.05 && lat >= 37 && lat <= 42) return "Utah";
   }
   return "";
 }
@@ -392,7 +605,7 @@ function renderLocationSelect() {
   const prev = sel.value;
   const groups = buildLocationIndex();
   const names = Object.keys(groups).sort((a, b) => (a === "Other" ? 1 : b === "Other" ? -1 : a.localeCompare(b)));
-  let html = '<option value="">📍 All locations</option>';
+  let html = '<option value="">🌐 World</option>';
   names.forEach(name => {
     const g = groups[name];
     html += '<optgroup label="' + esc(g.label) + '">';
@@ -435,37 +648,69 @@ function renderLocationSelect() {
   sel.innerHTML = html;
   if (prev && [].slice.call(sel.options).some(o => o.value === prev)) sel.value = prev;
 }
-function jumpToLocation(val) {
-  if (!gmap) {
-    if (app.dataset.view !== "map") show("map");
-    return;
-  }
-  /* any choice here is you placing the map, "All locations" included */ mapOwned = true;
-  let list;
-  if (!val) list = cafes.filter(c => c.lat != null);
-  else if (val.slice(0, 8) === "country:") {
+/* The pins a dropdown value stands for. "other:" is the places no country box claims. */
+function locationList(val) {
+  if (!val) return cafes.filter(c => c.lat != null);
+  if (val === "other:") return cafes.filter(c => c.lat != null && cafeCountryName(c) === "Other");
+  if (val.slice(0, 8) === "country:") {
     const name = decodeURIComponent(val.slice(8));
-    list = cafes.filter(c => c.lat != null && cafeCountryName(c) === name);
-  } else if (val.slice(0, 6) === "state:") {
+    return cafes.filter(c => c.lat != null && cafeCountryName(c) === name);
+  }
+  if (val.slice(0, 6) === "state:") {
     const parts = val.slice(6).split("|");
     const name = decodeURIComponent(parts[0]);
     const st = decodeURIComponent(parts[1] || "");
-    list = cafes.filter(c => c.lat != null && cafeCountryName(c) === name && cafeStateName(c) === st);
-  } else if (val.slice(0, 5) === "city:") {
+    return cafes.filter(c => c.lat != null && cafeCountryName(c) === name && cafeStateName(c) === st);
+  }
+  if (val.slice(0, 5) === "city:") {
     const parts = val.slice(5).split("|");
     const name = decodeURIComponent(parts[0]);
     const st = decodeURIComponent(parts[1] || "");
     const ct = decodeURIComponent(parts[2] || "");
-    list = cafes.filter(
+    return cafes.filter(
       c =>
         c.lat != null &&
         cafeCountryName(c) === name &&
         (c.area || "").trim() === ct &&
         (st ? cafeStateName(c) === st : true)
     );
-  } else list = cafes.filter(c => c.lat != null);
+  }
+  return cafes.filter(c => c.lat != null);
+}
+function fitList(list) {
+  if (!gmap || !list || !list.length) return;
+  if (list.length === 1) {
+    gmap.setCenter({ lat: list[0].lat, lng: list[0].lng });
+    gmap.setZoom(15);
+  } else {
+    const b = new google.maps.LatLngBounds();
+    list.forEach(c => b.extend({ lat: c.lat, lng: c.lng }));
+    gmap.fitBounds(b, fitPad());
+  }
+}
+function jumpToLocation(val) {
+  if (!gmap) {
+    if (app.dataset.view !== "map") show("map");
+    return;
+  }
+  /* any choice here is you placing the map, "World" included */ mapOwned = true;
+  /* "World" is the empty value; anything else is a place, and the pins come back for it */
+  const toWorld = !val;
+  const changed = mapWorld !== toWorld || _focusVal !== (val || null);
+  mapWorld = toWorld;
+  _focusVal = val || null;
+  const list = locationList(val);
   if (app.dataset.view !== "map") show("map");
-  if (!list || !list.length) return;
+  if (changed) {
+    closePeekIfOpen();
+    _showPins();
+    syncWorldUI();
+  }
+  if (toWorld) {
+    setTimeout(fitWorld, 0);
+    return;
+  }
+  if (!list.length) return;
   const _sel = $("locsel");
   if (_sel && val)
     setTimeout(() => {
@@ -475,16 +720,7 @@ function jumpToLocation(val) {
         warn("map.js", e);
       }
     }, 350);
-  setTimeout(() => {
-    if (list.length === 1) {
-      gmap.setCenter({ lat: list[0].lat, lng: list[0].lng });
-      gmap.setZoom(15);
-    } else {
-      const b = new google.maps.LatLngBounds();
-      list.forEach(c => b.extend({ lat: c.lat, lng: c.lng }));
-      gmap.fitBounds(b, fitPad());
-    }
-  }, 0);
+  setTimeout(() => fitList(list), 0);
 }
 let userLoc = null;
 let mapOwned = false; /* the person has positioned the map themselves */
