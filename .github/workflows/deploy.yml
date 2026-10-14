@@ -58,7 +58,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: main
-      - name: Assemble the site (the app's files only: no tests, notes or tooling)
+      - name: "Assemble the site (only the app's files, no tests, notes or tooling)"
         run: |
           mkdir _site
           cp -r index.html sw.js manifest.json cafes.json icon-180.png icon-192.png icon-512.png js styles.css _site/
