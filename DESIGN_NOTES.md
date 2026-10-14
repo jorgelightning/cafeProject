@@ -1088,3 +1088,43 @@ duplicate.
   sibling is still the same place.
 - "Log again" puts the brand's drinks first, counting a drink ordered once (a menu is small), then
   fills from everywhere. Price stays blank.
+
+## Sync and private-spot hardening — 14 Oct 2026 (v73)
+
+From the sync audit. Each has a test that fails on the v72 code.
+
+- **Private mirror and queue are loaded into memory whoever is looking.** `loadPrivateDetail` used to
+  empty `privDetail`/`privPending` for a not-yet-signed-in owner (offline, or auth script still
+  loading), so the first private save wrote a near-empty mirror and queue over the saved ones.
+  `privFor()` already hides them from non-owners.
+- **A private save that never touched the location does not save the location.** With the private
+  side unloaded the form shows the BLURRED pin and area; `saveForm` used to queue those as "the exact
+  address". It now saves only when the private copy is loaded or the person moved the pin, and
+  `savePrivateDetail` refuses to replace a saved address with its own blurred copy. `wasCustom` is read
+  before `Object.assign` overwrites the cafe, which also fixes un-privating (the force flag read the NEW
+  value).
+- **Private queue entries are `{base, value}`.** `flushPrivate` writes in a transaction and only if
+  the cloud still holds the base (or the value); a newer address from another device is kept and
+  toasted. Bare values (and null for a removal) from earlier versions still work and write
+  unconditionally. Removals stay unconditional on purpose: an orphan is worse than a lost race.
+- **After a merged flush, the screen takes what landed** (`syncAdoptWritten`). The merge can fold in
+  another device's change while the in-memory cafe still holds what this device queued, and a later
+  save built from it wrote that older value back over the other device's edit, with no conflict.
+- **Before the cloud has answered, `save()` waits** (`syncNeedsFullDiff`) instead of queueing every
+  cafe against a null base. `syncBootBase` is the cafes as this device started; the first snapshot
+  queues only what really differs from it, using it as the 3-way base. An ordinary edit made while
+  offline-at-boot uses the same base. Limit: a bulk tool run offline and closed before the first
+  snapshot is not queued (the tools are idempotent — run them again).
+- **`syncCanonical` reads null, undefined, `[]` and `{}` as absent**, as Firebase stores them. An empty
+  string, `false` and `0` are values. Both devices clearing a photo or tags is agreement; `saveForm`'s
+  `photo:null` no longer clashes with a photo added elsewhere.
+- **The pre-read in `flushSync` times out** (`SYNC_ONCE_MS`, 15 s) so a connection that looks up but is
+  not cannot hold `syncBusy` for ever.
+- **Legacy orders get deterministic ids** (`ensureOrderIds`: cafe, drink, date, nth of that day) in
+  `adoptCafes` and inside `syncMerge`, so they merge by id instead of all-or-nothing. Existing ids are
+  never changed; the oldest drink shape (dates and a count, no orders) is left alone.
+- **`fetchAllPhotos` resolves the cafe by id when each photo arrives**; a snapshot replaces every cafe
+  object during the minutes it runs.
+- Still open, from the audit's minor list: the boot re-seed of an empty cloud from the local cache,
+  the legacy dirty-flag path, duplicate-named drinks collapsing in a merge, whole-order conflicts when two
+  devices edit different fields of one order.

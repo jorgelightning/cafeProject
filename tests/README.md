@@ -44,12 +44,12 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `wishlist-drinks.js` | A cafe with drinks logged comes off the wishlist. |
 | `cloud-writes.js` / `sync-queue.js` | Persistent pending edits, cloud snapshot reconciliation, conflict decisions, per-cafe transactions, legacy migration, deletion and failure handling. |
 | `place-id.js` | A cafe's photo is fetched by its Google place id, not by searching its name. The wrong-photo bug. |
-| `private.js` | A private spot never publishes an exact location or a street address — at save, in `cafes.json`, and in the daily backup. |
+| `private.js` | A private spot never publishes an exact location or a street address — at save, in `cafes.json`, and in the daily backup. Also: the offline private-save audit (saved copies kept in memory, a save that never moved the pin cannot overwrite the real address, a newer address from another device is kept). |
 | `usuals.js` | Logging a drink you have had before: the one-tap shortcut, the near-match guard, and the cleanup for names already split by a typo. |
 | `audit-fixes.js` | The 16 Sep audit fixes: a refused private write survives, the rule probe, the folded form, update-prompt contrast. |
 | `sync-conflict.js` | Telling two versions of a cafe apart when they collide: what differs, and which is newer. |
 | `board-guide.js` | Every board row carries its reason, and the ranking bookkeeping stays with the owner. |
-| `sync-merge.js` | Two devices merging automatically — and every case where it must refuse and ask instead. |
+| `sync-merge.js` | Two devices merging automatically — and every case where it must refuse and ask instead. Also: id-less legacy orders merge, null/undefined/[]/{} read as absent, deterministic order ids. |
 | `scale.js` | The type/radius/space scale is the whole set, and all three device widths get a sane layout. |
 | `list-clean.js` | The placeholder tint carries the rating with legible ink, and four control rows fold into one. |
 | `settings.js` | Appearance, list layout, editing mode and the admin actions share one screen, with the maintenance count on the door; a Maps failure no longer paints over the whole app. |

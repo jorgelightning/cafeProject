@@ -107,7 +107,15 @@ function fillBrands() {
     toast("Nothing to fill in ✓");
     return updateBrandBtn();
   }
-  if (!confirm("Set the brand on " + plan.length + " cafe" + (plan.length === 1 ? "" : "s") + " whose names show a chain?\n\nOnly empty brands are filled; none you set are changed."))
+  if (
+    !confirm(
+      "Set the brand on " +
+        plan.length +
+        " cafe" +
+        (plan.length === 1 ? "" : "s") +
+        " whose names show a chain?\n\nOnly empty brands are filled; none you set are changed."
+    )
+  )
     return;
   backfillBrands(false);
   renderList();
@@ -130,7 +138,8 @@ function openForm(id) {
   $("form-title").textContent = c ? "Edit visit" : branchSrc ? "Add a branch" : "Add a visit";
   $("f-name").value = c ? c.name : branchSrc ? brandBaseName(branchSrc.name) : "";
   $("f-area").value = c ? areaOf(c) : "";
-  if ($("f-brand")) $("f-brand").value = c ? c.brand || "" : branchSrc ? branchSrc.brand || brandBaseName(branchSrc.name) : "";
+  if ($("f-brand"))
+    $("f-brand").value = c ? c.brand || "" : branchSrc ? branchSrc.brand || brandBaseName(branchSrc.name) : "";
   brandTouched = !!(c && (c.brand || "").trim()) || !!branchSrc;
   brandAuto = null;
   brandEdit = false;
@@ -1809,6 +1818,12 @@ function saveForm() {
     let savedId = editId,
       msg = "Saved ✓";
     const c = editId ? cafes.find(x => x.id === editId) : null;
+    /* Object.assign below overwrites c, so what it was has to be read now: whether it was a private
+       spot, and the blurred pin and area the form was showing. */
+    const wasCustom = !!(c && c.custom);
+    const _pre = c
+      ? { area: c.area || "", lat: c.lat == null ? null : c.lat, lng: c.lng == null ? null : c.lng }
+      : null;
     /* A wishlist entry is a place you have not been, so it saves no visit. The visit fields were
    hidden while the box was ticked; anything typed before it was ticked goes with them rather
    than being filed as a visit that never happened. Tags survive — "matcha" is a fine reason
@@ -1899,8 +1914,13 @@ function saveForm() {
     /* The public record is written above, blurred. The exact address goes to the owner-only node
     — or is deleted from it, if this stopped being a private spot, so unticking the box does
     not leave an address behind in a place nobody looks at again. */
-    if (_exact) savePrivateDetail(savedId, _exact);
-    else removePrivateDetail(savedId, !!(c && c.custom));
+    if (_exact) {
+      /* The private copy had not loaded, so the form showed the blurred pin and area. Saving those as
+         "the exact address" would overwrite the real one: only save when the person moved it. */
+      const loaded = Object.prototype.hasOwnProperty.call(privDetail, savedId);
+      const untouched = wasCustom && !loaded && _pre && _privSameLoc(_exact, _pre);
+      if (!untouched) savePrivateDetail(savedId, _exact);
+    } else removePrivateDetail(savedId, wasCustom);
     _formSnap = null;
     try {
       renderMarkers();
