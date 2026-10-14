@@ -42,6 +42,7 @@ const SUITE = [
   ["lazy-photos",      "a long list requests photos as cards near the screen, not all at once"],
   ["world",            "the World view: bubbles per region, a list, no grey, pins back on a tap"],
   ["brand-auto",       "brand / chain detection: names, the form never overriding you, a non-destructive backfill"],
+  ["branches",         "branch switcher in the detail page, + Branch, and usuals from a brand's other branches"],
   ["one-screen",       "logging a new cafe fits one phone screen, in counter order"],
   ["boot-firebase",    "the app starts against a connected, real-shaped Firebase"],
   ["offline",          "the app boots with the network pulled"],

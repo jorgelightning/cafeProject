@@ -4,6 +4,9 @@
 /* ---------- form ---------- */
 function checkExisting() {
   if (editId) return;
+  /* A new branch starts out named like its sibling. Until it has a pin there is nothing to say it
+     is the same place, so do not go and open the sibling instead. */
+  if (branchSrc && !picked) return;
   const name = $("f-name").value.trim();
   if (!name) return;
   const ex = findSameCafe(name, $("f-area").value.trim(), picked ? picked.lat : null, picked ? picked.lng : null);
@@ -24,6 +27,7 @@ function fmtEdited(iso) {
 }
 /* Brand detection fills the box only while the person has not decided it: once they type in it, or
    open a cafe that already has one, the detector leaves it alone. */
+let branchSrc = null; /* the cafe a new branch is being added to; null otherwise */
 let brandTouched = false;
 let brandAuto = null; /* what the detector last put in the box */
 function showBrandHint(r) {
@@ -43,6 +47,7 @@ function autoBrand() {
   brandAuto = r ? r.brand : null;
   showBrandHint(r);
   syncMoreSum();
+  renderUsuals();
 }
 function fillBrands() {
   if (!isAdmin) return toast("Sign in to edit first");
@@ -65,15 +70,17 @@ function updateBrandBtn() {
   b.style.display = n ? "" : "none";
   if (n) b.textContent = "🏷 Fill in " + n + " brand" + (n === 1 ? "" : "s");
 }
+/** @param {string|{branchOf:string}} [id] a cafe id to edit, or {branchOf} to add another branch of that cafe's brand */
 function openForm(id) {
   editId = typeof id === "string" ? id : null;
   const c = editId ? cafes.find(x => x.id === editId) : null;
+  branchSrc = (id && typeof id === "object" && cafes.find(x => x.id === id.branchOf)) || null;
   formSyncBase = c ? syncBaseFor(c.id) : null;
-  $("form-title").textContent = c ? "Edit visit" : "Add a visit";
-  $("f-name").value = c ? c.name : "";
+  $("form-title").textContent = c ? "Edit visit" : branchSrc ? "Add a branch" : "Add a visit";
+  $("f-name").value = c ? c.name : branchSrc ? brandBaseName(branchSrc.name) : "";
   $("f-area").value = c ? areaOf(c) : "";
-  if ($("f-brand")) $("f-brand").value = c ? c.brand || "" : "";
-  brandTouched = !!(c && (c.brand || "").trim());
+  if ($("f-brand")) $("f-brand").value = c ? c.brand || "" : branchSrc ? branchSrc.brand || brandBaseName(branchSrc.name) : "";
+  brandTouched = !!(c && (c.brand || "").trim()) || !!branchSrc;
   brandAuto = null;
   showBrandHint(null);
   $("f-review").value = c ? c.review || "" : "";
@@ -84,8 +91,8 @@ function openForm(id) {
   formPhoto = c ? c.photo || null : null;
   formRating = c ? c.rating || 0 : 0;
   formTags = c ? (c.tags || []).slice() : [];
-  formCC = c ? c.cc || "" : "";
-  formCcy = c ? c.ccy || "" : "";
+  formCC = c ? c.cc || "" : branchSrc ? branchSrc.cc || "" : "";
+  formCcy = c ? c.ccy || "" : branchSrc ? branchSrc.ccy || "" : "";
   formPid = c ? c.pid || "" : "";
   picked = c && latOf(c) != null ? { lat: latOf(c), lng: lngOf(c) } : null;
   renderRate();
@@ -103,6 +110,14 @@ function openForm(id) {
   _formSnap = formSnapshot();
   show("form");
   setTimeout(initFormMap, 90);
+  if (branchSrc)
+    setTimeout(() => {
+      const n = $("f-name");
+      if (n) {
+        n.focus();
+        n.select();
+      }
+    }, 120);
 }
 /* Unsaved-changes guard: snapshot the form on open, compare on any exit path (close button, back button, tab/nav via show(), page unload). Saving clears the snapshot so it never prompts. Pin coords are normalized to 5 decimals because setPicked rounds them. */
 let _formSnap = null,
@@ -496,6 +511,7 @@ function syncMore(open) {
       fb.addEventListener("input", () => {
         brandTouched = true;
         showBrandHint(null);
+        renderUsuals();
       });
     m.addEventListener("change", syncMoreSum);
   }
@@ -522,8 +538,18 @@ function syncMoreSum() {
 function renderUsuals() {
   const host = $("f-usuals");
   if (!host) return;
-  _formIx = drinkIndex();
-  const top = topUsuals(_formIx, 3);
+  /* A chain's orders first — even one is enough, a menu is small — then your usuals everywhere. */
+  const brand = $("f-brand") ? $("f-brand").value.trim() : "";
+  const mine = brand ? brandMembers(brand, cafes) : [];
+  const all = drinkIndex();
+  const sib = mine.length ? drinkIndex(mine) : {};
+  _formIx = Object.assign({}, all, sib);
+  const top = topUsuals(sib, 3, 1);
+  const have = {};
+  top.forEach(e => (have[e.key] = 1));
+  topUsuals(all, 3).forEach(e => {
+    if (top.length < 3 && !have[e.key]) top.push(e);
+  });
   if (!top.length) {
     host.hidden = true;
     host.innerHTML = "";
@@ -531,7 +557,9 @@ function renderUsuals() {
   }
   host.hidden = false;
   host.innerHTML =
-    '<span class="usuallbl">Log again</span>' +
+    '<span class="usuallbl">Log again' +
+    (Object.keys(sib).length ? " \u00b7 " + esc(brand) : "") +
+    "</span>" +
     top
       .map(function (e) {
         const spec = usualSpec(e);
@@ -813,7 +841,7 @@ function syncWishMode() {
   const ta = $("f-review");
   if (ta) ta.placeholder = on ? "Why you want to go, what to order…" : "Vibe, taste, service…";
   const ti = $("form-title");
-  if (ti && !editId) ti.textContent = on ? "Add a place to try" : "Add a visit";
+  if (ti && !editId) ti.textContent = on ? "Add a place to try" : branchSrc ? "Add a branch" : "Add a visit";
   syncMoreSum();
 }
 function drinkRowLabel(dr) {

@@ -649,9 +649,10 @@ function topKey(tally) {
   return best;
 }
 const USUAL_FIELDS = ["size", "sweet", "ice", "milk"];
-function drinkIndex() {
+/** Every drink you have logged, tallied by name. @param {Cafe[]} [list] defaults to all cafes */
+function drinkIndex(list) {
   const ix = {};
-  (cafes || []).forEach(function (c) {
+  (list || cafes || []).forEach(function (c) {
     (c.drinks || []).forEach(function (d) {
       const n = (d.n || "").trim();
       if (!n) return;
@@ -687,13 +688,14 @@ function usualSpec(entry) {
     });
   return out;
 }
-function topUsuals(ix, limit) {
+/** @param {Record<string, any>} ix @param {number} [limit] @param {number} [min] fewest orders that make a usual (default 2: a one-off is not) */
+function topUsuals(ix, limit, min) {
   return Object.keys(ix || {})
     .map(function (k) {
       return ix[k];
     })
     .filter(function (e) {
-      return e.count > 1;
+      return e.count >= (min || 2);
     }) /* a one-off is not a usual */
     .sort(function (a, b) {
       return b.count - a.count || a.n.localeCompare(b.n);
@@ -895,4 +897,63 @@ function brandBackfillPlan(list, seeds) {
     out.push({ id: c.id, name: c.name, brand: chosen[k] });
   });
   return out;
+}
+
+/* ---------- the branches of a brand ---------- */
+/** Which brand group a cafe is in: its brand, else its name with the location taken off. @param {Cafe} c */
+function brandGroupKey(c) {
+  return brandKey((c && c.brand) || "") || brandKey((c && c.name) || "");
+}
+/** Every cafe in a brand's group, the one with `brand` itself included. @param {string} brand @param {Cafe[]} list */
+function brandMembers(brand, list) {
+  const k = brandKey(brand);
+  return k ? (list || []).filter(x => x && brandGroupKey(x) === k) : [];
+}
+/** The place part of a branch name — "(San Mateo)", "- Berkeley", "@ Mall", or what follows the brand. @param {Cafe} c */
+function branchSuffix(c) {
+  const n = String((c && c.name) || "").trim();
+  let m = /\(([^)]+)\)\s*$/.exec(n) || /\s[-\u2013\u2014]\s+(.+)$/.exec(n) || /@\s*(.+)$/.exec(n);
+  if (m) return m[1].trim();
+  const b = String((c && c.brand) || "").trim();
+  if (b && n.length > b.length && n.toLowerCase().indexOf(b.toLowerCase() + " ") === 0) return n.slice(b.length).trim();
+  return "";
+}
+/**
+ * The branches of c's brand, c included, as short labelled entries — or [] when c is alone.
+ * Visited first, then wishlist, then by label. A label is the name's own place suffix, else the
+ * area (when it tells branches apart), else whatever is left of the name; clashes get a number.
+ * @param {Cafe} c
+ * @param {Cafe[]} [list]
+ * @returns {{id:string, label:string, full:string, wish:boolean, current:boolean}[]}
+ */
+function getBrandSiblings(c, list) {
+  if (!c) return [];
+  const group = (list || cafes || []).filter(x => x && brandGroupKey(x) === brandGroupKey(c));
+  if (group.length < 2) return [];
+  const areaCount = {};
+  group.forEach(x => {
+    const a = (x.area || "").trim().toLowerCase();
+    areaCount[a] = (areaCount[a] || 0) + 1;
+  });
+  const short = t => (t.length > 16 ? t.slice(0, 15).trim() + "\u2026" : t);
+  const raw = group.map(x => {
+    const a = (x.area || "").trim(),
+      suf = branchSuffix(x);
+    const unique = a && areaCount[a.toLowerCase()] === 1;
+    const t = suf || (unique ? a : "") || a || String(x.name || "Location").trim();
+    return { x, t: short(t) };
+  });
+  const seen = {};
+  const out = raw.map(r => {
+    const k = r.t.toLowerCase();
+    seen[k] = (seen[k] || 0) + 1;
+    return {
+      id: r.x.id,
+      full: String(r.x.name || ""),
+      wish: !!r.x.wish,
+      current: r.x.id === c.id,
+      label: seen[k] > 1 ? r.t + " " + seen[k] : r.t,
+    };
+  });
+  return out.sort((a, b) => +a.wish - +b.wish || a.label.localeCompare(b.label));
 }
