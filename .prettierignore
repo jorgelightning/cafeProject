@@ -1,0 +1,8 @@
+node_modules/
+vendor/
+package-lock.json
+*.html
+*.json
+*.md
+styles.css
+tests/

@@ -2,23 +2,35 @@
 /* boot.js — Startup wiring, update checker, back-button handling.
    Loaded by index.html; script order matters (config first, boot last). */
 /* ---------- boot ---------- */
-function migratePhotoCache(){
+function migratePhotoCache() {
   // Remove old plain-string cache entries (pre-TTL format) and any nulls
-  let cacheDirty=false;
-  Object.keys(gphotoCache).forEach(k=>{
-    const v=gphotoCache[k];
-    if(v===null||typeof v==="string"||isSessionPhotoUrl(v&&v.url)){ delete gphotoCache[k]; cacheDirty=true; }
+  let cacheDirty = false;
+  Object.keys(gphotoCache).forEach(k => {
+    const v = gphotoCache[k];
+    if (v === null || typeof v === "string" || isSessionPhotoUrl(v && v.url)) {
+      delete gphotoCache[k];
+      cacheDirty = true;
+    }
   });
-  if(cacheDirty)saveGphotoCache();
+  if (cacheDirty) saveGphotoCache();
   // Strip only session-bound gphoto URLs (they break silently once stale);
   // stable URLs persisted by fetchAllPhotos() are kept so viewers get instant thumbnails
-  let cafeDirty=false;
-  cafes.forEach(c=>{ if(c.gphoto&&isSessionPhotoUrl(c.gphoto)){ delete c.gphoto; cafeDirty=true; } });
-  if(cafeDirty){
-    try{ lsSet(KEY,JSON.stringify(cafes)); }catch(e){ warn("boot.js",e); }
-    if(fbReady&&fbAuth&&fbAuth.currentUser){
-      const u=fbAuth.currentUser;
-      if(u.email&&u.email.toLowerCase()===OWNER_EMAIL.toLowerCase()){
+  let cafeDirty = false;
+  cafes.forEach(c => {
+    if (c.gphoto && isSessionPhotoUrl(c.gphoto)) {
+      delete c.gphoto;
+      cafeDirty = true;
+    }
+  });
+  if (cafeDirty) {
+    try {
+      lsSet(KEY, JSON.stringify(cafes));
+    } catch (e) {
+      warn("boot.js", e);
+    }
+    if (fbReady && fbAuth && fbAuth.currentUser) {
+      const u = fbAuth.currentUser;
+      if (u.email && u.email.toLowerCase() === OWNER_EMAIL.toLowerCase()) {
         save();
       }
     }
@@ -26,39 +38,93 @@ function migratePhotoCache(){
 }
 /* "auto" removes the attribute so the media query decides; the other two set [data-theme],
    which both token blocks are written to honour. */
-const THEME_KEY="cafemap.theme";
-function applyTheme(t){ const r=document.documentElement; if(t==="light"||t==="dark")r.dataset.theme=t; else delete r.dataset.theme; if(typeof renderSettings==="function")renderSettings(); /* the two media-scoped meta tags follow the SYSTEM preference, so a manual choice needs an explicit override tag to keep the browser chrome in step */ let m=document.getElementById("tc-override"); if(t){ if(!m){ m=document.createElement("meta"); m.id="tc-override"; m.name="theme-color"; document.head.appendChild(m); } m.content=(t==="dark")?"#15110e":"#f6f5f3"; } else if(m)m.remove(); }
+const THEME_KEY = "cafemap.theme";
+function applyTheme(t) {
+  const r = document.documentElement;
+  if (t === "light" || t === "dark") r.dataset.theme = t;
+  else delete r.dataset.theme;
+  if (typeof renderSettings === "function") renderSettings();
+  /* the two media-scoped meta tags follow the SYSTEM preference, so a manual choice needs an explicit override tag to keep the browser chrome in step */ let m =
+    document.getElementById("tc-override");
+  if (t) {
+    if (!m) {
+      m = document.createElement("meta");
+      m.id = "tc-override";
+      m.name = "theme-color";
+      document.head.appendChild(m);
+    }
+    m.content = t === "dark" ? "#15110e" : "#f6f5f3";
+  } else if (m) m.remove();
+}
 /* One tap to any state, rather than a blind cycle that needed a toast to say where it
    landed. "" is auto, and removing the key is what auto means. */
-function setTheme(v){ try{ v?lsSet(THEME_KEY,v):localStorage.removeItem(THEME_KEY); }catch(e){ warn("boot.js",e); } applyTheme(v); }
-function storedTheme(){ try{ return localStorage.getItem(THEME_KEY)||""; }catch(e){ return ""; } }
+function setTheme(v) {
+  try {
+    v ? lsSet(THEME_KEY, v) : localStorage.removeItem(THEME_KEY);
+  } catch (e) {
+    warn("boot.js", e);
+  }
+  applyTheme(v);
+}
+function storedTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY) || "";
+  } catch (e) {
+    return "";
+  }
+}
 /* ---------- the settings screen ----------
    Static markup; this only syncs which value is on, so a preference changed anywhere
    else (a sign-in, a layout toggle) is reflected the next time the screen is drawn. */
-function segOn(id,v){ const g=$(id); if(!g)return; g.querySelectorAll("button").forEach(function(b){
-  const on=b.dataset.v===v; b.classList.toggle("on",on); b.setAttribute("aria-pressed",String(on)); }); }
-function renderSettings(){
-  if(typeof updateMilkBtn==="function")updateMilkBtn();
-  if(typeof updateSpellBtn==="function")updateSpellBtn();
-  segOn("seg-theme",storedTheme());
-  segOn("seg-layout",(typeof listCompact!=="undefined"&&listCompact)?"compact":"grid");
-  const m=$("set-mode"), b=$("set-admin"), n=$("set-adminnote");
-  if(m)m.textContent=isAdmin?"\u{1F513} Editing":"\u{1F512} Viewer";
-  if(b)b.textContent=isAdmin?"Sign out":"Sign in to edit";
-  if(n)n.textContent=isAdmin?"You can add cafes, log visits and rank them.":"Signing in lets you add cafes, log visits and rank them.";
+function segOn(id, v) {
+  const g = $(id);
+  if (!g) return;
+  g.querySelectorAll("button").forEach(function (b) {
+    const on = b.dataset.v === v;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+}
+function renderSettings() {
+  if (typeof updateMilkBtn === "function") updateMilkBtn();
+  if (typeof updateSpellBtn === "function") updateSpellBtn();
+  segOn("seg-theme", storedTheme());
+  segOn("seg-layout", typeof listCompact !== "undefined" && listCompact ? "compact" : "grid");
+  const m = $("set-mode"),
+    b = $("set-admin"),
+    n = $("set-adminnote");
+  if (m) m.textContent = isAdmin ? "\u{1F513} Editing" : "\u{1F512} Viewer";
+  if (b) b.textContent = isAdmin ? "Sign out" : "Sign in to edit";
+  if (n)
+    n.textContent = isAdmin
+      ? "You can add cafes, log visits and rank them."
+      : "Signing in lets you add cafes, log visits and rank them.";
   /* Read back from the script tag the browser actually loaded, so it cannot drift from
      the deploy version the way a hard-coded string would. */
-  const v=$("set-ver");
-  if(v){ const sc=document.querySelector('script[src*="js/boot.js"]'), mt=sc&&/\?v=(\d+)/.exec(sc.getAttribute("src"));
-    v.textContent="JL Cafe Project \u00b7 v"+(mt?mt[1]:"?"); }
+  const v = $("set-ver");
+  if (v) {
+    const sc = document.querySelector('script[src*="js/boot.js"]'),
+      mt = sc && /\?v=(\d+)/.exec(sc.getAttribute("src"));
+    v.textContent = "JL Cafe Project \u00b7 v" + (mt ? mt[1] : "?");
+  }
 }
-(function(){ let t=""; try{ t=localStorage.getItem(THEME_KEY)||""; }catch(e){ warn("boot.js",e); } applyTheme(t); })();
+(function () {
+  let t = "";
+  try {
+    t = localStorage.getItem(THEME_KEY) || "";
+  } catch (e) {
+    warn("boot.js", e);
+  }
+  applyTheme(t);
+})();
 /* Registered after load so it never competes with the first paint. localhost is allowed so
    the offline path can actually be exercised in development; everywhere else needs https. */
-const _localHosts=["localhost","127.0.0.1","[::1]","::1"];
-if("serviceWorker" in navigator && (location.protocol==="https:" || _localHosts.indexOf(location.hostname)>=0)){
-  window.addEventListener("load", function(){
-    navigator.serviceWorker.register("sw.js").catch(function(e){ warn("sw register", e); });
+const _localHosts = ["localhost", "127.0.0.1", "[::1]", "::1"];
+if ("serviceWorker" in navigator && (location.protocol === "https:" || _localHosts.indexOf(location.hostname) >= 0)) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function (e) {
+      warn("sw register", e);
+    });
   });
 }
 /* ---------- updates ----------
@@ -69,67 +135,215 @@ if("serviceWorker" in navigator && (location.protocol==="https:" || _localHosts.
    launch and every time you switch back to it. If you are already scrolling or typing when
    it is spotted, the bar still appears, and the next time you come back to the app it
    updates itself before you notice. A half-logged visit is never reloaded away. */
-function reloadLatest(auto){
+function reloadLatest(auto) {
   /* An automatic reload that lands on the same mismatch again — a half-finished deploy, a
      CDN still serving the old page — must not loop. One automatic reload a minute; after
      that it falls back to asking. A tap on the bar always goes through. */
-  if(auto){ try{ const last=+(sessionStorage.getItem("cafemap.autoReload")||0);
-      if(Date.now()-last<60000)return false;
-      sessionStorage.setItem("cafemap.autoReload",String(Date.now())); }catch(e){ return false; } }
-  const u=new URL(location.href); u.searchParams.set("v",Date.now()); location.replace(u.href);
+  if (auto) {
+    try {
+      const last = +(sessionStorage.getItem("cafemap.autoReload") || 0);
+      if (Date.now() - last < 60000) return false;
+      sessionStorage.setItem("cafemap.autoReload", String(Date.now()));
+    } catch (e) {
+      return false;
+    }
+  }
+  const u = new URL(location.href);
+  u.searchParams.set("v", Date.now());
+  location.replace(u.href);
   return true;
 }
-function buildOf(src){ const m=/js\/boot\.js\?v=(\d+)/.exec(src||""); return m?m[1]:null; }
-const _runningBuild=(function(){ const sc=document.querySelector('script[src*="js/boot.js"]'); return sc?buildOf(sc.getAttribute("src")):null; })();
-let _bootSrc=null, _updateShown=false, _updatePending=false, _touched=false;
-/* Any real input since the app came to the front means someone is using it. */
-["pointerdown","keydown","wheel","touchstart"].forEach(function(ev){
-  window.addEventListener(ev,function(){ _touched=true; },{passive:true,capture:true}); });
-function updateIsSafe(){ return !_touched && !(typeof formDirty==="function"&&formDirty()); }
-function onNewBuild(){
-  _updatePending=true;
-  if(updateIsSafe()&&reloadLatest(true))return;
-  if(!_updateShown){ _updateShown=true; const b=$("updatebar"); if(b)b.classList.add("show"); }
+function buildOf(src) {
+  const m = /js\/boot\.js\?v=(\d+)/.exec(src || "");
+  return m ? m[1] : null;
 }
-function checkForUpdate(){ fetch(location.pathname+"?_chk="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{
-  if(t==null)return;
-  /* Compare builds, not bytes. The first fetch used to become the baseline, so a phone that
+const _runningBuild = (function () {
+  const sc = document.querySelector('script[src*="js/boot.js"]');
+  return sc ? buildOf(sc.getAttribute("src")) : null;
+})();
+let _bootSrc = null,
+  _updateShown = false,
+  _updatePending = false,
+  _touched = false;
+/* Any real input since the app came to the front means someone is using it. */
+["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) {
+  window.addEventListener(
+    ev,
+    function () {
+      _touched = true;
+    },
+    { passive: true, capture: true }
+  );
+});
+function updateIsSafe() {
+  return !_touched && !(typeof formDirty === "function" && formDirty());
+}
+function onNewBuild() {
+  _updatePending = true;
+  if (updateIsSafe() && reloadLatest(true)) return;
+  if (!_updateShown) {
+    _updateShown = true;
+    const b = $("updatebar");
+    if (b) b.classList.add("show");
+  }
+}
+function checkForUpdate() {
+  fetch(location.pathname + "?_chk=" + Date.now(), { cache: "no-store" })
+    .then(r => (r.ok ? r.text() : null))
+    .then(t => {
+      if (t == null) return;
+      /* Compare builds, not bytes. The first fetch used to become the baseline, so a phone that
      booted from the offline cache and then came online adopted the NEW page as "current"
      and never offered the update at all. The running build is read from the script tag the
      browser actually executed. Bytes stay as the fallback for a page with no version tag. */
-  const next=buildOf(t);
-  if(next&&_runningBuild){ if(next!==_runningBuild)onNewBuild(); return; }
-  if(_bootSrc===null){ _bootSrc=t; return; }
-  if(t!==_bootSrc)onNewBuild();
-}).catch(()=>{}); }
-const _fbOk=initFirebase(); initAuth();
-{ const _abc=$("ab-cloud"); if(_abc)_abc.textContent=_fbOk?"☁️ Connected — edits save automatically for everyone.":"⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file."; }
-applyMode();renderSyncStatus();
+      const next = buildOf(t);
+      if (next && _runningBuild) {
+        if (next !== _runningBuild) onNewBuild();
+        return;
+      }
+      if (_bootSrc === null) {
+        _bootSrc = t;
+        return;
+      }
+      if (t !== _bootSrc) onNewBuild();
+    })
+    .catch(() => {});
+}
+const _fbOk = initFirebase();
+/* Only a device that remembers the owner needs auth at startup; everyone else never downloads it. */
+try {
+  if (localStorage.getItem(ADMIN_FLAG) === "1") ensureAuth();
+} catch (e) {
+  warn("boot.js", e);
+}
+{
+  const _abc = $("ab-cloud");
+  if (_abc)
+    _abc.textContent = _fbOk
+      ? "☁️ Connected — edits save automatically for everyone."
+      : "⚠ Cloud not set up — paste FIREBASE_CONFIG near the top of this file.";
+}
+applyMode();
+renderSyncStatus();
 /* A failed load must never cost the map. It used to: one private record Firebase refused
    to accept threw out of load(), and everything below — the map, the live sync, editing
    mode — was skipped, leaving a blank screen on every device (29 Sep). */
-load().catch(e=>warn("boot.js",e)).then(()=>{ migratePhotoCache(); applyMode(); const _sp=new URLSearchParams(location.search); const _sc=_sp.get('cafe'); show('map'); startMaps(); subscribeCloud(); probePrivateRule(); syncOnResume("open"); if(_sc){ const _wait=(tries)=>{ const _fc=cafes.find(x=>x.id===_sc); if(_fc){ setTimeout(()=>openDetail(_fc.id,'map'),400); } else if(tries>0){ setTimeout(()=>_wait(tries-1),600); } }; _wait(8); } if(_fbOk&&isAdmin){ fbDb.ref("cafes").once("value").then(s=>{ if(!asArray(s.val()).length&&cafes.length)save(); }).catch(()=>{}); } });
-let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{ mapResize(); refitMap(); },150); });
+load()
+  .catch(e => warn("boot.js", e))
+  .then(() => {
+    migratePhotoCache();
+    applyMode();
+    const _sp = new URLSearchParams(location.search);
+    const _sc = _sp.get("cafe");
+    show("map");
+    startMaps();
+    subscribeCloud();
+    probePrivateRule();
+    syncOnResume("open");
+    if (_sc) {
+      const _wait = tries => {
+        const _fc = cafes.find(x => x.id === _sc);
+        if (_fc) {
+          setTimeout(() => openDetail(_fc.id, "map"), 400);
+        } else if (tries > 0) {
+          setTimeout(() => _wait(tries - 1), 600);
+        }
+      };
+      _wait(8);
+    }
+    if (_fbOk && isAdmin) {
+      fbDb
+        .ref("cafes")
+        .once("value")
+        .then(s => {
+          if (!asArray(s.val()).length && cafes.length) save();
+        })
+        .catch(() => {});
+    }
+  });
+let rt;
+window.addEventListener("resize", () => {
+  clearTimeout(rt);
+  rt = setTimeout(() => {
+    mapResize();
+    refitMap();
+  }, 150);
+});
 checkForUpdate();
-setInterval(checkForUpdate,45000);
+setInterval(checkForUpdate, 45000);
 /* ---------- hardware/browser back button ---------- */
-let _exitArmed=false,_exitT=null;
-function _rearmBack(){ try{ history.pushState({cafeapp:1},""); }catch(e){ warn("boot.js",e); } }
+let _exitArmed = false,
+  _exitT = null;
+function _rearmBack() {
+  try {
+    history.pushState({ cafeapp: 1 }, "");
+  } catch (e) {
+    warn("boot.js", e);
+  }
+}
 _rearmBack();
-window.addEventListener("popstate",()=>{ if(typeof chaserOpen==="function"&&chaserOpen()){ chaserDismiss(); _rearmBack(); return; } if(typeof peekOpen==="function"&&peekOpen()){ closePeek(); _rearmBack(); return; } const v=app.dataset.view; if(v!=="map"&&v!=="list"){ if(v==="form")closeForm(); else goBack(); _rearmBack(); return; } if(!_exitArmed){ _exitArmed=true; toast("Press back again to exit ☕"); _rearmBack(); clearTimeout(_exitT); _exitT=setTimeout(()=>{ _exitArmed=false; },2000); } else { _exitArmed=false; history.back(); } });
+window.addEventListener("popstate", () => {
+  if (typeof chaserOpen === "function" && chaserOpen()) {
+    chaserDismiss();
+    _rearmBack();
+    return;
+  }
+  if (typeof peekOpen === "function" && peekOpen()) {
+    closePeek();
+    _rearmBack();
+    return;
+  }
+  const v = app.dataset.view;
+  if (v !== "map" && v !== "list") {
+    if (v === "form") closeForm();
+    else goBack();
+    _rearmBack();
+    return;
+  }
+  if (!_exitArmed) {
+    _exitArmed = true;
+    toast("Press back again to exit ☕");
+    _rearmBack();
+    clearTimeout(_exitT);
+    _exitT = setTimeout(() => {
+      _exitArmed = false;
+    }, 2000);
+  } else {
+    _exitArmed = false;
+    history.back();
+  }
+});
 /* Coming back to the app is the moment to reconcile. Incoming changes already arrive on a
    live listener, but anything this device queued while offline sat in the outbox until the
    next edit — and "online" often does not fire when a phone resumes from background, so
    waiting for it was not enough. */
-function syncOnResume(why){
-  try{ if(typeof flushSync==="function")flushSync(); }catch(e){ warn("boot.js",e); }
-  try{ if(typeof flushPrivate==="function")flushPrivate(); }catch(e){ warn("boot.js",e); }
+function syncOnResume(why) {
+  try {
+    if (typeof flushSync === "function") flushSync();
+  } catch (e) {
+    warn("boot.js", e);
+  }
+  try {
+    if (typeof flushPrivate === "function") flushPrivate();
+  } catch (e) {
+    warn("boot.js", e);
+  }
 }
 /* Coming back to the front is a fresh start as far as updates go: nothing has been touched
    yet, so an update already spotted applies now, before the first tap, and otherwise the
    check that follows can still apply one it finds. The outbox is durable, so reloading
    before syncOnResume loses nothing — boot flushes it again. */
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ _touched=false;
-  if(_updatePending&&updateIsSafe()&&reloadLatest(true))return;
-  checkForUpdate(); syncOnResume("resume"); } });
-window.addEventListener("beforeunload",e=>{ if(typeof formDirty==="function"&&formDirty()){ e.preventDefault(); e.returnValue=""; } });
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    _touched = false;
+    if (_updatePending && updateIsSafe() && reloadLatest(true)) return;
+    checkForUpdate();
+    syncOnResume("resume");
+  }
+});
+window.addEventListener("beforeunload", e => {
+  if (typeof formDirty === "function" && formDirty()) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});

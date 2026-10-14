@@ -12,6 +12,7 @@
 const { serve, launch, checker, ROOT } = require("./harness");
 const { eq, done } = checker();
 const fs = require("fs"), path = require("path");
+const read = f => fs.readFileSync(path.join(ROOT, f), "utf8");
 
 const list = JSON.parse(fs.readFileSync(path.join(ROOT, "cafes.json"), "utf8"));
 const arr = Array.isArray(list) ? list : Object.values(list);
@@ -26,12 +27,17 @@ exact.lat = 30.12345; exact.lng = -140.67891; exact.area = "742 Evergreen Terrac
   const srv = await serve();
   const b = await launch();
 
-  const boot = async ({ owner, lateAuth, privateThrows }) => {
+  const boot = async ({ owner, lateAuth, privateThrows, lazy }) => {
+    let authRequests = 0;
     const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
     const pg = await ctx.newPage(); const errs = [];
     pg.on("pageerror", e => errs.push(String(e)));
     await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
-    await pg.addInitScript(([data, owner, lateAuth, privateThrows]) => {
+    /* lazy: the fake Firebase has no auth(), exactly as in production now — it arrives with the
+       firebase-auth-compat script, which this route serves and counts */
+    await pg.route(/firebase-auth-compat\.js/, r => { authRequests++;
+      r.fulfill({ contentType: "application/javascript", body: "firebase.auth=function(){return window.__fakeAuth;}; firebase.auth.GoogleAuthProvider=function(){};" }); });
+    await pg.addInitScript(([data, owner, lateAuth, privateThrows, lazy]) => {
       window.__rej = []; window.addEventListener("unhandledrejection", e => window.__rej.push(String(e.reason)));
       if (owner) try { localStorage.setItem("cafemap.admin", "1"); } catch (e) {}
       const store = { cafes: data, private: {} }; window.__store = store; window.__writes = [];
@@ -57,12 +63,13 @@ exact.lat = 30.12345; exact.lng = -140.67891; exact.area = "742 Evergreen Terrac
       const user = owner ? { email: "jorgemarco.portillo@gmail.com", emailVerified: true } : null;
       const auth = { currentUser: lateAuth ? null : user,
         onAuthStateChanged: cb => setTimeout(() => { auth.currentUser = user; cb(user); }, lateAuth ? 900 : 50),
-        signOut: () => Promise.resolve(), signInWithPopup: () => Promise.resolve(), signInWithRedirect: () => Promise.resolve() };
+        signOut: () => Promise.resolve(), signInWithPopup: () => { window.__signins = (window.__signins || 0) + 1; return Promise.resolve(); }, signInWithRedirect: () => Promise.resolve() };
+      window.__fakeAuth = auth;
       const fb = { apps: [], initializeApp: (c, n) => { const a = { name: n || "[DEFAULT]" }; fb.apps.push(a); return a; },
-                   database: () => ({ ref }), auth: () => auth };
-      fb.auth.GoogleAuthProvider = function () {};
+                   database: () => ({ ref }) };
+      if (!lazy) { fb.auth = () => auth; fb.auth.GoogleAuthProvider = function () {}; }
       Object.defineProperty(window, "firebase", { get: () => fb, set: () => {}, configurable: true });
-    }, [keyed, owner, !!lateAuth, !!privateThrows]);
+    }, [keyed, owner, !!lateAuth, !!privateThrows, !!lazy]);
     await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
     await pg.waitForTimeout(2600);
     const st = await pg.evaluate(([pinId, exactId]) => ({
@@ -72,6 +79,9 @@ exact.lat = 30.12345; exact.lng = -140.67891; exact.area = "742 Evergreen Terrac
       pub: window.__store.cafes[exactId], priv: (window.__store.private || {})[exactId],
       pinWritten: window.__writes.some(w => w.includes(pinId))
     }), [pinless.id, exact.id]);
+    st.authRequests = authRequests;
+    if (lazy === "tap") { await pg.evaluate(() => toggleAdmin()); await pg.waitForTimeout(500);
+      st.authRequests = authRequests; st.signins = await pg.evaluate(() => window.__signins || 0); }
     await ctx.close();
     return { ...st, errs };
   };
@@ -95,6 +105,16 @@ exact.lat = 30.12345; exact.lng = -140.67891; exact.area = "742 Evergreen Terrac
   r = await boot({ owner: false });
   eq([r.errs, r.rej, r.maps, r.mode, r.writes], [[], [], true, "viewer", []],
      "a visitor gets the map and sends nothing");
+
+  // ---- the sign-in library is fetched only by whoever needs it ----
+  eq(/firebase-auth-compat/.test(read("index.html").replace(/<!--[\s\S]*?-->/g, "")), false, "index.html no longer loads firebase-auth for every visitor");
+  r = await boot({ owner: false, lazy: true });
+  eq([r.authRequests, r.maps, r.mode, r.errs, r.rej], [0, true, "viewer", [], []], "a visitor never downloads the sign-in library, and still gets the map");
+  r = await boot({ owner: true, lazy: true });
+  eq([r.authRequests, r.maps, r.mode, r.errs, r.rej], [1, true, "admin", [], []], "a device that remembers the owner fetches it once at startup, and editing mode comes on");
+  eq({ lat: r.pub.lat, area: r.pub.area }, { lat: 30.12, area: "" }, "…and the startup work that needs the owner (blurring old private spots) still runs once it arrives");
+  r = await boot({ owner: false, lazy: "tap" });
+  eq([r.authRequests, r.signins, r.errs], [1, 1, []], "a visitor who taps Sign in fetches it on demand, then the Google popup is requested");
 
   // ---- whatever the private side does, it cannot cost the map ----
   r = await boot({ owner: true, privateThrows: true });

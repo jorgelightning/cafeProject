@@ -5,20 +5,57 @@
 /* Faves and Wish are filter chips now, not views, so show() no longer clears favOnly /
    the been/want tab — that would wipe the chip the moment you opened a cafe and came back.
    The legacy "wish" argument still works for goBack() and any old entry point. */
-const _TABS={map:"t-map",list:"t-list",form:"t-log",compare:"t-rank",stats:"t-stats"};
+const _TABS = { map: "t-map", list: "t-list", form: "t-log", compare: "t-rank", stats: "t-stats" };
 /* map maps to n-list because on desktop the map and the list pane share the screen */
-const _NAVS={map:"n-list",list:"n-list",form:"n-add",compare:"n-rank",stats:"n-stats",settings:"n-settings"};
-function _mark(id){ const el=id&&$(id); if(el)el.classList.add("on"); }
-function show(view,fav){ if(app.dataset.view==="form"&&view!=="form"&&typeof formDirty==="function"&&formDirty()){ if(!confirm("Discard unsaved changes to this visit?"))return; _formSnap=null; } if(view==="wish"){ listTab="want"; favOnly=false; view="list"; } else if(fav){ listTab="been"; favOnly=true; } if(view==="map"||view==="list")lastMain=view; if(typeof closePeek==="function"&&peekOpen())closePeek(); app.dataset.view=view;
-document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
-document.querySelectorAll(".side-nav button").forEach(b=>b.classList.remove("on"));
-_mark(_TABS[view]); _mark(_NAVS[view]);
-if(view==="compare")renderBoard();
-if(view==="stats")renderStats();
-if(view==="settings")renderSettings();
-if(view==="list"||view==="map")renderList();
-if(gReady)setTimeout(()=>{ mapResize(); if(view==="map")focusNearest(); },60);
+const _NAVS = {
+  map: "n-list",
+  list: "n-list",
+  form: "n-add",
+  compare: "n-rank",
+  stats: "n-stats",
+  settings: "n-settings",
+};
+function _mark(id) {
+  const el = id && $(id);
+  if (el) el.classList.add("on");
+}
+function show(view, fav) {
+  if (app.dataset.view === "form" && view !== "form" && typeof formDirty === "function" && formDirty()) {
+    if (!confirm("Discard unsaved changes to this visit?")) return;
+    _formSnap = null;
+  }
+  if (view === "wish") {
+    listTab = "want";
+    favOnly = false;
+    view = "list";
+  } else if (fav) {
+    listTab = "been";
+    favOnly = true;
+  }
+  if (view === "map" || view === "list") lastMain = view;
+  if (typeof closePeek === "function" && peekOpen()) closePeek();
+  app.dataset.view = view;
+  if (view === "settings" && typeof ensureAuth === "function" && !isAdmin) ensureAuth();
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("on"));
+  document.querySelectorAll(".side-nav button").forEach(b => b.classList.remove("on"));
+  _mark(_TABS[view]);
+  _mark(_NAVS[view]);
+  if (view === "compare") renderBoard();
+  if (view === "stats") renderStats();
+  if (view === "settings") renderSettings();
+  if (view === "list" || view === "map") renderList();
+  if (gReady)
+    setTimeout(() => {
+      mapResize();
+      if (view === "map") focusNearest();
+    }, 60);
 }
 /* openDetail(id,"stats") sets lastMain="stats", so honour it — otherwise tapping a cafe
    from Stats and pressing back silently drops you on List. */
-function goBack(){ if(lastMain==="stats"||lastMain==="compare"){ show(lastMain); return; } show(lastMain==="map"&&window.innerWidth<900?"map":"list"); }
+function goBack() {
+  if (lastMain === "stats" || lastMain === "compare") {
+    show(lastMain);
+    return;
+  }
+  show(lastMain === "map" && window.innerWidth < 900 ? "map" : "list");
+}

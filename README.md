@@ -180,4 +180,11 @@ off once, then again after any key or hosting change.
 
 - `npm start` serves the app on port 3000 (`server.js`; it refuses to serve dotfiles such as `.git`).
 - `npm test` runs every test in `tests/` in a headless browser.
+- `npm run lint` runs ESLint (`eslint.config.js`). The scripts share one global scope, so the config reads
+  every top-level name from `js/*.js` and treats them as globals; `no-undef` still catches a typo.
+- `npm run typecheck` type-checks the JavaScript with TypeScript (`tsconfig.json`, data shapes in
+  `types/cafe.d.ts`). It is a ratchet: the error count in `types/baseline.json` may fall but not rise.
+  `npm run typecheck -- --list` prints every error.
+- `npm run format` runs Prettier on the scripts (`.prettierrc.json`). `npm run check` runs lint, typecheck
+  and the tests, which is what CI runs.
 - `.editorconfig` sets indentation and line endings; most editors read it automatically.
