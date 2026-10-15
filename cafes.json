@@ -620,7 +620,7 @@
   },
   {
     "area": "",
-    "brand": "",
+    "brand": "Odd One Out",
     "elo": 1487,
     "emoji": "☕",
     "fav": false,
@@ -683,7 +683,7 @@
   },
   {
     "area": "",
-    "brand": "",
+    "brand": "Milksha",
     "elo": 1513,
     "emoji": "☕",
     "fav": false,
@@ -821,7 +821,7 @@
   },
   {
     "area": "Mililani",
-    "brand": "",
+    "brand": "Teapresso",
     "drinks": [
       {
         "dates": [
@@ -928,7 +928,7 @@
   },
   {
     "area": "Ximen",
-    "brand": "",
+    "brand": "Milksha",
     "cc": "TW",
     "drinks": [
       {
@@ -1467,7 +1467,7 @@
     "id": "mrr7zovlvqbp",
     "lat": 37.56,
     "lng": -122.33,
-    "matches": 2,
+    "matches": 3,
     "name": "Cafe Plaza",
     "rating": 5,
     "review": "Amazing vibes, the host were extremely the best, drinks tailored to your taste!",
@@ -1572,7 +1572,7 @@
   },
   {
     "area": "Fillmore District",
-    "brand": "",
+    "brand": "Boba Guys",
     "custom": false,
     "drinks": [
       {
@@ -1698,7 +1698,7 @@
   },
   {
     "area": "Downtown",
-    "brand": "",
+    "brand": "Sunright Tea Studio",
     "custom": false,
     "drinks": [
       {
@@ -1762,7 +1762,7 @@
   },
   {
     "area": "Serramonte",
-    "brand": "",
+    "brand": "Chicha San Chen",
     "custom": false,
     "drinks": [
       {
@@ -1936,7 +1936,7 @@
   },
   {
     "area": "Downtown",
-    "brand": "",
+    "brand": "Odd One Out",
     "custom": false,
     "drinks": [
       {
@@ -2080,13 +2080,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1528,
+    "elo": 1545,
     "emoji": "☕",
     "fav": false,
     "id": "mt6wojizh8ca",
     "lat": 49.28251,
     "lng": -123.11126,
-    "matches": 4,
+    "matches": 5,
     "name": "Saunter Coffee",
     "rating": 5,
     "review": "Great atmosphere to work in the front and there is something on the back for more of a quiet experience. The flat white is so good, strong espresso and the matcha has a good strong matcha taste too!",
@@ -2359,7 +2359,7 @@
   },
   {
     "area": "Stonestown",
-    "brand": "",
+    "brand": "Heytea",
     "cc": "US",
     "custom": false,
     "drinks": [
@@ -2719,7 +2719,7 @@
   },
   {
     "area": "Southside",
-    "brand": "",
+    "brand": "Chicha San Chen",
     "cc": "US",
     "custom": false,
     "drinks": [
@@ -2851,7 +2851,7 @@
   },
   {
     "area": "Fountain Valley",
-    "brand": "",
+    "brand": "Airoma Cafe",
     "cc": "US",
     "custom": false,
     "emoji": "☕",
@@ -2868,7 +2868,7 @@
   },
   {
     "area": "Garden Grove",
-    "brand": "",
+    "brand": "Airoma Cafe",
     "cc": "US",
     "custom": false,
     "emoji": "☕",
@@ -2916,6 +2916,41 @@
     "review": "",
     "updated": "2026-10-13T03:54:39.619Z",
     "wish": true
+  },
+  {
+    "area": "Cupertino",
+    "brand": "Heytea",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-14"
+        ],
+        "n": "Golden Oolong Yuzu",
+        "orders": [
+          {
+            "date": "2026-10-14",
+            "id": "mv8h30215if3",
+            "p": "7.49"
+          }
+        ],
+        "p": "7.49"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mv8h777ieum6",
+    "lat": 37.32382,
+    "lng": -122.01051,
+    "matches": 1,
+    "name": "HEYTEA (Cupertino)",
+    "pid": "ChIJM47ZUwC1j4ARLFulJyoDIUE",
+    "rating": 5,
+    "review": "Great location, good vibes, seems super busy tho. The indoor and outdoor spaces are nice!",
+    "updated": "2026-10-14T19:01:21.342Z",
+    "wish": false
   },
   {
     "area": "San Francisco, CA",
@@ -2992,6 +3027,7 @@
   },
   {
     "area": "Cupertino, CA",
+    "brand": "Chicha San Chen",
     "drinks": [
       {
         "dates": [
@@ -3090,13 +3126,20 @@
   },
   {
     "area": "Daly City, CA",
+    "brand": "Heytea",
+    "custom": false,
     "drinks": [
       {
         "dates": [
           "2026-04-14"
         ],
         "n": "Yingde cheese milk tea",
-        "p": ""
+        "orders": [
+          {
+            "date": "2026-04-14",
+            "id": "mv8h7x5y16ou"
+          }
+        ]
       }
     ],
     "elo": 1436,
@@ -3108,10 +3151,13 @@
     "matches": 7,
     "name": "HEYTEA",
     "rating": 1,
-    "review": "Yingde cheese milk tea was way too sweet — not for me."
+    "review": "Yingde cheese milk tea was way too sweet — not for me.",
+    "updated": "2026-10-14T19:02:03.765Z",
+    "wish": false
   },
   {
     "area": "San Francisco, CA",
+    "brand": "Kiss of matcha",
     "drinks": [
       {
         "dates": [
@@ -3150,7 +3196,7 @@
     "custom": false,
     "drinks": [
       {
-        "count": 9,
+        "count": 10,
         "dates": [
           "2026-03-24",
           "2026-07-09",
@@ -3160,7 +3206,8 @@
           "2026-09-15",
           "2026-09-18",
           "2026-09-24",
-          "2026-10-07"
+          "2026-10-07",
+          "2026-10-14"
         ],
         "ice": "Warm",
         "milk": "Oat",
@@ -3250,6 +3297,16 @@
             "date": "2026-10-07",
             "ice": "Warm",
             "id": "muyz7cdju6n6",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-14",
+            "ice": "Warm",
+            "id": "mv8ts4lr2rvo",
             "milk": "Oat",
             "p": "5",
             "reorder": "yes",
@@ -3456,20 +3513,20 @@
         ]
       }
     ],
-    "elo": 1613,
+    "elo": 1596,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 21,
+    "matches": 22,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.\n\nAshley Cafe is next around the corner for a good bagel and sandwiches!",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-10-08T03:28:21.860Z",
+    "updated": "2026-10-15T00:53:45.229Z",
     "wish": false
   },
   {
@@ -3626,6 +3683,7 @@
   },
   {
     "area": "Sunnyvale, CA",
+    "brand": "Molly tea",
     "drinks": [
       {
         "dates": [
@@ -3784,6 +3842,7 @@
   },
   {
     "area": "Burlingame, CA",
+    "brand": "Sunright Tea Studio",
     "drinks": [
       {
         "dates": [
