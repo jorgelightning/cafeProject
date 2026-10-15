@@ -1247,3 +1247,29 @@ the result line, the map button and the Filters badge already agree with them.
   is what made the drink name clip. No price means no figure, never `$0.00`.
 - **Two columns at 375px.** The grid minimum went 168 → 156px; 343px of width is two cards of
   165px with a gap, and was one 343px card before. `tests/list-guide.js`.
+
+### The cafe page leads with what to order, and a postcard worth sending — Phase 3 (v81)
+
+Nobody opens a cafe's page to read a rating, they open it to learn what to get. **"What to order"**
+is now the first thing under the name: a glyph for the kind of drink, the drink, what it cost, how
+often and when last (`#d-orderagain`, with `.oa-name` / `.oa-meta`), and for the owner a **＋ Log
+again** that goes through the same `logAgainFrom()` as the list. The top ten get a gold rank tile
+(`.dranktile.top`), a drink's size, sweetness, ice and milk read as pills (`modPills()`), and the
+note is set as a quotation. `tests/discovery.js` read the old sentence and now reads the parts.
+
+**Share spot** replaces the bare link. `drawPostcard()` paints a 1080×1350 canvas — rank (gold for
+the top ten), name, verdict, area, what to get, the owner's line — and `sendPostcard()` sends it as
+a file through `navigator.share` where the device can, hands it over as a download where it cannot,
+and falls back to the link. Three decisions worth keeping:
+
+- **It is not the Google photo.** A cross-origin photo taints the canvas, so it could never be
+  exported, and it is not ours to redistribute. The picture is the tile: the rating colour and the
+  cafe's own emoji.
+- **It is built from `c.area`, never `areaOf(c)`** — the same rule as `shareCafe()`, which the
+  postcard shares a code path of intent with. It goes to someone else, so a private spot's exact
+  place must not travel with it. `tests/share-card.js` seeds a precise copy and checks the text.
+- **It is a real dialog**: `aria-modal`, focus moves in, Tab is trapped, Escape closes and returns
+  focus to the button that opened it. Opening it never writes anything.
+
+`.oa-gl` joined the glyph allowlist in `tests/scale.js`: it is a 26px emoji tile, artwork rather
+than type, like `.drinkicon`.

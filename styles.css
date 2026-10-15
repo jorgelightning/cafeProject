@@ -951,3 +951,31 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 
 .grid.compact-list .card .again{ display:none; }
 .grid.compact-list .card .b{ padding-right:0; }
+
+/* ---------- cafe page: banner, pills, quote, postcard (v81) ---------- */
+.dranktile.top{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, var(--shadow-sm); }
+.dranktile.top span{ color:var(--gold-ink); opacity:.8; }
+.orderagain{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-3); padding:var(--sp-3) var(--sp-4); border:1px solid var(--border); border-radius:var(--r-3); background:linear-gradient(135deg, var(--amber-bg), transparent 70%), var(--surface); box-shadow:var(--shadow-sm); }
+.orderagain[hidden]{ display:none; }
+.orderagain .oa-gl{ width:48px; height:48px; flex:none; display:grid; place-items:center; border-radius:var(--r-2); background:var(--surface2); font-size:26px; }
+.orderagain .oa-tx{ min-width:0; flex:1 1 140px; display:flex; flex-direction:column; }
+.orderagain .oa-tx small{ font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); }
+.orderagain .oa-name{ font-size:var(--fs-4); line-height:1.25; font-weight:700; overflow-wrap:anywhere; color:var(--text); }
+.orderagain .oa-meta{ font-size:var(--fs-2); color:var(--soft); font-variant-numeric:tabular-nums lining-nums; }
+.orderagain .oa-meta b{ color:var(--text); }
+.orderagain .oa-again{ flex:none; margin-left:auto; min-height:44px; padding:0 var(--sp-4); border:0; border-radius:var(--r-3); background:var(--acc-strong); color:var(--on-acc); font-family:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; }
+.dmods{ display:flex; flex-wrap:wrap; gap:var(--sp-1); margin-top:var(--sp-1); }
+.mpill{ display:inline-flex; align-items:center; padding:1px var(--sp-2); border:1px solid var(--border); border-radius:var(--r-pill); background:var(--surface2); color:var(--soft); font-size:var(--fs-1); font-weight:700; white-space:nowrap; }
+.mpill.k-sw{ background:var(--amber-bg); color:var(--amber-ink); border-color:transparent; }
+.mpill.k-mk{ background:var(--want-bg); color:var(--want-ink); border-color:transparent; }
+.dordermeta .mpill{ margin-right:var(--sp-1); }
+.review{ position:relative; padding:22px 18px 16px 22px; border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow-sm); }
+.review::before{ content:"\201C"; position:absolute; left:14px; top:-2px; font-size:calc(var(--fs-5) * 2.4); line-height:1; font-weight:800; color:var(--acc); }
+.review::after{ content:""; position:absolute; left:0; top:18px; bottom:18px; width:3px; border-radius:var(--r-1); background:var(--acc); }
+.pcmodal{ position:fixed; inset:0; z-index:90; display:flex; justify-content:center; align-items:flex-start; padding:var(--sp-4); overflow-y:auto; background:rgba(10,6,3,.66); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+.pcmodal[hidden]{ display:none; }
+.pccol{ width:min(360px, 100%); display:flex; flex-direction:column; gap:var(--sp-3); padding-bottom:var(--sp-5); }
+.pccol canvas{ width:100%; height:auto; border-radius:var(--r-4); box-shadow:var(--shadow); }
+.pcact{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.pcact .btn{ flex:1 1 30%; width:auto; }
+.pcnote{ margin:0; text-align:center; font-size:var(--fs-1); color:#fff; opacity:.8; }

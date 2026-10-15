@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=80">
+<link rel="stylesheet" href="styles.css?v=81">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -72,7 +72,7 @@
 <div class="chips" id="d-tags"></div>
 <div class="lab drinklab"><span>Drinks I had</span><small>Tap for order history</small></div><div id="d-drinks"></div>
 <div class="lab">My thoughts</div><div class="review" id="d-review"></div>
-<div style="margin-top:22px; display:flex; gap:10px"><button class="btn" id="d-dir" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" onclick="shareCafe()">🔗 Share</button><button class="btn ghost admin-only" onclick="editCurrent()">✎ Edit</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
+<div style="margin-top:22px; display:flex; gap:10px"><button class="btn" id="d-dir" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" id="d-share" onclick="openPostcard()">↗ Share spot</button><button class="btn ghost admin-only" onclick="editCurrent()">✎ Edit</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
 </div>
 <div class="dstickybar admin-only"><button class="btn" onclick="logDrinkHere()">＋ Log a drink here</button></div>
 </div>
@@ -161,6 +161,7 @@
 </nav>
 <div id="d-chaser"></div>
 <div class="updatebar" id="updatebar" role="button" tabindex="0" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
+<div class="pcmodal" id="pcmodal" role="dialog" aria-modal="true" aria-label="Share this spot" hidden><div class="pccol"><canvas id="pc-canvas" width="1080" height="1350" role="img" aria-label="Postcard preview"></canvas><div class="pcact"><button type="button" class="btn" id="pc-share" onclick="sendPostcard()">Share</button><button type="button" class="btn ghost" onclick="copyPostcardText()">Copy message</button><button type="button" class="btn ghost" onclick="closePostcard()">Close</button></div><p class="pcnote" id="pc-note"></p></div></div>
 <div class="toast" id="toast"></div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -172,18 +173,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=80"></script>
-<script src="js/core.js?v=80"></script>
-<script src="js/storage.js?v=80"></script>
-<script src="js/sync.js?v=80"></script>
-<script src="js/nav.js?v=80"></script>
-<script src="js/map.js?v=80"></script>
-<script src="js/photos.js?v=80"></script>
-<script src="js/list.js?v=80"></script>
-<script src="js/stats.js?v=80"></script>
-<script src="js/rank.js?v=80"></script>
-<script src="js/detail.js?v=80"></script>
-<script src="js/form.js?v=80"></script>
-<script src="js/boot.js?v=80"></script>
+<script src="js/config.js?v=81"></script>
+<script src="js/core.js?v=81"></script>
+<script src="js/storage.js?v=81"></script>
+<script src="js/sync.js?v=81"></script>
+<script src="js/nav.js?v=81"></script>
+<script src="js/map.js?v=81"></script>
+<script src="js/photos.js?v=81"></script>
+<script src="js/list.js?v=81"></script>
+<script src="js/stats.js?v=81"></script>
+<script src="js/rank.js?v=81"></script>
+<script src="js/detail.js?v=81"></script>
+<script src="js/form.js?v=81"></script>
+<script src="js/boot.js?v=81"></script>
 </body>
 </html>

@@ -30,7 +30,7 @@ const fs = require("fs"), path = require("path");
      sized, not type being set, so they keep their own dimensions. Everything else is a token. */
   const litFs = (body.match(/([^{}]*)\{[^}]*font-size:\s*[\d.]+px/g) || [])
     .map(m => m.slice(0, m.indexOf("{")).trim());
-  const GLYPH = /\.(em|big|plus|ti|drinkicon|rate|gotile|abchev|drgchev|cdchev|lbstars|gostar)\b|nophoto|emoji/;
+  const GLYPH = /\.(em|big|plus|ti|drinkicon|rate|gotile|abchev|drgchev|cdchev|lbstars|gostar|oa-gl)\b|nophoto|emoji/;
   const strays = litFs.filter(sel => !GLYPH.test(sel));
   eq(strays, [], "every text rule takes its size from the scale");
   eq(litFs.length > 0, true, "…while glyph rules keep their own (" + litFs.length + " of them)");
