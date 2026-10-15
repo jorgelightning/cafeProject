@@ -141,17 +141,24 @@ const SVG_PLUS =
 function setBranchesOpen(open) {
   _branchOpen = open;
   const l = $("d-locs"),
-    w = $("d-where");
+    w = $("d-where"),
+    sc = $("d-scrim");
   if (l) l.hidden = !open;
+  if (sc) sc.hidden = !open;
   if (w) w.setAttribute("aria-expanded", open ? "true" : "false");
 }
 function toggleBranches() {
   setBranchesOpen(!_branchOpen);
+  /* focus moves into the list so a keyboard or screen reader lands on the current branch */
+  const _l = $("d-locs");
+  const cur = _branchOpen && _l && (_l.querySelector(".br.on") || _l.querySelector(".br"));
+  if (cur) /** @type {HTMLElement} */ (cur).focus({ preventScroll: true });
 }
-/* The list floats over the page, so it has to be easy to put away: tap anywhere else, or Escape. */
+/* The list floats over the page (a bottom sheet on phones and iPad, a card under the bar on the
+   laptop layout), so it has to be easy to put away: tap anywhere else, Done, or Escape. */
 document.addEventListener("click", e => {
   const t = /** @type {Element|null} */ (e.target);
-  if (_branchOpen && !(t && t.closest && t.closest(".dloc"))) setBranchesOpen(false);
+  if (_branchOpen && !(t && t.closest && t.closest(".dloc") && t.id !== "d-scrim")) setBranchesOpen(false);
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && _branchOpen) {
@@ -231,7 +238,15 @@ function openDetail(id, from) {
     _rkEl.hidden = !_rk;
     _rkEl.innerHTML = _rk ? "<b>#" + _rk + "</b><span>of " + _rn + "</span>" : "";
   }
-  $("d-meta").textContent = areaOf(c) || (_brandTitle ? branchSuffix(c) : "");
+  /* A branch cafe gets a full-width bar under the header that says which branch this is and opens
+     the list, so the place leaves the rating row: rating and branch no longer compete for one line
+     and a long place never has to be cut to fit beside the rating. A cafe on its own keeps the plain
+     area line. */
+  const _addBr = isAdmin && (_sibs.length > 0 || !!(c.brand || "").trim());
+  const _hasBar = _sibs.length > 0 || _addBr;
+  const _place = areaOf(c) || (_brandTitle ? branchSuffix(c) : "");
+  $("d-meta").textContent = _place;
+  $("d-meta").hidden = _hasBar;
   const _scEl = $("d-score");
   if (_scEl) {
     const bits = [];
@@ -279,23 +294,34 @@ function openDetail(id, from) {
     _branchFor = c.id;
     _branchOpen = false;
   }
-  const _addBr = isAdmin && (_sibs.length > 0 || !!(c.brand || "").trim());
   const _le = $("d-locs"),
-    _wh = $("d-where");
-  if (_sibs.length || _addBr) {
+    _wh = $("d-where"),
+    _sc = $("d-scrim");
+  if (_hasBar) {
+    const _cur = _sibs.find(x => x.current);
+    const _bar = (_cur && _cur.label) || _place || _brandTitle || c.name;
     const _label = _sibs.length ? _sibs.length + " branches" : "\uFF0B Branch";
     _wh.hidden = false;
-    _wh.innerHTML = '<span class="wl">' + _label + "</span>" + SVG_CHEV;
+    _wh.innerHTML = '<span class="wname">' + esc(_bar) + '</span><span class="wcount">' + _label + "</span>" + SVG_CHEV;
     _wh.setAttribute("aria-expanded", _branchOpen ? "true" : "false");
     _wh.setAttribute(
       "aria-label",
-      _sibs.length ? "Branches of " + (_brandTitle || c.name) + ", " + _sibs.length : "Add a branch"
+      _sibs.length ? "Branch " + _bar + ", " + _sibs.length + " branches. Opens the list of branches" : "Add a branch"
     );
     _le.hidden = !_branchOpen;
+    _sc.hidden = !_branchOpen;
     const _rows = _sibs.length
       ? _sibs
       : [{ id: c.id, label: areaOf(c) || c.name, wish: !!c.wish, current: true, full: c.name }];
+    /* the sheet's own header (phones and iPad); the laptop layout hides it */
+    const _head =
+      '<div class="brhead"><div class="grab" aria-hidden="true"></div><div class="brhead-r"><div><b>' +
+      esc(_brandTitle || c.name) +
+      "</b><span>" +
+      (_sibs.length ? _sibs.length + " branches \u00B7 pick one to switch" : "Add another branch") +
+      '</span></div><button type="button" class="brdone" onclick="setBranchesOpen(false);$(\'d-where\').focus()">Done</button></div></div>';
     _le.innerHTML =
+      _head +
       _rows
         .map(x => {
           const src = cafes.find(y => y.id === x.id) || {},
@@ -335,6 +361,7 @@ function openDetail(id, from) {
   } else {
     _wh.hidden = true;
     _le.hidden = true;
+    _sc.hidden = true;
     _le.innerHTML = "";
   }
 

@@ -18,9 +18,16 @@ const { eq, done } = checker();
     const pg = await ctx.newPage();
     await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
     const errs = []; pg.on("pageerror", e => errs.push(String(e)));
-    /* freeze the first paint: check the skeleton before the app replaces it */
+    /* Freeze the first paint: hold the data request until the skeleton has been read. The app replaces
+       the placeholders when its data arrives, so with the data held the check no longer races the load
+       (it used to fail about one run in four when the page was quick). Registered after the catch-all
+       above, so it is matched first. */
+    let release;
+    const held = new Promise(r => { release = r; });
+    await pg.route(u => new URL(u).pathname === "/cafes.json", async r => { await held; r.continue(); });
     await pg.goto(srv.origin + "/index.html", { waitUntil: "domcontentloaded" });
     const skel = await pg.evaluate(() => ({ cards: document.querySelectorAll("#grid .skel-card").length, busy: document.getElementById("grid").getAttribute("aria-busy") }));
+    release();
     await pg.waitForTimeout(700);
     await pg.evaluate(admin => {
       isAdmin = admin; applyMode(); window.google = undefined;
