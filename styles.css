@@ -979,3 +979,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .pcact{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
 .pcact .btn{ flex:1 1 30%; width:auto; }
 .pcnote{ margin:0; text-align:center; font-size:var(--fs-1); color:#fff; opacity:.8; }
+
+/* ---------- Wrapped cards: stacked bars and branch dots (v82) ---------- */
+.sc-wide > .legrows{ flex:none; }
+.sc-stack{ display:flex; gap:var(--sp-1); height:22px; border-radius:var(--r-2); overflow:hidden; }
+.sc-stack > span{ display:block; min-width:3px; }
+.usualcard .usual{ font-size:var(--fs-5); line-height:1.25; font-weight:800; letter-spacing:-.02em; text-wrap:balance; }
+.sc-dots{ display:inline-flex; flex-wrap:wrap; gap:var(--sp-1); }
+.sc-dots i{ width:12px; height:12px; border-radius:50%; background:var(--good); }
+.sc-dots i.w{ background:none; border:2px solid var(--want); box-sizing:border-box; }

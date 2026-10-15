@@ -3,7 +3,7 @@
 const { checker, ROOT } = require("./harness");
 const fs=require("fs"), path=require("path"), vm=require("vm");
 const { eq, done } = checker();
-const core=fs.readFileSync(path.join(ROOT,'js/core.js'),'utf8');
+const core=fs.readFileSync(path.join(ROOT,'js/core.js'),'utf8').replace(/\r\n/g,'\n'); /* a Windows checkout may hand back CRLF */
 const a=core.indexOf('/* ---------- currency ----------');
 const b=core.indexOf('return o;\n}\n',a)+'return o;\n}\n'.length;
 const ctx={console, localStorage:{getItem:()=>null,setItem:()=>{}}, warn:()=>{}, lsSet:()=>true};

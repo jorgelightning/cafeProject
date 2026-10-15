@@ -41,7 +41,7 @@ const { eq, done } = checker();
   }, admin);
 
   const o = await seed(true);
-  eq(o.cards, 3, "three chart cards: cadence, price spread and taste");
+  eq(o.cards >= 3, true, "at least the three chart cards: cadence, price spread and taste");
   eq(["Cadence", "Price spread", "Taste"].every(t => o.heads.some(h => h.indexOf(t) > -1)), true, "…each under its own heading");
   eq(o.overflow, false, "nothing sticks out at 375px");
   eq(o.curve, true, "the owner gets the running spend total");
@@ -51,7 +51,7 @@ const { eq, done } = checker();
 
   const v = await seed(false);
   eq(v.curve, false, "a viewer never sees the running spend total, a money figure");
-  eq(v.cards, 3, "…but still gets the three charts");
+  eq(v.cards >= 3, true, "…but still gets the three charts");
 
   const num = await pg.evaluate(() => {
     isAdmin = true; applyMode(); renderStats();

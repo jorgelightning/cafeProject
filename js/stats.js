@@ -291,7 +291,62 @@ function statBarRows(items) {
       .map(function (i) {
         return (
           '<div class="hb-row"><span class="hb-nm">' + esc(i.label) + '</span><span class="hb-tr"><i style="width:' +
-          (i.n / mx) * 100 + '%"></i></span><span class="hb-v">' + i.n + "</span></div>"
+          (i.n / mx) * 100 + '%"></i></span><span class="hb-v">' + (i.text != null ? i.text : i.n) + "</span></div>"
+        );
+      })
+      .join("") +
+    "</div>"
+  );
+}
+
+/* ---------- Wrapped: drink DNA, worth it, chains and independents ----------
+   Everything here is counted from what is already stored; nothing is estimated, and each card says
+   how much of the data it stood on. No location, area or review is read — a brand name and a count
+   are all a private spot contributes. */
+const STAT_SEG = ["var(--acc)", "var(--want)", "var(--good)", "var(--mid)", "var(--soft)"];
+/** The top few values of a counter, with everything else folded into "Other". */
+function statGroups(counter, keep) {
+  const keys = Object.keys(counter).sort(function (a, b) {
+    return counter[b] - counter[a] || (a < b ? -1 : 1);
+  });
+  const items = keys.slice(0, keep).map(function (k) {
+    return { label: k === "0%" ? "No sugar" : k, n: counter[k] };
+  });
+  const rest = keys.slice(keep).reduce(function (s, k) {
+    return s + counter[k];
+  }, 0);
+  if (rest) items.push({ label: "Other", n: rest });
+  return items;
+}
+function statStack(items) {
+  const tot =
+    items.reduce(function (s, i) {
+      return s + i.n;
+    }, 0) || 1;
+  return (
+    '<div class="sc-stack" role="img" aria-label="' +
+    items
+      .map(function (i) {
+        return esc(i.label) + " " + i.n;
+      })
+      .join(", ") +
+    '">' +
+    items
+      .map(function (i, ix) {
+        return '<span style="width:' + (i.n / tot) * 100 + "%;background:" + STAT_SEG[ix % STAT_SEG.length] + '" title="' + esc(i.label) + " · " + i.n + '"></span>';
+      })
+      .join("") +
+    "</div>"
+  );
+}
+function statLegend(items, total) {
+  return (
+    '<div class="legrows">' +
+    items
+      .map(function (i, ix) {
+        return (
+          '<div><i style="background:' + STAT_SEG[ix % STAT_SEG.length] + '"></i><span>' + esc(i.label) + "</span><b>" + i.n + " \u00b7 " +
+          Math.round((i.n / (total || 1)) * 100) + "%</b></div>"
         );
       })
       .join("") +
@@ -322,6 +377,7 @@ function renderStats() {
   const allDays = {},
     dayCount = {},
     pricedList = [],
+    orderRows = [],
     monthVisit = {},
     monthUnits = {},
     monthPriced = {},
@@ -351,6 +407,7 @@ function renderStats() {
         const q = orderQty(o),
           p = dpr(o);
         nDrinkRows += q;
+        orderRows.push({ c: c, dn: d.n || "", fam: fam, o: o, q: q, p: p });
         if (p > 0) {
           nPriced += q;
           pricedList.push({ p: p, q: q, d: o.date || "", cc: c.cc || "" });
@@ -843,12 +900,14 @@ function renderStats() {
       (split ? "; the country split uses only cafes with a country set" : "") + ". Missing prices are not estimated.</div></div>";
   }
 
-  /* ---------- 6. your usual ---------- */
+  /* ---------- 6. drink DNA ----------
+     "Your usual" printed the single most common value of each option as a chip, which hid the
+     shape: 86% no sugar and 96% oat is a very different story from 51% and 52%. Each option is
+     now a bar of its whole spread, under the sentence the chips used to add up to. */
   const tSweet = top(sweetC),
     tIce = top(iceC),
     tMilk = top(milkC),
     tSize = top(sizeC),
-    tTag = top(tagC),
     tFam = top(drinkFam);
   if (tFam || tSweet || tIce) {
     const words = [];
@@ -857,29 +916,149 @@ function renderStats() {
     if (tIce) words.push(tIce[0].toLowerCase());
     if (tMilk) words.push(tMilk[0].toLowerCase());
     if (tSize) words.push(tSize[0]);
-    const nSweet = Object.keys(sweetC).reduce(function (s, k) {
-      return s + sweetC[k];
-    }, 0);
-    const nMilk = Object.keys(milkC).reduce(function (s, k) {
-      return s + milkC[k];
-    }, 0);
-    const chips = [];
-    if (tSweet) chips.push((tSweet[0] === "0%" ? "No sugar" : tSweet[0]) + " · " + tSweet[1] + " of " + nSweet);
-    if (tIce) chips.push(tIce[0] + " · " + tIce[1]);
-    if (tMilk) chips.push(tMilk[0] + " · " + tMilk[1] + " of " + nMilk);
-    if (tSize) chips.push(tSize[0] + " · " + tSize[1]);
-    if (tTag) chips.push("#" + tTag[0] + " · " + tTag[1]);
+    const sum = function (m) {
+      return Object.keys(m).reduce(function (s, k) {
+        return s + m[k];
+      }, 0);
+    };
+    /* the priciest drink you have only ever ordered once: the one you took a chance on */
+    const famSeen = {};
+    orderRows.forEach(function (x) {
+      if (x.fam) famSeen[x.fam] = (famSeen[x.fam] || 0) + x.q;
+    });
+    const gamble = orderRows
+      .filter(function (x) {
+        return x.fam && famSeen[x.fam] === 1 && x.p > 0;
+      })
+      .sort(function (a, b) {
+        return b.p - a.p;
+      })[0];
+    /* the cafe where you tried the most different drinks */
+    const adv = nonWish
+      .map(function (c) {
+        const s = {};
+        (c.drinks || []).forEach(function (d) {
+          s[/hoji/i.test(d.n || "") ? "Hojicha latte" : (d.n || "").trim()] = 1;
+        });
+        return { c: c, n: Object.keys(s).length };
+      })
+      .sort(function (a, b) {
+        return b.n - a.n;
+      })[0];
+    const rows = [
+      ["Sweetness", sweetC, 4],
+      ["Ice or heat", iceC, 4],
+      ["Milk", milkC, 3],
+      ["Size", sizeC, 4],
+    ].filter(function (r) {
+      return sum(r[1]) > 0;
+    });
     h +=
-      '<div class="statsec">☕ Your usual</div><div class="statcard usualcard"><div class="usual">' +
-      esc(words.join(", ")) +
-      ".</div>" +
-      '<div class="chips">' +
-      chips
-        .map(function (x) {
-          return '<span class="chip">' + esc(x) + "</span>";
+      '<div class="statsec">🧬 Drink DNA</div><div class="statcard sc-wide usualcard">' +
+      '<div class="usual">' + esc(words.join(", ")) + ".</div>" +
+      '<div class="sc-duo"><div><span>Most loyal order</span><b>' + esc(tFam ? tFam[0] : "") + "</b><i>" + (tFam ? tFam[1] : 0) +
+      " drinks</i></div><div><span>Biggest gamble</span><b>" + esc(gamble ? gamble.fam : "None") + "</b><i>" +
+      (gamble ? statMoney(gamble.p) + " once, at " + esc(gamble.c.name) : "nothing ordered only once is priced") + "</i></div></div>" +
+      rows
+        .map(function (r) {
+          const g = statGroups(r[1], r[2]),
+            t = sum(r[1]);
+          return '<div class="sc-cap">' + r[0] + " \u00b7 " + Math.round((g[0].n / t) * 100) + "% " + esc(g[0].label.toLowerCase()) + "</div>" + statStack(g) + statLegend(g, t);
         })
         .join("") +
-      "</div></div>";
+      '<div class="statnote">' + (adv && adv.n > 1 ? "Most adventurous: <b>" + esc(adv.c.name) + "</b>, " + adv.n + " different drinks. " : "") +
+      "Counted from " + sum(sweetC) + " of " + nDrinkRows + " drinks with a sweetness set.</div></div>";
+  }
+
+  /* ---------- 6a. worth it: do you reorder it, and what does it cost ---------- */
+  const verdicts = { yes: 0, neutral: 0, no: 0 },
+    vPrice = { yes: [], neutral: [], no: [] };
+  orderRows.forEach(function (x) {
+    const v = x.o.reorder;
+    if (v !== "yes" && v !== "neutral" && v !== "no") return;
+    verdicts[v] += x.q;
+    if (x.p > 0) for (let i = 0; i < x.q; i++) vPrice[v].push(x.p);
+  });
+  const vTotal = verdicts.yes + verdicts.neutral + verdicts.no;
+  if (vTotal >= 5) {
+    const avgOf = function (a) {
+      return a.length
+        ? a.reduce(function (s, v) {
+            return s + v;
+          }, 0) / a.length
+        : 0;
+    };
+    const tiers = [
+      ["Under $6", 0, 6],
+      ["$6 to $8", 6, 8],
+      ["$8 to $10", 8, 10],
+      ["$10 and up", 10, 1e9],
+    ].map(function (t) {
+      const inT = orderRows.filter(function (x) {
+        return x.p >= t[1] && x.p < t[2] && (x.o.reorder === "yes" || x.o.reorder === "neutral" || x.o.reorder === "no");
+      });
+      const yes = inT.reduce(function (s, x) {
+        return s + (x.o.reorder === "yes" ? x.q : 0);
+      }, 0);
+      const all = inT.reduce(function (s, x) {
+        return s + x.q;
+      }, 0);
+      return { label: t[0], n: all ? Math.round((yes / all) * 100) : 0, all: all, yes: yes };
+    });
+    const cheap = nonWish
+      .filter(function (c) {
+        return bucketOf(c) === "loved";
+      })
+      .map(function (c) {
+        const ps = [];
+        (c.drinks || []).forEach(function (d) {
+          drinkOrders(d).forEach(function (o) {
+            if (dpr(o) > 0) ps.push(dpr(o));
+          });
+        });
+        return { c: c, p: avgOf(ps), n: ps.length };
+      })
+      .filter(function (x) {
+        return x.n >= 2;
+      })
+      .sort(function (a, b) {
+        return a.p - b.p;
+      })
+      .slice(0, 3);
+    const regret = verdicts.no;
+    h +=
+      '<div class="statsec">💎 Worth it</div><div class="statcard sc-wide">' +
+      '<div class="sc-head"><b>' + Math.round((verdicts.yes / vTotal) * 100) + "%</b> of your drinks, you would order again</div>" +
+      statStack([
+        { label: "Order again", n: verdicts.yes },
+        { label: "Neutral", n: verdicts.neutral },
+        { label: "Regret", n: verdicts.no },
+      ]) +
+      statLegend([
+        { label: "Order again", n: verdicts.yes },
+        { label: "Neutral", n: verdicts.neutral },
+        { label: "Regret", n: verdicts.no },
+      ], vTotal) +
+      (vPrice.yes.length && vPrice.neutral.length
+        ? '<div class="sc-duo"><div><span>Avg price, order again</span><b>' + statMoney(avgOf(vPrice.yes)) + "</b><i>" + vPrice.yes.length +
+          " priced</i></div><div><span>Avg price, neutral</span><b>" + statMoney(avgOf(vPrice.neutral)) + "</b><i>" + vPrice.neutral.length + " priced</i></div></div>"
+        : "") +
+      '<div class="sc-cap">Order-again rate by price</div>' +
+      statBarRows(
+        tiers.map(function (t) {
+          return { label: t.label + " (" + t.all + ")", n: t.n, text: t.n + "%" };
+        })
+      ) +
+      (cheap.length
+        ? '<div class="sc-cap">Loved cafes with the lowest average drink</div>' +
+          statBarRows(
+            cheap.map(function (x) {
+              return { label: x.c.name, n: x.p, text: statMoney(x.p) };
+            })
+          )
+        : "") +
+      '<div class="statnote">' + vTotal + " of " + nDrinkRows + " drinks carry a verdict" +
+      (regret < 5 ? ", and only " + regret + " were a regret, so the price bands show a pattern to watch, not a rule" : "") + ".</div></div>";
   }
 
   /* ---------- 6b. taste: verdict split, wishlist, tags ---------- */
@@ -992,6 +1171,101 @@ function renderStats() {
       (rest ? "+" + rest + " elsewhere. " : "") +
       (far ? "Farthest: " + esc(far.c.name) + " — " + Math.round(far.mi).toLocaleString() + " mi." : "") +
       "</div>";
+  }
+
+  /* ---------- 8b. chains and independents ----------
+     A chain is a brand group of two or more cafes, the same grouping the cafe page uses for its
+     branches (brandGroupKey), so this cannot disagree with it. */
+  const groups = {};
+  cafes.forEach(function (c) {
+    const k = brandGroupKey(c);
+    if (k) (groups[k] = groups[k] || []).push(c);
+  });
+  const chains = Object.keys(groups)
+    .map(function (k) {
+      const m = groups[k],
+        names = {};
+      m.forEach(function (c) {
+        const b = (c.brand || "").trim() || brandBaseName(c.name);
+        names[b] = (names[b] || 0) + 1;
+      });
+      const label = Object.keys(names).sort(function (a, b) {
+        return names[b] - names[a] || a.length - b.length;
+      })[0];
+      const been = m.filter(function (c) {
+        return !c.wish;
+      });
+      return {
+        label: label,
+        members: m,
+        been: been,
+        visits: been.reduce(function (s, c) {
+          return s + visitDates(c).length;
+        }, 0),
+      };
+    })
+    .filter(function (g) {
+      return g.members.length > 1 && g.been.length > 0;
+    })
+    .sort(function (a, b) {
+      return b.been.length - a.been.length || b.visits - a.visits || (a.label < b.label ? -1 : 1);
+    });
+  if (chains.length && nonWish.length >= 5) {
+    const inChain = {};
+    chains.forEach(function (g) {
+      g.been.forEach(function (c) {
+        inChain[c.id] = 1;
+      });
+    });
+    const chainCafes = nonWish.filter(function (c) {
+        return inChain[c.id];
+      }),
+      indie = nonWish.filter(function (c) {
+        return !inChain[c.id];
+      });
+    const lovedPct = function (a) {
+      return a.length
+        ? Math.round(
+            (a.filter(function (c) {
+              return bucketOf(c) === "loved";
+            }).length /
+              a.length) *
+              100
+          )
+        : 0;
+    };
+    const mostV = chains.slice().sort(function (a, b) {
+      return b.visits - a.visits;
+    })[0];
+    const split = [
+      { label: "Independent spots", n: indie.length },
+      { label: "Chain branches", n: chainCafes.length },
+    ];
+    h +=
+      '<div class="statsec">🏪 Chains and independents</div><div class="statcard sc-wide">' +
+      '<div class="sc-head"><b>' + Math.round((indie.length / nonWish.length) * 100) + "%</b> independent, " +
+      Math.round((chainCafes.length / nonWish.length) * 100) + "% chain branches</div>" +
+      statStack(split) +
+      statLegend(split, nonWish.length) +
+      '<div class="sc-duo"><div><span>Most visited brand</span><b>' + esc(mostV.label) + "</b><i>" + mostV.visits + " dated visits, " +
+      mostV.been.length + " branches</i></div><div><span>Loved rate</span><b>" + lovedPct(chainCafes) + "% vs " + lovedPct(indie) +
+      "%</b><i>chains vs independents</i></div></div>" +
+      '<div class="hbars">' +
+      chains
+        .slice(0, 6)
+        .map(function (g) {
+          return (
+            '<div class="hb-row"><span class="hb-nm">' + esc(g.label) + '</span><span class="sc-dots">' +
+            g.members
+              .map(function (c) {
+                return '<i class="' + (c.wish ? "w" : "") + '"></i>';
+              })
+              .join("") +
+            '</span><span class="hb-v">' + g.been.length + " of " + g.members.length + "</span></div>"
+          );
+        })
+        .join("") +
+      '</div><div class="statnote">Filled dot: a branch you have logged. Ring: still on your want list.</div></div>';
   }
 
   /* ---------- 9. keep ranking ---------- */
