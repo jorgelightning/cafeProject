@@ -154,6 +154,118 @@ function chipMatch(c, chip) {
     );
   return true;
 }
+/* ---------- guides: one-tap ways in ----------
+   A friend opening the app wants "where should I go", not a filter panel. Four guides sit under
+   the tabs for a viewer; the owner gets three working views inside Filters, where they cost no
+   height at rest. They are one more filter in filteredCafes, so Clear, the result line, the map
+   button and the Filters badge all already know about them. */
+let activeGuide = "";
+const GUIDE_DEFS = [
+  ["top10", "\ud83c\udfc6 Top 10"],
+  ["tea", "\ud83c\udf75 Best tea"],
+  ["goto", "\u2615 Go-to"],
+  ["near", "\ud83d\udccd Near me"],
+];
+const QUICK_DEFS = [
+  ["recent", "Recent"],
+  ["unranked", "Unranked"],
+  ["noprice", "Needs price"],
+];
+function _rankNum(c) {
+  const r = rankOf(c, _cardRanks || undefined);
+  return r || 99999;
+}
+function _hasPrice(o) {
+  return parseFloat(String((o && o.p) || "").replace(/[^0-9.]/g, "")) > 0;
+}
+/** @param {Cafe} c @param {string} g */
+function guideMatch(c, g) {
+  if (g === "top10") return _rankNum(c) <= 10;
+  if (g === "tea") return bucketOf(c) === "loved" && (chipMatch(c, "matcha") || chipMatch(c, "boba"));
+  if (g === "goto") return !!(typeof topDrinkAt === "function" && topDrinkAt(c) && reorderTally(c).yes > 0);
+  /* Near me needs a position. Until the app has one it filters nothing, rather than showing an
+     empty list that looks broken; only locate() ever asks the browser for it. */
+  if (g === "near") {
+    if (!userLoc) return true;
+    return latOf(c) != null && distKm(userLoc.lat, userLoc.lng, latOf(c), lngOf(c)) * 0.621371 <= NEAR_MI;
+  }
+  if (g === "recent") {
+    const last = visitDates(c).slice(-1)[0] || "";
+    return !!last && Date.now() - new Date(last).getTime() <= 45 * 86400000;
+  }
+  if (g === "unranked") return matchCount(c) === 0;
+  if (g === "noprice")
+    return (c.drinks || []).some(function (d) {
+      return drinkOrders(d).some(function (o) {
+        return !_hasPrice(o);
+      });
+    });
+  return true;
+}
+/** The order a guide implies, or null to fall through to the chosen sort. */
+function guideCompare(a, b) {
+  const g = activeGuide;
+  if (g === "top10" || g === "tea") return _rankNum(a) - _rankNum(b) || (a.name || "").localeCompare(b.name || "");
+  if (g === "goto") {
+    const na = (topDrinkAt(a) || { n: 0 }).n,
+      nb = (topDrinkAt(b) || { n: 0 }).n;
+    return nb - na || _rankNum(a) - _rankNum(b) || (a.name || "").localeCompare(b.name || "");
+  }
+  if (g === "near" && userLoc) {
+    const da = a.lat != null ? distKm(userLoc.lat, userLoc.lng, latOf(a), lngOf(a)) : Infinity,
+      db = b.lat != null ? distKm(userLoc.lat, userLoc.lng, latOf(b), lngOf(b)) : Infinity;
+    return da - db || (a.name || "").localeCompare(b.name || "");
+  }
+  if (g === "recent") {
+    const ad = visitDates(a).slice(-1)[0] || "",
+      bd = visitDates(b).slice(-1)[0] || "";
+    return bd.localeCompare(ad) || (a.name || "").localeCompare(b.name || "");
+  }
+  return null;
+}
+function setGuide(g) {
+  activeGuide = activeGuide === g ? "" : g;
+  /* a guide is about places you have been; the want-to-try tab has its own short list */
+  if (activeGuide && listTab === "want") listTab = "been";
+  renderList();
+  if (activeGuide === "near" && !userLoc && typeof locate === "function") locate();
+}
+function renderGuideRow() {
+  const host = $("guiderow");
+  if (!host) return;
+  const show = !isAdmin && listTab === "been";
+  host.hidden = !show;
+  if (!show) {
+    host.innerHTML = "";
+    return;
+  }
+  host.innerHTML = GUIDE_DEFS.map(function (d) {
+    return (
+      '<button type="button" aria-pressed="' + (activeGuide === d[0] ? "true" : "false") +
+      '" onclick="setGuide(\'' + d[0] + "')\">" + d[1] + "</button>"
+    );
+  }).join("");
+}
+function renderQuickChips() {
+  const host = $("quickchips");
+  if (!host) return;
+  host.innerHTML = QUICK_DEFS.map(function (d) {
+    const n = cafes.filter(c => !c.wish && guideMatch(c, d[0])).length;
+    return (
+      '<span class="chip' + (activeGuide === d[0] ? " on" : "") + '" role="button" tabindex="0" onclick="setGuide(\'' +
+      d[0] + "')\">" + d[1] + " <small>" + n + "</small></span>"
+    );
+  }).join("");
+}
+/** The latest priced order of a drink, as dollars — the card's order line carries it. */
+function cardPrice(d) {
+  const os = drinkOrders(d)
+    .filter(_hasPrice)
+    .sort(function (x, y) {
+      return (y.date || "").localeCompare(x.date || "");
+    });
+  return os.length ? fmtPrice(os[0].p) : "";
+}
 /* Faves and Wish are toggles on their own globals rather than activeChip values, so
    "coffee favorites" stays expressible — folding them into the single-select chip would
    quietly remove combined filters. They stay mutually exclusive to each other. */
@@ -223,6 +335,7 @@ function filteredCafes(q) {
   if (activeChip) items = items.filter(c => chipMatch(c, activeChip));
   if (activeVerdict && listTab !== "want") items = items.filter(c => bucketOf(c) === activeVerdict);
   if (activeArea) items = items.filter(c => areaKey(c) === activeArea);
+  if (activeGuide && listTab !== "want") items = items.filter(c => guideMatch(c, activeGuide));
   if (q) items = items.filter(c => matchSearch(c, q));
   return items;
 }
@@ -235,7 +348,7 @@ function setArea(a) {
   renderList();
 }
 function filtersActive() {
-  return !!(activeChip || favOnly || activeVerdict || activeArea || ($("q") && $("q").value.trim()));
+  return !!(activeChip || favOnly || activeVerdict || activeArea || activeGuide || ($("q") && $("q").value.trim()));
 }
 /* Everything, including the search box — what "Clear" means to a person looking at a short list. */
 function clearAll() {
@@ -294,6 +407,8 @@ function renderFilterChips() {
       (showTagRow ? " on" : "") +
       '" role="button" tabindex="0" onclick="toggleTagRow()"># Tags</span>';
   host.innerHTML = h;
+  renderGuideRow();
+  renderQuickChips();
   renderVerdictAreaChips();
   const trow = $("tagchips");
   if (trow) {
@@ -376,6 +491,7 @@ function clearFilters() {
   showTagRow = false;
   activeVerdict = "";
   activeArea = "";
+  activeGuide = "";
   renderList();
 }
 function setChip(v) {
@@ -394,7 +510,21 @@ function renderList() {
   updateFilterBadge();
   if (typeof updateMilkBtn === "function") updateMilkBtn();
   if (typeof updateSpellBtn === "function") updateSpellBtn();
+  /* A viewer is told what the list is before they search it. Same height as before: it is the
+     placeholder, not a row. */
+  const _ph = $("q");
+  if (_ph) {
+    const nb = cafes.filter(c => !c.wish),
+      nc = typeof countryCount === "function" ? countryCount(nb) : 0;
+    _ph.placeholder = isAdmin
+      ? "Search name, city, drink\u2026"
+      : nb.length + " spots" + (nc > 1 ? " in " + nc + " countries" : "") + "\u2026";
+  }
   items.sort((a, b) => {
+    if (activeGuide) {
+      const gs = guideCompare(a, b);
+      if (gs !== null) return gs;
+    }
     /* Untested cafes sort last, not mid-table. eloScoreNum returns exactly 5.0 with no
    comparisons, which floated every unranked cafe above the 36 that were compared and lost —
    putting the most-compared cafe in the app in last place. */
@@ -532,6 +662,7 @@ function renderList() {
       /* "No visit date" on a place you have not been is the definition of the want-to-try tab,
      and it was what truncated the area to "West San Jose · No vis…" seven times over. */
       const _td = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
+      const _tp = _td ? cardPrice(_td.d) : "";
       const _lv = c.wish ? "" : lastVisitedStr(c, true);
       if (_lv) M.push(_lv);
 
@@ -555,11 +686,24 @@ function renderList() {
         '<div class="m">' +
         M.join(" · ") +
         "</div>" +
-        (_td ? '<div class="cdrink">Order the ' + esc(_td.d.n) + "</div>" : "") +
+        (_td
+          ? '<div class="cdrink"><span class="cdn"><span class="cdo">Order the </span>' +
+            esc(_td.d.n) +
+            "</span>" +
+            (_tp ? '<b class="cdp">' + _tp + "</b>" : "") +
+            "</div>"
+          : "") +
         "</div>" +
         '<span class="compact-stars">' +
         (bucketLabel(c) || "Not rated yet") +
         "</span>" +
+        (_td
+          ? '<button type="button" class="again admin-only" aria-label="Log ' +
+            esc(_td.d.n) +
+            ' again" onclick="event.stopPropagation();logAgainFrom(\'' +
+            c.id +
+            "')\">\uff0b</button>"
+          : "") +
         "</div>"
       );
     })
@@ -643,6 +787,8 @@ function activeFilterCount() {
   if (favOnly) n++;
   if (activeVerdict) n++;
   if (activeArea) n++;
+  /* the viewer's guide shows itself on the row; the owner's views live inside the panel */
+  if (isAdmin && activeGuide) n++;
   if (sortMode && sortMode !== "recent") n++;
   return n;
 }

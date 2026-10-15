@@ -100,7 +100,7 @@ const { eq, done } = checker();
     const order = [...k.querySelectorAll(".b > div")].map(d => d.className);
     setListLayout(true); const hiddenCompact = getComputedStyle([...document.querySelectorAll("#grid .card")].find(c => c.querySelector(".n").textContent === "Kettle & Kiln").querySelector(".cdrink")).display; setListLayout(false);
     setListTab("want"); const wishDrink = document.querySelectorAll("#grid .cdrink").length; setListTab("been");
-    return { text: k.querySelector(".cdrink").textContent, order, hiddenCompact, wishDrink }; });
+    return { text: k.querySelector(".cdrink .cdn").textContent, order, hiddenCompact, wishDrink }; });
   eq(r.text, "Order the Matcha latte", "a card says what to order");
   eq(r.order, ["n", "m", "cdrink"], "…in the order name, where, then the drink");
   eq([r.hiddenCompact, r.wishDrink], ["none", 0], "the compact list stays one line per cafe, and a place you have not been has no order to suggest");

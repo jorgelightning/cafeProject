@@ -1224,3 +1224,26 @@ a polish block at the end of `styles.css`.
   with `isolation:isolate` and `z-index:-1` so they sit under the badges without moving them.
 - Not done in this phase, on purpose: the detail page's gold rank tile and the order banner
   (markup, Phase 3), and two columns at 375px (the 168px grid minimum is a layout change, Phase 2).
+
+### One-tap ways in — Phase 2 of the guide tune-up, 15 Oct 2026 (v80)
+
+A friend opens the app to answer "where should I go", and the only way in was a search box and a
+filter panel. **Four guides** now sit under the tabs for a viewer — Top 10, Best tea, Go-to, Near
+me — and the search box says what is behind it ("110 spots in 6 countries"), as its placeholder,
+so it costs no height. They are one more filter in `filteredCafes()` (`activeGuide`), so Clear,
+the result line, the map button and the Filters badge already agree with them.
+
+- **The owner has no guide row.** Their chrome is already the tightest on the screen, so Recent,
+  Unranked and Needs price live inside Filters (the badge counts them, because that is where
+  they are), and each card carries a **＋** that opens that cafe's visit with its usual drink
+  already added (`logAgainFrom()` → `logUsual()`). It opens the form rather than saving, on
+  purpose: price is the one thing it cannot know, and a one-tap write is a one-tap mistake.
+- **The viewer's row is the one deliberate addition to chrome.** `tests/list-clean.js` measures it
+  separately (≤60px) and holds everything else to the old 145px, rather than raising the budget.
+- **Near me never asks for location by itself.** Without a position it filters nothing, and the
+  tap calls `locate()`, the only path allowed to raise the prompt.
+- **The order line carries the price** (`Hojicha latte $7.25`). The words "Order the" stay in the
+  DOM for the tests and assistive tech but are hidden when a price is present, because the price
+  is what made the drink name clip. No price means no figure, never `$0.00`.
+- **Two columns at 375px.** The grid minimum went 168 → 156px; 343px of width is two cards of
+  165px with a gap, and was one 343px card before. `tests/list-guide.js`.

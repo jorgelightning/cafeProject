@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=79">
+<link rel="stylesheet" href="styles.css?v=80">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -40,7 +40,8 @@
 <div class="search">🔍<input id="q" placeholder="Search name, city, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
 
 
-<div class="listbar"><div class="listtabs" id="listtabs" role="group" aria-label="Been or want to try"></div><button class="filterbtn" id="filterbtn" onclick="toggleListFilters()" aria-expanded="false" aria-controls="listpanel">Filters<span class="fcount" id="fcount" hidden></span><span class="fchev">▾</span></button><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" aria-label="Show these on the map" style="margin-left:4px">🗺️</button><span id="save-state" class="admin-only" role="status"></span></div><div class="listpanel" id="listpanel" hidden><label class="lp-row"><span>Sort</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="visited">Recently visited</option><option value="ranked">Top ranked</option><option value="rating">Loved first</option><option value="near">📍 Nearest to me</option></select></label><div class="lp-group"><div class="lp-label" id="lab-type">Type</div><div class="chiprow" id="filterchips" role="group" aria-labelledby="lab-type"></div><div class="chiprow tagrow" id="tagchips" style="display:none"></div></div>
+<div class="listbar"><div class="listtabs" id="listtabs" role="group" aria-label="Been or want to try"></div><button class="filterbtn" id="filterbtn" onclick="toggleListFilters()" aria-expanded="false" aria-controls="listpanel">Filters<span class="fcount" id="fcount" hidden></span><span class="fchev">▾</span></button><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" aria-label="Show these on the map" style="margin-left:4px">🗺️</button><span id="save-state" class="admin-only" role="status"></span><div class="guiderow" id="guiderow" role="group" aria-label="Quick filters" hidden></div></div><div class="listpanel" id="listpanel" hidden><label class="lp-row"><span>Sort</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="visited">Recently visited</option><option value="ranked">Top ranked</option><option value="rating">Loved first</option><option value="near">📍 Nearest to me</option></select></label><div class="lp-group"><div class="lp-label" id="lab-type">Type</div><div class="chiprow" id="filterchips" role="group" aria-labelledby="lab-type"></div><div class="chiprow tagrow" id="tagchips" style="display:none"></div></div>
+<div class="lp-group admin-only" id="quickgroup"><div class="lp-label" id="lab-quick">Quick views</div><div class="chiprow" id="quickchips" role="group" aria-labelledby="lab-quick"></div></div>
 <div class="lp-group" id="verdictgroup"><div class="lp-label" id="lab-verdict">Verdict</div><div class="chiprow" id="verdictchips" role="group" aria-labelledby="lab-verdict"></div></div>
 <div class="lp-group" id="areagroup"><div class="lp-label" id="lab-area">Area</div><div class="chiprow" id="areachips" role="group" aria-labelledby="lab-area"></div></div></div>
 <div class="resultline" id="resultline" role="status" aria-live="polite" hidden></div>
@@ -171,18 +172,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=79"></script>
-<script src="js/core.js?v=79"></script>
-<script src="js/storage.js?v=79"></script>
-<script src="js/sync.js?v=79"></script>
-<script src="js/nav.js?v=79"></script>
-<script src="js/map.js?v=79"></script>
-<script src="js/photos.js?v=79"></script>
-<script src="js/list.js?v=79"></script>
-<script src="js/stats.js?v=79"></script>
-<script src="js/rank.js?v=79"></script>
-<script src="js/detail.js?v=79"></script>
-<script src="js/form.js?v=79"></script>
-<script src="js/boot.js?v=79"></script>
+<script src="js/config.js?v=80"></script>
+<script src="js/core.js?v=80"></script>
+<script src="js/storage.js?v=80"></script>
+<script src="js/sync.js?v=80"></script>
+<script src="js/nav.js?v=80"></script>
+<script src="js/map.js?v=80"></script>
+<script src="js/photos.js?v=80"></script>
+<script src="js/list.js?v=80"></script>
+<script src="js/stats.js?v=80"></script>
+<script src="js/rank.js?v=80"></script>
+<script src="js/detail.js?v=80"></script>
+<script src="js/form.js?v=80"></script>
+<script src="js/boot.js?v=80"></script>
 </body>
 </html>
