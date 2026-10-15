@@ -44,7 +44,7 @@ function applyTheme(t) {
   if (t === "light" || t === "dark") r.dataset.theme = t;
   else delete r.dataset.theme;
   if (typeof renderSettings === "function") renderSettings();
-  /* the two media-scoped meta tags follow the SYSTEM preference, so a manual choice needs an explicit override tag to keep the browser chrome in step */ let m =
+  /* the two media-scoped meta tags follow the SYSTEM preference, so a manual choice needs an explicit override tag to keep the browser chrome in step */ /** @type {any} */ let m =
     document.getElementById("tc-override");
   if (t) {
     if (!m) {
@@ -150,7 +150,7 @@ function reloadLatest(auto) {
     }
   }
   const u = new URL(location.href);
-  u.searchParams.set("v", Date.now());
+  u.searchParams.set("v", /** @type {any} */ (Date.now()));
   location.replace(u.href);
   return true;
 }

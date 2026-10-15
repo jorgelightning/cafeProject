@@ -18,7 +18,7 @@ function checkExisting() {
 function fmtEdited(iso) {
   if (!iso) return "";
   const d = new Date(iso);
-  if (isNaN(d)) return "";
+  if (isNaN(/** @type {any} */ (d))) return "";
   return (
     d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) +
     " · " +
@@ -243,7 +243,7 @@ function logDrinkHere() {
   setTimeout(function () {
     const row = addDrinkRow("", "", localToday());
     activateDrinkRow(row);
-    const n = row.querySelector(".dn");
+    const n = /** @type {HTMLElement|null} */ (row.querySelector(".dn"));
     if (n) n.focus({ preventScroll: true });
     row.scrollIntoView({ block: "start" });
     _formSnap = formSnapshot();
@@ -492,7 +492,7 @@ function addOrderToGroup(btn) {
     if (ch) ch.textContent = "▾";
   }
   activateDrinkRow(row);
-  const p = row.querySelector(".dp");
+  const p = /** @type {HTMLInputElement|null} */ (row.querySelector(".dp"));
   if (p) {
     try {
       p.focus({ preventScroll: true });
@@ -661,7 +661,7 @@ function logUsual(btn) {
   const row = addDrinkRow(e.n, "", localToday(), spec.sweet, spec.ice, spec.size, "", false, spec.milk, 1, null);
   if (!row) return;
   activateDrinkRow(row);
-  const p = row.querySelector(".dp");
+  const p = /** @type {HTMLInputElement|null} */ (row.querySelector(".dp"));
   if (p) {
     try {
       p.focus({ preventScroll: true });
@@ -881,7 +881,7 @@ function syncCcy(sel) {
   if (!dr) return;
   sel.dataset.user = "1";
   formCcy = sel.value; /* remember it on the cafe so this is a once-per-cafe question */
-  const rt = dr.querySelector(".dpr");
+  const rt = /** @type {HTMLElement|null} */ (dr.querySelector(".dpr"));
   if (rt) rt.dataset.frozen = ""; /* re-declaring the currency re-rates */
   const dp = dr.querySelector(".dp");
   if (dp) syncPrice(dp);
@@ -892,14 +892,14 @@ function syncCcy(sel) {
 function refreshRowCcy() {
   const ccy = ccyFor({ cc: formCC, ccy: formCcy });
   document.querySelectorAll("#f-drinks .dr").forEach(function (dr) {
-    const sel = dr.querySelector(".dpc"),
-      dp = dr.querySelector(".dp");
+    const sel = /** @type {HTMLSelectElement|null} */ (dr.querySelector(".dpc")),
+      dp = /** @type {HTMLInputElement|null} */ (dr.querySelector(".dp"));
     if (!sel || !dp || sel.dataset.user === "1") return;
     if (String(dp.value || "").trim()) return;
     sel.innerHTML = ccyOptionsHTML(ccy);
     sel.value = ccy;
     sel.hidden = ccy === "USD" && !!formCC;
-    const rt = dr.querySelector(".dpr");
+    const rt = /** @type {HTMLElement|null} */ (dr.querySelector(".dpr"));
     if (rt) rt.dataset.frozen = "";
     syncPrice(dp);
   });
@@ -1086,6 +1086,7 @@ function setMilk(btn) {
    one drink across several ranking entries. This moves it into the milk field. A rename is
    applied only when the trimmed name is unique in that cafe — otherwise the name is left
    alone and just the milk is set, so entries that record separate visits never merge. */
+/** @type {[RegExp, string][]} */
 const MILK_IN_NAME = [
   [/\s*\/w\s*oak\s*milk\b/i, "Oat"],
   [/\s*[+]\s*oak\s*milk\b/i, "Oat"],
@@ -1206,7 +1207,7 @@ function adminTodo() {
 function updateAdminBadge() {
   const n = adminTodo();
   document.querySelectorAll(".setdoor").forEach(function (b) {
-    const el = b.querySelector(".gcount");
+    const el = /** @type {HTMLElement|null} */ (b.querySelector(".gcount"));
     if (el) {
       el.textContent = n ? String(n) : "";
       el.hidden = !n;
@@ -1675,7 +1676,7 @@ function saveForm() {
       toast("Please add a cafe name");
       return;
     }
-    const invalidSweet = document.querySelector("#f-drinks .sweetcustom:invalid");
+    const invalidSweet = /** @type {HTMLInputElement|null} */ (document.querySelector("#f-drinks .sweetcustom:invalid"));
     if (invalidSweet) {
       const row = invalidSweet.closest(".dr"),
         group = invalidSweet.closest(".drgroup");
@@ -1689,7 +1690,8 @@ function saveForm() {
      owns has to be listed here: anything missing is silently dropped on the next edit, which
      is the trap DESIGN_NOTES opens with. */
     const raw = [...document.querySelectorAll("#f-drinks .dr")]
-      .map(function (r) {
+      .map(function (/** @type {HTMLElement} */ r) {
+        /** @returns {any} */
         const q = function (sel) {
           return r.querySelector(sel);
         };
@@ -1774,7 +1776,7 @@ function saveForm() {
       _asked[k] = use ? near.n : "";
       if (use) {
         d.n = near.n;
-        const el = d._row && d._row.querySelector(".dn");
+        const el = d._row && /** @type {HTMLInputElement|null} */ (d._row.querySelector(".dn"));
         if (el) el.value = near.n;
       }
     });
@@ -1800,6 +1802,7 @@ function saveForm() {
 
     const drinks = [...dmap.values()].map(syncDrinkSummary);
 
+    /** @type {any} */
     const data = {
       name,
       area: $("f-area").value.trim(),
