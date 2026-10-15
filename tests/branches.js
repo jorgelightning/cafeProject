@@ -67,30 +67,37 @@ const { eq, done } = checker();
   r = await pg.evaluate(() => {
     openDetail("m0", "list");
     const w = $("d-where"),
-      l = $("d-locs");
+      l = $("d-locs"),
+      bar = w.getBoundingClientRect(),
+      body = document.querySelector("#pane-detail .dbody").getBoundingClientRect();
     return {
-      chip: w.textContent.replace(/\s+/g, " ").trim(),
+      barName: w.querySelector(".wname").textContent,
+      barCount: w.querySelector(".wcount").textContent,
       chipShown: !w.hidden,
       metaHidden: $("d-meta").hidden,
       title: $("d-name").textContent,
       fullName: $("d-name").title,
       place: $("d-meta").textContent,
-      emoji: /\u{1F4CD}/u.test(document.getElementById("d-where").parentElement.textContent),
+      emoji: /\u{1F4CD}/u.test(w.parentElement.textContent),
       listHidden: l.hidden,
       expanded: w.getAttribute("aria-expanded"),
-      chipH: w.getBoundingClientRect().height,
+      chipH: bar.height,
+      belowRating: bar.top >= $("d-stars").getBoundingClientRect().bottom,
+      fullWidth: Math.abs(bar.width - (body.width - 32)) <= 1,
     };
   });
-  eq(r.chip, "9 branches", "a control after the place says how many branches there are");
+  eq([r.barName, r.barCount], ["Mission", "9 branches"], "a bar under the header names this branch and says how many branches there are");
   eq([r.title, r.fullName, r.place], ["Molly Tea", "Molly Tea (Mission)", "Mission"],
-     "the title is the brand and the place sits under it, instead of naming the place twice (the full name is on hover)");
-  eq([r.chipShown, r.metaHidden, r.listHidden, r.expanded, r.emoji], [true, false, true, "false", false], "the place stays as plain text, the list starts shut, and there is no pin emoji");
-  eq(r.chipH >= 44, true, "the chip is a 44px target (" + r.chipH + ")");
+     "the title is the brand and the place is in the bar, instead of naming the place twice (the full name is on hover)");
+  eq([r.chipShown, r.metaHidden, r.listHidden, r.expanded, r.emoji], [true, true, true, "false", false], "the place leaves the rating row for the bar, the list starts shut, and there is no pin emoji");
+  eq([r.belowRating, r.fullWidth], [true, true], "the bar has its own row under the rating and spans the card");
+  eq(r.chipH >= 48, true, "the bar is a 48px target (" + r.chipH + ")");
 
   r = await pg.evaluate(() => {
     $("d-where").click();
     const l = $("d-locs"),
       rows = [...l.querySelectorAll(".br:not(.add)")];
+    l.getAnimations().forEach(a => a.finish()); /* measure the sheet where it settles, not mid-slide */
     const longRow = rows.find(x => /Shopping Centre/.test(x.textContent));
     return {
       open: !l.hidden,
@@ -100,29 +107,48 @@ const { eq, done } = checker();
       cur: rows.filter(x => x.getAttribute("aria-current") === "true").map(x => x.querySelector(".t").textContent),
       minH: Math.min(...rows.map(x => x.getBoundingClientRect().height)),
       boxH: l.getBoundingClientRect().height,
-      scrolls: l.scrollHeight > l.clientHeight,
       pageOver: document.documentElement.scrollWidth - innerWidth,
       add: !!l.querySelector(".add"),
       full: longRow ? longRow.querySelector(".t").textContent : null,
       order: rows.slice(0, 3).map(x => x.querySelector(".t").textContent),
+      pos: getComputedStyle(l).position,
+      onTabBar: Math.round(l.getBoundingClientRect().bottom) === Math.round(document.querySelector(".tabbar").getBoundingClientRect().top),
+      scrim: !$("d-scrim").hidden && getComputedStyle($("d-scrim")).position === "fixed",
+      head: getComputedStyle(l.querySelector(".brhead")).display !== "none",
+      done: !!l.querySelector(".brdone"),
+      focus: document.activeElement.classList.contains("on"),
     };
   });
-  eq([r.open, r.expanded, r.n, r.tag], [true, "true", 9, "BUTTON"], "tapping the chip opens a list of real buttons, one per branch");
+  eq([r.open, r.expanded, r.n, r.tag], [true, "true", 9, "BUTTON"], "tapping the bar opens a list of real buttons, one per branch");
   eq(r.cur, ["Mission"], "the current branch is marked");
-  eq(r.minH >= 44, true, "every row is at least 44px tall (" + r.minH + ")");
-  eq([r.boxH <= 290, r.scrolls, r.pageOver <= 0], [true, true, true], "nine branches stay a compact list that scrolls inside itself (" + r.boxH + "px); the page does not scroll sideways");
+  eq(r.minH >= 52, true, "on a phone every row is at least 52px tall (" + r.minH + ")");
+  eq([r.pos, r.onTabBar, r.scrim, r.head, r.done], ["fixed", true, true, true, true], "on a phone the list is a bottom sheet on a scrim above the tab bar, with a grab bar, a title and Done");
+  eq([r.boxH <= 812 * 0.78 + 1, r.pageOver <= 0], [true, true], "nine branches fit under 78% of the screen (" + r.boxH + "px); the page does not scroll sideways");
+  eq(r.focus, true, "focus moves into the list, onto the current branch");
   eq(r.full, "The Very Long Name Of A Shopping Centre Branch", "a long branch name is shown whole, not cut");
   eq(r.add, true, "the owner gets ＋ Add branch at the bottom");
+
+  await pg.setViewportSize({ width: 375, height: 500 });
+  r = await pg.evaluate(() => {
+    const l = $("d-locs"),
+      add = l.querySelector(".add");
+    add.scrollIntoView({ block: "end" });
+    const lb = l.getBoundingClientRect(),
+      ab = add.getBoundingClientRect();
+    return { scrolls: l.scrollHeight > l.clientHeight, boxH: lb.height, addIn: ab.bottom <= lb.bottom + 1 && ab.top >= lb.top, headStays: l.querySelector(".brhead").getBoundingClientRect().top >= lb.top - 1 };
+  });
+  eq([r.scrolls, r.boxH <= 500 * 0.78 + 1, r.addIn, r.headStays], [true, true, true, true], "on a short screen the sheet scrolls inside itself, the title stays put and the last row is reachable (" + r.boxH + "px)");
+  await pg.setViewportSize({ width: 375, height: 812 });
 
   r = await pg.evaluate(() => {
     openDetail("m0", "list"); /* what the cloud echo does after a save */
     const same = !$("d-locs").hidden;
     [...$("d-locs").querySelectorAll(".br")].find(x => x.querySelector(".t").textContent === "Marina").click();
-    return { same, cur: curId, shut: $("d-locs").hidden, place: $("d-meta").textContent };
+    return { same, cur: curId, shut: $("d-locs").hidden, scrimShut: $("d-scrim").hidden, place: $("d-where").querySelector(".wname").textContent };
   });
   eq(r.same, true, "a repaint of the same cafe leaves the list open");
-  eq([r.cur, r.shut], ["m1", true], "tapping a branch opens it, and the list closes");
-  eq(r.place, "Marina", "…and the line under the title now names that branch");
+  eq([r.cur, r.shut, r.scrimShut], ["m1", true, true], "tapping a branch opens it, and the list and scrim close");
+  eq(r.place, "Marina", "…and the bar now names that branch");
 
   r = await pg.evaluate(() => {
     isAdmin = false;
@@ -145,13 +171,14 @@ const { eq, done } = checker();
 
   r = await pg.evaluate(() => {
     openDetail("solo", "list");
-    const chip = $("d-where").textContent.replace(/\s+/g, " ").trim();
+    const chip = $("d-where").querySelector(".wcount").textContent.trim(),
+      place = $("d-where").querySelector(".wname").textContent;
     $("d-where").click();
     const rows = [...$("d-locs").querySelectorAll(".br")].map(x => x.textContent.replace(/\s+/g, " ").trim());
     openDetail("plain", "list");
-    return { chip, rows, plain: $("d-where").hidden };
+    return { chip, place, rows, plain: $("d-where").hidden };
   });
-  eq(r.chip, "＋ Branch", "a lone cafe with a brand offers ＋ Branch to the owner");
+  eq([r.chip, r.place], ["＋ Branch", "Nowhere"], "a lone cafe with a brand offers ＋ Branch to the owner, in the bar beside its place");
   eq(r.rows, ["Nowhere", "Add a branch"], "…and opening it lists itself and the add row");
   eq(r.plain, true, "a lone cafe with no brand shows no chip");
 
@@ -182,7 +209,7 @@ const { eq, done } = checker();
     };
   });
   eq(r.shut, r.open, "opening the list floats it over the page: nothing below it moves");
-  eq([r.pos, r.shadow], ["absolute", true], "…as an elevated card");
+  eq([r.pos, r.shadow], ["fixed", true], "…as an elevated sheet");
   eq(r.order, ["Cupertino", "Fremont", "South San Francisco", "Palo Alto"], "each branch is its place, visited first and the wishlist one last");
   eq(r.checks.filter(Boolean).length, 1, "only the current branch carries a check");
   eq([r.dots.filter(Boolean).length, r.tags.filter(Boolean).length], [3, 1], "visited branches show a rating dot and the wishlist one a 🔖");
@@ -199,9 +226,17 @@ const { eq, done } = checker();
     $("d-where").click();
     $("d-locs").querySelector(".br.on").click();
     out.inside = $("d-locs").hidden;
+    $("d-where").click();
+    $("d-scrim").click();
+    out.scrim = $("d-locs").hidden && $("d-scrim").hidden;
+    $("d-where").click();
+    $("d-locs").querySelector(".brdone").click();
+    out.done = $("d-locs").hidden && $("d-scrim").hidden;
+    out.doneFocus = document.activeElement && document.activeElement.id;
     return out;
   });
-  eq([r.outside, r.escape, r.focus], [true, true, "d-where"], "a tap elsewhere or Escape puts the list away, and Escape returns focus to the control");
+  eq([r.outside, r.escape, r.focus], [true, true, "d-where"], "a tap elsewhere or Escape puts the list away, and Escape returns focus to the bar");
+  eq([r.scrim, r.done, r.doneFocus], [true, true, "d-where"], "tapping the scrim or Done puts the sheet away too, and Done returns focus to the bar");
 
   // ---- the header across devices ----
   const widths = [360, 375, 390, 430, 744, 768, 1024, 1440];
@@ -211,22 +246,27 @@ const { eq, done } = checker();
     const m = await pg.evaluate(() => {
       openDetail("h2", "list");
       const row = (id) => document.getElementById(id);
-      const w = row("d-where"), meta = row("d-meta"), st = row("d-stars");
+      const w = row("d-where"), st = row("d-stars");
       const box = (e) => e.getBoundingClientRect();
       const pane = document.getElementById("pane-detail").getBoundingClientRect();
       const out = { over: document.documentElement.scrollWidth - innerWidth, ctl: Math.round(box(w).height), ctlW: Math.round(box(w).width) };
-      out.inView = [st, meta, w].every(e => box(e).right <= pane.right + 1 && box(e).left >= pane.left - 1);
+      out.inView = [st, w].every(e => box(e).right <= pane.right + 1 && box(e).left >= pane.left - 1);
       out.title = row("d-name").textContent;
+      const wn = w.querySelector(".wname");
+      out.cut = wn.scrollWidth > wn.clientWidth;
+      out.ratingRow = Math.round(box(row("d-stars")).height);
       w.click();
       const l = row("d-locs"), lb = box(l);
-      out.listIn = lb.left >= 0 && lb.right <= innerWidth && lb.right <= pane.right + 1;
+      out.pos = getComputedStyle(l).position;
+      out.listIn = lb.left >= 0 && lb.right <= innerWidth && lb.right <= pane.right + 1 && lb.top >= 0 && lb.bottom <= innerHeight + 1;
       out.rowH = Math.min(...[...l.querySelectorAll(".br")].map((e) => Math.round(box(e).height)));
       w.click();
       return out;
     });
-    if (m.over > 0 || m.ctl < 44 || !m.inView || !m.listIn || m.rowH < 44 || m.title !== "HEYTEA") bad.push(w + ": " + JSON.stringify(m));
+    const sheet = w < 900;
+    if (m.over > 0 || m.ctl < 48 || !m.inView || !m.listIn || m.rowH < (sheet ? 52 : 48) || m.title !== "HEYTEA" || m.cut || m.pos !== (sheet ? "fixed" : "absolute")) bad.push(w + ": " + JSON.stringify(m));
   }
-  eq(bad, [], "at 360 to 1440px a long place (South San Francisco · 4 branches) stays in view beside the rating, with 44px targets, no sideways scroll, and a list that fits on screen");
+  eq(bad, [], "at 360 to 1440px a long place (South San Francisco · 4 branches) shows whole in a 48px bar under the rating, with no sideways scroll, and the list is a sheet below 900px and a card from 900px, always on screen");
   await pg.setViewportSize({ width: 375, height: 812 });
 
   // ---- + Branch ----

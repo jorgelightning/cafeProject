@@ -306,7 +306,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 #d-stars{ flex:none; }
 .darea{ flex:0 1 auto; min-width:5em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--fs-2); color:var(--soft); }
 /* A quiet map pin before the place: a mask, so it takes the text colour in either theme. */
-.darea:not(:empty)::before{ content:""; display:inline-block; width:13px; height:13px; margin-right:5px; vertical-align:-2px; background:currentColor; opacity:.8; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-15.4a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-15.4a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z'/%3E%3C/svg%3E") center/contain no-repeat; }
+.darea:not(:empty)::before, .where::before{ content:""; flex:none; display:inline-block; width:13px; height:13px; margin-right:5px; vertical-align:-2px; background:currentColor; opacity:.8; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-15.4a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-15.4a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z'/%3E%3C/svg%3E") center/contain no-repeat; }
 .dscoreline{ margin-top:7px; font-size:var(--fs-1); color:var(--faint); }
 .dscoreline[hidden]{ display:none; }
 .chips{ display:flex; flex-wrap:wrap; gap:var(--sp-2); margin:12px 0; }
@@ -359,15 +359,32 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 @keyframes locspin{ to{ transform:rotate(360deg); } }
 @media (prefers-reduced-motion:reduce){ .locbtn[data-state="busy"] svg{ animation:none; opacity:.55; } }
 @media (min-width:900px){ .locbtn{ bottom:62px; } }
-/* The branches of a brand: the area under the title is the control, the list opens below it. */
-/* The branch control is text, not a second pill: the rating is the filled badge, this is the thing you tap. */
-.where{ flex:none; display:inline-flex; align-items:center; gap:var(--sp-1); min-height:44px; padding:0 var(--sp-2); font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); background:transparent; border:0; border-radius:var(--r-2); cursor:pointer; }
+/* The branches of a brand: a full-width bar under the header says which branch this is and opens
+   the list. The rating is the filled badge above it, so the two no longer share a row. */
+.where{ display:flex; align-items:center; gap:var(--sp-2); width:100%; min-height:48px; margin-top:var(--sp-3); padding:0 var(--sp-3); font-family:inherit; font-size:var(--fs-2); font-weight:600; color:var(--soft); text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-3); cursor:pointer; }
 .where:hover, .where[aria-expanded="true"]{ background:var(--surface2); }
-.where .car{ flex:none; transition:transform .15s; }
+.where .wname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--fs-3); font-weight:700; color:var(--text); }
+.where .wcount{ flex:none; }
+.where .car{ flex:none; color:var(--acc-strong); transition:transform .15s; }
 .where[aria-expanded="true"] .car{ transform:rotate(180deg); }
-/* The list floats over the page under the control, so opening it does not shove the drinks down. */
-.branches{ position:absolute; z-index:20; left:0; top:calc(100% + var(--sp-1)); width:100%; max-width:380px; max-height:min(46vh,288px); overflow-y:auto; display:flex; flex-direction:column; padding:var(--sp-1) 0; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-3); box-shadow:var(--shadow); overscroll-behavior:contain; }
-.where[hidden], .branches[hidden]{ display:none; }
+/* Laptop layout: the list is a card under the bar, so opening it does not shove the drinks down. */
+.branches{ position:absolute; z-index:20; left:0; top:calc(100% + var(--sp-1)); width:100%; max-width:380px; max-height:min(46vh,300px); overflow-y:auto; display:flex; flex-direction:column; padding:var(--sp-1) 0; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-3); box-shadow:var(--shadow); overscroll-behavior:contain; }
+.where[hidden], .branches[hidden], .brscrim[hidden]{ display:none; }
+.brhead{ display:none; }
+/* Phones and iPad: the same list is a bottom sheet over a scrim, with 52px rows. */
+@media (max-width:899px){
+  .brscrim{ position:fixed; inset:0; z-index:40; background:rgba(0,0,0,.45); touch-action:none; }
+  .branches{ position:fixed; z-index:41; inset:auto 0 0 0; width:auto; max-width:560px; margin-inline:auto; max-height:78vh; padding:0 0 calc(var(--sp-5) + env(safe-area-inset-bottom)); border-width:1px 0 0; border-radius:var(--r-4) var(--r-4) 0 0; animation:brrise .18s ease-out; }
+  .brhead{ display:block; flex:none; position:sticky; top:0; z-index:1; padding-top:var(--sp-2); background:var(--surface); }
+  .brhead .grab{ width:40px; height:5px; margin:0 auto var(--sp-2); border-radius:var(--r-pill); background:var(--star-off); }
+  .brhead-r{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); padding:0 var(--sp-4) var(--sp-2); }
+  .brhead-r b{ display:block; font-size:var(--fs-4); font-weight:800; }
+  .brhead-r span{ display:block; font-size:var(--fs-2); color:var(--soft); }
+  .brdone{ min-height:44px; padding:0 var(--sp-3); font-family:inherit; font-size:var(--fs-3); font-weight:700; color:var(--acc-strong); background:none; border:0; border-radius:var(--r-2); cursor:pointer; }
+  .branches .br{ min-height:52px; }
+}
+@keyframes brrise{ from{ transform:translateY(24px); opacity:.6; } }
+@media (prefers-reduced-motion:reduce){ .branches{ animation:none; } .where .car{ transition:none; } }
 .br{ flex:none; display:flex; align-items:center; gap:var(--sp-3); min-height:48px; padding:var(--sp-2) var(--sp-4); font-family:inherit; font-size:var(--fs-3); font-weight:600; color:var(--text); text-align:left; background:transparent; border:0; cursor:pointer; }
 .br:hover{ background:var(--surface2); }
 .br .t{ flex:1; min-width:0; overflow-wrap:anywhere; }

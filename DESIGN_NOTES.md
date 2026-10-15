@@ -1148,3 +1148,26 @@ second rating pill beside `● Loved it`, and pushed the page down when opened.
   elsewhere or Escape closes it, and Escape returns focus to the control.
 - Checked at 360, 375, 390, 430, 744, 768, 1024 and 1440 (`tests/branches.js`): nothing overflows,
   targets are 44px, the list stays on screen.
+
+## The branch bar and sheet — 15 Oct 2026 (v75)
+
+v74 still put the place and the branch control on the rating's row, so a long place (`South San
+Francisco`) was cut with an ellipsis and the control stayed small. Chosen from three mock-ups (V3):
+the branch gets its own row.
+
+- A **48px bar** under the header (`#d-where`, full card width): pin, the current branch's place
+  (whole, ellipsised only past the bar), `N branches`, a chevron. The place leaves the rating row, so
+  `#d-meta` is hidden whenever the bar is shown; a cafe with no brand keeps its plain area line.
+  The name comes from the same label as the list rows (`getBrandSiblings`), so "Ferry Building" and
+  "Hayes Valley" are told apart even when both are in San Francisco.
+- The list is a **bottom sheet below 900px** (phones and iPad): fixed to the sidebar's bottom edge, so
+  it sits on the tab bar, over a scrim, max 78vh and 560px wide, a sticky header (grab bar, brand,
+  "N branches · pick one to switch", Done) and 52px rows. From 900px it stays v74's floating card
+  under the bar. Same markup for both; `.brhead`, `.brscrim` and the sheet rules live in one
+  `max-width:899px` block.
+- Opening moves focus onto the current branch. Tap the scrim, tap elsewhere, Done or Escape closes;
+  Escape and Done return focus to the bar. The scrim takes its tap from the document handler, not an
+  inline `onclick`, so `tests/keyboard.js` still finds no clickable div without keyboard access.
+- A cafe on its own with a brand (owner only) shows the bar with its place and `＋ Branch`.
+- `.wn` is already a class (the stats figures), so the bar's parts are `.wname` and `.wcount`.
+- Not built: the segmented picker. It truncates names and only suits three or four branches.

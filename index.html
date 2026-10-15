@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=74">
+<link rel="stylesheet" href="styles.css?v=75">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -59,11 +59,13 @@
 <div class="dranktile" id="d-rank" hidden></div>
 <div class="dheadmain">
 <h2 id="d-name"></h2>
-<div class="dloc"><div class="dsub"><span id="d-stars"></span><span class="darea" id="d-meta"></span><button type="button" class="where" id="d-where" aria-expanded="false" aria-controls="d-locs" onclick="toggleBranches()" hidden></button></div>
-<div class="branches" id="d-locs" hidden></div></div>
+<div class="dsub"><span id="d-stars"></span><span class="darea" id="d-meta"></span></div>
 <div class="dscoreline" id="d-score" hidden></div>
 </div>
 </div>
+<div class="dloc"><button type="button" class="where" id="d-where" aria-expanded="false" aria-controls="d-locs" onclick="toggleBranches()" hidden></button>
+<div class="brscrim" id="d-scrim" hidden></div>
+<div class="branches" id="d-locs" hidden></div></div>
 <div class="orderagain" id="d-orderagain" hidden></div>
 <div class="reorder-rollup" id="d-reorder" style="display:none"></div>
 <div class="chips" id="d-tags"></div>
@@ -169,18 +171,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=74"></script>
-<script src="js/core.js?v=74"></script>
-<script src="js/storage.js?v=74"></script>
-<script src="js/sync.js?v=74"></script>
-<script src="js/nav.js?v=74"></script>
-<script src="js/map.js?v=74"></script>
-<script src="js/photos.js?v=74"></script>
-<script src="js/list.js?v=74"></script>
-<script src="js/stats.js?v=74"></script>
-<script src="js/rank.js?v=74"></script>
-<script src="js/detail.js?v=74"></script>
-<script src="js/form.js?v=74"></script>
-<script src="js/boot.js?v=74"></script>
+<script src="js/config.js?v=75"></script>
+<script src="js/core.js?v=75"></script>
+<script src="js/storage.js?v=75"></script>
+<script src="js/sync.js?v=75"></script>
+<script src="js/nav.js?v=75"></script>
+<script src="js/map.js?v=75"></script>
+<script src="js/photos.js?v=75"></script>
+<script src="js/list.js?v=75"></script>
+<script src="js/stats.js?v=75"></script>
+<script src="js/rank.js?v=75"></script>
+<script src="js/detail.js?v=75"></script>
+<script src="js/form.js?v=75"></script>
+<script src="js/boot.js?v=75"></script>
 </body>
 </html>
