@@ -105,6 +105,19 @@ function setReorder(btn, v) {
   wrap.querySelectorAll(".rbtn").forEach(b => b.classList.remove("on"));
   if (hid.value) wrap.querySelector(".rbtn." + hid.value).classList.add("on");
 }
+/* The options of an order as pills — size, sweetness, ice, milk — in place of one grey line. */
+function modPills(o) {
+  if (!o) return "";
+  const m = [
+    o.size ? ["", o.size] : null,
+    o.sweet ? ["k-sw", o.sweet + " sweet"] : null,
+    o.ice ? ["k-ic", o.ice] : null,
+    o.milk ? ["k-mk", "\ud83e\udd5b " + o.milk] : null,
+  ].filter(Boolean);
+  return m.length
+    ? '<span class="dmods">' + m.map(x => '<span class="mpill ' + x[0] + '">' + esc(x[1]) + "</span>").join("") + "</span>"
+    : "";
+}
 function drinkGlyph(n) {
   n = (n || "").toLowerCase();
   if (/matcha|hojicha|green tea/.test(n)) return "🍵";
@@ -236,6 +249,7 @@ function openDetail(id, from) {
   const _rkEl = $("d-rank");
   if (_rkEl) {
     _rkEl.hidden = !_rk;
+    _rkEl.className = "dranktile" + (_rk && _rk <= 10 ? " top" : "");
     _rkEl.innerHTML = _rk ? "<b>#" + _rk + "</b><span>of " + _rn + "</span>" : "";
   }
   /* A branch cafe gets a full-width bar under the header that says which branch this is and opens
@@ -262,13 +276,23 @@ function openDetail(id, from) {
     const td = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
     if (td) {
       const last = (latestDrinkOrder(td.d) || {}).date;
+      const price = typeof cardPrice === "function" ? cardPrice(td.d) : "";
+      /* The answer to "what do I get here", as the first thing under the name: the drink, what it
+         costs, how often, and when last. The owner can log it again from the same place. */
       _oa.innerHTML =
-        "Order again: <b>" +
+        '<span class="oa-gl" aria-hidden="true">' +
+        drinkGlyph(td.d.n) +
+        '</span><span class="oa-tx"><small>What to order</small><strong class="oa-name">' +
         esc(td.d.n) +
-        "</b> \u00b7 " +
+        '</strong><span class="oa-meta">' +
+        (price ? "<b>" + price + "</b> \u00b7 " : "") +
         td.n +
-        "\u00d7" +
-        (last ? " \u00b7 last " + esc(fmtDate(last)) : "");
+        "\u00d7 ordered" +
+        (last ? " \u00b7 last " + esc(fmtDate(last)) : "") +
+        "</span></span>" +
+        '<button type="button" class="oa-again admin-only" onclick="logAgainFrom(\'' +
+        esc(c.id) +
+        "')\">\uff0b Log again</button>";
       _oa.hidden = false;
     } else {
       _oa.hidden = true;
@@ -407,7 +431,10 @@ function openDetail(id, from) {
                 priceHTML(o) +
                 "</div>" +
                 (ov || opts.length
-                  ? '<div class="dordermeta">' + reorderChip(o) + esc(opts.join(" · ")) + "</div>"
+                  ? '<div class="dordermeta">' +
+                    reorderChip(o) +
+                    opts.map(x => '<span class="mpill">' + esc(x) + "</span>").join("") +
+                    "</div>"
                   : "") +
                 "</div>"
               );
@@ -434,7 +461,9 @@ function openDetail(id, from) {
             cnt +
             " ordered · latest " +
             esc(last) +
-            "</span></span>" +
+            "</span>" +
+            modPills(latest) +
+            "</span>" +
             '<span class="drinkprice">' +
             drinkHistoryPrice(d, latest) +
             "</span>" +
@@ -545,3 +574,286 @@ function addBranch(id) {
 function editCurrent() {
   openForm(curId);
 }
+
+/* ---------- share spot: a postcard ----------
+   A link says nothing until it is opened. The postcard is the thing worth sending: rank, name,
+   what to get there, and the owner's own line, drawn to a canvas so it goes out as a picture.
+   It is deliberately not the Google photo — that cannot be drawn to an exportable canvas, and
+   it is not ours to redistribute — so the picture is the tile: the rating colour and the emoji.
+   Like shareCafe() it uses c.area and never areaOf(c): this goes to someone else, and a private
+   spot's exact place must not travel with it. */
+let _pcOpener = null;
+function postcardData(c) {
+  const td = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
+  const rk = !c.wish && typeof rankOf === "function" ? rankOf(c) : null;
+  const rv = String(c.review || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return {
+    name: c.name,
+    area: c.area || "",
+    rk: rk,
+    rn: rk && typeof rankMap === "function" ? rankMap()._n : 0,
+    label: c.wish ? "Want to try" : bucketLabel(c),
+    color: c.wish ? WISH_HEX : BUCKET_HEX[bucketOf(c) || ""],
+    drink: td ? td.d.n : "",
+    price: td && typeof cardPrice === "function" ? cardPrice(td.d) : "",
+    count: td ? td.n : 0,
+    review: rv.length > 170 ? rv.slice(0, 167).replace(/\s+\S*$/, "") + "\u2026" : rv,
+    emoji: c.emoji || "\u2615",
+    tint: tintFor(c),
+  };
+}
+function postcardText(c) {
+  const d = postcardData(c);
+  return (
+    d.name +
+    (d.rk ? " \u2014 #" + d.rk + " of " + d.rn + " on my list" : d.label ? " \u2014 " + d.label.toLowerCase() : "") +
+    (d.area ? "\n" + d.area : "") +
+    (d.drink ? "\nWhat to get: " + d.drink + (d.price ? " (" + d.price + ")" : "") : "") +
+    (d.review ? "\n\u201c" + d.review + "\u201d" : "") +
+    "\n" +
+    cafeShareUrl(c.id)
+  );
+}
+function _pcWrap(ctx, text, maxW, maxLines) {
+  const words = String(text).split(" "),
+    lines = [];
+  let cur = "";
+  for (let i = 0; i < words.length; i++) {
+    const t = cur ? cur + " " + words[i] : words[i];
+    if (ctx.measureText(t).width > maxW && cur) {
+      lines.push(cur);
+      cur = words[i];
+    } else cur = t;
+  }
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines) {
+    lines.length = maxLines;
+    lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, "") + "\u2026";
+  }
+  return lines;
+}
+function _pcRound(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function drawPostcard(canvas, d) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const W = canvas.width,
+    H = canvas.height,
+    PAD = 72,
+    SANS = 'system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif',
+    EMO = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+  const paper = "#fbfaf8",
+    ink = "#1d1a17",
+    soft = "#5a5a63";
+  ctx.fillStyle = paper;
+  ctx.fillRect(0, 0, W, H);
+  /* the tile: the rating colour, deepening towards the bottom, with the cafe's own emoji */
+  const top = 540,
+    g = ctx.createLinearGradient(0, 0, W, top);
+  g.addColorStop(0, d.tint);
+  g.addColorStop(1, "#2a1a0c");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, top);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "300px " + EMO;
+  ctx.fillStyle = "#fff";
+  ctx.fillText(d.emoji, W / 2, top / 2 + 30);
+  const fade = ctx.createLinearGradient(0, top - 220, 0, top);
+  fade.addColorStop(0, "rgba(251,250,248,0)");
+  fade.addColorStop(1, paper);
+  ctx.fillStyle = fade;
+  ctx.fillRect(0, top - 220, W, 220);
+  /* rank medallion: gold for the top ten, dark glass for the rest */
+  ctx.textAlign = "left";
+  if (d.rk) {
+    const label = "#" + d.rk,
+      gold = d.rk <= 10;
+    ctx.font = "800 72px " + SANS;
+    const w = ctx.measureText(label).width + 72;
+    _pcRound(ctx, PAD, PAD, w, 112, 56);
+    if (gold) {
+      const gg = ctx.createLinearGradient(PAD, PAD, PAD + w, PAD + 112);
+      gg.addColorStop(0, "#f6d77f");
+      gg.addColorStop(1, "#dca13a");
+      ctx.fillStyle = gg;
+    } else ctx.fillStyle = "rgba(20,13,8,.62)";
+    ctx.fill();
+    ctx.fillStyle = gold ? "#3b2606" : "#fff";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, PAD + 36, PAD + 58);
+    ctx.font = "700 36px " + SANS;
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "right";
+    ctx.shadowColor = "rgba(0,0,0,.5)";
+    ctx.shadowBlur = 8;
+    ctx.fillText("of " + d.rn + " on my list", W - PAD, PAD + 58);
+    ctx.shadowBlur = 0;
+    ctx.textAlign = "left";
+  }
+  /* the words */
+  let y = top + 40;
+  ctx.fillStyle = ink;
+  ctx.textBaseline = "alphabetic";
+  ctx.font = "800 88px " + SANS;
+  const nameLines = _pcWrap(ctx, d.name, W - PAD * 2, 2);
+  nameLines.forEach(function (ln) {
+    y += 92;
+    ctx.fillText(ln, PAD, y);
+  });
+  y += 36;
+  ctx.font = "700 38px " + SANS;
+  if (d.label) {
+    const pw = ctx.measureText(d.label).width + 76;
+    _pcRound(ctx, PAD, y, pw, 64, 32);
+    ctx.fillStyle = "#ececee";
+    ctx.fill();
+    ctx.fillStyle = d.color;
+    ctx.beginPath();
+    ctx.arc(PAD + 32, y + 32, 11, 0, 7);
+    ctx.fill();
+    ctx.fillStyle = ink;
+    ctx.fillText(d.label, PAD + 56, y + 45);
+    ctx.font = "500 38px " + SANS;
+    ctx.fillStyle = soft;
+    ctx.fillText(_pcWrap(ctx, d.area, W - PAD * 2 - pw - 24, 1)[0] || "", PAD + pw + 24, y + 45);
+  }
+  y += 104;
+  if (d.drink) {
+    _pcRound(ctx, PAD, y, W - PAD * 2, 176, 28);
+    ctx.fillStyle = "#f0ebe4";
+    ctx.fill();
+    ctx.fillStyle = soft;
+    ctx.font = "800 26px " + SANS;
+    ctx.fillText("WHAT TO GET", PAD + 36, y + 50);
+    ctx.fillStyle = ink;
+    ctx.font = "800 52px " + SANS;
+    ctx.fillText(_pcWrap(ctx, d.drink, W - PAD * 2 - 72, 1)[0], PAD + 36, y + 106);
+    ctx.fillStyle = soft;
+    ctx.font = "600 32px " + SANS;
+    ctx.fillText((d.price ? d.price + " \u00b7 " : "") + d.count + "\u00d7 ordered", PAD + 36, y + 148);
+    y += 216;
+  }
+  if (d.review) {
+    ctx.fillStyle = ink;
+    ctx.font = "500 42px " + SANS;
+    /* as many lines as fit above the footer, never fewer than two */
+    const room = Math.max(2, Math.min(4, Math.floor((H - 130 - y) / 58)));
+    _pcWrap(ctx, "\u201c" + d.review + "\u201d", W - PAD * 2, room).forEach(function (ln) {
+      ctx.fillText(ln, PAD, y + 40);
+      y += 58;
+    });
+  }
+  /* footer */
+  ctx.fillStyle = "rgba(0,0,0,.12)";
+  ctx.fillRect(PAD, H - 120, W - PAD * 2, 2);
+  ctx.font = "800 28px " + SANS;
+  ctx.fillStyle = soft;
+  ctx.fillText("JL CAFE PROJECT", PAD, H - 62);
+  ctx.textAlign = "right";
+  ctx.fillText("OPEN IN THE APP \u203a", W - PAD, H - 62);
+  ctx.textAlign = "left";
+}
+function openPostcard() {
+  const c = cafes.find(x => x.id === curId),
+    m = $("pcmodal"),
+    cv = $("pc-canvas");
+  if (!c || !m || !cv) return;
+  _pcOpener = document.activeElement;
+  drawPostcard(cv, postcardData(c));
+  cv.setAttribute("aria-label", "Postcard for " + c.name);
+  const note = $("pc-note");
+  if (note)
+    note.textContent = navigator.canShare
+      ? "Shares the picture with a link to this cafe."
+      : "Saves the picture, or copies the message.";
+  m.hidden = false;
+  const b = $("pc-share");
+  if (b) b.focus();
+}
+function closePostcard() {
+  const m = $("pcmodal");
+  if (!m || m.hidden) return;
+  m.hidden = true;
+  if (_pcOpener && _pcOpener.focus) _pcOpener.focus();
+  _pcOpener = null;
+}
+function copyPostcardText() {
+  const c = cafes.find(x => x.id === curId);
+  if (!c) return;
+  const t = postcardText(c);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(
+      () => toast("Message copied"),
+      () => toast("Couldn't copy")
+    );
+  } else toast("Couldn't copy");
+}
+function sendPostcard() {
+  const c = cafes.find(x => x.id === curId),
+    cv = $("pc-canvas");
+  if (!c || !cv) return;
+  const url = cafeShareUrl(c.id),
+    d = postcardData(c),
+    text = postcardText(c).split("\n").slice(0, -1).join("\n");
+  const byLink = function () {
+    if (navigator.share) navigator.share({ title: d.name, text: text, url: url }).catch(function () {});
+    else copyPostcardText();
+  };
+  if (!cv.toBlob) return byLink();
+  cv.toBlob(function (blob) {
+    if (!blob) return byLink();
+    const slug = String(c.name || "cafe").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    let file = null;
+    try {
+      file = new File([blob], (slug || "cafe") + ".png", { type: "image/png" });
+    } catch (e) {
+      warn("detail.js postcard", e);
+    }
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: d.name, text: text, url: url }).catch(function (e) {
+        if (e && e.name !== "AbortError") byLink();
+      });
+      return;
+    }
+    /* no picture sharing here (most desktops): hand over the picture itself */
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (slug || "cafe") + ".png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () {
+      URL.revokeObjectURL(a.href);
+    }, 4000);
+    toast("Postcard saved");
+  }, "image/png");
+}
+document.addEventListener("keydown", e => {
+  const m = $("pcmodal");
+  if (!m || m.hidden) return;
+  if (e.key === "Escape") closePostcard();
+  else if (e.key === "Tab") {
+    const f = [].slice.call(m.querySelectorAll("button")).filter(b => !b.disabled);
+    if (!f.length) return;
+    const first = f[0],
+      last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+});
+
