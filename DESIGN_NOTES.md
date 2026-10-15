@@ -1206,3 +1206,21 @@ so rather than inventing a pattern. Weekend bars are grey, not violet: violet me
 
 Not built, on purpose: a wishlist *conversion rate*. It needs the date a place was added to the
 wishlist and that is not stored, so Taste shows the split only. `tests/stats-charts.js`.
+
+### Graphite, depth and rank tiers — Phase 1 of the guide tune-up, 15 Oct 2026 (v79)
+
+The warm-grey palette read dull next to the orange, and the showcase mock-ups were reviewed in
+four palettes; **Graphite** (cool neutral greys, the orange as the one pop of colour) won, in the
+device's own sans, so there is still no font to download. All of it is the three theme blocks plus
+a polish block at the end of `styles.css`.
+
+- **Tokens:** `--shadow-sm` (raised) beside `--shadow` (floating), `--gold-a/-b/-ink`,
+  `--amber-bg/-ink`, `--wash` — each in all three blocks. Gold carries dark ink so `--acc-strong`
+  is still the only accent under white text.
+- **Rank tiers:** `rankBadge()` adds `r-gold` (#1 to #3) and `r-amber` (#4 to #10) as a class.
+  `phInner()` is still the only writer of a tile. The amber ring is a literal colour on purpose:
+  the badge sits on its own dark scrim, so it must read the same in both themes and over any photo.
+- **Scrims** are `::before` on `.ph` and `.hero` (`::after` on `.ph` is the loading shimmer),
+  with `isolation:isolate` and `z-index:-1` so they sit under the badges without moving them.
+- Not done in this phase, on purpose: the detail page's gold rank tile and the order banner
+  (markup, Phase 3), and two columns at 375px (the 168px grid minimum is a layout change, Phase 2).
