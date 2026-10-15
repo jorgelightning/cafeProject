@@ -2,7 +2,7 @@
 
    Three charts the data could already support but nothing drew: a heatmap of the last 30 weeks
    with the longest streak and the weekday split, the spread of drink prices with a monthly trend
-   (and, for the owner only, a running spend total), and the verdict split with the wishlist and
+   and the verdict split with the wishlist and
    tags. They are plain SVG and CSS on the theme tokens, and they must never carry a location. */
 const { serve, launch, checker } = require("./harness");
 const { eq, done } = checker();
@@ -36,7 +36,7 @@ const { eq, done } = checker();
       cards: body.querySelectorAll(".sc-wide").length,
       html: [...body.querySelectorAll(".sc-wide")].map(e => e.innerHTML).join(""),
       overflow: body.scrollWidth > body.clientWidth,
-      curve: body.textContent.indexOf("Recorded spend, running total") > -1
+      spent: /Spent/.test(body.textContent) && /\$\d/.test(body.textContent.slice(body.textContent.indexOf("Spent")))
     };
   }, admin);
 
@@ -44,13 +44,13 @@ const { eq, done } = checker();
   eq(o.cards >= 3, true, "at least the three chart cards: cadence, price spread and taste");
   eq(["Cadence", "Price spread", "Taste"].every(t => o.heads.some(h => h.indexOf(t) > -1)), true, "…each under its own heading");
   eq(o.overflow, false, "nothing sticks out at 375px");
-  eq(o.curve, true, "the owner gets the running spend total");
+  eq(o.spent, true, "the owner sees what they spent");
   eq(/Evergreen|21\.3|-157\.8/.test(o.html), false, "a private spot's address and coordinates never reach the page");
   eq(/<svg class="sc-svg heat"/.test(o.html) && /<svg class="sc-svg donut"/.test(o.html), true, "the heatmap and the verdict ring are inline SVG");
   eq(/<script|chart\.js|d3/i.test(o.html), false, "no chart library");
 
   const v = await seed(false);
-  eq(v.curve, false, "a viewer never sees the running spend total, a money figure");
+  eq(/Spent/.test(await pg.evaluate(() => document.getElementById("stats-body").textContent)), false, "a viewer never sees the total spent, a money figure");
   eq(v.cards >= 3, true, "…but still gets the three charts");
 
   const num = await pg.evaluate(() => {

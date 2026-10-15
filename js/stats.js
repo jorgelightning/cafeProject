@@ -44,7 +44,6 @@ function setRhythmMonth(month) {
    a review, so a private spot contributes only a count and a date. Text is sized in CSS
    (.sc-svg text) so the type scale holds, and every chart states its own coverage. */
 const STAT_MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const STAT_DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function statMoney(n) {
   return "$" + (n || 0).toFixed(2);
 }
@@ -168,112 +167,6 @@ function statHist(prices) {
     '<svg class="sc-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Drink prices, most common ' + statMoney(med) + '">' +
     bars + axis + '<line class="medln" x1="' + mxp + '" x2="' + mxp + '" y1="' + t + '" y2="' + (H - b) + '"/>' +
     '<text class="acct" x="' + (W - l) + '" y="' + (t + 8) + '" text-anchor="end">median ' + statMoney(med) + "</text></svg>"
-  );
-}
-/* Average price per month, for months with at least three priced drinks. */
-function statTrend(list) {
-  const m = {};
-  list.forEach(function (x) {
-    if (!x.d) return;
-    const k = x.d.slice(0, 7);
-    m[k] = m[k] || [];
-    for (let i = 0; i < x.q; i++) m[k].push(x.p);
-  });
-  const ks = Object.keys(m)
-    .filter(function (k) {
-      return m[k].length >= 3;
-    })
-    .sort();
-  if (ks.length < 3) return "";
-  const avg = function (a) {
-      return a.reduce(function (s, v) {
-        return s + v;
-      }, 0) / a.length;
-    },
-    vals = ks.map(function (k) {
-      return avg(m[k]);
-    });
-  const W = 320,
-    H = 110,
-    l = 28,
-    r = 16,
-    t = 14,
-    b = 22;
-  let lo = Math.floor(Math.min.apply(null, vals)),
-    hi = Math.ceil(Math.max.apply(null, vals));
-  if (hi === lo) hi++;
-  const X = function (i) {
-      return l + (i * (W - l - r)) / (ks.length - 1);
-    },
-    Y = function (v) {
-      return t + ((hi - v) / (hi - lo)) * (H - t - b);
-    };
-  const pts = vals
-    .map(function (v, i) {
-      return X(i) + "," + Y(v);
-    })
-    .join(" ");
-  const dots = vals
-    .map(function (v, i) {
-      return (
-        '<circle class="tp" cx="' + X(i) + '" cy="' + Y(v) + '" r="' + (i === vals.length - 1 ? 5 : 3.5) +
-        '"><title>' + statMonthLabel(ks[i]) + ": " + statMoney(v) + " average, " + m[ks[i]].length + " drinks</title></circle>"
-      );
-    })
-    .join("");
-  const lab = ks
-    .map(function (k, i) {
-      return '<text x="' + X(i) + '" y="' + (H - 6) + '" text-anchor="middle">' + STAT_MON[+k.slice(5, 7) - 1] + "</text>";
-    })
-    .join("");
-  return (
-    '<svg class="sc-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Average drink price by month">' +
-    '<text x="0" y="' + (Y(hi) + 4) + '">$' + hi + '</text><text x="0" y="' + (Y(lo) + 4) + '">$' + lo + "</text>" +
-    '<line class="axln" x1="' + l + '" x2="' + (W - r) + '" y1="' + Y(lo) + '" y2="' + Y(lo) + '"/>' +
-    '<polyline class="tl" points="' + pts + '"/>' + dots + lab + "</svg>"
-  );
-}
-/* Running total of recorded spend, dated orders only. Owner only: it is a money total. */
-function statSpendCurve(list) {
-  const by = {};
-  list.forEach(function (x) {
-    if (x.d) by[x.d] = (by[x.d] || 0) + x.p * x.q;
-  });
-  const ds = Object.keys(by).sort();
-  let run = 0;
-  const pts = ds.map(function (d) {
-    run += by[d];
-    return { d: d, v: run };
-  });
-  if (pts.length < 2) return "";
-  const W = 320,
-    H = 110,
-    l = 4,
-    r = 44,
-    t = 12,
-    b = 20,
-    t0 = new Date(pts[0].d).getTime(),
-    t1 = new Date(pts[pts.length - 1].d).getTime(),
-    mx = pts[pts.length - 1].v;
-  const X = function (d) {
-      return l + ((new Date(d).getTime() - t0) / (t1 - t0 || 1)) * (W - l - r);
-    },
-    Y = function (v) {
-      return t + (1 - v / mx) * (H - t - b);
-    };
-  const path = pts
-    .map(function (p, i) {
-      return (i ? "L" : "M") + X(p.d).toFixed(1) + " " + Y(p.v).toFixed(1);
-    })
-    .join(" ");
-  const ex = X(pts[pts.length - 1].d);
-  return (
-    '<svg class="sc-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Running total of recorded spend">' +
-    '<path class="sa" d="' + path + " L" + ex + " " + (H - b) + " L" + X(pts[0].d) + " " + (H - b) + 'Z"/>' +
-    '<path class="tl" d="' + path + '"/><circle class="tp" cx="' + ex + '" cy="' + Y(mx) + '" r="5"/>' +
-    '<text class="acct" x="' + (ex + 8) + '" y="' + (Y(mx) + 4) + '">$' + Math.round(mx) + "</text>" +
-    '<text x="' + l + '" y="' + (H - 5) + '">' + statMonthLabel(pts[0].d.slice(0, 7)) + "</text>" +
-    '<text x="' + (W - r) + '" y="' + (H - 5) + '" text-anchor="end">' + statMonthLabel(pts[pts.length - 1].d.slice(0, 7)) + "</text></svg>"
   );
 }
 function statBarRows(items) {
@@ -689,215 +582,36 @@ function renderStats() {
     "</div>" +
     "</div>";
 
-  /* ---------- 3b. cadence: heatmap, streak, weekdays ---------- */
+  /* ---------- 3b. cadence: heatmap, busiest month, longest streak ---------- */
   const dayKeys = Object.keys(allDays).sort();
   if (dayKeys.length >= 3) {
-    const dow = [0, 0, 0, 0, 0, 0, 0];
-    dayKeys.forEach(function (d) {
-      dow[new Date(d + "T12:00:00").getDay()] += dayCount[d];
-    });
-    const dowTot = dow.reduce(function (s, x) {
-        return s + x;
-      }, 0),
-      wkPct = Math.round(((dow[0] + dow[6]) / dowTot) * 100),
-      dowMax = Math.max.apply(null, dow),
-      kind = wkPct >= 40 ? "Weekend explorer" : wkPct <= 30 ? "Weekday regular" : "Any-day drinker";
+    const cutoff = statDayKey(new Date(Date.now() - 210 * 86400000));
+    const recent = dayKeys.reduce(function (s, d) {
+      return d >= cutoff ? s + dayCount[d] : s;
+    }, 0);
     const busiest = Object.keys(monthVisit).sort(function (a, b) {
       return monthVisit[b] - monthVisit[a] || (a < b ? 1 : -1);
     })[0];
     h +=
       '<div class="statsec">📅 Cadence</div><div class="statcard sc-wide">' +
-      '<div class="sc-head"><b>' + kind + "</b> · " + wkPct + "% of visits are on a weekend</div>" +
+      '<div class="sc-head"><b>' + recent + "</b> cafe visits in the last 30 weeks</div>" +
       statHeat(dayCount) +
       '<div class="sc-duo"><div><span>Busiest month</span><b>' + statMonthLabel(busiest) + "</b><i>" + monthVisit[busiest] +
       ' cafe-days</i></div><div><span>Longest streak</span><b>' + statStreak(dayKeys) + ' days</b><i>in a row with a visit</i></div></div>' +
-      '<div class="sc-cap">Visits by weekday</div><div class="rchart sc-dow">' +
-      dow
-        .map(function (v, i) {
-          return (
-            '<div class="rcol static" role="img" aria-label="' + STAT_DOW[i] + ": " + v + ' visits"><span class="rbar has' +
-            (i === 0 || i === 6 ? " wk" : "") + '" style="height:' + Math.max(4, Math.round((v / dowMax) * 52)) +
-            'px"></span><span class="rlab">' + STAT_DOW[i].charAt(0) + "</span></div>"
-          );
-        })
-        .join("") +
-      "</div>" +
-      '<div class="statnote">Counted from ' + nVisits + " dated cafe-days; undated visits are left out. Weekend bars are grey.</div></div>";
+      '<div class="statnote">Counted from ' + nVisits + " dated cafe-days; undated visits are left out.</div></div>";
   }
 
-  /* ---------- 4. top spending (admin) ---------- */
-  if (isAdmin) {
-    const byCafe = nonWish
-      .map(function (c) {
-        return {
-          c: c,
-          amt: (c.drinks || []).reduce(function (t, d) {
-            return (
-              t +
-              drinkOrders(d).reduce(function (s, o) {
-                return s + dpr(o) * orderQty(o);
-              }, 0)
-            );
-          }, 0),
-        };
-      })
-      .filter(function (x) {
-        return x.amt > 0;
-      })
-      .sort(function (a, b) {
-        return b.amt - a.amt;
-      });
-    if (byCafe.length) {
-      const tp = byCafe.slice(0, 4);
-      h += '<div class="statsec">💸 Top spending</div>';
-      tp.forEach(function (x, i) {
-        h += magRow(i + 1, x.c.name, x.c.area, money(x.amt), "openDetail('" + x.c.id + "','stats')");
-      });
-      h +=
-        '<div class="statnote">These ' +
-        tp.length +
-        " are " +
-        money(
-          tp.reduce(function (s, x) {
-            return s + x.amt;
-          }, 0)
-        ) +
-        " of the " +
-        money(spend) +
-        " recorded, across " +
-        byCafe.length +
-        " cafes with any price.</div>";
-    }
-  }
-
-  /* ---------- 5. hojicha, priced around town ---------- */
-  /* Matched on the name family rather than normDrink, which splits hojicha into eleven
-     keys across thirteen spellings and hides the corpus's most-ordered drink entirely. */
-  const hoj = {};
-  nonWish.forEach(function (c) {
-    (c.drinks || []).forEach(function (d) {
-      if (!/hoji/i.test(d.n || "")) return;
-      const priced = drinkOrders(d)
-        .filter(function (o) {
-          return dpr(o) > 0;
-        })
-        .sort(function (a, b) {
-          return (a.date || "").localeCompare(b.date || "");
-        });
-      if (!priced.length) return;
-      const o = priced[priced.length - 1],
-        p = dpr(o);
-      if (!hoj[c.id] || (o.date || "") >= (hoj[c.id].date || ""))
-        hoj[c.id] = { c: c, p: p, n: d.n, date: o.date || "" };
-    });
-  });
-  const hojA = Object.keys(hoj)
-    .map(function (k) {
-      return hoj[k];
-    })
-    .sort(function (a, b) {
-      return a.p - b.p;
-    });
-  const hojCafes = nonWish.filter(function (c) {
-    return (c.drinks || []).some(function (d) {
-      return /hoji/i.test(d.n || "");
-    });
-  }).length;
-  if (hojA.length >= 3) {
-    const hmx = hojA[hojA.length - 1].p;
-    const med = median(
-      hojA.map(function (x) {
-        return x.p;
-      })
-    );
-    const prices = [];
-    nonWish.forEach(function (c) {
-      (c.drinks || []).forEach(function (d) {
-        drinkOrders(d).forEach(function (o) {
-          const p = dpr(o);
-          if (p > 0) {
-            for (let i = 0; i < orderQty(o); i++) prices.push(p);
-          }
-        });
-      });
-    });
-    prices.sort(function (a, b) {
-      return a - b;
-    });
-    const pmed = median(prices);
-    h += '<div class="statsec">🍵 Hojicha latte, priced around town</div>';
-    hojA.slice(0, 4).forEach(function (x) {
-      h += magRow("🍵", x.c.name, x.c.area, money(x.p), "openDetail('" + x.c.id + "','stats')");
-    });
-    if (hojA.length > 4) {
-      h +=
-        '<div class="foldbox">' +
-        hojA
-          .slice(4)
-          .map(function (x) {
-            return magRow("🍵", x.c.name, x.c.area, money(x.p), "openDetail('" + x.c.id + "','stats')");
-          })
-          .join("") +
-        "</div>" +
-        '<button class="morebtn" data-lab="Show ' +
-        (hojA.length - 4) +
-        ' more" onclick="statFold(this)">Show ' +
-        (hojA.length - 4) +
-        " more ▾</button>";
-    }
-    h +=
-      '<div class="statnote">Hojicha at ' +
-      hojCafes +
-      " cafes, " +
-      hojA.length +
-      " with a price. Median " +
-      money(med) +
-      ", dearest " +
-      money(hmx) +
-      " (" +
-      esc(hojA[hojA.length - 1].c.name) +
-      "). All " +
-      prices.length +
-      " priced drinks: median " +
-      money(pmed) +
-      ".</div>";
-  }
-
-  /* ---------- 5b. price spread, trend, spend curve ---------- */
+  /* ---------- 5b. price spread ---------- */
   const allPrices = [];
   pricedList.forEach(function (x) {
     for (let i = 0; i < x.q; i++) allPrices.push(x.p);
   });
   if (allPrices.length >= 5) {
-    const home = [],
-      away = [];
-    pricedList.forEach(function (x) {
-      for (let i = 0; i < x.q; i++) {
-        if (x.cc === "US") home.push(x.p);
-        else if (x.cc) away.push(x.p);
-      }
-    });
-    const avg = function (a) {
-      return a.reduce(function (s, v) {
-        return s + v;
-      }, 0) / a.length;
-    };
-    const split =
-      home.length >= 3 && away.length >= 3
-        ? '<div class="sc-duo"><div><span>US cafes</span><b>' + statMoney(avg(home)) + "</b><i>" + home.length +
-          " priced drinks</i></div><div><span>Outside the US</span><b>" + statMoney(avg(away)) + "</b><i>" + away.length +
-          " priced drinks</i></div></div>"
-        : "";
-    const trend = statTrend(pricedList),
-      curve = isAdmin ? statSpendCurve(pricedList) : "";
     h +=
       '<div class="statsec">💵 Price spread</div><div class="statcard sc-wide">' +
       '<div class="sc-head"><b>Median ' + statMoney(median(allPrices)) + "</b> · from " + statMoney(Math.min.apply(null, allPrices)) +
       " to " + statMoney(Math.max.apply(null, allPrices)) + "</div>" + statHist(allPrices) +
-      (trend ? '<div class="sc-cap">Average price by month</div>' + trend : "") + split +
-      (curve ? '<div class="sc-cap">Recorded spend, running total</div>' + curve : "") +
-      '<div class="statnote">' + allPrices.length + " of " + nDrinkRows + " drinks have a price" +
-      (split ? "; the country split uses only cafes with a country set" : "") + ". Missing prices are not estimated.</div></div>";
+      '<div class="statnote">' + allPrices.length + " of " + nDrinkRows + " drinks have a price. Missing prices are not estimated.</div></div>";
   }
 
   /* ---------- 6. drink DNA ----------

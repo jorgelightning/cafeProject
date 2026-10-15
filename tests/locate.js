@@ -81,14 +81,14 @@ const { eq, done } = checker();
   // --- 2. it sits in the bottom-right thumb corner, clear of the legend ---
   r = await pg.evaluate(() => {
     const b = document.getElementById("btn-locate").getBoundingClientRect();
-    const lg = document.querySelector(".maplegend").getBoundingClientRect();
+    const lg = document.getElementById("btn-legend").getBoundingClientRect();
     const box = document.querySelector(".mapbox").getBoundingClientRect();
-    return { rightGap: Math.round(box.right - b.right), aboveLegend: b.bottom <= lg.top,
+    return { rightGap: Math.round(box.right - b.right), aboveLegend: b.top >= lg.bottom,
              overlaps: !(b.bottom <= lg.top || b.top >= lg.bottom || b.right <= lg.left || b.left >= lg.right),
              inLowerHalf: b.top > box.top + box.height / 2 };
   });
   eq(r.rightGap, 12, "…12px from the right edge, matching the legend's inset");
-  eq(r.aboveLegend, true, "…stacked above the legend");
+  eq(r.aboveLegend, true, "…stacked below the ? that holds the legend, the one control in the corner above it");
   eq(r.overlaps, false, "…and never overlapping it");
   eq(r.inLowerHalf, true, "…in the lower half of the map, where a thumb reaches");
 
