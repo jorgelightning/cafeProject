@@ -73,6 +73,7 @@ function initMap() {
     streetViewControl: false,
     fullscreenControl: false,
     clickableIcons: false,
+    styles: MAP_STYLES,
     gestureHandling: "greedy",
     /* Zoomed out far enough, the world is smaller than the screen and the rest is grey. The floor is
        the zoom at which the world is as tall as the map; the background is the ocean's colour, so a
@@ -476,24 +477,73 @@ function toggleWantOnly(on) {
   }
   syncWantUI();
 }
+/* A cluster used to be a plain orange circle, which looked like a rating colour and said nothing
+   about what was inside. It is now a ring split by how the cafes went — loved, fine, not for me,
+   not rated — around a white face with the count. Want-to-try pins are never clustered, so they
+   have no segment. Literal hex throughout: Google needs real colour strings. */
+function clusterIcon(buckets) {
+  const keys = ["loved", "fine", "meh", ""],
+    cnt = { loved: 0, fine: 0, meh: 0, "": 0 };
+  buckets.forEach(function (b) {
+    cnt[b in cnt ? b : ""]++;
+  });
+  const n = buckets.length,
+    d = Math.round(38 + Math.min(24, n * 2.2)),
+    r = d / 2 - 5,
+    C = 2 * Math.PI * r,
+    used = keys.filter(function (k) {
+      return cnt[k];
+    });
+  let off = 0,
+    segs = "";
+  used.forEach(function (k) {
+    const len = (C * cnt[k]) / n,
+      vis = used.length > 1 ? Math.max(1, len - 2.5) : len;
+    segs +=
+      '<circle cx="' + d / 2 + '" cy="' + d / 2 + '" r="' + r + '" fill="none" stroke="' + BUCKET_HEX[k] +
+      '" stroke-width="7" stroke-dasharray="' + vis.toFixed(2) + " " + (C - vis).toFixed(2) +
+      '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 ' + d / 2 + " " + d / 2 + ')"/>';
+    off += len;
+  });
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' + d + '" height="' + d + '" viewBox="0 0 ' + d + " " + d + '">' +
+    '<circle cx="' + d / 2 + '" cy="' + d / 2 + '" r="' + (d / 2 - 1) + '" fill="#ffffff" stroke="#00000022" stroke-width="1"/>' +
+    segs +
+    '<text x="' + d / 2 + '" y="' + d / 2 + '" text-anchor="middle" dy=".35em" font-family="Helvetica,Arial,sans-serif" font-size="' +
+    (n > 9 ? 14 : 13) + '" font-weight="700" fill="#1d1a17">' + n + "</text></svg>";
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(d, d),
+    anchor: new google.maps.Point(d / 2, d / 2),
+  };
+}
 const _clusterRenderer = {
   render: function (cluster) {
     const n = cluster.count;
     return new google.maps.Marker({
       position: cluster.position,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 14 + Math.min(12, n),
-        fillColor: "#d5803b",
-        fillOpacity: 0.92,
-        strokeColor: "#ffffff",
-        strokeWeight: 3,
-      },
-      label: { text: String(n), color: "#ffffff", fontSize: "12px", fontWeight: "700" },
+      icon: clusterIcon(
+        (cluster.markers || []).map(function (m) {
+          return m._bucket || "";
+        })
+      ),
+      title: n + " cafes",
       zIndex: google.maps.Marker.MAX_ZINDEX + n,
     });
   },
 };
+/* Google's own shops, hotels, clinics and churches drew their icons over the cafe pins. Hiding
+   the commercial kinds leaves parks, transit and neighbourhood names. This is the `styles`
+   option, which Google ignores once a map has a mapId — if one is ever added, move this into
+   the cloud map style instead. */
+const MAP_STYLES = [
+  "poi.business",
+  "poi.attraction",
+  "poi.medical",
+  "poi.place_of_worship",
+].map(function (f) {
+  return { featureType: f, stylers: [{ visibility: "off" }] };
+});
 function renderMarkers() {
   if (!gmap) return;
   if (gclusterer) {
@@ -529,6 +579,7 @@ function renderMarkers() {
     };
     const m = new google.maps.Marker(opt);
     m._wish = !!c.wish;
+    m._bucket = c.wish ? "" : bucketOf(c);
     m.addListener("click", () => onMarkerClick(c, m));
     gmarkers.push(m);
     if (_pinShown(m)) {
