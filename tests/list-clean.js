@@ -95,6 +95,9 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
     const rows = [...pane.children].filter(el => !el.hidden && el.getBoundingClientRect().height > 0
                                                  && !el.classList.contains("scroll"));
     return {
+      /* the viewer's guide row is deliberate chrome (a friend's one-tap way in), so it is measured
+         on its own and taken out of the budget below: everything else has not moved */
+      guide: (g => g && !g.hidden ? Math.round(g.getBoundingClientRect().height) + 8 : 0)(document.getElementById("guiderow")),
       chrome: Math.round(grid.getBoundingClientRect().top - pane.getBoundingClientRect().top),
       rows: rows.length,
       panelHidden: document.getElementById("listpanel").hidden,
@@ -109,8 +112,9 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
   eq(shape.rows, 2, "the controls are a search box and one bar, not four stacked rows");
   /* 145, not 130: raising the tabs and Filters to the 44px touch floor bought back 8px of
      chrome, and the floor wins that trade. Still 137px against the original 217. */
-  eq(shape.chrome <= 145, true,
-     "…so the grid starts " + shape.chrome + "px down instead of 217px");
+  eq(shape.chrome - shape.guide <= 145, true,
+     "…so the grid starts " + (shape.chrome - shape.guide) + "px down instead of 217px, before the guide row");
+  eq(shape.guide <= 60, true, "…and the viewer's guide row costs " + shape.guide + "px, one row of 44px buttons");
   eq(shape.panelHidden, true, "the panel is closed at rest");
   eq(shape.inPanel, [true, true], "sort and the filter chips both live inside it");
   eq(shape.layoutMoved, true, "…and the layout toggle does not — it is a preference, not a filter");
@@ -130,7 +134,7 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
   eq(floor, [], "the search gear, both tabs, Filters and the map button all clear 44px");
   const oneLine = await pg.evaluate(() => {
     const bar = document.querySelector(".listbar");
-    const kids = [...bar.children].filter(e => e.getBoundingClientRect().height > 0 && e.id !== "save-state");
+    const kids = [...bar.children].filter(e => e.getBoundingClientRect().height > 0 && e.id !== "save-state" && e.id !== "guiderow");
     return [...new Set(kids.map(e => Math.round(e.getBoundingClientRect().top / 10)))].length;
   });
   eq(oneLine, 1, "…and the taller controls still share one line at 390px");

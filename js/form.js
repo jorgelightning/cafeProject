@@ -677,6 +677,23 @@ function logUsual(btn) {
     .join(" · ");
   toast("Added " + e.n + (bits ? " — " + bits : "") + " ✓");
 }
+/* The + on a list card: open this cafe's visit with its usual drink already added, dated today.
+   One tap on the card, then Save — the price is the only thing left to type. */
+function logAgainFrom(id) {
+  const c = cafes.find(x => x.id === id),
+    td = c && !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
+  if (!isAdmin || !td) return;
+  openForm(id);
+  setTimeout(function () {
+    const ix = _formIx || drinkIndex(),
+      want = String(td.d.n || "").toLowerCase();
+    const key = Object.keys(ix).filter(function (k) {
+      return String(ix[k].n || "").toLowerCase() === want;
+    })[0];
+    if (key) logUsual({ dataset: { key: key } });
+    else addDrinkRow(td.d.n, "", localToday());
+  }, 180);
+}
 function renderDrinkRows(drinks) {
   const host = $("f-drinks");
   host.innerHTML = "";
