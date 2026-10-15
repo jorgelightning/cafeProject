@@ -3,9 +3,9 @@
    and [data-theme="dark"] = manually chosen dark. Keep any new colour in all three.
    --acc stays the identity orange for fills/pins/underlines; --acc-strong is the only
    one that may sit under white text (--acc is 3.01:1 there, --acc-strong is 4.94:1). */
-:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a8551a; --on-acc:#fff; --acc2:#c0374b; --bg:#f6f5f3; --surface:#fff; --surface2:#f1efed; --text:#1d1a17; --soft:#706860; --faint:#726a63; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d9d3cc; --border:rgba(0,0,0,.09); --shadow:0 8px 24px rgba(0,0,0,.12); --glass:rgba(255,255,255,.93); --glass-strong:rgba(248,246,244,.88); }
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#968b83; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); } }
-:root[data-theme="dark"]{ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#15110e; --surface:#201a16; --surface2:#2a221d; --text:#f3eee9; --soft:#b4aaa2; --faint:#968b83; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#4a3f37; --border:rgba(255,255,255,.12); --shadow:0 8px 24px rgba(0,0,0,.5); --glass:rgba(28,23,19,.92); --glass-strong:rgba(20,16,13,.86); }
+:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a8551a; --on-acc:#fff; --acc2:#c0374b; --bg:#f4f4f5; --surface:#fff; --surface2:#ececee; --text:#18181b; --soft:#5a5a63; --faint:#666670; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d6d6db; --border:rgba(20,20,40,.11); --shadow:0 2px 4px rgba(30,24,16,.06),0 14px 32px rgba(30,24,16,.14); --shadow-sm:0 1px 2px rgba(30,24,16,.07),0 2px 6px rgba(30,24,16,.06); --glass:rgba(255,255,255,.9); --glass-strong:rgba(244,244,245,.88); --gold-a:#f6d77f; --gold-b:#dca13a; --gold-ink:#3b2606; --amber-bg:rgba(213,128,59,.14); --amber-ink:#7a3f0a; --wash:rgba(120,120,150,.08); }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.10); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); } }
+:root[data-theme="dark"]{ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.10); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); }
 /* ---------- the scale ----------
    Colour was tokenised; nothing dimensional was, so the stylesheet grew 23 font sizes, 18
    corner radii and 13 gap values — seven of the font sizes inside three pixels, which nobody
@@ -30,7 +30,7 @@
 .chip:focus-visible, .where:focus-visible, .tagrow-chip:focus-visible{ border-radius:var(--r-4); }
 html,body{ height:100%; margin:0; }
 body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,"Apple Color Emoji",sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
-#app{ position:fixed; inset:0; display:flex; flex-direction:column; background:radial-gradient(125% 90% at 0% 0%, rgba(213,128,59,.10), transparent 55%), radial-gradient(125% 90% at 100% 100%, rgba(224,85,107,.08), transparent 52%), var(--bg); }
+#app{ position:fixed; inset:0; display:flex; flex-direction:column; background:radial-gradient(125% 90% at 0% 0%, var(--wash), transparent 55%), var(--bg); }
 /* ---- shell: mobile defaults ---- */
 .sidebar{ position:absolute; inset:0 0 calc(64px + env(safe-area-inset-bottom)) 0; display:flex; flex-direction:column; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); z-index:30; min-height:0; }
 .mapwrap{ position:absolute; inset:0 0 calc(64px + env(safe-area-inset-bottom)) 0; display:flex; flex-direction:column; }
@@ -911,3 +911,27 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
   .worldsheet{ left:calc(var(--sidebar) + 12px); right:auto; bottom:26px; width:min(380px, calc(100% - var(--sidebar) - 24px)); max-height:50%; border-radius:var(--r-4); }
   .mapbox.worlding .locbtn{ bottom:calc(114px + env(safe-area-inset-bottom)); }
 }
+
+/* ---------- polish: depth, rank tiers, scrims, numerals (v79) ----------
+   CSS only. Surfaces get a two-step shadow (--shadow-sm raised, --shadow floating); the rank
+   badge gains a gold tier (#1 to #3) and an amber one (#4 to #10), written by rankBadge() as a
+   class, so phInner() is still the only thing that writes a tile. Gold carries dark ink, which
+   keeps --acc-strong the only accent under white text. */
+.card, .pfig, .drinkcard, .statcard{ box-shadow:var(--shadow-sm); }
+.grid.compact-list .card{ box-shadow:none; }
+.card{ transition:transform .16s ease, box-shadow .16s ease; }
+@media (hover:hover){ .card:hover{ transform:translateY(-2px); box-shadow:var(--shadow); } .grid.compact-list .card:hover{ transform:none; box-shadow:none; } }
+@media (prefers-reduced-motion:reduce){ .card{ transition:none; } .card:hover{ transform:none; } }
+.card .n{ letter-spacing:-.015em; }
+.dhead h2, .hero .hd{ letter-spacing:-.03em; }
+.card .ph, .hero{ isolation:isolate; }
+.card .ph::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(180deg, rgba(18,10,4,.34) 0%, rgba(18,10,4,0) 38%, rgba(18,10,4,0) 58%, rgba(18,10,4,.45) 100%); }
+.card .ph.nophoto::before{ background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.14)); }
+.hero::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(180deg, rgba(18,10,4,.42) 0%, rgba(18,10,4,0) 34%, rgba(18,10,4,0) 62%, rgba(18,10,4,.22) 100%); }
+.hero .nav{ z-index:1; }
+.rankbadge{ backdrop-filter:blur(8px) saturate(1.4); -webkit-backdrop-filter:blur(8px) saturate(1.4); box-shadow:0 0 0 1px rgba(255,235,205,.16) inset; }
+/* On the tile the pills sit on their own dark scrim, so the amber ring is a literal colour,
+   identical in both themes and over any photo, like the badge itself. */
+.rankbadge.r-amber{ background:rgba(32,18,6,.62); color:#ffd9a1; box-shadow:0 0 0 1.5px rgba(246,197,140,.75) inset; }
+.rankbadge.r-gold{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 2px 8px rgba(0,0,0,.35); backdrop-filter:none; -webkit-backdrop-filter:none; }
+.dranktile b, .drinkprice, .dscore, .lbscore, .prsub, .dorderprice .pr, .wantn, .scorebadge{ font-variant-numeric:tabular-nums lining-nums; }

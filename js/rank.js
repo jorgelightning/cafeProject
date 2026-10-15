@@ -547,7 +547,7 @@ function rankOf(c, m) {
    bucket, so repeating it there said nothing twice. */
 function rankBadge(c, m) {
   const r = rankOf(c, m);
-  return r ? '<span class="rankbadge">#' + r + "</span>" : "";
+  return r ? '<span class="rankbadge' + (r <= 3 ? " r-gold" : r <= 10 ? " r-amber" : "") + '">#' + r + "</span>" : "";
 }
 function chaserRank(c, board) {
   let n = 1;
