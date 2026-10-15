@@ -403,6 +403,7 @@ function chaserFresh(c) {
 }
 /* Ordered: matcha before coffee so "Matcha Einspaner" is matcha, tea before coffee so
    "Dong Ding Oolong Latte" is tea. First match wins. */
+/** @type {[string, RegExp][]} */
 const CHASER_FAM = [
   ["hojicha", /hojicha|houjicha|hojica|hoji/],
   ["matcha", /matcha/],

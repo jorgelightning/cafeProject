@@ -32,6 +32,7 @@ function gphotoFor(c) {
   return entry;
 }
 function applyCardPhoto(id, url) {
+  /** @type {HTMLElement|null} */
   const el = document.querySelector('.card[data-id="' + id + '"] .ph');
   if (!el) return;
   const c = cafes.find(x => x.id === id);
@@ -221,7 +222,7 @@ async function fetchAllPhotos() {
     while (queue.length) {
       const c = queue.shift();
       delete gphotoCache[c.id];
-      await new Promise(res =>
+      await new Promise((/** @type {(v?: any) => void} */ res) =>
         fetchPlacePhoto(c, url => {
           if (url && !isSessionPhotoUrl(url)) {
             /* A snapshot can replace every cafe object during the minutes this runs, so find the

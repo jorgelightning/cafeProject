@@ -14,7 +14,16 @@ const fs = require("fs"),
 const root = path.join(__dirname, "..");
 const baselinePath = path.join(root, "types", "baseline.json");
 const tsc = path.join(root, "node_modules", ".bin", process.platform === "win32" ? "tsc.cmd" : "tsc");
-const r = spawnSync(tsc, ["-p", root, "--pretty", "false"], { encoding: "utf8" });
+/* On Windows tsc is a .cmd shim, and Node refuses to spawn those without a shell (EINVAL). That used to
+   make this script see no output at all and report "0 errors" — a ratchet that could never fail. */
+const r =
+  process.platform === "win32"
+    ? spawnSync('"' + tsc + '" -p "' + root + '" --pretty false', { encoding: "utf8", shell: true })
+    : spawnSync(tsc, ["-p", root, "--pretty", "false"], { encoding: "utf8" });
+if (r.error || r.status === null) {
+  console.error("Could not run tsc: " + ((r.error && r.error.message) || "no exit status"));
+  process.exit(1);
+}
 const out = (r.stdout || "") + (r.stderr || "");
 const errors = out.split("\n").filter(l => /error TS\d+/.test(l));
 const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8")).errors;

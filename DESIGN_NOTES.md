@@ -1273,3 +1273,12 @@ and falls back to the link. Three decisions worth keeping:
 
 `.oa-gl` joined the glyph allowlist in `tests/scale.js`: it is a 26px emoji tile, artwork rather
 than type, like `.drinkicon`.
+
+### The type ratchet could not fail on Windows — 15 Oct 2026
+
+`scripts/typecheck.js` spawned `tsc.cmd` without a shell, which Node refuses on Windows (EINVAL).
+It then saw no output and printed `type errors: 0`, so on a Windows machine it passed whatever the
+code held — it reported "0" for weeks while the real count was 33 (baseline 32; one had crept in).
+It now runs through a shell there and exits non-zero if `tsc` cannot be started at all. The count
+is genuinely **0** and `types/baseline.json` says so; the fixes are JSDoc annotations and casts
+only, plus one `const _t` that holds `e.target` once so the cast is written once.

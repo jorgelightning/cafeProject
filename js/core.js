@@ -184,7 +184,9 @@ document.addEventListener("keydown", function (e) {
     return;
   }
   if (e.key !== "Enter" && e.key !== " ") return;
-  const el = e.target && e.target.closest ? e.target.closest('[role="button"][tabindex="0"]') : null;
+  const _t = /** @type {Element|null} */ (e.target);
+  /** @type {HTMLElement|null} */
+  const el = _t && _t.closest ? /** @type {HTMLElement|null} */ (_t.closest('[role="button"][tabindex="0"]')) : null;
   if (!el) return;
   e.preventDefault(); /* Space would otherwise scroll the page */
   el.click();
@@ -228,6 +230,7 @@ function initials(c) {
 
    It is still STORED as a rating, which is why nothing had to be migrated: 4 and 5 both read
    as loved, 3 as fine, 1 and 2 as not-for-me, and new saves land on the canonical 5 / 3 / 1. */
+/** @type {[string, number, string][]} */
 const BUCKETS = [
   ["loved", 5, "Loved it"],
   ["fine", 3, "It was fine"],
@@ -612,7 +615,7 @@ function drinkOrders(d) {
     if (d[k] !== undefined && d[k] !== "") base[k] = d[k];
   });
   const dates = [...new Set((d.dates || []).filter(Boolean))].sort();
-  const cnt = Math.max(parseInt(d.count, 10) || 0, dates.length, 1);
+  const cnt = Math.max(parseInt(/** @type {any} */ (d.count), 10) || 0, dates.length, 1);
   /** @type {Order[]} */
   const out = dates.length
     ? dates.map(function (dt) {
@@ -833,6 +836,7 @@ function verifyCardPhoto(id, url) {
       delete gphotoCache[id];
       saveGphotoCache();
     }
+    /** @type {HTMLElement|null} */
     const el = document.querySelector('.card[data-id="' + CSS.escape(String(id)) + '"] .ph');
     if (el) {
       el.style.backgroundImage = "";
