@@ -1128,3 +1128,23 @@ From the sync audit. Each has a test that fails on the v72 code.
 - Still open, from the audit's minor list: the boot re-seed of an empty cloud from the local cache,
   the legacy dirty-flag path, duplicate-named drinks collapsing in a merge, whole-order conflicts when two
   devices edit different fields of one order.
+
+## The branch header, quieter — 15 Oct 2026 (v74)
+
+v72's chip repeated the place (`HEYTEA (Cupertino)` over `📍 Cupertino · 3 branches ▾`), looked like a
+second rating pill beside `● Loved it`, and pushed the page down when opened.
+
+- When a cafe is a brand's branch and its name ends in a real place suffix, the **title is the brand**
+  (`HEYTEA`) and the place is the plain line under it; the full name is on hover. Names with no
+  separator ("Odd One Out Tea San Mateo") keep their full title.
+- The place is plain muted text with a monochrome pin (a CSS mask, so it follows both themes — the
+  pink emoji is gone). The control after it is **text, not a pill**: `4 branches ⌄` in the accent
+  colour, 44px tall, so the filled rating badge and the thing you tap no longer look alike. The row
+  does not wrap: a long place (`South San Francisco`) ellipsises beside the rating (never under 5em) and
+  the control keeps its place.
+- The list **floats** over the page (`position:absolute` inside `.dloc`, capped at 380px and
+  `min(46vh,288px)`) with a shadow, so opening it moves nothing. Each row: rating dot or 🔖, the
+  place, how you rated it, a check on the current branch; `Add a branch` (owner only) last. Tap
+  elsewhere or Escape closes it, and Escape returns focus to the control.
+- Checked at 360, 375, 390, 430, 744, 768, 1024 and 1440 (`tests/branches.js`): nothing overflows,
+  targets are 44px, the list stays on screen.
