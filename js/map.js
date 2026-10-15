@@ -567,7 +567,29 @@ function _pinTextWidth(t) {
     return t.length * 7.5;
   }
 }
+/* A want-to-try pin is the same pin as any other, in the one hue nothing else on the map uses, and it
+   keeps its white bookmark so it still reads without colour. */
+function wishDotIcon(big) {
+  const d = big ? 26 : 20,
+    edge = big ? 2.5 : 2,
+    r = d / 2 - edge,
+    c = d / 2;
+  const x0 = c - r * 0.4,
+    x1 = c + r * 0.4,
+    y0 = c - r * 0.52,
+    y1 = c + r * 0.56;
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' + d + '" height="' + d + '" viewBox="0 0 ' + d + " " + d + '">' +
+    '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" fill="' + WISH_HEX + '" stroke="#ffffff" stroke-width="' + edge + '"/>' +
+    '<path d="M' + x0 + " " + y0 + "H" + x1 + "V" + y1 + "L" + c + " " + (y1 - r * 0.3) + "L" + x0 + " " + y1 + 'Z" fill="#ffffff"/></svg>';
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(d, d),
+    anchor: new google.maps.Point(d / 2, d / 2),
+  };
+}
 function pinDotIcon(m, big) {
+  if (m._wish) return wishDotIcon(big);
   return {
     path: google.maps.SymbolPath.CIRCLE,
     scale: (big ? 9 : 6) + (m._fav ? 2 : 0),
@@ -582,13 +604,17 @@ function pinPillIcon(m, selected) {
   const label = name.length > 17 ? name.slice(0, 16) + "\u2026" : name;
   const w = Math.ceil(_pinTextWidth(label)) + 52,
     h = 30;
+  const wish = !!m._wish;
   const svg =
     '<svg xmlns="http://www.w3.org/2000/svg" width="' + (w + 6) + '" height="' + (h + 6) + '" viewBox="0 0 ' + (w + 6) + " " + (h + 6) + '">' +
-    '<rect x="3" y="3" width="' + w + '" height="' + h + '" rx="15" fill="#ffffff" stroke="' +
-    (selected ? "#1d1a17" : m._fav ? "#e0556b" : "#00000024") + '" stroke-width="' + (selected ? 3 : 1.5) + '"/>' +
-    '<circle cx="19" cy="18" r="10" fill="' + BUCKET_HEX[m._bucket || ""] + '"/>' +
-    '<text x="19" y="18" text-anchor="middle" dy=".35em" font-size="11">' + esc(m._emoji || "\u2615") + "</text>" +
-    '<text x="36" y="18" dy=".35em" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="#1d1a17">' + esc(label) + "</text></svg>";
+    '<rect x="3" y="3" width="' + w + '" height="' + h + '" rx="15" fill="' + (wish ? WISH_HEX : "#ffffff") + '" stroke="' +
+    (selected ? "#1d1a17" : wish ? "#ffffff" : m._fav ? "#e0556b" : "#00000024") + '" stroke-width="' + (selected ? 3 : 1.5) + '"/>' +
+    '<circle cx="19" cy="18" r="10" fill="' + (wish ? "#ffffff" : BUCKET_HEX[m._bucket || ""]) + '"/>' +
+    (wish
+      ? '<path d="M15.5 12.5h7v11l-3.5-2.8-3.5 2.8z" fill="' + WISH_HEX + '"/>'
+      : '<text x="19" y="18" text-anchor="middle" dy=".35em" font-size="11">' + esc(m._emoji || "\u2615") + "</text>") +
+    '<text x="36" y="18" dy=".35em" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="' + (wish ? "#ffffff" : "#1d1a17") +
+    '">' + esc(label) + "</text></svg>";
   return {
     url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
     scaledSize: new google.maps.Size(w + 6, h + 6),
@@ -604,7 +630,7 @@ function refreshPinIcons() {
     bds = typeof gmap.getBounds === "function" ? gmap.getBounds() : null;
   const near = gmarkers
     .filter(function (m) {
-      return !m._wish && m.getPosition() && (!bds || bds.contains(m.getPosition()));
+      return m.getPosition() && (!bds || bds.contains(m.getPosition()));
     })
     .map(function (m) {
       const pt = proj.fromLatLngToPoint(m.getPosition());
@@ -613,7 +639,10 @@ function refreshPinIcons() {
   /* the picked cafe first, then favourites, then the better-ranked */
   near.sort(function (a, b) {
     return (
-      (b.m._id === _selPin ? 1 : 0) - (a.m._id === _selPin ? 1 : 0) || (b.m._fav ? 1 : 0) - (a.m._fav ? 1 : 0) || (a.m._rk || 99999) - (b.m._rk || 99999)
+      (b.m._id === _selPin ? 1 : 0) - (a.m._id === _selPin ? 1 : 0) ||
+      (b.m._wish ? 1 : 0) - (a.m._wish ? 1 : 0) ||
+      (b.m._fav ? 1 : 0) - (a.m._fav ? 1 : 0) ||
+      (a.m._rk || 99999) - (b.m._rk || 99999)
     );
   });
   const taken = [];
@@ -636,7 +665,8 @@ function refreshPinIcons() {
     if (m._mode === key) return;
     m._mode = key;
     m.setIcon(mode === "pill" ? pinPillIcon(m, sel) : pinDotIcon(m, mode === "big"));
-    m.setZIndex(sel ? 10 : mode === "pill" ? 8 : m._fav ? 5 : 3);
+    /* want-to-try pins stay above the cluster bubbles, as they always have */
+    m.setZIndex(m._wish ? wishPinZ() + (sel ? 1 : 0) : sel ? 10 : mode === "pill" ? 8 : m._fav ? 5 : 3);
   });
 }
 function selectPin(id) {
@@ -693,16 +723,14 @@ function renderMarkers() {
     m._emoji = c.emoji || "";
     m._fav = !!c.fav;
     m._rk = _rm[c.id] || 0;
-    if (!c.wish) {
-      m.addListener("mouseover", function () {
-        m._hover = true;
-        refreshPinIcons();
-      });
-      m.addListener("mouseout", function () {
-        m._hover = false;
-        refreshPinIcons();
-      });
-    }
+    m.addListener("mouseover", function () {
+      m._hover = true;
+      refreshPinIcons();
+    });
+    m.addListener("mouseout", function () {
+      m._hover = false;
+      refreshPinIcons();
+    });
     m.addListener("click", () => onMarkerClick(c, m));
     gmarkers.push(m);
     if (_pinShown(m)) {

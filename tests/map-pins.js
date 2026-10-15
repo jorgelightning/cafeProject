@@ -53,17 +53,21 @@ const { eq, done } = checker();
     window.__zoom = zz; _selPin = null; gmarkers.forEach(m => { m._mode = null; }); refreshPinIcons();
     const by = id => gmarkers.find(m => m._id === id || (!m._id && m.o.title === "Someday")).o;
     const kind = o => o.icon.url ? "pill" : "dot" + o.icon.scale;
-    return { a: kind(by("a")), b: kind(by("b")), c: kind(by("c")), wish: gmarkers.find(m => m._wish).o.icon.url.indexOf("svg") > -1 };
+    const w = gmarkers.find(m => m._wish).o;
+    return { a: kind(by("a")), b: kind(by("b")), c: kind(by("c")), wish: w.icon.url ? "svg" + w.icon.scaledSize.width : "other", wz: w.zIndex };
   }, z);
 
   let r = await state(12);
+  eq(r.wish, "svg20", "zoomed out a want-to-try pin is the small dot too (20px with its edge)");
   eq([r.a, r.b, r.c], ["dot8", "dot6", "dot6"], "zoomed out every cafe is a small dot, a favourite a little larger");
   r = await state(14.6);
+  eq(r.wish, "svg26", "in between it is the larger dot, 26px, violet with its bookmark");
   eq([r.a, r.b, r.c], ["dot11", "dot9", "dot9"], "in between they are larger dots");
   r = await state(16);
   eq([r.a, r.c], ["pill", "pill"], "close in, a pill carries the cafe's name");
   eq(r.b, "dot9", "…but one that would cover the better-ranked cafe next to it gives way to a dot");
-  eq(r.wish, true, "want-to-try pins are never changed by any of this");
+  eq(/^svg1\d\d$/.test(r.wish), true, "close in a want-to-try pin is a pill too, sized to its name (" + r.wish + ")");
+  eq(r.wz > 1000 + 100, true, "…and still sits above the cluster bubbles (z " + r.wz + ")");
 
   const pill = await pg.evaluate(() => {
     window.__zoom = 16; gmarkers.forEach(m => { m._mode = null; }); refreshPinIcons();
