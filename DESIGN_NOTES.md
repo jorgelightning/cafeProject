@@ -1171,3 +1171,21 @@ the branch gets its own row.
 - A cafe on its own with a brand (owner only) shows the bar with its place and `＋ Branch`.
 - `.wn` is already a class (the stats figures), so the bar's parts are `.wname` and `.wcount`.
 - Not built: the segmented picker. It truncates names and only suits three or four branches.
+
+## "The private rule is missing" — 15 Oct 2026 (v75)
+
+The banner appeared with correct rules published. `privateWriteFailed()` raised it for ANY failed
+private read or write, so a dropped connection, a request made a moment before the sign-in token
+reached the database, or a bug all read as a missing rule.
+
+- Only `PERMISSION_DENIED` is a rules finding. Anything else toasts what happened
+  ("couldn't reach the cloud (…)") and keeps the address queued. The banner now ends with
+  `Firebase said: <code>: <message>`, and the console logs it.
+- Requests wait for the signed-in user's token (`_privAuthed`), and a refusal is retried once with a
+  freshly fetched token (`_privRetryDenied`) before it counts.
+- A private read or write that succeeds withdraws the warning (`_privOk`); it never withdraws one
+  about strangers being able to write or read.
+- v73's `{base, value}` write used `ref.transaction`. A transaction on a path nothing listens to
+  starts from an empty cache, returns "abort" at once when the base is not null, and would have read
+  as another device's newer address — dropping the edit. It is now a read, a comparison with the base,
+  then a write (one owner, so the gap is not a real race).
