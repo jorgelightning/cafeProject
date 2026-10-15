@@ -54,6 +54,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `list-clean.js` | The placeholder tint carries the rating with legible ink, and four control rows fold into one. |
 | `settings.js` | Appearance, list layout, editing mode and the admin actions share one screen, with the maintenance count on the door; a Maps failure no longer paints over the whole app. |
 | `beli.js` | The ranking is the spine: three buckets instead of five stars, a position on every card, been/want as the two lists, and Stats opening with the collection. |
+| `stats-charts.js` | Stats gains a cadence heatmap with streak and weekday split, a price spread with monthly trend, and a verdict ring with wishlist and tags. All inline SVG on theme tokens, no location in the markup, nothing sticking out at 375px, and the running spend total is owner only. |
 | `updates.js` | A new build reloads itself before anything is touched, waits behind the bar when you are mid-use or mid-form, and can never loop. |
 | `peek.js` | On a phone a pin slides up a card — rank, verdict, what to order, Directions — without leaving the map; the back button and a map tap put it away. On a laptop a pin still opens the page beside the map. |
 | `want-pins.js` | Want-to-try pins are violet with a white edge and a bookmark, sit above visited pins and cluster bubbles, and are never clustered; the map's Want to try switch hides visited pins without refitting the map, and the Want tab's map button turns it on. |

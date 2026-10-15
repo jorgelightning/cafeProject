@@ -1189,3 +1189,20 @@ reached the database, or a bug all read as a missing rule.
   starts from an empty cache, returns "abort" at once when the base is not null, and would have read
   as another device's newer address — dropping the edit. It is now a read, a comparison with the base,
   then a write (one owner, so the gap is not a real race).
+
+### Three charts for the data that was already there — 15 Oct 2026 (v78)
+
+`reorder`, the whole drink-habit set and the dates on every order were stored and never drawn.
+Stats now has **Cadence** (a 30-week heatmap, busiest month, longest streak, weekday split),
+**Price spread** (histogram with the median, a monthly average once three months have three
+priced drinks, US against elsewhere only when each side has three, and — owner only — a running
+spend total) and **Taste** (the verdict ring, logged against still-to-try, top tags).
+
+All of it is inline SVG and CSS on the theme tokens; chart text is sized in `styles.css`
+(`.sc-svg text`), not in the markup, so the type scale holds. **Nothing here reads an area, a
+coordinate or a review**, so a private spot contributes a date and a count and nothing else.
+The weekday bars come out nearly flat on this data, which is itself the finding, so the card says
+so rather than inventing a pattern. Weekend bars are grey, not violet: violet means want to try.
+
+Not built, on purpose: a wishlist *conversion rate*. It needs the date a place was added to the
+wishlist and that is not stored, so Taste shows the split only. `tests/stats-charts.js`.

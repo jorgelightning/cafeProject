@@ -286,6 +286,50 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .rcov{ display:block; width:100%; height:3px; overflow:hidden; border-radius:var(--r-1); background:var(--star-off); }
 .rcov > i{ display:block; height:100%; background:var(--good); }
 .rlab{ height:14px; text-align:center; font-size:var(--fs-1); font-weight:700; }
+/* Cadence, price and taste charts: inline SVG and CSS only, every colour a token. Text inside the
+   SVGs is sized here, not in the markup, so the type scale still governs it. */
+.sc-wide{ gap:var(--sp-3); }
+.sc-head{ font-size:var(--fs-4); font-weight:700; line-height:1.35; }
+.sc-head b{ color:var(--acc-strong); }
+.sc-cap{ font-size:var(--fs-2); font-weight:700; color:var(--soft); }
+.sc-svg{ display:block; width:100%; height:auto; }
+.sc-svg text{ fill:var(--faint); font-size:var(--fs-1); }
+.sc-svg .big{ fill:var(--text); font-size:var(--fs-5); font-weight:800; }
+.sc-svg .acct{ fill:var(--acc-strong); font-weight:700; }
+.heat .hc{ fill:var(--star-off); }
+.heat .hc.on{ fill:var(--acc); }
+.sc-svg .hb{ fill:var(--acc); }
+.sc-svg .medln{ stroke:var(--acc-strong); stroke-width:2; stroke-dasharray:4 3; }
+.sc-svg .axln{ stroke:var(--border); }
+.sc-svg .tl{ fill:none; stroke:var(--acc); stroke-width:2.5; stroke-linejoin:round; }
+.sc-svg .tp{ fill:var(--acc); stroke:var(--surface2); stroke-width:1.5; }
+.sc-svg .sa{ fill:var(--acc); fill-opacity:.18; }
+.sc-svg.donut{ width:132px; flex:none; }
+.sc-duo{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-2); }
+.sc-duo > div{ min-width:0; padding:var(--sp-3); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-2); }
+.sc-duo span{ display:block; font-size:var(--fs-1); font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.04em; }
+.sc-duo b{ display:block; margin-top:2px; font-size:var(--fs-3); overflow-wrap:anywhere; }
+.sc-duo i{ display:block; font-style:normal; font-size:var(--fs-1); color:var(--soft); }
+.sc-dow{ height:88px; margin-top:0; }
+.rcol.static{ cursor:default; }
+.rbar.has.wk{ background:var(--soft); }
+.sc-donutrow{ display:flex; align-items:center; gap:var(--sp-4); flex-wrap:wrap; }
+.legrows{ display:flex; flex-direction:column; flex:1 1 150px; min-width:0; }
+.legrows > div{ display:flex; align-items:center; gap:var(--sp-2); padding:6px 0; border-bottom:1px solid var(--border); font-size:var(--fs-2); }
+.legrows > div:last-child{ border-bottom:none; }
+.legrows i{ width:10px; height:10px; border-radius:50%; flex:none; }
+.legrows i.lg{ background:var(--acc); }
+.legrows i.wsh{ background:var(--want); }
+.legrows b{ margin-left:auto; color:var(--soft); font-variant-numeric:tabular-nums; }
+.sc-split{ display:flex; gap:var(--sp-1); height:22px; border-radius:var(--r-2); overflow:hidden; }
+.sc-split span{ display:block; background:var(--acc); }
+.sc-split span.w{ background:var(--want); }
+.hbars{ display:flex; flex-direction:column; gap:var(--sp-2); }
+.hb-row{ display:grid; grid-template-columns:minmax(64px,34%) 1fr auto; gap:var(--sp-2); align-items:center; font-size:var(--fs-2); }
+.hb-nm{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+.hb-tr{ height:12px; border-radius:var(--r-pill); background:var(--star-off); overflow:hidden; }
+.hb-tr > i{ display:block; height:100%; background:var(--acc); border-radius:var(--r-pill); }
+.hb-v{ color:var(--soft); font-weight:700; font-variant-numeric:tabular-nums; }
 .usualcard .usual{ font-size:var(--fs-4); font-weight:700; line-height:1.4; }
 .usualcard .chips{ margin:10px 0 0; }
 .handoff{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; min-height:52px; margin-top:22px; padding:0 14px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-3); font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); cursor:pointer; }
