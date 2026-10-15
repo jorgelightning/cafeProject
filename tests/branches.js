@@ -72,13 +72,19 @@ const { eq, done } = checker();
       chip: w.textContent.replace(/\s+/g, " ").trim(),
       chipShown: !w.hidden,
       metaHidden: $("d-meta").hidden,
+      title: $("d-name").textContent,
+      fullName: $("d-name").title,
+      place: $("d-meta").textContent,
+      emoji: /\u{1F4CD}/u.test(document.getElementById("d-where").parentElement.textContent),
       listHidden: l.hidden,
       expanded: w.getAttribute("aria-expanded"),
       chipH: w.getBoundingClientRect().height,
     };
   });
-  eq(r.chip, "📍 Mission · 9 branches ▾", "the area under the title becomes a chip that says how many branches");
-  eq([r.chipShown, r.metaHidden, r.listHidden, r.expanded], [true, true, true, "false"], "the plain area line steps aside and the list starts shut");
+  eq(r.chip, "9 branches", "a control after the place says how many branches there are");
+  eq([r.title, r.fullName, r.place], ["Molly Tea", "Molly Tea (Mission)", "Mission"],
+     "the title is the brand and the place sits under it, instead of naming the place twice (the full name is on hover)");
+  eq([r.chipShown, r.metaHidden, r.listHidden, r.expanded, r.emoji], [true, false, true, "false", false], "the place stays as plain text, the list starts shut, and there is no pin emoji");
   eq(r.chipH >= 44, true, "the chip is a 44px target (" + r.chipH + ")");
 
   r = await pg.evaluate(() => {
@@ -112,11 +118,11 @@ const { eq, done } = checker();
     openDetail("m0", "list"); /* what the cloud echo does after a save */
     const same = !$("d-locs").hidden;
     [...$("d-locs").querySelectorAll(".br")].find(x => x.querySelector(".t").textContent === "Marina").click();
-    return { same, cur: curId, shut: $("d-locs").hidden, chip: $("d-where").textContent.replace(/\s+/g, " ").trim() };
+    return { same, cur: curId, shut: $("d-locs").hidden, place: $("d-meta").textContent };
   });
   eq(r.same, true, "a repaint of the same cafe leaves the list open");
   eq([r.cur, r.shut], ["m1", true], "tapping a branch opens it, and the list closes");
-  eq(r.chip.indexOf("Marina") >= 0, true, "…and the chip now names that branch");
+  eq(r.place, "Marina", "…and the line under the title now names that branch");
 
   r = await pg.evaluate(() => {
     isAdmin = false;
@@ -145,9 +151,83 @@ const { eq, done } = checker();
     openDetail("plain", "list");
     return { chip, rows, plain: $("d-where").hidden };
   });
-  eq(r.chip, "📍 Nowhere · ＋ Branch ▾", "a lone cafe with a brand offers ＋ Branch to the owner");
-  eq(r.rows, ["Nowhere", "＋ Add branch"], "…and opening it lists itself and the add row");
+  eq(r.chip, "＋ Branch", "a lone cafe with a brand offers ＋ Branch to the owner");
+  eq(r.rows, ["Nowhere", "Add a branch"], "…and opening it lists itself and the add row");
   eq(r.plain, true, "a lone cafe with no brand shows no chip");
+
+  // ---- how the list looks and behaves ----
+  await set([
+    { id: "h1", name: "HEYTEA (Cupertino)", area: "Cupertino", brand: "HEYTEA", rating: 5 },
+    { id: "h2", name: "HEYTEA (South San Francisco)", area: "South San Francisco", brand: "HEYTEA", rating: 3 },
+    { id: "h3", name: "HEYTEA (Palo Alto)", area: "Palo Alto", brand: "HEYTEA", wish: true },
+    { id: "h4", name: "HEYTEA (Fremont)", area: "Fremont", brand: "HEYTEA", rating: 1 },
+  ]);
+  r = await pg.evaluate(() => {
+    openDetail("h1", "list");
+    const drinksTop = () => Math.round($("d-drinks").getBoundingClientRect().top);
+    const shut = drinksTop();
+    $("d-where").click();
+    const open = drinksTop();
+    const l = $("d-locs"),
+      rows = [...l.querySelectorAll(".br:not(.add)")];
+    const cs = getComputedStyle(l);
+    return {
+      shut, open, pos: cs.position, shadow: cs.boxShadow !== "none",
+      checks: rows.map(x => !!x.querySelector(".ck")),
+      cur: rows.map(x => x.classList.contains("on")),
+      dots: rows.map(x => !!x.querySelector(".brdot")),
+      tags: rows.map(x => !!x.querySelector(".brtag")),
+      small: rows.map(x => x.querySelector("small").textContent),
+      order: rows.map(x => x.querySelector(".t").textContent),
+    };
+  });
+  eq(r.shut, r.open, "opening the list floats it over the page: nothing below it moves");
+  eq([r.pos, r.shadow], ["absolute", true], "…as an elevated card");
+  eq(r.order, ["Cupertino", "Fremont", "South San Francisco", "Palo Alto"], "each branch is its place, visited first and the wishlist one last");
+  eq(r.checks.filter(Boolean).length, 1, "only the current branch carries a check");
+  eq([r.dots.filter(Boolean).length, r.tags.filter(Boolean).length], [3, 1], "visited branches show a rating dot and the wishlist one a 🔖");
+  eq(r.small, ["Loved it", "Not for me", "It was fine", "to try"], "each row says how you rated it, and the wishlist one says to try");
+
+  r = await pg.evaluate(() => {
+    const out = {};
+    document.body.click();
+    out.outside = $("d-locs").hidden;
+    $("d-where").click();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    out.escape = $("d-locs").hidden;
+    out.focus = document.activeElement && document.activeElement.id;
+    $("d-where").click();
+    $("d-locs").querySelector(".br.on").click();
+    out.inside = $("d-locs").hidden;
+    return out;
+  });
+  eq([r.outside, r.escape, r.focus], [true, true, "d-where"], "a tap elsewhere or Escape puts the list away, and Escape returns focus to the control");
+
+  // ---- the header across devices ----
+  const widths = [360, 375, 390, 430, 744, 768, 1024, 1440];
+  const bad = [];
+  for (const w of widths) {
+    await pg.setViewportSize({ width: w, height: 900 });
+    const m = await pg.evaluate(() => {
+      openDetail("h2", "list");
+      const row = (id) => document.getElementById(id);
+      const w = row("d-where"), meta = row("d-meta"), st = row("d-stars");
+      const box = (e) => e.getBoundingClientRect();
+      const pane = document.getElementById("pane-detail").getBoundingClientRect();
+      const out = { over: document.documentElement.scrollWidth - innerWidth, ctl: Math.round(box(w).height), ctlW: Math.round(box(w).width) };
+      out.inView = [st, meta, w].every(e => box(e).right <= pane.right + 1 && box(e).left >= pane.left - 1);
+      out.title = row("d-name").textContent;
+      w.click();
+      const l = row("d-locs"), lb = box(l);
+      out.listIn = lb.left >= 0 && lb.right <= innerWidth && lb.right <= pane.right + 1;
+      out.rowH = Math.min(...[...l.querySelectorAll(".br")].map((e) => Math.round(box(e).height)));
+      w.click();
+      return out;
+    });
+    if (m.over > 0 || m.ctl < 44 || !m.inView || !m.listIn || m.rowH < 44 || m.title !== "HEYTEA") bad.push(w + ": " + JSON.stringify(m));
+  }
+  eq(bad, [], "at 360 to 1440px a long place (South San Francisco · 4 branches) stays in view beside the rating, with 44px targets, no sideways scroll, and a list that fits on screen");
+  await pg.setViewportSize({ width: 375, height: 812 });
 
   // ---- + Branch ----
   let r2;

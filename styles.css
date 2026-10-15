@@ -301,8 +301,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .dranktile span{ display:block; margin-top:3px; font-size:var(--fs-1); color:var(--soft); }
 .dranktile[hidden]{ display:none; }
 .dheadmain{ flex:1; min-width:0; }
+.dloc{ position:relative; }
 .dsub{ display:flex; align-items:center; gap:var(--sp-2); margin-top:7px; }
-.darea{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--fs-2); color:var(--soft); }
+#d-stars{ flex:none; }
+.darea{ flex:0 1 auto; min-width:5em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--fs-2); color:var(--soft); }
+/* A quiet map pin before the place: a mask, so it takes the text colour in either theme. */
+.darea:not(:empty)::before{ content:""; display:inline-block; width:13px; height:13px; margin-right:5px; vertical-align:-2px; background:currentColor; opacity:.8; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-15.4a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-15.4a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8z'/%3E%3C/svg%3E") center/contain no-repeat; }
 .dscoreline{ margin-top:7px; font-size:var(--fs-1); color:var(--faint); }
 .dscoreline[hidden]{ display:none; }
 .chips{ display:flex; flex-wrap:wrap; gap:var(--sp-2); margin:12px 0; }
@@ -356,18 +360,24 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 @media (prefers-reduced-motion:reduce){ .locbtn[data-state="busy"] svg{ animation:none; opacity:.55; } }
 @media (min-width:900px){ .locbtn{ bottom:62px; } }
 /* The branches of a brand: the area under the title is the control, the list opens below it. */
-.where{ display:inline-flex; align-items:center; gap:var(--sp-1); min-height:44px; max-width:100%; padding:0 12px; font-family:inherit; font-size:var(--fs-2); font-weight:600; color:var(--text); background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-pill); cursor:pointer; }
-.where .wt{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* The branch control is text, not a second pill: the rating is the filled badge, this is the thing you tap. */
+.where{ flex:none; display:inline-flex; align-items:center; gap:var(--sp-1); min-height:44px; padding:0 var(--sp-2); font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); background:transparent; border:0; border-radius:var(--r-2); cursor:pointer; }
+.where:hover, .where[aria-expanded="true"]{ background:var(--surface2); }
 .where .car{ flex:none; transition:transform .15s; }
 .where[aria-expanded="true"] .car{ transform:rotate(180deg); }
-.branches{ margin:var(--sp-2) 0 var(--sp-3); max-height:min(46vh,288px); overflow-y:auto; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-3); }
-.where[hidden], .darea[hidden], .branches[hidden]{ display:none; }
-.br{ flex:none; display:flex; align-items:center; gap:var(--sp-3); min-height:48px; padding:var(--sp-2) var(--sp-4); font-family:inherit; font-size:var(--fs-3); font-weight:600; color:var(--text); text-align:left; background:transparent; border:0; border-bottom:1px solid var(--border); cursor:pointer; }
-.br:last-child{ border-bottom:0; }
+/* The list floats over the page under the control, so opening it does not shove the drinks down. */
+.branches{ position:absolute; z-index:20; left:0; top:calc(100% + var(--sp-1)); width:100%; max-width:380px; max-height:min(46vh,288px); overflow-y:auto; display:flex; flex-direction:column; padding:var(--sp-1) 0; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-3); box-shadow:var(--shadow); overscroll-behavior:contain; }
+.where[hidden], .branches[hidden]{ display:none; }
+.br{ flex:none; display:flex; align-items:center; gap:var(--sp-3); min-height:48px; padding:var(--sp-2) var(--sp-4); font-family:inherit; font-size:var(--fs-3); font-weight:600; color:var(--text); text-align:left; background:transparent; border:0; cursor:pointer; }
+.br:hover{ background:var(--surface2); }
 .br .t{ flex:1; min-width:0; overflow-wrap:anywhere; }
-.br small{ flex:none; color:var(--soft); font-size:var(--fs-1); }
-.br.on{ background:var(--surface2); cursor:default; }
-.br.add{ color:var(--acc-strong); font-weight:700; }
+.br small{ flex:none; max-width:40%; color:var(--soft); font-size:var(--fs-1); font-weight:600; }
+.br .brdot{ flex:none; width:10px; height:10px; border-radius:50%; }
+.br .brtag{ flex:none; width:10px; text-align:center; font-size:var(--fs-2); line-height:1; }
+.br .ck{ flex:none; color:var(--acc-strong); }
+.br.on{ cursor:default; }
+.br.add{ color:var(--acc-strong); font-weight:700; border-top:1px solid var(--border); }
+.br.add .pl{ flex:none; }
 /* the form's brand link: a chip under the name, only when there is a brand to show */
 .linkrow{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-1) var(--sp-2); }
 .linkrow[hidden]{ display:none; }

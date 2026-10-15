@@ -131,13 +131,35 @@ function toggleDrinkHistory(btn) {
 }
 let _branchOpen = false; /* the branch list is open; survives the cloud repaint, closes on another cafe */
 let _branchFor = null;
-function toggleBranches() {
-  _branchOpen = !_branchOpen;
+/* Monochrome marks: they take the colour of the text they sit in, so they follow both themes. */
+const SVG_CHEV =
+  '<svg class="car" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const SVG_CHECK =
+  '<svg class="ck" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const SVG_PLUS =
+  '<svg class="pl" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
+function setBranchesOpen(open) {
+  _branchOpen = open;
   const l = $("d-locs"),
     w = $("d-where");
-  if (l) l.hidden = !_branchOpen;
-  if (w) w.setAttribute("aria-expanded", _branchOpen ? "true" : "false");
+  if (l) l.hidden = !open;
+  if (w) w.setAttribute("aria-expanded", open ? "true" : "false");
 }
+function toggleBranches() {
+  setBranchesOpen(!_branchOpen);
+}
+/* The list floats over the page, so it has to be easy to put away: tap anywhere else, or Escape. */
+document.addEventListener("click", e => {
+  const t = /** @type {Element|null} */ (e.target);
+  if (_branchOpen && !(t && t.closest && t.closest(".dloc"))) setBranchesOpen(false);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && _branchOpen) {
+    setBranchesOpen(false);
+    const w = $("d-where");
+    if (w && !w.hidden) w.focus();
+  }
+});
 function openDetail(id, from) {
   const c = cafes.find(x => x.id === id);
   if (!c) return;
@@ -193,7 +215,14 @@ function openDetail(id, from) {
      position is the block you see first and cannot wrap, the judgement and the place share a
      line (a long area truncates instead of pushing), and the score drops to a caption — it is
      bookkeeping, and 104 of 113 cafes share theirs with another. */
-  $("d-name").textContent = c.name;
+  /* A branch is named twice when the title carries its place — "HEYTEA (Cupertino)" over a Cupertino
+     chip. When the cafe is one of a brand's branches and the name ends in a real place suffix, the
+     title is the brand and the place sits in the line under it. The full name stays on hover. */
+  const _sibs = getBrandSiblings(c, undefined, 0);
+  const _base = brandBaseName(c.name);
+  const _brandTitle = (_sibs.length || (c.brand || "").trim()) && _base && _base !== c.name ? _base : "";
+  $("d-name").textContent = _brandTitle || c.name;
+  $("d-name").title = _brandTitle ? c.name : "";
   $("d-stars").innerHTML = bucketPill(c, "big");
   const _rk = typeof rankOf === "function" ? rankOf(c) : null,
     _rn = typeof rankMap === "function" ? rankMap()._n : 0;
@@ -202,7 +231,7 @@ function openDetail(id, from) {
     _rkEl.hidden = !_rk;
     _rkEl.innerHTML = _rk ? "<b>#" + _rk + "</b><span>of " + _rn + "</span>" : "";
   }
-  $("d-meta").textContent = areaOf(c) || "";
+  $("d-meta").textContent = areaOf(c) || (_brandTitle ? branchSuffix(c) : "");
   const _scEl = $("d-score");
   if (_scEl) {
     const bits = [];
@@ -244,36 +273,34 @@ function openDetail(id, from) {
   renderReorderRollup(c);
   $("d-tags").innerHTML = (c.tags || []).map(t => '<span class="chip">' + esc(t) + "</span>").join("");
 
-  /* ---- the branches of this brand: the area under the title becomes a chip that opens the list.
+  /* ---- the branches of this brand: a quiet control after the place opens a list over the page.
      Drawn inside openDetail so the cloud repaint redraws it; ids only, never object references. ---- */
   if (_branchFor !== c.id) {
     _branchFor = c.id;
     _branchOpen = false;
   }
-  const _sibs = getBrandSiblings(c, undefined, 0);
   const _addBr = isAdmin && (_sibs.length > 0 || !!(c.brand || "").trim());
   const _le = $("d-locs"),
-    _wh = $("d-where"),
-    _mt = $("d-meta");
+    _wh = $("d-where");
   if (_sibs.length || _addBr) {
-    const _here = areaOf(c) || (_sibs.find(x => x.current) || {}).label || c.name || "";
+    const _label = _sibs.length ? _sibs.length + " branches" : "\uFF0B Branch";
     _wh.hidden = false;
-    _mt.hidden = true;
-    _wh.innerHTML =
-      '\u{1F4CD} <span class="wt">' +
-      esc(_here) +
-      "</span> \u00b7 " +
-      (_sibs.length ? _sibs.length + " branches" : "\uFF0B Branch") +
-      ' <span class="car" aria-hidden="true">\u25be</span>';
+    _wh.innerHTML = '<span class="wl">' + _label + "</span>" + SVG_CHEV;
     _wh.setAttribute("aria-expanded", _branchOpen ? "true" : "false");
+    _wh.setAttribute(
+      "aria-label",
+      _sibs.length ? "Branches of " + (_brandTitle || c.name) + ", " + _sibs.length : "Add a branch"
+    );
     _le.hidden = !_branchOpen;
+    const _rows = _sibs.length
+      ? _sibs
+      : [{ id: c.id, label: areaOf(c) || c.name, wish: !!c.wish, current: true, full: c.name }];
     _le.innerHTML =
-      (_sibs.length
-        ? _sibs
-        : [{ id: c.id, label: _here, wish: !!c.wish, stars: c.rating || 0, current: true, full: c.name }]
-      )
-        .map(
-          x =>
+      _rows
+        .map(x => {
+          const src = cafes.find(y => y.id === x.id) || {},
+            k = bucketOf(src);
+          return (
             '<button type="button" class="br' +
             (x.current ? " on" : "") +
             '"' +
@@ -284,22 +311,29 @@ function openDetail(id, from) {
             esc(x.id) +
             "','" +
             esc(lastMain || "list") +
-            '\')"><span class="t">' +
-            (x.wish ? "\u{1F516} " : "") +
+            "')\">" +
+            (x.wish
+              ? '<span class="brtag" aria-hidden="true">\u{1F516}</span>'
+              : '<i class="brdot" aria-hidden="true" style="background:' + BUCKET_HEX[k || ""] + '"></i>') +
+            '<span class="t">' +
             esc(x.label) +
             "</span><small>" +
-            (x.wish ? "to try" : x.stars ? x.stars + "\u2605" : "") +
-            "</small></button>"
-        )
+            (x.wish ? "to try" : esc(bucketLabel(src) || "")) +
+            "</small>" +
+            (x.current ? SVG_CHECK : "") +
+            "</button>"
+          );
+        })
         .join("") +
       (_addBr
         ? '<button type="button" class="br add admin-only" onclick="addBranch(\'' +
           esc(c.id) +
-          "')\">\uFF0B Add branch</button>"
+          "')\">" +
+          SVG_PLUS +
+          '<span class="t">Add a branch</span></button>'
         : "");
   } else {
     _wh.hidden = true;
-    _mt.hidden = false;
     _le.hidden = true;
     _le.innerHTML = "";
   }
