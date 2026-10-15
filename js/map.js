@@ -88,6 +88,7 @@ function initMap() {
     pendingMarkerId = null;
     if (gInfo) gInfo.close();
     closePeek();
+    setMapPanel(false);
   });
   gmap.addListener("dragstart", () => {
     if ($("btn-locate") && $("btn-locate").dataset.state === "on") setLocateState("idle");
@@ -447,6 +448,8 @@ function syncWantUI() {
   }
   updateWantBar();
   syncWorldUI();
+  const pill = $("map-pill");
+  if (pill) pill.classList.toggle("wanting", mapWantOnly);
 }
 function updateWantBar() {
   const bar = $("wantbar");
@@ -762,12 +765,33 @@ function fitList(list) {
     gmap.fitBounds(b, fitPad());
   }
 }
+/* The pill on a phone: one button that opens the place picker, the Want to try switch, the gear and
+   the legend. On a laptop it is hidden and these helpers still run harmlessly. */
+function setMapPanel(open) {
+  const m = $("mapsearch"),
+    b = $("map-pill");
+  if (m) m.dataset.open = String(!!open);
+  if (b) b.setAttribute("aria-expanded", String(!!open));
+}
+function toggleMapPanel() {
+  const m = $("mapsearch");
+  setMapPanel(!(m && m.dataset.open === "true"));
+}
+function setPillLabel(val) {
+  const l = $("pill-lbl"),
+    sel = $("locsel");
+  if (!l) return;
+  const o = val && sel ? [].slice.call(sel.options).filter(x => x.value === val)[0] : null;
+  l.textContent = o ? "📍 " + o.textContent.trim() : "🌐 World";
+}
 function jumpToLocation(val) {
   if (!gmap) {
     if (app.dataset.view !== "map") show("map");
     return;
   }
   /* any choice here is you placing the map, "World" included */ mapOwned = true;
+  setPillLabel(val);
+  setMapPanel(false);
   /* "World" is the empty value; anything else is a place, and the pins come back for it */
   const toWorld = !val;
   const changed = mapWorld !== toWorld || _focusVal !== (val || null);

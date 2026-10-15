@@ -42,12 +42,15 @@ const fs = require("fs"), path = require("path");
     const on = sel => [...document.querySelectorAll(sel + ' button')]
       .filter(vis).map(x => (x.getAttribute("aria-label") || x.textContent).trim());
     show("list"); const list = on(".search");
-    show("map");  const map  = on(".mapsearch");
-    return { list, map, cyclerGone: typeof window.cycleTheme === "undefined",
+    show("map");  const mapClosed = on(".mapsearch");
+    /* on a phone the map's controls sit behind one pill; open it to reach the gear */
+    toggleMapPanel(); const map = on(".mapsearch"); toggleMapPanel();
+    return { list, map, mapClosed, cyclerGone: typeof window.cycleTheme === "undefined",
              lockButtons: document.querySelectorAll(".lockbtn").length };
   });
   eq(doors.list, ["Settings"], "the List search bar carries one button now, not a lock and a theme cycler");
-  eq(doors.map, ["Settings"], "…and the map overlay carries the same one");
+  eq(doors.mapClosed.length, 1, "the map overlay is one compact pill while closed");
+  eq(doors.map.includes("Settings"), true, "…and the same Settings door is one tap behind it");
   eq(doors.cyclerGone, true, "the blind cycle is gone, not left behind unused");
   eq(doors.lockButtons, 0, "…and so is every lock pill it replaced");
 

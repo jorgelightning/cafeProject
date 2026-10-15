@@ -113,6 +113,33 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 @media (min-width:900px){ .wantbar{ left:calc(var(--sidebar) + 12px); top:66px; } }
 .bkpill.wantpill{ background:var(--want-bg); color:var(--want-ink); }
 .bkpill.wantpill i{ background:var(--want); }
+/* One compact pill on a phone. The place picker, the Want to try switch, the gear and the legend
+   used to float as four separate pieces across the top and bottom of a 375px map. They now sit in a
+   panel behind a single pill; the controls themselves are unchanged and a laptop never sees the pill
+   (the panel there is display:contents, so the row lays out exactly as it did). */
+.mappill, .panelegend{ display:none; }
+.mappill.wanting{ border-color:var(--want); }
+.mappanel{ display:contents; }
+@media (max-width:899px){
+  .mapsearch{ right:auto; flex-direction:column; align-items:flex-start; gap:var(--sp-2); }
+  .mappill{ display:inline-flex; align-items:center; gap:var(--sp-2); height:44px; padding:0 14px; border:1px solid var(--border); border-radius:var(--r-pill); background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); color:var(--text); font:inherit; font-size:var(--fs-3); font-weight:700; cursor:pointer; }
+  .mappill .pilldots{ display:inline-flex; gap:var(--sp-1); }
+  .mappill .pilldots i{ width:8px; height:8px; border-radius:50%; }
+  .mappill .pillcar{ color:var(--soft); font-size:var(--fs-2); }
+  .mapsearch[data-open="true"] .pillcar{ transform:rotate(180deg); }
+  .mappanel{ display:none; flex-direction:column; gap:var(--sp-2); width:min(320px, calc(100vw - 24px)); padding:var(--sp-2); border:1px solid var(--border); border-radius:var(--r-4); background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); }
+  .mapsearch[data-open="true"] .mappanel{ display:flex; }
+  .mappanel select{ width:100%; flex:none; box-shadow:none; }
+  .panelrow{ display:flex; align-items:center; gap:var(--sp-2); }
+  .panelrow .wantchip{ flex:1 1 auto; justify-content:center; box-shadow:none; }
+  .panelrow .iconbtn{ margin-left:0; box-shadow:none; }
+  .panelegend{ display:flex; flex-wrap:wrap; gap:var(--sp-2) var(--sp-3); padding:var(--sp-1) var(--sp-2); font-size:var(--fs-1); color:var(--soft); }
+  .panelegend i{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; }
+  .panelegend svg.wl{ width:11px; height:11px; margin-right:4px; vertical-align:-1px; fill:#6b3fbf; }
+  .panelegend svg.wl path{ fill:#fff; }
+  .mapbox .maplegend{ display:none; }
+  .mapbox .locbtn{ bottom:calc(78px + env(safe-area-inset-bottom)); }
+}
 .mapsearch select:focus{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); }
 @media (min-width:900px){ .mapsearch{ left:calc(var(--sidebar) + 12px); } .mapsearch select{ max-width:300px; } }
 

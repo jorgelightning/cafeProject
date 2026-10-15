@@ -87,6 +87,19 @@ const { eq, done } = checker();
   eq([r.legend, r.fill], [true, "rgb(107, 63, 191)"], "the legend shows the same violet bookmark");
 
   // ================= C: the switch =================
+  /* a phone shows one pill; the switch, the picker, the gear and the legend are behind it */
+  r = await ph.pg.evaluate(() => {
+    const pill = document.getElementById("map-pill").getBoundingClientRect();
+    return { closed: document.getElementById("btn-want").getBoundingClientRect().height === 0,
+             pill: pill.height >= 44, legendOut: document.querySelector(".maplegend").getBoundingClientRect().height === 0 };
+  });
+  eq(r, { closed: true, pill: true, legendOut: true }, "closed, the map shows one 44px pill and no floating switch or legend");
+  r = await ph.pg.evaluate(() => {
+    toggleMapPanel();
+    const leg = document.querySelector(".panelegend").getBoundingClientRect();
+    return { legend: leg.height > 0 };
+  });
+  eq(r.legend, true, "…and the legend is in the panel it opens");
   r = await ph.pg.evaluate(() => {
     const chip = document.getElementById("btn-want"), box = chip.getBoundingClientRect();
     const row = document.querySelector(".mapsearch").getBoundingClientRect();
