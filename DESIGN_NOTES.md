@@ -1304,3 +1304,30 @@ Nothing here reads an area, a coordinate or a review. `tests/stats-wrapped.js`.
 Two test fixes ride along: `stats-charts.js` counted exactly three `.sc-wide` cards and now asks for
 at least three, and `currency-units.js` read `core.js` by `\n` and broke when a Windows checkout
 handed it CRLF.
+
+### Stats, pruned — and Map direction A (v83)
+
+**Stats lost five things**, on the rule that a card stays only if it tells you something you could not
+see already:
+
+- *Top spending* repeated what Spent and Monthly activity say, and *Hojicha priced around town* was
+  hard-wired to one drink's name. The price histogram and Worth it's cheapest-loved list cover the
+  same ground for every drink.
+- In *Price spread*, the monthly average moved by under a dollar, the US-against-elsewhere split stood
+  on 18 priced drinks, and the running spend total repeated Monthly activity. The median and the
+  histogram stay.
+- In *Cadence*, the weekday bars came out nearly flat on the real data, and the "Weekday regular" label
+  built from them rested on that. The heatmap, the busiest month and the longest streak stay.
+
+What remains reads, top to bottom: the collection, went back / spent, monthly activity, cadence,
+price spread, Drink DNA, Worth it, Taste, regulars, where you go, chains and independents.
+
+**Map direction A.** A visited pin used to be one 24px disc at every zoom. It is now a small dot zoomed
+out, a larger one in between, and a pill with the cafe's emoji and name from zoom 15.4, on hover, or when
+it is the picked cafe. Pills that would cover each other give way to the better-ranked cafe's
+(`refreshPinIcons()`, greedy in screen pixels; it runs on `idle` and on selection, and needs a map that
+reports a projection, so the stub maps in older tests keep their plain discs). Colours stay literal hex.
+The ring clusters, the single phone pill and the want-to-try pins are unchanged. On a laptop the legend
+is a 44px **?** above the locate button, the same fold the phone already had inside the pill's panel.
+`tests/map-pins.js`.
+

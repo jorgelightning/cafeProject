@@ -67,14 +67,14 @@ const { eq, done } = checker();
     const svg = decodeURIComponent(String(w.icon.url || "").replace(/^data:image\/svg\+xml;charset=UTF-8,/, ""));
     return { url: /^data:image\/svg\+xml/.test(w.icon.url || ""), violet: svg.toLowerCase().includes("#6b3fbf"), white: /stroke="#ffffff"/.test(svg),
              bookmark: /<path[^>]*fill="#ffffff"/.test(svg), size: [w.icon.scaledSize && w.icon.scaledSize.width, w.icon.anchor && w.icon.anchor.x],
-             visited: v.icon.path === "circle" && v.icon.scale === 12, wz: w.zIndex, vz: v.zIndex,
+             visited: v.icon.path === "circle" && v.icon.scale === 9, wz: w.zIndex, vz: v.zIndex,
              clustered: (window.__clustered || []).map(m => m.o.title).sort(),
              wishOnMap: gmarkers.filter(m => m._wish).every(m => m.map === gmap) };
   });
   eq([r.url, r.violet, r.white, r.bookmark], [true, true, true, true],
      "a want-to-try pin is violet, white-edged, with a white bookmark — readable without its colour");
   eq(r.size, [30, 15], "…the size of a visited pin (30px box, centred on the spot)");
-  eq(r.visited, true, "visited pins are untouched");
+  eq(r.visited, true, "visited pins stay round discs (9px, scaled with the zoom once a real map reports one)");
   eq(r.wz > 1000 + 100 && r.wz < 1000 + 1000, true, "it sits above every cluster bubble and below the you-are-here dot (z " + r.wz + ")");
   eq(r.wz > r.vz, true, "…and above visited pins, so De Matcha is no longer under 8 Grams Matcha");
   eq(r.clustered, ["8 Grams Matcha", "ChaHalo", "Purple Kow"], "only visited pins go into clusters");

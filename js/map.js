@@ -89,6 +89,8 @@ function initMap() {
     if (gInfo) gInfo.close();
     closePeek();
     setMapPanel(false);
+    toggleLegend(false);
+    if (_selPin) selectPin(null);
   });
   gmap.addListener("dragstart", () => {
     if ($("btn-locate") && $("btn-locate").dataset.state === "on") setLocateState("idle");
@@ -99,6 +101,7 @@ function initMap() {
      on every pin. DOM events rather than map events, because a pinch fires no dragstart. */
   gmap.addListener("idle", function () {
     if (mapWantOnly) updateWantBar();
+    refreshPinIcons();
   });
   const _mapEl = $("map");
   if (_mapEl)
@@ -547,6 +550,107 @@ const MAP_STYLES = [
 ].map(function (f) {
   return { featureType: f, stylers: [{ visibility: "off" }] };
 });
+/* ---------- pins that scale with the zoom ----------
+   A pin was one 24px disc at every zoom, which at street level hid the street and said nothing
+   about which cafe it was. Now: a small dot zoomed out, a larger one in between, and a pill with the
+   cafe's emoji and name once you are close, when you hover it, or when it is the one you picked.
+   Pills that would cover each other fall back to dots, the better-ranked cafe keeping its label.
+   Colours stay literal hex (Google needs real colour strings), and want-to-try pins are untouched. */
+let _selPin = null;
+let _pinCtx = null;
+function _pinTextWidth(t) {
+  try {
+    if (!_pinCtx) _pinCtx = document.createElement("canvas").getContext("2d");
+    _pinCtx.font = "700 12px Helvetica, Arial, sans-serif";
+    return _pinCtx.measureText(t).width;
+  } catch (e) {
+    return t.length * 7.5;
+  }
+}
+function pinDotIcon(m, big) {
+  return {
+    path: google.maps.SymbolPath.CIRCLE,
+    scale: (big ? 9 : 6) + (m._fav ? 2 : 0),
+    fillColor: BUCKET_HEX[m._bucket || ""],
+    fillOpacity: 1,
+    strokeColor: m._fav ? "#e0556b" : "#ffffff",
+    strokeWeight: m._fav ? 3 : 2.5,
+  };
+}
+function pinPillIcon(m, selected) {
+  const name = String(m._name || "").toUpperCase();
+  const label = name.length > 17 ? name.slice(0, 16) + "\u2026" : name;
+  const w = Math.ceil(_pinTextWidth(label)) + 52,
+    h = 30;
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="' + (w + 6) + '" height="' + (h + 6) + '" viewBox="0 0 ' + (w + 6) + " " + (h + 6) + '">' +
+    '<rect x="3" y="3" width="' + w + '" height="' + h + '" rx="15" fill="#ffffff" stroke="' +
+    (selected ? "#1d1a17" : m._fav ? "#e0556b" : "#00000024") + '" stroke-width="' + (selected ? 3 : 1.5) + '"/>' +
+    '<circle cx="19" cy="18" r="10" fill="' + BUCKET_HEX[m._bucket || ""] + '"/>' +
+    '<text x="19" y="18" text-anchor="middle" dy=".35em" font-size="11">' + esc(m._emoji || "\u2615") + "</text>" +
+    '<text x="36" y="18" dy=".35em" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="#1d1a17">' + esc(label) + "</text></svg>";
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(w + 6, h + 6),
+    anchor: new google.maps.Point((w + 6) / 2, (h + 6) / 2),
+  };
+}
+function refreshPinIcons() {
+  if (!gmap || typeof gmap.getZoom !== "function" || typeof gmap.getProjection !== "function") return;
+  const proj = gmap.getProjection(),
+    z = gmap.getZoom() || 12;
+  if (!proj) return;
+  const scale = Math.pow(2, z),
+    bds = typeof gmap.getBounds === "function" ? gmap.getBounds() : null;
+  const near = gmarkers
+    .filter(function (m) {
+      return !m._wish && m.getPosition() && (!bds || bds.contains(m.getPosition()));
+    })
+    .map(function (m) {
+      const pt = proj.fromLatLngToPoint(m.getPosition());
+      return { m: m, x: pt.x * scale, y: pt.y * scale };
+    });
+  /* the picked cafe first, then favourites, then the better-ranked */
+  near.sort(function (a, b) {
+    return (
+      (b.m._id === _selPin ? 1 : 0) - (a.m._id === _selPin ? 1 : 0) || (b.m._fav ? 1 : 0) - (a.m._fav ? 1 : 0) || (a.m._rk || 99999) - (b.m._rk || 99999)
+    );
+  });
+  const taken = [];
+  near.forEach(function (it) {
+    const m = it.m,
+      sel = m._id === _selPin;
+    let mode = z >= 14.4 ? "big" : "small";
+    if (sel || m._hover || z >= 15.4) {
+      const w = Math.ceil(_pinTextWidth(String(m._name || "").toUpperCase().slice(0, 17))) + 58;
+      const box = { x0: it.x - w / 2, x1: it.x + w / 2, y0: it.y - 18, y1: it.y + 18 };
+      const clash = !sel && !m._hover && taken.some(function (b) {
+        return box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0;
+      });
+      if (!clash) {
+        taken.push(box);
+        mode = "pill";
+      }
+    }
+    const key = mode + (sel ? "s" : "");
+    if (m._mode === key) return;
+    m._mode = key;
+    m.setIcon(mode === "pill" ? pinPillIcon(m, sel) : pinDotIcon(m, mode === "big"));
+    m.setZIndex(sel ? 10 : mode === "pill" ? 8 : m._fav ? 5 : 3);
+  });
+}
+function selectPin(id) {
+  _selPin = id;
+  refreshPinIcons();
+}
+function toggleLegend(open) {
+  const box = /** @type {HTMLElement|null} */ (document.querySelector(".mapbox")),
+    b = $("btn-legend");
+  if (!box) return;
+  const on = open === undefined ? box.dataset.legend !== "open" : !!open;
+  box.dataset.legend = on ? "open" : "";
+  if (b) b.setAttribute("aria-expanded", String(on));
+}
 function renderMarkers() {
   if (!gmap) return;
   if (gclusterer) {
@@ -563,6 +667,7 @@ function renderMarkers() {
   const b = new google.maps.LatLngBounds();
   let n = 0;
   const dups = dupNameKeys();
+  const _rm = typeof rankMap === "function" ? rankMap() : {};
   cafes.forEach(c => {
     if (c.lat == null) return;
     const opt = {
@@ -572,17 +677,32 @@ function renderMarkers() {
         ? wishPinIcon()
         : {
             path: google.maps.SymbolPath.CIRCLE,
-            scale: c.fav ? 15 : 12,
+            scale: c.fav ? 11 : 9,
             fillColor: ratingColor(c.rating),
             fillOpacity: 1,
             strokeColor: c.fav ? "#e0556b" : "#ffffff",
-            strokeWeight: c.fav ? 4 : 3,
+            strokeWeight: c.fav ? 3 : 2.5,
           },
       zIndex: c.wish ? wishPinZ() : c.fav ? 5 : 3,
     };
     const m = new google.maps.Marker(opt);
     m._wish = !!c.wish;
     m._bucket = c.wish ? "" : bucketOf(c);
+    m._id = c.id;
+    m._name = c.name;
+    m._emoji = c.emoji || "";
+    m._fav = !!c.fav;
+    m._rk = _rm[c.id] || 0;
+    if (!c.wish) {
+      m.addListener("mouseover", function () {
+        m._hover = true;
+        refreshPinIcons();
+      });
+      m.addListener("mouseout", function () {
+        m._hover = false;
+        refreshPinIcons();
+      });
+    }
     m.addListener("click", () => onMarkerClick(c, m));
     gmarkers.push(m);
     if (_pinShown(m)) {
@@ -591,6 +711,7 @@ function renderMarkers() {
     }
   });
   _showPins();
+  refreshPinIcons();
   syncWantUI();
   if ($("map-sub"))
     $("map-sub").textContent = cafes.length + " cafe" + (cafes.length === 1 ? "" : "s") + " · tap a pin";
@@ -838,6 +959,7 @@ let peekId = null;
 function onMarkerClick(c, m) {
   if (gInfo) gInfo.close();
   mapOwned = true;
+  selectPin(c.id);
   if (window.innerWidth >= 900) {
     openDetail(c.id, "map");
     return;
@@ -892,6 +1014,7 @@ function closePeek() {
   const box = el && el.closest(".mapbox");
   if (box) box.classList.remove("peeking");
   peekId = null;
+  if (_selPin) selectPin(null);
 }
 function peekDirections() {
   const c = cafes.find(x => x.id === peekId);
