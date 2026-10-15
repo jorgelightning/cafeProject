@@ -187,9 +187,9 @@ function loadPrivateDetail() {
   privPending = _readPrivStore(PRIV_QUEUE);
   if (!ownerSignedIn()) return Promise.resolve();
   if (!fbReady) return Promise.resolve();
-  return fbDb
-    .ref(PRIVATE_PATH)
-    .once("value")
+  return _privRetryDenied(function () {
+    return fbDb.ref(PRIVATE_PATH).once("value");
+  })
     .then(function (s) {
       const cloud = s.val() || {};
       /* Cloud wins, except where this device still holds a write the cloud never accepted —
@@ -202,17 +202,76 @@ function loadPrivateDetail() {
       });
       privDetail = merged;
       persistPrivate();
+      _privOk();
       flushPrivate();
     })
     .catch(function (e) {
       warn("storage.js", e);
       /* A refused read means the rule is missing or wrong — the same cause as a refused write,
-       and worth saying now rather than at the next save. */
-      privateWriteFailed();
+       and worth saying now rather than at the next save. Anything else is not the rules. */
+      privateWriteFailed(e);
     });
 }
-/* Said once a session. It names the cause, because there is really only one. */
-function privateWriteFailed() {
+/* The database sends the signed-in user's token a moment after sign-in. A read or write made in that
+   gap goes out as a stranger's and is refused, which looks exactly like a missing rule. Wait for the
+   token first, and if a request is still refused, fetch a fresh token and try once more before
+   concluding anything about the rules. */
+function _privAuthed() {
+  try {
+    const u = fbAuth && fbAuth.currentUser;
+    if (u && typeof u.getIdToken === "function")
+      return Promise.resolve(u.getIdToken()).then(
+        function () {},
+        function () {}
+      );
+  } catch (e) {
+    warn("storage.js", e);
+  }
+  return Promise.resolve();
+}
+function _privDenied(e) {
+  return /permission[_ ]denied/i.test(String((e && e.code) || "") + " " + String((e && e.message) || ""));
+}
+function _privRetryDenied(run) {
+  return _privAuthed()
+    .then(run)
+    .catch(function (e) {
+      const u = fbAuth && fbAuth.currentUser;
+      if (!_privDenied(e) || !u || typeof u.getIdToken !== "function") throw e;
+      return Promise.resolve(u.getIdToken(true)).then(run);
+    });
+}
+/* A private read or write that the owner's account just completed proves the owner's rule is in place, so
+   a warning raised earlier (a request made before the token arrived, say) is withdrawn. */
+function _privOk() {
+  if (!_ruleFindings.owner) return;
+  delete _ruleFindings.owner;
+  _privLastError = "";
+  if (_ruleFindings.map || _ruleFindings.db || _ruleFindings.read) {
+    showRuleWarning();
+    return;
+  }
+  const el = $("rule-warn");
+  if (el) el.hidden = true;
+}
+let _privLastError = ""; /* what Firebase actually said, shown in the banner */
+/* Said once a session. A refusal (PERMISSION_DENIED) is the rules; anything else — the network, a
+   bug — is not, and used to be reported as "the private rule is missing". Either way the address is
+   kept on this device and queued, and the banner and console now carry Firebase's own words. */
+function privateWriteFailed(e) {
+  const code = (e && e.code) || "",
+    msg = (e && e.message) || (e ? String(e) : "");
+  const said = (code && msg.indexOf(code) < 0 ? code + ": " : "") + msg;
+  if (e) {
+    console.warn("private/ failed:", said);
+    _privLastError = said.slice(0, 200);
+  }
+  if (e && !_privDenied(e)) {
+    if (_privWarned) return;
+    _privWarned = true;
+    toast("Private address kept on this device — couldn't reach the cloud (" + _privLastError.slice(0, 90) + ")");
+    return;
+  }
   _ruleFindings.owner = true;
   showRuleWarning();
   if (_privWarned) return;
@@ -232,26 +291,27 @@ function flushPrivate() {
     let write;
     try {
       if (op.legacy || op.value === null) {
-        write = op.value === null ? ref.remove() : ref.set(_privClean(op.value));
+        write = _privRetryDenied(function () {
+          return op.value === null ? ref.remove() : ref.set(_privClean(op.value));
+        });
       } else {
-        /* Write only if the cloud still holds what this device last saw (or already holds what it
-           is about to write). Another device's newer address is kept, not overwritten. */
-        write = ref
-          .transaction(
-            function (cur) {
-              if (_privSame(cur, op.base) || _privSame(cur, op.value)) return _privClean(op.value);
-              return;
-            },
-            undefined,
-            false
-          )
-          .then(function (r) {
-            if (r && r.committed === false) {
+        /* Write only if the cloud still holds what this device last saw (or already holds what it is
+           about to write). Another device's newer address is kept, not overwritten. This reads the
+           server's value and then writes rather than using a transaction: a transaction on a path
+           nothing is listening to starts from an empty cache, aborts at once when the base is not
+           null, and would have read as "changed elsewhere". One owner, so the gap between the read
+           and the write is not a real race. */
+        write = _privRetryDenied(function () {
+          return ref.once("value").then(function (snap) {
+            const cur = snap.val();
+            if (!(_privSame(cur, op.base) || _privSame(cur, op.value))) {
               const e = new Error("private-changed-elsewhere");
-              /** @type {any} */ (e).cloud = r.snapshot ? r.snapshot.val() : null;
+              /** @type {any} */ (e).cloud = cur;
               throw e;
             }
+            return ref.set(_privClean(op.value));
           });
+        });
       }
     } catch (e) {
       warn("storage.js", e);
@@ -259,6 +319,7 @@ function flushPrivate() {
     }
     write
       .then(function () {
+        _privOk();
         if (privPending[id] === entry) {
           delete privPending[id];
           persistPrivate();
@@ -275,7 +336,7 @@ function flushPrivate() {
           toast("Another device changed a private address — kept that one");
           return;
         }
-        privateWriteFailed();
+        privateWriteFailed(e);
       });
   });
 }
@@ -453,7 +514,10 @@ function showRuleWarning() {
   if (f.map) lines.push(RULE_WARN_TEXT.map);
   else if (f.db) lines.push(RULE_WARN_TEXT.db);
   if (f.read) lines.push(RULE_WARN_TEXT.read);
-  else if (f.owner) lines.push(RULE_WARN_TEXT.owner);
+  else if (f.owner)
+    lines.push(
+      RULE_WARN_TEXT.owner + (_privLastError ? " <small>Firebase said: " + esc(_privLastError) + "</small>" : "")
+    );
   if (!lines.length) return;
   if (txt)
     txt.innerHTML =

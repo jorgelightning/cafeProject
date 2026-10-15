@@ -358,6 +358,65 @@ const fs = require("fs"), path = require("path");
   });
   eq(r, [true, "x", true, "y"], "queue entries saved by earlier versions (a bare value, or null) are still understood");
 
+  /* --- 14. "the private rule is missing" must mean the rule is missing (v73) ---
+     Any failed private read or write used to raise that banner, so a dropped connection, a request
+     made a moment before the sign-in token reached the database, or a bug all read as a missing rule. */
+  const privFail = (setup) => pg.evaluate(async (setup) => {
+    window.__signedIn = true; fbReady = true; isAdmin = true;
+    const toasts = []; const _t = window.toast; window.toast = m => toasts.push(m);
+    const _warn = console.warn; console.warn = () => {};
+    Object.keys(_ruleFindings).forEach(k => delete _ruleFindings[k]);
+    _privWarned = false; _privLastError = "";
+    document.getElementById("rule-warn").hidden = true;
+    let tokenCalls = [], attempts = 0;
+    fbAuth = { get currentUser() { return window.__signedIn ? { email: OWNER_EMAIL, getIdToken: (force) => { tokenCalls.push(!!force); return Promise.resolve("t"); } } : null; } };
+    const denied = () => Object.assign(new Error("permission_denied at /private/x: Client doesn't have permission to access the desired data."), { code: "PERMISSION_DENIED" });
+    const store = {};
+    fbDb = { ref: path => ({
+      once: () => { attempts++;
+        if (setup === "network") return Promise.reject(Object.assign(new Error("Network error: the connection was lost"), { code: "NETWORK_ERROR" }));
+        if (setup === "denied") return Promise.reject(denied());
+        if (setup === "token" && attempts === 1) return Promise.reject(denied());
+        return Promise.resolve({ val: () => store[path.split("/")[1]] === undefined ? null : store[path.split("/")[1]] }); },
+      set: v => { store[path.split("/")[1]] = v; return Promise.resolve(); },
+      remove: () => Promise.resolve() }) };
+    cafes = [{ id: "x", name: "X", custom: true, lat: 1, lng: 1, area: "", drinks: [] }];
+    privDetail = {}; privPending = {};
+    savePrivateDetail("x", { area: "5 Elm", lat: 1.23456, lng: 2.34567 });
+    await new Promise(res => setTimeout(res, 60));
+    window.toast = _t; console.warn = _warn;
+    const w = document.getElementById("rule-warn");
+    return { banner: !w.hidden ? w.textContent : "", owner: !!_ruleFindings.owner, toasts: toasts.join("|"), kept: privPending.x !== undefined,
+             landed: store.x && store.x.area, tokenCalls, attempts };
+  }, setup);
+
+  r = await privFail("network");
+  eq([r.banner, r.owner], ["", false], "a dropped connection does not raise the missing-rule banner");
+  eq([/couldn't reach the cloud/.test(r.toasts), /Network error/.test(r.toasts), r.kept], [true, true, true],
+     "…it says what happened instead, and the address stays queued");
+
+  r = await privFail("denied");
+  eq(r.owner, true, "a real refusal still raises the banner");
+  eq([/PERMISSION_DENIED/.test(r.banner), /Client doesn't have permission/.test(r.banner)], [true, true],
+     "…and the banner carries Firebase's own words, so the cause can be read off it");
+  eq(r.tokenCalls.includes(true), true, "…after a fresh sign-in token was fetched and the request tried again");
+  eq(r.kept, true, "…with the address still queued");
+
+  r = await pg.evaluate(() => {
+    _ruleFindings.owner = true; showRuleWarning();
+    const shown = !document.getElementById("rule-warn").hidden;
+    _privOk();
+    const cleared = document.getElementById("rule-warn").hidden;
+    _ruleFindings.owner = true; _ruleFindings.map = true; showRuleWarning(); _privOk();
+    const kept = !document.getElementById("rule-warn").hidden && /edit or delete/.test(document.getElementById("rule-warn-text").textContent);
+    delete _ruleFindings.map; document.getElementById("rule-warn").hidden = true;
+    return [shown, cleared, kept];
+  });
+  eq(r, [true, true, true], "a private read or write that goes through withdraws the missing-rule warning, but never one about strangers");
+
+  r = await privFail("token");
+  eq([r.banner, r.owner, r.landed], ["", false, "5 Elm"], "a request refused only because the token had not arrived is retried and goes through, with no banner");
+
   eq(errs, [], "no page errors");
   const ok = done();
   await b.close(); srv.close(); process.exit(ok ? 0 : 1);
