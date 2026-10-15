@@ -1282,3 +1282,25 @@ code held — it reported "0" for weeks while the real count was 33 (baseline 32
 It now runs through a shell there and exits non-zero if `tsc` cannot be started at all. The count
 is genuinely **0** and `types/baseline.json` says so; the fixes are JSDoc annotations and casts
 only, plus one `const _t` that holds `e.target` once so the cast is written once.
+
+### Coffee and Tea Wrapped — Direction A of the stats review (v82)
+
+Three cards from data that was already stored and never drawn, replacing "Your usual":
+
+- **Drink DNA.** "Your usual" printed the single most common value of each option as a chip, which
+  hid the shape (82% no sugar and 97% oat is a different story from 52% and 52%). The signature
+  sentence stays, now under it: the most loyal order, the biggest gamble (the priciest drink ever
+  ordered exactly once) and a bar for the whole spread of sweetness, ice, milk and size.
+- **Worth it.** The reorder verdict, stored on most orders and read by nothing on Stats. Share you
+  would order again, average price of the ones you would against the ones you would not, the
+  order-again rate by price band, and the loved cafes with the cheapest average drink. With only
+  three regrets in 96 verdicts the card says the bands are a pattern to watch, not a rule.
+- **Chains and independents.** A chain is a brand group of two or more cafes with one you have been
+  to, the same grouping the cafe page uses for its branches (`brandGroupKey`), so the two cannot
+  disagree. A want-list branch shows as a ring and is not counted as visited.
+
+Nothing here reads an area, a coordinate or a review. `tests/stats-wrapped.js`.
+
+Two test fixes ride along: `stats-charts.js` counted exactly three `.sc-wide` cards and now asks for
+at least three, and `currency-units.js` read `core.js` by `\n` and broke when a Windows checkout
+handed it CRLF.
