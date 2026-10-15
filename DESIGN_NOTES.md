@@ -1331,3 +1331,11 @@ The ring clusters, the single phone pill and the want-to-try pins are unchanged.
 is a 44px **?** above the locate button, the same fold the phone already had inside the pill's panel.
 `tests/map-pins.js`.
 
+**Want-to-try pins joined the same system (v84).** They were the one stand-alone icon: a fixed 30px
+violet disc at every zoom. They are now the same small dot, larger dot and pill as every other pin, in
+the one violet nothing else on the map uses, each still carrying its white bookmark so it reads without
+colour. They are still never clustered, still above the cluster bubbles (`wishPinZ()`), and take
+priority over visited pins when two pills would overlap, since a want-to-try is the pin you are looking
+for. The 30px `wishPinIcon()` remains as the first paint and the fallback on a map that reports no
+projection.
+
