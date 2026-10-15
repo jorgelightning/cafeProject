@@ -33,6 +33,7 @@ const SUITE = [
   ["list-clean",       "the list tint carries the rating, and four control rows fold into one"],
   ["settings",         "one home for the preferences, and a map error that stays in the map"],
   ["beli",             "three buckets, a position on every card, and the two lists up front"],
+  ["stats-charts",     "cadence heatmap, price spread and taste split: SVG only, no location, no spend total for viewers"],
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],
