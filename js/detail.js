@@ -68,28 +68,6 @@ function reorderTally(c) {
   });
   return { yes: yes, no: no, neutral: neutral, total: yes + no + neutral };
 }
-function renderReorderRollup(c) {
-  const re = $("d-reorder");
-  if (!re) return;
-  const t = reorderTally(c);
-  if (!t.total) {
-    re.style.display = "none";
-    re.innerHTML = "";
-    return;
-  }
-  re.style.display = "flex";
-  const pct = Math.round((t.yes / t.total) * 100);
-  re.innerHTML =
-    '<span class="ro-badge ' +
-    (t.yes >= t.no ? "yes" : "no") +
-    '">👍 Liked ' +
-    t.yes +
-    " of " +
-    t.total +
-    '</span><span class="ro-bar"><i style="width:' +
-    pct +
-    '%"></i></span>';
-}
 /* Compact form for the detail line — the rail already carries the colour, so the chip
    only needs the glyph. The full-text badge is still used elsewhere. */
 function reorderChip(d) {
@@ -289,10 +267,7 @@ function openDetail(id, from) {
         td.n +
         "\u00d7 ordered" +
         (last ? " \u00b7 last " + esc(fmtDate(last)) : "") +
-        "</span></span>" +
-        '<button type="button" class="oa-again admin-only" onclick="logAgainFrom(\'' +
-        esc(c.id) +
-        "')\">\uff0b Log again</button>";
+        "</span></span>";
       _oa.hidden = false;
     } else {
       _oa.hidden = true;
@@ -309,7 +284,6 @@ function openDetail(id, from) {
     $("d-wish").textContent = "🔖";
     $("d-wish").style.opacity = c.wish ? "1" : ".45";
   }
-  renderReorderRollup(c);
   $("d-tags").innerHTML = (c.tags || []).map(t => '<span class="chip">' + esc(t) + "</span>").join("");
 
   /* ---- the branches of this brand: a quiet control after the place opens a list over the page.
@@ -484,6 +458,23 @@ function openDetail(id, from) {
       (isAdmin ? "Tap \uFF0B Log a drink here below." : "No drinks logged yet.") +
       "</div>";
 
+  /* the first three drinks, then "Show N more": a cafe with five drinks pushed the note off the screen */
+  const _cards = $("d-drinks").querySelectorAll(".drinkcard");
+  if (_cards.length > 3) {
+    const box = document.createElement("div");
+    box.className = "foldbox";
+    _cards[2].after(box);
+    for (let i = 3; i < _cards.length; i++) box.appendChild(_cards[i]);
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "morebtn";
+    more.dataset.lab = "Show " + (_cards.length - 3) + " more";
+    more.textContent = more.dataset.lab + " \u25be";
+    more.onclick = function () {
+      statFold(more);
+    };
+    box.after(more);
+  }
   const _dir = $("d-dir");
   if (_dir) _dir.style.display = c.custom && c.lat == null ? "none" : "";
   $("d-review").textContent = c.review || (isAdmin ? "Tap \u270E Edit to add your thoughts\u2026" : "No notes yet.");

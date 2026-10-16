@@ -36,10 +36,13 @@ const { eq, done } = checker();
     privDetail = { pv: { area: "742 Evergreen Terrace #12", lat: 21.30123, lng: -157.80456 } };
     show("list"); renderList(); openDetail("top", "list");
     const ba = document.getElementById("d-orderagain"), rk = document.getElementById("d-rank");
-    const again = ba.querySelector(".oa-again");
+    const hero = document.getElementById("d-hero"), more = document.getElementById("d-more"), det = document.getElementById("d-details");
     return {
       banner: ba.querySelector(".oa-name").textContent + " | " + ba.querySelector(".oa-meta").textContent,
-      glyph: ba.querySelector(".oa-gl").textContent, againShown: !!again && getComputedStyle(again).display !== "none",
+      glyph: ba.querySelector(".oa-gl").textContent, bannerButtons: ba.querySelectorAll("button").length,
+      medalInHero: hero.contains(rk), moreShown: getComputedStyle(more).display !== "none", detailsShown: getComputedStyle(det).display !== "none",
+      detailsOpen: det.open, folded: document.querySelectorAll("#d-drinks .foldbox .drinkcard").length,
+      moreBtn: (document.querySelector("#d-drinks .morebtn") || {}).textContent || "",
       gold: rk.classList.contains("top"), rankText: rk.textContent,
       pills: [...document.querySelectorAll("#d-drinks .drinksum .mpill")].map(x => x.textContent),
       quote: getComputedStyle(document.getElementById("d-review"), "::before").content,
@@ -50,16 +53,34 @@ const { eq, done } = checker();
   const v = await seed(false);
   eq(v.banner, "Hojicha latte | $7.25 · 2× ordered · last Sep 23, 2026", "what to order leads: the drink, its price, how often, and when last");
   eq(v.glyph, "🍵", "…with a glyph for the kind of drink");
-  eq(v.againShown, false, "a viewer has no Log again button");
+  eq(v.bannerButtons, 0, "the order block is information, not a second way to log: the bar at the bottom is the one");
+  eq(v.medalInHero, true, "the rank is a medal on the hero, not a tile beside the name");
+  eq([v.moreShown, v.detailsShown], [false, false], "a viewer has no edit menu and no bookkeeping");
   eq(v.gold, true, "a top-ten cafe gets the gold rank tile");
   eq(v.pills, ["12 oz", "0% sweet", "Warm", "🥛 Oat"], "a drink's options read as pills, not one grey line");
   eq(/201C/i.test(JSON.stringify(v.quote)) || /“/.test(v.quote), true, "the note is set as a quotation");
   eq(v.doc <= v.win + 1, true, "nothing scrolls sideways at 375px");
 
   const o = await seed(true);
-  eq(o.againShown, true, "the owner can log it again from the banner");
+  eq([o.moreShown, o.detailsShown, o.detailsOpen], [true, true, false], "the owner gets a ⋯ menu for Edit and Delete, and the comparisons and edit time folded under Details");
   const mid = await pg.evaluate(() => { openDetail("mid", "list"); return document.getElementById("d-rank").classList.contains("top"); });
   eq(mid, false, "…and a cafe outside the top ten has no gold");
+
+  // ---- a long drink list shows three, then "Show N more" ----
+  const fold = await pg.evaluate(() => {
+    cafes.push({ id: "many", name: "Many Drinks", area: "SF", rating: 4, elo: 1450, matches: 8,
+      drinks: ["A", "B", "C", "D", "E"].map(n => ({ n: "Drink " + n, orders: [{ date: "2026-09-0" + (n.charCodeAt(0) - 64), p: 5 }] })) });
+    openDetail("many", "list");
+    const box = document.querySelector("#d-drinks .foldbox"), btn = document.querySelector("#d-drinks .morebtn");
+    const before = getComputedStyle(box).display;
+    btn.click();
+    const res = { shown: document.querySelectorAll("#d-drinks > .drinkcard").length, folded: box.querySelectorAll(".drinkcard").length, label: btn.dataset.lab,
+             before, after: getComputedStyle(box).display, total: document.querySelectorAll("#d-drinks .drinkcard").length };
+    cafes = cafes.filter(c => c.id !== "many");
+    return res;
+  });
+  eq([fold.shown, fold.folded, fold.total], [3, 2, 5], "five drinks are three in view and two folded (nothing is dropped)");
+  eq([fold.label, fold.before, fold.after], ["Show 2 more", "none", "block"], "…behind a Show 2 more that opens them");
 
   // ---- the postcard ----
   await pg.evaluate(() => { openDetail("top", "list"); });
