@@ -1460,3 +1460,12 @@ against all of `js/`, `index.html` and `sw.js`) found what nothing referenced. R
 `gm_authFailure` (Google calls it), the `v-yes/no/neutral` classes (built as `"v-" + verdict`), `inkOn` (a test
 uses it), and `importPublished`, `exportJSON`, `revertPublished` in `storage.js`: nothing calls them any more, but they
 are the owner's data backup and restore, so removing them is a decision for a person, not a sweep.
+
+### Performance check (v95)
+
+111 rows: the List renders in about 3ms (14ms with the CPU throttled to a quarter), Stats 5ms, a rank map under 1ms. The
+one slow screen was Go at 49ms (215ms throttled): it ranked every row by walking the whole board, 111 x 111 score
+calls. It reads the one-pass `rankMap()` now (4ms, 25ms throttled), and `chaserBoard()` and the List sort score each cafe once
+before sorting instead of twice per comparison (board 5,300 score calls to under 1,300, List 5,000 to under 400).
+Search is 8ms a keystroke, so it stays undebounced. `tests/perf-budget.js` counts calls, since milliseconds flake.
+
