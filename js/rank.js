@@ -385,8 +385,9 @@ function renderBoard() {
   } else {
     /* Competition ranking off the same helper the sheet quotes, so "#2 → #1" in the popup and
        "#1" here can never disagree. Genuine ties share a position. */
+    const rm = rankMap();
     const pos = board.map(function (c) {
-      return chaserRank(c, board);
+      return rm[c.id];
     });
     const uniq = {};
     pos.forEach(function (p) {
@@ -681,12 +682,20 @@ function chaserArm(id) {
   };
 }
 function chaserBoard() {
+  /* score each cafe once, then sort on the stored number: the comparator would otherwise ask
+     for two scores per comparison, a hundred and fifty of them per row on a long board. */
   return cafes
     .filter(function (c) {
       return !c.wish && matchCount(c) > 0;
     })
+    .map(function (c) {
+      return { c: c, s: eloScoreNum(c) };
+    })
     .sort(function (a, b) {
-      return eloScoreNum(b) - eloScoreNum(a);
+      return b.s - a.s;
+    })
+    .map(function (x) {
+      return x.c;
     });
 }
 /* Position, everywhere. chaserRank walks the whole board per cafe, which is fine for one

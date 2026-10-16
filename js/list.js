@@ -520,6 +520,10 @@ function renderList() {
       ? "Search name, city, drink\u2026"
       : nb.length + " spots" + (nc > 1 ? " in " + nc + " countries" : "") + "\u2026";
   }
+  /* A score is worked out once per cafe, not twice per comparison: sorting 111 rows asks the
+     comparator about 1,500 times. */
+  const _scores = new Map();
+  if (sortMode === "ranked" || sortMode === "rating") items.forEach(c => _scores.set(c.id, eloScoreNum(c)));
   items.sort((a, b) => {
     if (activeGuide) {
       const gs = guideCompare(a, b);
@@ -536,8 +540,8 @@ function renderList() {
       const ra = matchCount(a) > 0,
         rb = matchCount(b) > 0;
       if (ra !== rb) return ra ? -1 : 1;
-      const ea = eloScoreNum(a),
-        eb = eloScoreNum(b);
+      const ea = _scores.get(a.id),
+        eb = _scores.get(b.id);
       if (ea !== eb) return eb - ea;
       const ma = matchCount(a),
         mb = matchCount(b);
@@ -547,8 +551,8 @@ function renderList() {
     }
     if (sortMode === "rating") {
       if ((b.rating || 0) !== (a.rating || 0)) return (b.rating || 0) - (a.rating || 0);
-      const sa = eloScoreNum(a),
-        sb = eloScoreNum(b);
+      const sa = _scores.get(a.id),
+        sb = _scores.get(b.id);
       if (sa !== sb) return sb - sa;
       return (a.name || "").localeCompare(b.name || "");
     }
