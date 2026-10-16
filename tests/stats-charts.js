@@ -64,7 +64,7 @@ const { eq, done } = checker();
   const tok = await pg.evaluate(() => {
     const rgb = t => { const d = document.createElement("div"); d.style.color = "var(" + t + ")"; document.body.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; };
     const fill = sel => getComputedStyle(document.querySelector(sel)).fill;
-    return { hist: fill(".sc-svg .hb") === rgb("--acc"), txt: fill(".sc-svg text") === rgb("--faint"), cell: fill(".heat .hc:not(.on)") === rgb("--star-off") };
+    return { hist: fill(".sc-svg .hb") === rgb("--acc"), txt: fill(".heat text") === rgb("--faint"), cell: fill(".heat .hc:not(.on)") === rgb("--star-off") };
   });
   eq(tok, { hist: true, txt: true, cell: true }, "chart colours come from theme tokens, so both themes follow");
 

@@ -44,7 +44,7 @@ const { eq, done } = checker();
     const card = t => sec(t) && sec(t).nextElementSibling;
     const dna = card("Drink DNA"), worth = card("Worth it"), chain = card("Chains");
     return {
-      heads: [...body.querySelectorAll(".statsec")].map(e => e.textContent.replace(/^\S+\s/, "")),
+      heads: [...body.querySelectorAll(".statsec")].map(e => e.textContent),
       usual: dna && dna.querySelector(".usual").textContent,
       duo: dna && [...dna.querySelectorAll(".sc-duo > div")].map(d => d.querySelector("b").textContent),
       stacks: dna && dna.querySelectorAll(".sc-stack").length,

@@ -1404,3 +1404,12 @@ block and no longer carries a Log again button — the bar at the bottom of the 
 clutter. The first three drinks show, the rest are behind "Show N more" (nothing dropped); Edit and Delete live in a
 ⋯ menu for the owner; the comparisons and edit time ("6.8 from 22 comparisons · edited Oct 14, 5:53 PM") fold under
 Details, owner only. The "Liked 23 of 23" bar is gone with `renderReorderRollup()`: the order block already says it.
+
+**Stats in three tabs (v89).** One scroll of fourteen cards (4,838px at 390px) is three tabs now. **You**: the
+collection, went back and favourites, Drink DNA, Taste, where you go, chains and independents. **Habits**:
+monthly activity, cadence, regulars. **Money**: what was spent (owner only, so a viewer's Money opens on price
+spread), price spread, Worth it. Every card is still rendered and the other two tabs are only `hidden`, so
+anything that reads the page (and `tests/stats-charts.js`, `stats-wrapped.js`) loses nothing; it is a view, not a
+data change. Headings are plain words (no emoji), and the long chart note under Monthly activity is a caption:
+"Bar: spend. Green line: share of drinks with a price."
+

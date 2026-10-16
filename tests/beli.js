@@ -183,7 +183,7 @@ const fs = require("fs"), path = require("path");
     show("stats"); renderStats();
     const body = document.getElementById("stats-body");
     const prof = body.querySelector(".profile");
-    return { first: body.firstElementChild.className,
+    return { first: body.querySelector(".stabpanel:not([hidden])").firstElementChild.className,
              figs: [...prof.querySelectorAll(".pfig")].map(f =>
                f.querySelector("b").textContent + " " + f.querySelector("span").textContent),
              line: (body.querySelector(".pline") || {}).textContent || "" };
