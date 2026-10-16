@@ -168,8 +168,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 @media (max-width:899px){ .grid{ padding-bottom:44px; } }
 .card{ border:1px solid var(--border); border-radius:var(--r-3); overflow:hidden; background:var(--surface); cursor:pointer; }
 .card .ph{ height:104px; background-size:cover; background-position:center; display:flex; align-items:flex-start; justify-content:flex-end; padding:7px; font-size:var(--fs-4); }
-.card .nophoto{ background:linear-gradient(140deg,#caa472,#7b4a26); color:#fff; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-1); font-size:21px; font-weight:800; letter-spacing:1px; line-height:1.15; text-shadow:0 1px 3px rgba(0,0,0,.3); }
-.card .nophoto .em{ font-size:24px; text-shadow:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
+.card .nophoto{ background:var(--surface2); color:var(--text); flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-1); line-height:1.15; }
+.card .nophoto .em{ font-size:34px; text-shadow:none; }
 .card .ph{ position:relative; overflow:hidden; }
 .card .ph.loaded{ animation:phIn .4s ease; }
 .card .ph.loading::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent); transform:translateX(-100%); animation:shimmer 1.4s 3; }
@@ -347,7 +347,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .empty{ text-align:center; color:var(--soft); padding:60px 30px; }
 .empty .big{ font-size:46px; margin-bottom:10px; }
 .hero{ position:relative; height:176px; background-size:cover; background-position:center; display:flex; align-items:flex-end; }
-.hero.nophoto{ background:linear-gradient(140deg,#caa472,#7b4a26); align-items:center; justify-content:center; font-size:84px; }
+.hero.nophoto{ background:var(--surface2); align-items:center; justify-content:center; font-size:84px; }
 .hero .hero-emoji{ display:none; filter:drop-shadow(0 4px 12px rgba(0,0,0,.3)); }
 .hero.nophoto .hero-emoji{ display:block; }
 .hero .nav{ position:absolute; top:14px; left:14px; right:14px; display:flex; justify-content:space-between; }
@@ -920,7 +920,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .dhead h2, .hero .hd{ letter-spacing:-.03em; }
 .card .ph, .hero{ isolation:isolate; }
 .card .ph::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(180deg, rgba(18,10,4,.34) 0%, rgba(18,10,4,0) 38%, rgba(18,10,4,0) 58%, rgba(18,10,4,.45) 100%); }
-.card .ph.nophoto::before{ background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.14)); }
+.card .ph.nophoto::before{ background:none; }
 .hero::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(180deg, rgba(18,10,4,.42) 0%, rgba(18,10,4,0) 34%, rgba(18,10,4,0) 62%, rgba(18,10,4,.22) 100%); }
 .hero .nav{ z-index:1; }
 .rankbadge{ backdrop-filter:blur(8px) saturate(1.4); -webkit-backdrop-filter:blur(8px) saturate(1.4); box-shadow:0 0 0 1px rgba(255,235,205,.16) inset; }
@@ -995,3 +995,17 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
   .locbtn{ bottom:26px; }
   .mapbox.worlding .locbtn{ bottom:26px; }
 }
+
+/* ---------- one accent, one meaning (v86) ----------
+   Orange was the order line, the links, the counts, the figures in every chart heading, the active tab,
+   the primary button and the badges, so nothing was quieter than anything else. It now means two things:
+   the primary action and the current state. Information goes to the text colours, and a link says it is
+   one with an underline. Chart marks are data, so they keep it. */
+.card .cdrink{ color:var(--text); font-weight:600; }
+.card .cdrink .cdp{ color:var(--soft); }
+.drinkprice .pr.range{ color:var(--text); }
+.dorderdate b{ color:var(--soft); }
+.orderagain .oa-name, .orderagain b{ color:var(--text); }
+.sc-head b, .usualcard .usual em{ color:var(--text); }
+.morebtn, .resultline button{ color:var(--text); text-decoration:underline; text-underline-offset:3px; }
+.gotile + .lbmain .lbname i, .lbrow.one .lbname i{ color:var(--soft); }

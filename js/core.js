@@ -295,16 +295,20 @@ function inkOn(hex) {
      that the ink has to be dark, which on every tint here is 9:1 or better. */
   return L > 0.3 ? "rgba(0,0,0,.72)" : "#fff";
 }
+/* 111 of 111 tiles are placeholders, so a saturated block per cafe was the loudest thing on the List and
+   said nothing the name did not. The tint is now a 22% wash over the surface, with the cafe's own
+   emoji on it: the colour still carries the verdict (the same scale the map pins use), and a photo,
+   when there is one, is the only loud thing. */
 function nophotoBg(c) {
-  const t = tintFor(c);
-  return "linear-gradient(140deg,rgba(255,255,255,.18),rgba(0,0,0,.26)) " + t;
+  return "color-mix(in srgb," + tintFor(c) + " 22%,var(--surface2))";
 }
-/* background and a legible ink together, since they always travel as a pair */
+/* background and ink together; the ink is the theme's own, since the wash is light in both themes */
 function nophotoStyle(c) {
-  return "background:" + nophotoBg(c) + ";color:" + inkOn(tintFor(c));
+  return "background:" + nophotoBg(c) + ";color:var(--text)";
 }
+/* emoji only: the initials were a second mark for the same cafe, and broke on "HEYTEA (Cupertino)" ("H(") */
 function nophotoHTML(c) {
-  return '<span class="em">' + esc((c && c.emoji) || "☕") + "</span><span>" + esc(initials(c)) + "</span>";
+  return '<span class="em">' + esc((c && c.emoji) || "☕") + "</span>";
 }
 /* Local calendar date. Plain toISOString() would hand back yesterday (or tomorrow) when
    logging from Hawaii or Taipei, so shift by the timezone offset before slicing. */
