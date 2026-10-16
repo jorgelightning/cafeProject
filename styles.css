@@ -1053,3 +1053,16 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .legrows.inl{ flex-direction:row; flex-wrap:wrap; gap:var(--sp-1) var(--sp-4); flex:none; }
 .legrows.inl > div{ border-bottom:none; padding:0; font-size:var(--fs-1); color:var(--soft); }
 .legrows.inl b{ margin-left:0; }
+
+/* ---------- logging gets the whole screen (v90) ----------
+   The form carried three layers at the bottom: its own Save bar, the tab bar, and a raised "Log" that was the
+   tab you were already on. While you log, the tab bar steps aside (Back is at the top, Save at the bottom); the
+   currency joins the price into one field instead of two controls side by side. */
+@media (max-width:899px){
+  #app[data-view="form"] .tabbar{ display:none; }
+  #app[data-view="form"] .sidebar, #app[data-view="form"] .mapwrap{ bottom:0; }
+}
+.priceline{ gap:0; }
+.priceline select.dpc{ border-right:0; border-radius:var(--r-2) 0 0 var(--r-2); }
+.priceline select.dpc[hidden] + input.dp{ border-radius:var(--r-2); }
+.priceline input.dp{ border-radius:0 var(--r-2) var(--r-2) 0; }
