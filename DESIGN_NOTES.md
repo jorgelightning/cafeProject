@@ -1397,3 +1397,10 @@ counts, the active tab, the primary button and the badges at once.
   at the bottom of the cafe page, and a second way to do it was clutter.
 - "No pending edits" is no longer printed when there is nothing pending.
 
+
+**The cafe page, one block and one action (v88).** The rank is a medal on the hero (gold for the top
+ten), not a tile beside the name; the order block (glyph, drink, price, how often, last) is the single accented
+block and no longer carries a Log again button — the bar at the bottom of the page is the way to log, and two were
+clutter. The first three drinks show, the rest are behind "Show N more" (nothing dropped); Edit and Delete live in a
+⋯ menu for the owner; the comparisons and edit time ("6.8 from 22 comparisons · edited Oct 14, 5:53 PM") fold under
+Details, owner only. The "Liked 23 of 23" bar is gone with `renderReorderRollup()`: the order block already says it.

@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=87">
+<link rel="stylesheet" href="styles.css?v=88">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -54,25 +54,24 @@
 <div class="hero-emoji" id="d-hero-emoji">☕</div>
 <div class="nav"><button class="round" onclick="goBack()" aria-label="Back">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()" aria-label="Toggle favorite">🤍</button><button class="round admin-only" id="d-wish" onclick="toggleWish()" aria-label="Toggle wishlist" style="opacity:.45">🔖</button></div></div>
 <div class="tagphoto" id="d-tagphoto">📷 My drink</div>
+<div class="dranktile" id="d-rank" hidden></div>
 </div>
 <div class="dbody">
 <div class="dhead">
-<div class="dranktile" id="d-rank" hidden></div>
 <div class="dheadmain">
 <h2 id="d-name"></h2>
 <div class="dsub"><span id="d-stars"></span><span class="darea" id="d-meta"></span></div>
-<div class="dscoreline" id="d-score" hidden></div>
 </div>
 </div>
 <div class="dloc"><button type="button" class="where" id="d-where" aria-expanded="false" aria-controls="d-locs" onclick="toggleBranches()" hidden></button>
 <div class="brscrim" id="d-scrim" hidden></div>
 <div class="branches" id="d-locs" hidden></div></div>
 <div class="orderagain" id="d-orderagain" hidden></div>
-<div class="reorder-rollup" id="d-reorder" style="display:none"></div>
 <div class="chips" id="d-tags"></div>
 <div class="lab drinklab"><span>Drinks I had</span><small>Tap for order history</small></div><div id="d-drinks"></div>
 <div class="lab">My thoughts</div><div class="review" id="d-review"></div>
-<div style="margin-top:22px; display:flex; gap:10px"><button class="btn" id="d-dir" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" id="d-share" onclick="openPostcard()">↗ Share spot</button><button class="btn ghost admin-only" onclick="editCurrent()">✎ Edit</button><button class="btn danger admin-only" onclick="deleteCurrent()">Delete</button></div>
+<div class="dactions"><button class="btn" id="d-dir" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" id="d-share" onclick="openPostcard()">↗ Share spot</button><details class="dmore admin-only" id="d-more"><summary aria-label="More: edit or delete">⋯</summary><div class="dmorepop"><button type="button" class="btn ghost" onclick="editCurrent()">✎ Edit</button><button type="button" class="btn danger" onclick="deleteCurrent()">Delete</button></div></details></div>
+<details class="det admin-only" id="d-details"><summary>Details</summary><div class="dscoreline" id="d-score" hidden></div></details>
 </div>
 <div class="dstickybar admin-only"><button class="btn" onclick="logDrinkHere()">＋ Log a drink here</button></div>
 </div>
@@ -174,18 +173,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=87"></script>
-<script src="js/core.js?v=87"></script>
-<script src="js/storage.js?v=87"></script>
-<script src="js/sync.js?v=87"></script>
-<script src="js/nav.js?v=87"></script>
-<script src="js/map.js?v=87"></script>
-<script src="js/photos.js?v=87"></script>
-<script src="js/list.js?v=87"></script>
-<script src="js/stats.js?v=87"></script>
-<script src="js/rank.js?v=87"></script>
-<script src="js/detail.js?v=87"></script>
-<script src="js/form.js?v=87"></script>
-<script src="js/boot.js?v=87"></script>
+<script src="js/config.js?v=88"></script>
+<script src="js/core.js?v=88"></script>
+<script src="js/storage.js?v=88"></script>
+<script src="js/sync.js?v=88"></script>
+<script src="js/nav.js?v=88"></script>
+<script src="js/map.js?v=88"></script>
+<script src="js/photos.js?v=88"></script>
+<script src="js/list.js?v=88"></script>
+<script src="js/stats.js?v=88"></script>
+<script src="js/rank.js?v=88"></script>
+<script src="js/detail.js?v=88"></script>
+<script src="js/form.js?v=88"></script>
+<script src="js/boot.js?v=88"></script>
 </body>
 </html>
