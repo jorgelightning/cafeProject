@@ -1449,3 +1449,14 @@ A Go row is rank, name, place and the drink there, on two lines (`Kailua · Hoji
 bookkeeping (comparisons, score, how often it was ordered), sit behind a 44px chevron `.lbmore` with
 `aria-expanded`; a visitor's row with no note has no chevron. The row's own tap area (`.lbhit`) is its sibling, not
 its parent, so no button nests in a button. `tests/board-guide.js`.
+
+### Dead-code sweep (v94)
+
+After the plus, rollup and banner button went, a scan (every class in `styles.css` and every top-level function
+against all of `js/`, `index.html` and `sw.js`) found what nothing referenced. Removed: `setMilk`, `visitCount`,
+`mapInfo` and the never-created `gInfo` info window with its two guards; the `.mkbtn`, `.ro-badge`, `.ro-bar`,
+`.swval/.icval/.szval`, `.dr-oldertoggle` and `.lbtimes` rules; and `.filterrow`, `.listhead`, `.fbody`,
+`.tagrow-chip`, `.scorebadge` from shared selector lists. Left on purpose: Google's `gm-*` classes and
+`gm_authFailure` (Google calls it), the `v-yes/no/neutral` classes (built as `"v-" + verdict`), `inkOn` (a test
+uses it), and `importPublished`, `exportJSON`, `revertPublished` in `storage.js`: nothing calls them any more, but they
+are the owner's data backup and restore, so removing them is a decision for a person, not a sweep.
