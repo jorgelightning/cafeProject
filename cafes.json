@@ -170,13 +170,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1433,
+    "elo": 1428,
     "emoji": "☕",
     "fav": false,
     "id": "mqf9w1vzajpl",
     "lat": 21.32908,
     "lng": -158.0914,
-    "matches": 11,
+    "matches": 12,
     "name": "Island Vintage Coffee and Wine Bar Kapolei",
     "rating": 3,
     "review": "Flat white are known for their micro foam and there was none here!",
@@ -2080,13 +2080,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1545,
+    "elo": 1560,
     "emoji": "☕",
     "fav": false,
     "id": "mt6wojizh8ca",
     "lat": 49.28251,
     "lng": -123.11126,
-    "matches": 5,
+    "matches": 6,
     "name": "Saunter Coffee",
     "rating": 5,
     "review": "Great atmosphere to work in the front and there is something on the back for more of a quiet experience. The flat white is so good, strong espresso and the matcha has a good strong matcha taste too!",
@@ -2792,13 +2792,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1484,
+    "elo": 1476,
     "emoji": "☕",
     "fav": false,
     "id": "muwyp04dhkja",
     "lat": 37.78928,
     "lng": -122.42024,
-    "matches": 1,
+    "matches": 2,
     "name": "Le Mil's Coffee",
     "pid": "ChIJtzoq9mF9j4ARTv5k3P0nZfw",
     "rating": 3,
@@ -2951,6 +2951,57 @@
     "review": "Great location, good vibes, seems super busy tho. The indoor and outdoor spaces are nice!",
     "updated": "2026-10-14T19:01:21.342Z",
     "wish": false
+  },
+  {
+    "area": "Fountain Valley",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvajqucb8soy",
+    "lat": 33.71501,
+    "lng": -117.96387,
+    "name": "Rề Cà Phê",
+    "pid": "ChIJg73RFV4n3YAR2AGWUQoArL4",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-16T05:48:09.371Z",
+    "wish": true
+  },
+  {
+    "area": "Westminster",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvajr8btu0wu",
+    "lat": 33.73465,
+    "lng": -117.95515,
+    "name": "Kei Coffee House",
+    "pid": "ChIJ49bKrE8n3YARKDyb0QPEOfQ",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-16T05:48:27.497Z",
+    "wish": true
+  },
+  {
+    "area": "Garden Grove",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvajril1d9cu",
+    "lat": 33.77497,
+    "lng": -117.94122,
+    "name": "Phin Smith",
+    "pid": "ChIJK5hXsDop3YAR4G29n_kNilg",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-16T05:48:40.788Z",
+    "wish": true
   },
   {
     "area": "San Francisco, CA",
@@ -3196,7 +3247,7 @@
     "custom": false,
     "drinks": [
       {
-        "count": 10,
+        "count": 11,
         "dates": [
           "2026-03-24",
           "2026-07-09",
@@ -3207,7 +3258,8 @@
           "2026-09-18",
           "2026-09-24",
           "2026-10-07",
-          "2026-10-14"
+          "2026-10-14",
+          "2026-10-15"
         ],
         "ice": "Warm",
         "milk": "Oat",
@@ -3307,6 +3359,16 @@
             "date": "2026-10-14",
             "ice": "Warm",
             "id": "mv8ts4lr2rvo",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-15",
+            "ice": "Warm",
+            "id": "mv9wwgzcjgu5",
             "milk": "Oat",
             "p": "5",
             "reorder": "yes",
@@ -3513,20 +3575,20 @@
         ]
       }
     ],
-    "elo": 1596,
+    "elo": 1586,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 22,
+    "matches": 24,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.\n\nAshley Cafe is next around the corner for a good bagel and sandwiches!",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-10-15T00:53:45.229Z",
+    "updated": "2026-10-16T05:43:27.259Z",
     "wish": false
   },
   {
@@ -3612,13 +3674,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1592,
+    "elo": 1600,
     "emoji": "☕",
     "fav": true,
     "id": "tea-komeya",
     "lat": 37.80007,
     "lng": -122.43134,
-    "matches": 8,
+    "matches": 9,
     "name": "Komeya No Bento",
     "rating": 4,
     "review": "Surprisingly good hojicha latte alongside the bento.",
@@ -3626,7 +3688,7 @@
       "matcha",
       "to-go"
     ],
-    "updated": "2026-09-30T01:57:35.487Z",
+    "updated": "2026-10-16T05:46:08.000Z",
     "wish": false
   },
   {
