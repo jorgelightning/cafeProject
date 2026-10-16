@@ -1431,3 +1431,13 @@ bands spanning both); a chart's text scaled to 2.3 times its size on a tablet be
 sticky band was a darker bar than the panel behind it (it takes `--glass`). The laptop panel (422px) needed
 nothing. `tests/wide-screens.js`.
 
+### Contrast and focus, measured (v92)
+
+`tests/a11y.js` resolves every text colour against the layers behind it in both themes. What it found: the count
+on a List tab was dimmed with `opacity:.6` (2.5:1 light, 3.6:1 dark), so it is full strength now; the round
+buttons over a photo were 2.4:1 against a white photo and the amber rank badge 3.8:1, so their scrims are deeper
+(.34 to .5, .62 to .76); `--acc-strong` is `#a5521a` (was `#a8551a`) so accent text also clears 4.5:1 on the grey
+`--surface2` tile (4.66); and the row-summary focus ring was the accent at 35% and is the full accent. The gold
+medal, the soft tile wash and `--soft`/`--faint` on every surface already passed. Text over a photo or gradient is
+judged by its scrim, not by the pixels, since the photo is the user's.
+
