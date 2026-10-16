@@ -1469,3 +1469,10 @@ calls. It reads the one-pass `rankMap()` now (4ms, 25ms throttled), and `chaserB
 before sorting instead of twice per comparison (board 5,300 score calls to under 1,300, List 5,000 to under 400).
 Search is 8ms a keystroke, so it stays undebounced. `tests/perf-budget.js` counts calls, since milliseconds flake.
 
+
+### Test hardening (checked, nothing to fix)
+
+The whole suite (53 files) ran green four times in a row on this machine, and once more on a copy of the repo with every
+source file converted to CRLF, which is what a Windows checkout can hand back. The tests that read source files
+(`currency-units`, `beli`, `list-clean`, `settings`, `scale` and others) already cope. If a future test greps a source
+file for a multi-line string, normalise `\r\n` first, as `currency-units.js` does.
