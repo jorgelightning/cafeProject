@@ -26,6 +26,15 @@ function statFold(btn) {
   else box.setAttribute("data-open", "");
   btn.textContent = (btn.dataset.lab || "Show more") + (open ? " ▾" : " ▴");
 }
+/* Stats was one 4,800px scroll of fourteen cards. It is three tabs now: You (who you are as a drinker),
+   Habits (when you go) and Money (what it costs). Every card is still rendered, so nothing that reads
+   the page loses anything; the other two tabs are simply hidden. */
+let _statsTab = "you";
+function setStatsTab(t) {
+  if (t !== "you" && t !== "habits" && t !== "money") return;
+  _statsTab = t;
+  renderStats();
+}
 let _rhythmMetric = "spend",
   _rhythmMonth = "";
 function setRhythmMetric(metric) {
@@ -234,7 +243,7 @@ function statStack(items) {
 }
 function statLegend(items, total) {
   return (
-    '<div class="legrows">' +
+    '<div class="legrows inl">' +
     items
       .map(function (i, ix) {
         return (
@@ -359,6 +368,11 @@ function renderStats() {
     );
   };
   let h = "";
+  /** @type {[number, string][]} */
+  const _marks = [[0, "you"]];
+  const mark = function (tab) {
+    _marks.push([h.length, tab]);
+  };
 
   /* ---------- 0. the collection at a glance ----------
      Stats opened straight into data about cafes. The same figures, led with as what the
@@ -412,36 +426,40 @@ function renderStats() {
     backN +
     '<span class="of"> / ' +
     datedN +
-    '</span></div><div class="k">🔁 Went back</div><div class="s"><span class="sc-meter g"><i style="width:' +
+    '</span></div><div class="k">Went back</div><div class="s"><span class="sc-meter g"><i style="width:' +
     backPct +
     '%"></i></span>' +
     backPct +
-    "% · " +
+    "% \u00b7 " +
     onceN +
     " once, " +
     undatedN +
     " undated</div></div>" +
-    (isAdmin
-      ? '<div class="statcard"><div class="v">' +
-        money(spend) +
-        '</div><div class="k">💸 Spent</div><div class="s"><span class="sc-meter"><i style="width:' +
-        pricedPct +
-        '%"></i></span>' +
-        nPriced +
-        " of " +
-        nDrinkRows +
-        " drinks priced</div></div>"
-      : '<div class="statcard"><div class="v">' +
-        cafes.filter(function (c) {
-          return c.fav;
-        }).length +
-        '</div><div class="k">❤️ Favourites</div><div class="s">of the ' +
-        nonWish.filter(function (c) {
-          return c.rating;
-        }).length +
-        " cafes you rated</div></div>") +
+    '<div class="statcard"><div class="v">' +
+    cafes.filter(function (c) {
+      return c.fav;
+    }).length +
+    '</div><div class="k">Favourites</div><div class="s">of the ' +
+    nonWish.filter(function (c) {
+      return c.rating;
+    }).length +
+    " cafes you rated</div></div>" +
     "</div>";
+  /* what you spent is a Money fact, and the owner's alone */
+  mark("money");
+  if (isAdmin)
+    h +=
+      '<div class="statgrid"><div class="statcard"><div class="v">' +
+      money(spend) +
+      '</div><div class="k">Spent</div><div class="s"><span class="sc-meter"><i style="width:' +
+      pricedPct +
+      '%"></i></span>' +
+      nPriced +
+      " of " +
+      nDrinkRows +
+      " drinks priced</div></div></div>";
 
+  mark("habits");
   /* ---------- 3. rhythm ---------- */
   const d0 = new Date(),
     mk = [];
@@ -512,7 +530,7 @@ function renderStats() {
   }
   const MOL = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
   h +=
-    '<div class="statsec">📈 Monthly activity · last 12 months</div><div class="statcard rhythm">' +
+    '<div class="statsec">Monthly activity \u00b7 last 12 months</div><div class="statcard rhythm">' +
     (isAdmin
       ? '<div class="rseg" aria-label="Monthly metric"><button type="button" class="' +
         (metric === "visits" ? "on" : "") +
@@ -575,9 +593,9 @@ function renderStats() {
     '<div class="statnote">' +
     (isAdmin
       ? metric === "spend"
-        ? "Bar = recorded spend · green line = price coverage. Missing prices are not estimated. "
-        : "Bar = cafe visits · green line = price coverage. "
-      : "Tap a month for its visit count. ") +
+        ? "Bar: spend. Green line: share of drinks with a price. "
+        : "Bar: cafe visits. Green line: share of drinks with a price. "
+      : "Tap a month for its visits. ") +
     (earlier > 0 ? "Earlier: " + earlier + " visits before this window." : "") +
     "</div>" +
     "</div>";
@@ -593,7 +611,7 @@ function renderStats() {
       return monthVisit[b] - monthVisit[a] || (a < b ? 1 : -1);
     })[0];
     h +=
-      '<div class="statsec">📅 Cadence</div><div class="statcard sc-wide">' +
+      '<div class="statsec">Cadence</div><div class="statcard sc-wide">' +
       '<div class="sc-head"><b>' + recent + "</b> cafe visits in the last 30 weeks</div>" +
       statHeat(dayCount) +
       '<div class="sc-duo"><div><span>Busiest month</span><b>' + statMonthLabel(busiest) + "</b><i>" + monthVisit[busiest] +
@@ -601,6 +619,7 @@ function renderStats() {
       '<div class="statnote">Counted from ' + nVisits + " dated cafe-days; undated visits are left out.</div></div>";
   }
 
+  mark("money");
   /* ---------- 5b. price spread ---------- */
   const allPrices = [];
   pricedList.forEach(function (x) {
@@ -608,12 +627,13 @@ function renderStats() {
   });
   if (allPrices.length >= 5) {
     h +=
-      '<div class="statsec">💵 Price spread</div><div class="statcard sc-wide">' +
+      '<div class="statsec">Price spread</div><div class="statcard sc-wide">' +
       '<div class="sc-head"><b>Median ' + statMoney(median(allPrices)) + "</b> · from " + statMoney(Math.min.apply(null, allPrices)) +
       " to " + statMoney(Math.max.apply(null, allPrices)) + "</div>" + statHist(allPrices) +
       '<div class="statnote">' + allPrices.length + " of " + nDrinkRows + " drinks have a price. Missing prices are not estimated.</div></div>";
   }
 
+  mark("you");
   /* ---------- 6. drink DNA ----------
      "Your usual" printed the single most common value of each option as a chip, which hid the
      shape: 86% no sugar and 96% oat is a very different story from 51% and 52%. Each option is
@@ -668,7 +688,7 @@ function renderStats() {
       return sum(r[1]) > 0;
     });
     h +=
-      '<div class="statsec">🧬 Drink DNA</div><div class="statcard sc-wide usualcard">' +
+      '<div class="statsec">Drink DNA</div><div class="statcard sc-wide usualcard">' +
       '<div class="usual">' + esc(words.join(", ")) + ".</div>" +
       '<div class="sc-duo"><div><span>Most loyal order</span><b>' + esc(tFam ? tFam[0] : "") + "</b><i>" + (tFam ? tFam[1] : 0) +
       " drinks</i></div><div><span>Biggest gamble</span><b>" + esc(gamble ? gamble.fam : "None") + "</b><i>" +
@@ -684,6 +704,7 @@ function renderStats() {
       "Counted from " + sum(sweetC) + " of " + nDrinkRows + " drinks with a sweetness set.</div></div>";
   }
 
+  mark("money");
   /* ---------- 6a. worth it: do you reorder it, and what does it cost ---------- */
   const verdicts = { yes: 0, neutral: 0, no: 0 },
     vPrice = { yes: [], neutral: [], no: [] };
@@ -741,7 +762,7 @@ function renderStats() {
       .slice(0, 3);
     const regret = verdicts.no;
     h +=
-      '<div class="statsec">💎 Worth it</div><div class="statcard sc-wide">' +
+      '<div class="statsec">Worth it</div><div class="statcard sc-wide">' +
       '<div class="sc-head"><b>' + Math.round((verdicts.yes / vTotal) * 100) + "%</b> of your drinks, you would order again</div>" +
       statStack([
         { label: "Order again", n: verdicts.yes },
@@ -775,6 +796,7 @@ function renderStats() {
       (regret < 5 ? ", and only " + regret + " were a regret, so the price bands show a pattern to watch, not a rule" : "") + ".</div></div>";
   }
 
+  mark("you");
   /* ---------- 6b. taste: verdict split, wishlist, tags ---------- */
   const verdictN = { loved: 0, fine: 0, meh: 0, "": 0 };
   nonWish.forEach(function (c) {
@@ -798,7 +820,7 @@ function renderStats() {
       });
     const logged = Math.round((nonWish.length / Math.max(1, cafes.length)) * 100);
     h +=
-      '<div class="statsec">🎯 Taste</div><div class="statcard sc-wide">' +
+      '<div class="statsec">Taste</div><div class="statcard sc-wide">' +
       '<div class="sc-head"><b>' + Math.round((verdictN.loved / ratedN) * 100) + "%</b> of the cafes you rated, you loved</div>" +
       '<div class="sc-donutrow">' + statDonut(vItems, ratedN, "Verdicts of " + ratedN + " rated cafes") +
       '<div class="legrows">' +
@@ -822,6 +844,7 @@ function renderStats() {
       " visited cafes have no rating yet.</div></div>";
   }
 
+  mark("habits");
   /* ---------- 7. regulars ---------- */
   const reg = nonWish
     .map(function (c) {
@@ -834,7 +857,7 @@ function renderStats() {
       return b.n - a.n;
     });
   if (reg.length) {
-    h += '<div class="statsec">🔁 Regulars</div>';
+    h += '<div class="statsec">Regulars</div>';
     reg.slice(0, 4).forEach(function (x, i) {
       h += magRow(i + 1, x.c.name, x.c.area, x.n + " days", "openDetail('" + x.c.id + "','stats')");
     });
@@ -844,6 +867,7 @@ function renderStats() {
       " cafes ever got a second day.</div>";
   }
 
+  mark("habits");
   /* ---------- 8. where you go ---------- */
   const geo = {};
   nonWish
@@ -876,7 +900,7 @@ function renderStats() {
       .sort(function (a, b) {
         return b.mi - a.mi;
       })[0];
-    h += '<div class="statsec">📍 Where you go</div>';
+    h += '<div class="statsec">Where you go</div>';
     shown.forEach(function (x) {
       h += magRow(null, x[0], "", x[1] + " cafe" + (x[1] === 1 ? "" : "s"), "");
     });
@@ -956,7 +980,7 @@ function renderStats() {
       { label: "Chain branches", n: chainCafes.length },
     ];
     h +=
-      '<div class="statsec">🏪 Chains and independents</div><div class="statcard sc-wide">' +
+      '<div class="statsec">Chains and independents</div><div class="statcard sc-wide">' +
       '<div class="sc-head"><b>' + Math.round((indie.length / nonWish.length) * 100) + "%</b> independent, " +
       Math.round((chainCafes.length / nonWish.length) * 100) + "% chain branches</div>" +
       statStack(split) +
@@ -982,6 +1006,7 @@ function renderStats() {
       '</div><div class="statnote">Filled dot: a branch you have logged. Ring: still on your want list.</div></div>';
   }
 
+  mark("you");
   /* ---------- 9. keep ranking ---------- */
   /* Cafe coverage, not the drink count — drinks are no longer what ranking moves. */
   /* Ranking coverage is a chore only the owner can clear, so it is theirs alone — the same
@@ -999,5 +1024,26 @@ function renderStats() {
       "</div>"
     : '<div class="handoff" role="button" tabindex="0" onclick="openRank()">🏆 Where to go <span>›</span></div>';
 
-  host.innerHTML = h;
+  _marks.push([h.length, "end"]);
+  /** @type {Record<string, string>} */
+  const tabs = { you: "", habits: "", money: "" };
+  for (let i = 0; i < _marks.length - 1; i++) tabs[_marks[i][1]] += h.slice(_marks[i][0], _marks[i + 1][0]);
+  const labels = [
+    ["you", "You"],
+    ["habits", "Habits"],
+    ["money", "Money"],
+  ];
+  host.innerHTML =
+    '<div class="stabs" role="group" aria-label="Stats sections">' +
+    labels
+      .map(function (t) {
+        return '<button type="button" aria-pressed="' + (_statsTab === t[0]) + '" onclick="setStatsTab(\'' + t[0] + "')\">" + t[1] + "</button>";
+      })
+      .join("") +
+    "</div>" +
+    labels
+      .map(function (t) {
+        return '<div class="stabpanel" data-tab="' + t[0] + '"' + (_statsTab === t[0] ? "" : " hidden") + ">" + tabs[t[0]] + "</div>";
+      })
+      .join("");
 }
