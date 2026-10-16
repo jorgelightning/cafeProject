@@ -256,6 +256,253 @@ function statLegend(items, total) {
   );
 }
 
+/* ---------- Wrapped: the year, told back to you ----------
+   A strip of small cards at the top of You: visits, your drink, where you went back, your busiest month,
+   how you take it, and Share. Every number is counted from what Stats already counts (visitDates,
+   drinkOrders); nothing is stored, and no area, coordinate or review is read, so a private spot is a
+   name, a count and a date here and nowhere else. No money: spend stays in Money, for the owner. It stays
+   out of the way until the year has WRAP_FLOOR visits, so it never opens on "1 visit". */
+const WRAP_FLOOR = 20;
+const WRAP_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/** @param {Cafe[]} list the visited cafes, never the wishlist @param {number} year @returns {any} */
+function wrappedYear(list, year) {
+  const Y = String(year);
+  let visits = 0,
+    cafeN = 0,
+    fresh = 0,
+    back = null;
+  const series = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    fam = {},
+    shown = {},
+    sweet = {},
+    milk = {};
+  let sweetN = 0,
+    milkN = 0;
+  list.forEach(function (c) {
+    if (c.wish) return;
+    const all = visitDates(c),
+      vd = all.filter(function (d) {
+        return d.slice(0, 4) === Y;
+      });
+    if (!vd.length) return;
+    cafeN++;
+    visits += vd.length;
+    if (all[0].slice(0, 4) === Y) fresh++;
+    if (!back || vd.length > back.n) back = { name: c.name || "", n: vd.length };
+    vd.forEach(function (d) {
+      series[parseInt(d.slice(5, 7), 10) - 1]++;
+    });
+    (c.drinks || []).forEach(function (d) {
+      const f = /hoji/i.test(d.n || "") ? "Hojicha latte" : (d.n || "").trim();
+      drinkOrders(d).forEach(function (o) {
+        if (!o.date || o.date.slice(0, 4) !== Y) return;
+        const q = orderQty(o);
+        if (f) {
+          /* "Flat White" and "Flat white" are one drink */
+          const k = f.toLowerCase();
+          if (!shown[k]) shown[k] = f;
+          fam[k] = (fam[k] || 0) + q;
+        }
+        if (o.sweet) {
+          sweet[o.sweet] = (sweet[o.sweet] || 0) + q;
+          sweetN += q;
+        }
+        if (o.milk) {
+          milk[o.milk] = (milk[o.milk] || 0) + q;
+          milkN += q;
+        }
+      });
+    });
+  });
+  if (visits < WRAP_FLOOR) return null;
+  const rank = function (m) {
+    return Object.keys(m)
+      .sort(function (a, b) {
+        return m[b] - m[a] || (a < b ? -1 : 1);
+      })
+      .map(function (k) {
+        return { name: shown[k] || k, n: m[k] };
+      });
+  };
+  const drinks = rank(fam),
+    milks = rank(milk);
+  let hi = 0;
+  series.forEach(function (v, i) {
+    if (v > series[hi]) hi = i;
+  });
+  const second = series
+    .map(function (v, i) {
+      return { i: i, v: v };
+    })
+    .filter(function (x) {
+      return x.i !== hi && x.v > 0;
+    })
+    .sort(function (a, b) {
+      return b.v - a.v;
+    })[0];
+  return {
+    year: year,
+    visits: visits,
+    cafes: cafeN,
+    fresh: fresh,
+    drink: drinks[0] || null,
+    next: drinks[1] || null,
+    back: back && back.n > 1 ? back : null,
+    series: series,
+    peak: { i: hi, n: series[hi] },
+    runner: second || null,
+    months: series.filter(function (v) {
+      return v > 0;
+    }).length,
+    noSugar: sweetN >= 10 ? { n: sweet["0%"] || 0, of: sweetN } : null,
+    milk: milkN >= 5 && milks[0] ? { name: milks[0].name, pct: Math.round((milks[0].n / milkN) * 100) } : null,
+  };
+}
+function wrappedCards(w) {
+  const cards = [];
+  cards.push({
+    k: w.year + " so far",
+    big: String(w.visits),
+    unit: "visits",
+    cap:
+      "At " +
+      w.cafes +
+      (w.cafes === 1 ? " caf\u00e9" : " caf\u00e9s") +
+      (w.fresh ? ". " + (w.fresh === w.cafes ? "All" : w.fresh) + " of them new to you." : "."),
+    tint: "var(--acc)",
+  });
+  if (w.drink)
+    cards.push({
+      k: "Your drink",
+      big: w.drink.name,
+      sm: 1,
+      unit: "\u00d7" + w.drink.n,
+      cap: w.next
+        ? w.drink.n >= w.next.n * 2
+          ? w.next.name + " is a distant second, at " + w.next.n + "."
+          : "Next is " + w.next.name + ", at " + w.next.n + "."
+        : "",
+      tint: "var(--good)",
+    });
+  if (w.back)
+    cards.push({
+      k: "You went back",
+      big: w.back.name,
+      sm: 1,
+      unit: w.back.n + " visits",
+      cap: "More than anywhere else this year.",
+      tint: "var(--want)",
+    });
+  if (w.months >= 2)
+    cards.push({
+      k: "Busiest month",
+      big: WRAP_MONTHS[w.peak.i],
+      sm: 1,
+      unit: w.peak.n + " visits",
+      cap: w.runner ? WRAP_MONTHS[w.runner.i] + " was next, with " + w.runner.v + "." : "",
+      tint: "var(--acc)",
+      bars: w.series,
+      hi: w.peak.i,
+    });
+  if (w.noSugar && w.noSugar.n / w.noSugar.of >= 0.5)
+    cards.push({
+      k: "How you take it",
+      big: Math.round((w.noSugar.n / w.noSugar.of) * 100) + "%",
+      unit: "no sugar",
+      cap:
+        w.noSugar.n +
+        " of " +
+        w.noSugar.of +
+        " drinks." +
+        (w.milk && w.milk.pct >= 60 ? " And " + w.milk.pct + "% of the milk was " + w.milk.name.toLowerCase() + "." : ""),
+      tint: "var(--good)",
+    });
+  return cards;
+}
+function wrappedHTML(list) {
+  const w = wrappedYear(list, new Date().getFullYear());
+  if (!w) return "";
+  const cards = wrappedCards(w);
+  const bars = function (series, hi) {
+    const mx = Math.max.apply(null, series) || 1;
+    return (
+      '<div class="wbars" aria-hidden="true">' +
+      series
+        .map(function (v, i) {
+          return "<i" + (i === hi ? ' class="hi"' : "") + ' style="height:' + Math.max(6, Math.round((v / mx) * 100)) + '%"></i>';
+        })
+        .join("") +
+      "</div>"
+    );
+  };
+  const html = cards.map(function (c) {
+    return (
+      '<div class="wc' + (c.sm ? " sm" : "") + '" style="--tint:' + c.tint + '"><span class="wk">' + esc(c.k) + "</span>" +
+      (c.bars ? bars(c.bars, c.hi) : "") +
+      '<div class="big">' + esc(c.big) + "<small>" + esc(c.unit) + "</small></div>" +
+      (c.cap ? '<span class="wcap">' + esc(c.cap) + "</span>" : "") +
+      "</div>"
+    );
+  });
+  html.push(
+    '<div class="wc share"><span class="wk">Keep it</span><div class="wcap strong">Send your ' +
+      w.year +
+      ' in caf\u00e9s to someone.</div><button type="button" onclick="shareWrapped()">Share \u203a</button></div>'
+  );
+  return (
+    '<section class="wrapped" aria-label="Your ' + w.year + '">' +
+    '<div class="sech"><b>Your ' + w.year + '</b><button type="button" onclick="shareWrapped()">Share \u203a</button></div>' +
+    '<div class="wstrip" role="region" aria-label="Your ' + w.year + ', swipe for more" tabindex="0" onscroll="wrappedDots(this)">' +
+    html.join("") +
+    "</div>" +
+    '<div class="wdots" aria-hidden="true">' +
+    html.map(function (_, i) { return "<i" + (i ? "" : ' class="on"') + "></i>"; }).join("") +
+    "</div></section>"
+  );
+}
+function wrappedDots(el) {
+  const k = el.children;
+  if (k.length < 2) return;
+  const step = k[1].offsetLeft - k[0].offsetLeft || 1,
+    dots = el.nextElementSibling ? el.nextElementSibling.children : [];
+  const at = Math.min(dots.length - 1, Math.max(0, Math.round(el.scrollLeft / step)));
+  for (let i = 0; i < dots.length; i++) dots[i].classList.toggle("on", i === at);
+}
+/* Text only, from the same counts. It names no area and quotes no review; the link is the app's front door. */
+function wrappedText(w) {
+  const bits = [
+    "My " + w.year + " in caf\u00e9s: " + w.visits + " visits at " + w.cafes + (w.cafes === 1 ? " caf\u00e9" : " caf\u00e9s") + (w.fresh ? " (" + w.fresh + " new)" : "") + ".",
+  ];
+  if (w.drink) bits.push("Most ordered: " + w.drink.name + " \u00d7" + w.drink.n + ".");
+  if (w.back) bits.push("Went back to " + w.back.name + " " + w.back.n + " times.");
+  return bits.join(" ");
+}
+function shareWrapped() {
+  const w = wrappedYear(
+    cafes.filter(function (c) {
+      return !c.wish;
+    }),
+    new Date().getFullYear()
+  );
+  if (!w) return;
+  const text = wrappedText(w),
+    url = location.origin + location.pathname;
+  if (navigator.share) {
+    navigator.share({ title: "My " + w.year + " in caf\u00e9s", text: text, url: url }).catch(function () {});
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text + " " + url).then(
+      function () {
+        toast("Message copied");
+      },
+      function () {
+        toast("Couldn't copy");
+      }
+    );
+  } else toast("Couldn't copy");
+}
+
 function renderStats() {
   const host = $("stats-body");
   if (!host) return;
@@ -373,6 +620,8 @@ function renderStats() {
   const mark = function (tab) {
     _marks.push([h.length, tab]);
   };
+
+  h += wrappedHTML(nonWish);
 
   /* ---------- 0. the collection at a glance ----------
      Stats opened straight into data about cafes. The same figures, led with as what the
