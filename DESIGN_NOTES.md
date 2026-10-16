@@ -1421,3 +1421,58 @@ own bottom instead of the tab bar's top. The currency and the price are one join
 meets the price input) instead of two controls side by side; nothing about their markup, `syncCcy` or the frozen
 rate changed. Not done, on purpose: "Add pin", "Add another drink" and the Log again chips stay accent-coloured —
 they are the form's own actions, and `tests/keyboard.js` pins `.hintbtn` to `--acc-strong`.
+
+### The calmer screens at wider widths (v91)
+
+Overnight check at iPad Mini (744) and laptop (1280, 1600) of everything changed in v86–v90. Found and fixed:
+the List rows were one 700px strip with the price a long way from the name (two columns from 700 to 899px now,
+bands spanning both); a chart's text scaled to 2.3 times its size on a tablet because an SVG fills its card
+(`.sc-svg` stops at 520px); a lone card in a two-column grid (the owner's Spent) left half the row empty; and the
+sticky band was a darker bar than the panel behind it (it takes `--glass`). The laptop panel (422px) needed
+nothing. `tests/wide-screens.js`.
+
+### Contrast and focus, measured (v92)
+
+`tests/a11y.js` resolves every text colour against the layers behind it in both themes. What it found: the count
+on a List tab was dimmed with `opacity:.6` (2.5:1 light, 3.6:1 dark), so it is full strength now; the round
+buttons over a photo were 2.4:1 against a white photo and the amber rank badge 3.8:1, so their scrims are deeper
+(.34 to .5, .62 to .76); `--acc-strong` is `#a5521a` (was `#a8551a`) so accent text also clears 4.5:1 on the grey
+`--surface2` tile (4.66); and the row-summary focus ring was the accent at 35% and is the full accent. The gold
+medal, the soft tile wash and `--soft`/`--faint` on every surface already passed. Text over a photo or gradient is
+judged by its scrim, not by the pixels, since the photo is the user's.
+
+
+### Go board rows (v93)
+
+A Go row is rank, name, place and the drink there, on two lines (`Kailua · Hojicha latte`; the place is capped at
+58% so the drink never vanishes, and the drink is what gives way). The owner's sentence, and for the owner the
+bookkeeping (comparisons, score, how often it was ordered), sit behind a 44px chevron `.lbmore` with
+`aria-expanded`; a visitor's row with no note has no chevron. The row's own tap area (`.lbhit`) is its sibling, not
+its parent, so no button nests in a button. `tests/board-guide.js`.
+
+### Dead-code sweep (v94)
+
+After the plus, rollup and banner button went, a scan (every class in `styles.css` and every top-level function
+against all of `js/`, `index.html` and `sw.js`) found what nothing referenced. Removed: `setMilk`, `visitCount`,
+`mapInfo` and the never-created `gInfo` info window with its two guards; the `.mkbtn`, `.ro-badge`, `.ro-bar`,
+`.swval/.icval/.szval`, `.dr-oldertoggle` and `.lbtimes` rules; and `.filterrow`, `.listhead`, `.fbody`,
+`.tagrow-chip`, `.scorebadge` from shared selector lists. Left on purpose: Google's `gm-*` classes and
+`gm_authFailure` (Google calls it), the `v-yes/no/neutral` classes (built as `"v-" + verdict`), `inkOn` (a test
+uses it), and `importPublished`, `exportJSON`, `revertPublished` in `storage.js`: nothing calls them any more, but they
+are the owner's data backup and restore, so removing them is a decision for a person, not a sweep.
+
+### Performance check (v95)
+
+111 rows: the List renders in about 3ms (14ms with the CPU throttled to a quarter), Stats 5ms, a rank map under 1ms. The
+one slow screen was Go at 49ms (215ms throttled): it ranked every row by walking the whole board, 111 x 111 score
+calls. It reads the one-pass `rankMap()` now (4ms, 25ms throttled), and `chaserBoard()` and the List sort score each cafe once
+before sorting instead of twice per comparison (board 5,300 score calls to under 1,300, List 5,000 to under 400).
+Search is 8ms a keystroke, so it stays undebounced. `tests/perf-budget.js` counts calls, since milliseconds flake.
+
+
+### Test hardening (checked, nothing to fix)
+
+The whole suite (53 files) ran green four times in a row on this machine, and once more on a copy of the repo with every
+source file converted to CRLF, which is what a Windows checkout can hand back. The tests that read source files
+(`currency-units`, `beli`, `list-clean`, `settings`, `scale` and others) already cope. If a future test greps a source
+file for a multi-line string, normalise `\r\n` first, as `currency-units.js` does.

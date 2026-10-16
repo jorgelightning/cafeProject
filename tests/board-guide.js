@@ -21,7 +21,7 @@ const { eq, done } = checker();
   const seed = () => pg.evaluate(() => {
     cafes = [
       { id: "z", name: "Zen Gelato & Bar", area: "Honolulu", rating: 5, elo: 1600, matches: 11,
-        review: "There were four different types of matcha to choose from, and I have tried all of them across several visits.",
+        review: "There were four different types of matcha to choose from, and I have tried all of them across several visits. The hojicha latte is the one I come back for: roasty, not bitter, and they steam the oat milk properly so it never goes thin. Staff remember the order and the room stays quiet enough to read in on a weekday afternoon.",
         drinks: [{ n: "Matcha latte - Samidori", orders: [{ date: "2026-08-01" }] },
                  { n: "Hojicha latte", orders: [{ date: "2026-08-02" }, { date: "2026-08-09" }, { date: "2026-08-11" }] }] },
       { id: "k", name: "Kissaten HiFi", area: "San Francisco", rating: 4, elo: 1560, matches: 13,
@@ -45,6 +45,7 @@ const { eq, done } = checker();
       firstOrder: (first.querySelector(".lborder") || {}).textContent || "",
       firstSay: (first.querySelector(".lbsay") || {}).textContent || "",
       firstSub: (first.querySelector(".lbsub") || {}).textContent || "",
+      firstBook: (first.querySelector(".lbbook") || {}).textContent || "",
       scores: host.querySelectorAll(".lbscore").length,
       sub: (host.querySelector(".cs") || {}).textContent || "",
       statnote: !!host.querySelector(".statnote"),
@@ -67,14 +68,14 @@ const { eq, done } = checker();
   /* On a best-first list, "Loved it" on every top row said nothing — 90 pills, 3 distinct.
      The pill now appears only when a row breaks the pattern. */
   eq(v.firstStars, "", "a loved row does not repeat what its position already says");
-  eq(v.firstOrder, "Order the Hojicha latte · 3×",
-     "…and the drink to order there, counted by orders rather than by record");
+  eq(v.firstOrder, "Hojicha latte", "…and the drink to order there, counted by orders rather than by record");
+  eq(/Honolulu · Hojicha latte/.test(v.firstSub), true, "…on one line with the place: rank, name, place, drink");
   eq(/four different types of matcha/.test(v.firstSay), true, "…and the owner's own words");
   /* The note is rendered inside curly quotes, so strip them before checking the trim. */
   const bare = v.firstSay.replace(/^[\u201c"]|[\u201d"]$/g, "");
-  eq(/…$/.test(bare), true, "…trimmed, since notes run to 273 characters");
+  eq(/…$/.test(bare), true, "…trimmed, since notes run to 273 characters, and the board shows a longer cut than before");
   eq(/\s…$/.test(bare) || /[a-z]…$/.test(bare), true, "…ending on a whole word, not mid-word");
-  eq(bare.length <= 97, true, "…to a readable length (" + bare.length + " chars)");
+  eq(bare.length <= 221, true, "…to a readable length (" + bare.length + " chars)");
 
   v = await pg.evaluate(() => {
     const rows = [...document.querySelectorAll("#cmp-body .lbrow.guide")];
@@ -96,7 +97,9 @@ const { eq, done } = checker();
   eq(/Honolulu/.test(v.firstSub), true, "the area, which is about the cafe, stays");
 
   v = await render(true);
-  eq(/11 comparisons/.test(v.firstSub), true, "the owner still sees the comparison count");
+  eq(/11 comparisons/.test(v.firstBook), true, "the owner still sees the comparison count, behind the row's chevron");
+  eq(/comparison/.test(v.firstSub), false, "…not on the row's own lines");
+  eq(/ordered 3×/.test(v.firstBook), true, "…with how often the drink was ordered");
   eq(v.scores, 4, "…and the scores");
   eq(v.statnote, true, "…and the provisional caveat");
   eq(v.queue, true, "…and the never-compared queue");
@@ -105,11 +108,39 @@ const { eq, done } = checker();
   // ---- the reason survives being the thing you tap ----
   v = await pg.evaluate(() => {
     const r = document.querySelector("#cmp-body .lbrow.guide");
-    return { tappable: r.getAttribute("role") === "button" && r.tabIndex === 0,
-             opens: /openDetail/.test(r.getAttribute("onclick") || "") };
+    const hit = r.querySelector(".lbhit");
+    return { tappable: hit.getAttribute("role") === "button" && hit.tabIndex === 0,
+             opens: /openDetail/.test(hit.getAttribute("onclick") || "") };
   });
   eq(v.tappable, true, "a row is still reachable without a pointer");
   eq(v.opens, true, "…and still opens the cafe");
+
+  // ---- the note and the bookkeeping wait behind a chevron ----
+  v = await pg.evaluate(() => {
+    isAdmin = false; applyMode && applyMode(); show("compare"); renderBoard();
+    const row = document.querySelector("#cmp-body .lbrow.guide");
+    const btn = row.querySelector(".lbmore"), extra = row.querySelector(".lbextra");
+    const before = { hidden: extra.hidden, shown: extra.offsetHeight > 0, exp: btn.getAttribute("aria-expanded"), label: btn.getAttribute("aria-label") };
+    const h0 = row.getBoundingClientRect().height;
+    btn.click();
+    const open = { hidden: extra.hidden, shown: extra.offsetHeight > 0, exp: btn.getAttribute("aria-expanded"), grew: row.getBoundingClientRect().height > h0 };
+    btn.click();
+    const bare = [...document.querySelectorAll("#cmp-body .lbrow.guide")].find(r => /Bare Cafe/.test(r.textContent));
+    const rect = btn.getBoundingClientRect();
+    return { before, open, closed: extra.hidden, bareBtn: !!bare.querySelector(".lbmore"), size: [Math.round(rect.width), Math.round(rect.height)],
+             sayInside: !!extra.querySelector(".lbsay"), nested: !!row.querySelector('[role="button"] button, button [role="button"]') };
+  });
+  eq(v.before, { hidden: true, shown: false, exp: "false", label: "Show note for Zen Gelato & Bar" }, "a row starts short: the owner's sentence is folded, and the button says what it opens");
+  eq(v.open.hidden === false && v.open.shown && v.open.exp === "true" && v.open.grew, true, "…the chevron opens it and says so (aria-expanded)");
+  eq(v.closed, true, "…and closes it again");
+  eq(v.sayInside, true, "the sentence lives in the folded part");
+  eq(v.bareBtn, false, "a visitor's row with no note has no chevron to open nothing");
+  eq(v.size[0] >= 44 && v.size[1] >= 44, true, "the chevron clears the 44px floor (" + v.size.join("×") + ")");
+  eq(v.nested, false, "no button sits inside another button");
+  v = await pg.evaluate(() => { isAdmin = true; applyMode && applyMode(); renderBoard();
+    const bare = [...document.querySelectorAll("#cmp-body .lbrow.guide")].find(r => /Bare Cafe/.test(r.textContent));
+    return { btn: !!bare.querySelector(".lbmore"), label: bare.querySelector(".lbmore").getAttribute("aria-label") }; });
+  eq(v.btn && /Show details/.test(v.label), true, "the owner's bare row still has one, for the comparison count");
 
   // ---- stats leaderboards must not have been restyled ----
   v = await pg.evaluate(() => {

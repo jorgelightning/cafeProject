@@ -86,7 +86,6 @@ function initMap() {
   autoLocate();
   gmap.addListener("click", () => {
     pendingMarkerId = null;
-    if (gInfo) gInfo.close();
     closePeek();
     setMapPanel(false);
     toggleLegend(false);
@@ -971,12 +970,7 @@ function jumpToLocation(val) {
 }
 let userLoc = null;
 let mapOwned = false; /* the person has positioned the map themselves */
-let gInfo = null,
-  pendingMarkerId = null;
-function mapInfo() {
-  if (!gInfo) gInfo = new google.maps.InfoWindow();
-  return gInfo;
-}
+let pendingMarkerId = null;
 /* ---------- the peek card ----------
    On a phone a pin used to swap the whole screen for the cafe page, so looking at five pins
    was five trips there and back — and each trip back re-centred the map. A pin now slides up
@@ -985,7 +979,6 @@ function mapInfo() {
    opens in the side panel beside the map. */
 let peekId = null;
 function onMarkerClick(c, m) {
-  if (gInfo) gInfo.close();
   mapOwned = true;
   selectPin(c.id);
   if (window.innerWidth >= 900) {

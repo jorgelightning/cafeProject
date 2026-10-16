@@ -1058,13 +1058,6 @@ const MILKS = [
   "Half & half",
   "None",
 ];
-function setMilk(btn) {
-  const wrap = btn.closest(".mkwrap");
-  const hid = wrap.querySelector(".dmk");
-  const v = btn.dataset.milk;
-  hid.value = hid.value === v ? "" : v;
-  wrap.querySelectorAll(".mkbtn").forEach(b => b.classList.toggle("on", !!hid.value && b.dataset.milk === hid.value));
-}
 /* Milk used to be typed into drink names ("Hojicha latte w/ oak milk"), which also split
    one drink across several ranking entries. This moves it into the milk field. A rename is
    applied only when the trimmed name is unique in that cafe — otherwise the name is left
@@ -1578,14 +1571,6 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
   host.appendChild(div);
   if (!target && !old) activateDrinkRow(div);
   return div;
-}
-function visitCount(d) {
-  const a = drinkOrders(d);
-  return a.length
-    ? a.reduce(function (t, o) {
-        return t + orderQty(o);
-      }, 0)
-    : 1;
 }
 function findSameCafe(name, area, lat, lng) {
   const nm = (name || "").trim().toLowerCase();
