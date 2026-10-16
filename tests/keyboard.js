@@ -75,7 +75,7 @@ const { eq, done } = checker();
    const hint=document.querySelector('.hintbtn');
    return getComputedStyle(hint).color;
  });
- eq(r,'rgb(168, 85, 26)','.hintbtn now uses --acc-strong (#a8551a), not --acc');
+ eq(r,'rgb(165, 82, 26)','.hintbtn now uses --acc-strong (#a5521a), not --acc');
 
  eq(errs,[],'no page errors');
  const ok=done();

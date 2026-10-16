@@ -225,35 +225,52 @@ function boardIsNear(c) {
   const d = boardDistTo(c);
   return d != null && d * 0.621371 <= NEAR_MI;
 }
+/* A row on the Go board reads in one glance: rank, name, place, and the drink to order. The owner's own
+   sentence and the ranking bookkeeping (comparisons, score) wait behind a small chevron, so a page of ninety
+   rows is a list of places, not a page of paragraphs. The row itself still opens the cafe. */
+function lbToggle(btn) {
+  const row = btn.closest(".lbrow");
+  const more = row && row.querySelector(".lbextra");
+  if (!more) return;
+  const open = more.hidden;
+  more.hidden = !open;
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  row.classList.toggle("open", open);
+}
 function boardRow(c, pos, unique) {
   const rank = pos <= 3 && unique ? ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"][pos - 1] : "#" + pos;
   const ar = boardArea(c),
     m = matchCount(c);
-  /* D: a comparison count and a score describe the ranking process, not the cafe. The owner
-     still needs both; a visitor can act on neither. */
   const dkm = boardDistTo(c);
-  const meta = [
-    dkm != null ? fmtDist(dkm) : "",
-    ar ? esc(ar) : "",
-    isAdmin ? m + " comparison" + (m === 1 ? "" : "s") : "",
-  ]
-    .filter(Boolean)
-    .join(" \u00b7 ");
+  const top = topDrinkAt(c);
   /* On a best-first list every top row said "Loved it" — 90 pills down the page, 3 of them
      distinct. The position already says it, so the pill appears only when a row BREAKS the
      pattern: a fine or a not-for-me sitting in the ranking. */
   const stars = bucketOf(c) === "loved" ? "" : bucketPill(c, "lbstars");
-  const top = topDrinkAt(c);
-  const order = top
-    ? '<div class="lborder">Order the ' +
-      esc(top.d.n) +
-      (top.n > 1 ? ' <span class="lbtimes">\u00b7 ' + top.n + "\u00d7</span>" : "") +
+  const place = [dkm != null ? fmtDist(dkm) : "", ar ? esc(ar) : ""].filter(Boolean).join(" \u00b7 ");
+  const sub =
+    (place ? '<span class="lbplace">' + place + "</span>" : "") +
+    (place && top ? '<span class="lbdot"> \u00b7 </span>' : "") +
+    (top ? '<span class="lborder">' + esc(top.d.n) + "</span>" : "");
+  /* D: a comparison count and a score describe the ranking process, not the cafe. The owner
+     still needs both; a visitor can act on neither. */
+  const book = isAdmin
+    ? '<div class="lbbook">' +
+      m +
+      " comparison" +
+      (m === 1 ? "" : "s") +
+      ' \u00b7 score <span class="lbscore soft">' +
+      eloScore(c) +
+      "</span>" +
+      (top && top.n > 1 ? " \u00b7 ordered " + top.n + "\u00d7" : "") +
       "</div>"
     : "";
-  const say = boardSnip(c.review, 96);
+  const say = boardSnip(c.review, 220);
   const note = say ? '<div class="lbsay">\u201c' + esc(say) + "\u201d</div>" : "";
+  const extra = note + book;
   return (
-    '<div class="lbrow guide tap" role="button" tabindex="0" onclick="openDetail(\'' +
+    '<div class="lbrow guide">' +
+    '<div class="lbhit tap" role="button" tabindex="0" onclick="openDetail(\'' +
     c.id +
     "','compare')\">" +
     '<span class="lbrank">' +
@@ -264,11 +281,18 @@ function boardRow(c, pos, unique) {
     esc(c.name) +
     stars +
     "</div>" +
-    (meta ? '<div class="lbsub">' + meta + "</div>" : "") +
-    order +
-    note +
-    "</div>" +
-    (isAdmin ? '<span class="lbscore soft">' + eloScore(c) + "</span>" : "") +
+    (sub ? '<div class="lbsub">' + sub + "</div>" : "") +
+    "</div></div>" +
+    (extra
+      ? '<button class="lbmore" type="button" aria-expanded="false" aria-label="' +
+        (say ? "Show note" : "Show details") +
+        " for " +
+        esc(c.name) +
+        '" onclick="lbToggle(this)">\u25be</button>' +
+        '<div class="lbextra" hidden>' +
+        extra +
+        "</div>"
+      : "") +
     "</div>"
   );
 }
@@ -361,8 +385,9 @@ function renderBoard() {
   } else {
     /* Competition ranking off the same helper the sheet quotes, so "#2 → #1" in the popup and
        "#1" here can never disagree. Genuine ties share a position. */
+    const rm = rankMap();
     const pos = board.map(function (c) {
-      return chaserRank(c, board);
+      return rm[c.id];
     });
     const uniq = {};
     pos.forEach(function (p) {
@@ -657,12 +682,20 @@ function chaserArm(id) {
   };
 }
 function chaserBoard() {
+  /* score each cafe once, then sort on the stored number: the comparator would otherwise ask
+     for two scores per comparison, a hundred and fifty of them per row on a long board. */
   return cafes
     .filter(function (c) {
       return !c.wish && matchCount(c) > 0;
     })
+    .map(function (c) {
+      return { c: c, s: eloScoreNum(c) };
+    })
     .sort(function (a, b) {
-      return eloScoreNum(b) - eloScoreNum(a);
+      return b.s - a.s;
+    })
+    .map(function (x) {
+      return x.c;
     });
 }
 /* Position, everywhere. chaserRank walks the whole board per cafe, which is fine for one
