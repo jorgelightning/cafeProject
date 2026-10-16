@@ -1376,3 +1376,24 @@ places or more; it does not by itself lift the 18 thin Loved cafes — *new answ
 point of the placement search. In the code, five consistent answers put a new Loved cafe within 1.7
 places (worst 3) of where it belongs among 36. `tests/rank-placement.js`.
 
+### Calmer screens — quiet tiles, one accent, rows with landmarks (v86–v87)
+
+The brief: "everything outside the map is crowded and messy". Measured on the running app before changing
+anything: the List was **12,032px** of scroll at 390px; 111 of 111 tiles were a saturated placeholder block
+carrying nothing the name did not; an admin card held eight things; orange was the order line, the links, the
+counts, the active tab, the primary button and the badges at once.
+
+- **Quiet tiles.** A placeholder is a 22% wash of the verdict colour over the surface with the cafe's emoji
+  (`nophotoBg`, a `color-mix`), in the theme's own ink. No initials: they were a second mark for the same cafe and
+  broke on "HEYTEA (Cupertino)" ("H("). A photo, when there is one, is the only loud thing. `inkOn()` stays: it is
+  still the proof the old tints cleared 3:1, and the chaser thumbnails still draw initials.
+- **One accent, one meaning.** Orange is the primary action and the current state. Order lines, counts, link
+  text and chart-heading figures go to the text colours; a link is underlined. Chart marks are data and keep it.
+- **Rows are the default List**, photo cards a layout choice in Settings ("Photo cards" / "Rows"). A row is name,
+  what to order and its price, then place and time, with the rank at the right (gold for the top ten). It is
+  8,391px against 12,032 (-30%). Sticky bands follow the sort (`bandFor`): Top 10 / 11 to 30 / 31 to 60 / the rest
+  by rank, This week / This month by recency, a verdict by rating, distance by near. None while searching, in a
+  guide, or in the photo layout. The grid's `.again` plus and `logAgainFrom()` are gone: logging again is the bar
+  at the bottom of the cafe page, and a second way to do it was clutter.
+- "No pending edits" is no longer printed when there is nothing pending.
+

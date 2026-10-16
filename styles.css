@@ -941,11 +941,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .card .cdrink .cdn{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .card .cdrink .cdp{ flex:none; margin-left:auto; color:var(--soft); font-weight:700; font-variant-numeric:tabular-nums lining-nums; }
 .card{ position:relative; }
-.card .again{ position:absolute; right:var(--sp-2); top:calc(104px - 52px); z-index:2; width:44px; height:44px; padding:0; border:1px solid var(--border); border-radius:50%; background:var(--glass); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:var(--acc-strong); font-family:inherit; font-size:var(--fs-4); line-height:1; display:grid; place-items:center; cursor:pointer; }
 
-.grid.compact-list .card .again{ display:none; }
-.grid.compact-list .card .b{ padding-right:0; }
-
+.grid.compact-list 
 /* ---------- cafe page: banner, pills, quote, postcard (v81) ---------- */
 .dranktile.top{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, var(--shadow-sm); }
 .dranktile.top span{ color:var(--gold-ink); opacity:.8; }
@@ -1009,3 +1006,24 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .sc-head b, .usualcard .usual em{ color:var(--text); }
 .morebtn, .resultline button{ color:var(--text); text-decoration:underline; text-underline-offset:3px; }
 .gotile + .lbmain .lbname i, .lbrow.one .lbname i{ color:var(--soft); }
+
+/* ---------- rows with landmarks (v87) ---------- */
+#save-state:empty{ display:none; }
+.rkcol, .band{ display:none; }
+.grid.compact-list .band{ display:block; position:sticky; top:0; z-index:5; padding:var(--sp-4) 0 var(--sp-2); font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); background:linear-gradient(var(--bg) 78%, transparent); }
+.grid.compact-list .card{ min-height:68px; padding:10px 0; gap:var(--sp-3); }
+.grid.compact-list .card .ph{ flex:0 0 46px; width:46px; height:46px; padding:0; justify-content:center; align-items:center; }
+.grid.compact-list .card .ph .em{ font-size:24px; }
+.grid.compact-list .card .ph .rankbadge{ display:none; }
+.grid.compact-list .card .ph .favbadge{ display:none; }
+.grid.compact-list .card .n{ min-height:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; -webkit-line-clamp:unset; font-size:var(--fs-3); letter-spacing:-.01em; }
+.grid.compact-list .card .cdrink{ display:flex; margin-top:1px; font-size:var(--fs-2); }
+.grid.compact-list .card .m{ margin-top:1px; font-size:var(--fs-1); color:var(--faint); }
+.grid.compact-list .card .compact-stars{ display:none; }
+.grid.compact-list .card .rkcol{ display:block; flex:none; min-width:34px; text-align:right; font-size:var(--fs-2); font-weight:700; color:var(--faint); font-variant-numeric:tabular-nums; }
+.grid.compact-list .card .rkcol.g{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); border-radius:var(--r-pill); padding:2px 9px; text-align:center; }
+.grid.compact-list .card .b{ display:flex; flex-direction:column; }
+.grid.compact-list .card .b .cdrink{ order:2; }
+.grid.compact-list .card .b .m{ order:3; }
+.grid.compact-list .card .cdo{ display:none; }
+.grid.compact-list .band{ background:color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
