@@ -1339,3 +1339,40 @@ priority over visited pins when two pills would overlap, since a want-to-try is 
 for. The 30px `wishPinIcon()` remains as the first paint and the fallback on a map that reports no
 projection.
 
+### Placing a new cafe, instead of nudging it (v85)
+
+Measured on the real board before touching it: 29 of 110 cafes (26%) had one or two comparisons and
+sat in a band at ranks 36–80 with scores of 4.77–5.24, interleaved with cafes that had ten times the
+evidence; and 18% of tier-ordered pairs were inverted (a Fine cafe above a Loved one). Three causes,
+all in `rank.js`:
+
+1. **Pairing.** `chaserArm` priced an opponent at `0.35 × its comparisons`, so a new cafe met whichever
+   cafe had the fewest — two near-blank cafes, and neither learned anything. It also ignored the verdict.
+2. **Elo.** `K = max(16, 32 − winner's comparisons)` read the winner alone: a veteran beating a newcomer
+   cost the newcomer about 5 points, a newcomer beating a veteran moved both by about 22. The verdict was
+   not used at all.
+3. **The score.** `5 + Δ/45 × m/(m+4)` kept 20% of the Elo gap at one comparison, so what a cafe had
+   beaten barely showed.
+
+What replaced them, with no new stored field (the sync-merge and `saveForm` traps above stay shut):
+
+- A cafe is **provisional** below five comparisons (`PLACING`). It is placed by a search among the
+  *established cafes of its own verdict*: the tier's median first, then a step that shrinks
+  (`placementStep`: a quarter of the list, a sixth, an eighth…). Its **Elo is its position in the
+  search**, read back by rank among the references, and its comparison count says how far along it is.
+  The search is anchored on the cafe it actually met, so it is right however the pair was found. A
+  verdict with fewer than six established cafes borrows the whole board.
+- **Per-cafe K** (`kFor`: 40 falling to 16). A newcomer moves a lot and a veteran barely moves, whoever won.
+- **The verdict is a prior, not a wall.** Below eight comparisons the score is shrunk towards the *tier's*
+  average instead of 5.0 (`tierPrior`), and an answer counts for more (m/(m+2)); from eight comparisons on
+  it is exactly the old formula, so `tests/beli.js` and every established position are untouched. A Fine
+  cafe that keeps winning can still climb past a Loved one.
+- Established cafes still pair on drink and area, now with a penalty for crossing a verdict (a comparison
+  with an obvious answer).
+- The Board lists **Still placing** (owner only), fewest comparisons first, beside "Never compared".
+
+On the real data the score change alone cut tier inversions from 17.9% to 9.6% and moved six cafes by ten
+places or more; it does not by itself lift the 18 thin Loved cafes — *new answers do that*, which is the
+point of the placement search. In the code, five consistent answers put a new Loved cafe within 1.7
+places (worst 3) of where it belongs among 36. `tests/rank-placement.js`.
+

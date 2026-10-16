@@ -38,6 +38,7 @@ const SUITE = [
   ["share-card",       "what to order leads the cafe page, a gold rank tile, option pills, and a postcard that never carries a private place"],
   ["stats-wrapped",    "drink DNA, worth it, and chains against independents: counted from the data, no place read"],
   ["map-pins",         "pins scale with the zoom into pills that give way to each other, and the legend is a ? on a laptop"],
+  ["rank-placement",   "a new cafe is placed by a search among its own verdict, K is per cafe, and the tier is a prior not a wall"],
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],

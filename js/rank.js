@@ -6,10 +6,121 @@ const ELO_BASE = 1500;
 function eloFor(c) {
   return c && typeof c.elo === "number" ? c.elo : ELO_BASE;
 }
+/* A cafe is PROVISIONAL until it has been compared this many times. While it is, it is placed by a
+   search (below), not nudged by Elo, and it is not yet used as a yardstick for anyone else. */
+const PLACING = 5;
+function isProvisional(c) {
+  return matchCount(c) < PLACING;
+}
+/* Every cafe moves by its OWN K, so a newcomer moves a lot and a veteran barely moves, whoever won.
+   It used to be the winner's count alone, so a veteran beating a newcomer cost the newcomer 5 points
+   and a newcomer beating a veteran moved both by 22. */
+function kFor(c) {
+  return Math.max(16, 40 - 6 * matchCount(c));
+}
+/* Where cafes of one verdict tend to sit: the mean Elo of the established ones. A cafe you called
+   Loved is shrunk towards the Loved average, not towards the middle of the whole board — the tier is
+   a prior, not a wall, so enough comparisons can still carry a cafe across it. Memoised on a cheap
+   signature of the board, since the sort asks for a score thousands of times. */
+let _priorSig = -1,
+  _prior = {};
+function tierPriors() {
+  let sig = cafes.length;
+  for (let i = 0; i < cafes.length; i++) sig = (sig * 31 + matchCount(cafes[i]) * 7 + Math.round(eloFor(cafes[i]))) % 1000003;
+  if (sig === _priorSig) return _prior;
+  const sum = {},
+    n = {};
+  cafes.forEach(function (c) {
+    if (c.wish || isProvisional(c)) return;
+    const k = bucketOf(c) || "";
+    sum[k] = (sum[k] || 0) + eloFor(c);
+    n[k] = (n[k] || 0) + 1;
+  });
+  const out = {};
+  Object.keys(n).forEach(function (k) {
+    if (k && n[k] >= 3) out[k] = sum[k] / n[k];
+  });
+  _priorSig = sig;
+  _prior = out;
+  return out;
+}
+function tierPrior(c) {
+  const p = tierPriors()[bucketOf(c) || ""];
+  return p === undefined ? ELO_BASE : p;
+}
+/* Never compared is exactly 5.0, a real midpoint, and has no position (see DESIGN_NOTES). Otherwise a
+   cafe's Elo is shrunk by how few comparisons it has: towards the middle of the board when it has
+   plenty, towards its own verdict's average when it has few. The change is faded in below eight
+   comparisons (`fade` is 1 up to two, 0 from eight), so a well-compared cafe scores exactly as it
+   always did and only the barely-compared ones are lifted off the midpoint, where a single comparison
+   used to leave a Loved cafe at 5.0. While it is still being placed, an answer is worth more too:
+   m/(m+2) instead of m/(m+4). */
 function eloScoreNum(c) {
   const m = matchCount(c);
-  const conf = m / (m + 4);
-  return Math.max(0, Math.min(10, 5 + ((eloFor(c) - ELO_BASE) / 45) * conf));
+  if (!m) return 5;
+  const fade = Math.max(0, Math.min(1, (8 - m) / 6)),
+    conf = m / (m + 4 - 2 * fade),
+    target = ELO_BASE + fade * (tierPrior(c) - ELO_BASE);
+  return Math.max(0, Math.min(10, 5 + (target + (eloFor(c) - target) * conf - ELO_BASE) / 45));
+}
+/* ---------- placement ----------
+   A new cafe was paired with whichever cafe had the fewest comparisons, so two near-blank cafes met
+   and neither learned anything; with one comparison a cafe kept a fifth of its Elo gap and stayed
+   near 5.0 whatever it had beaten. Now it is PLACED, as a search: it meets the established cafes of its
+   own verdict, best-guess first, and each answer moves its position by a step that shrinks. The
+   position IS its Elo (read back by rank among the references), and the number of comparisons says
+   how far along the search is, so nothing new is stored on a cafe. */
+function placementRefs(c) {
+  const est = cafes.filter(function (x) {
+    return !x.wish && x.id !== c.id && !isProvisional(x);
+  });
+  const k = bucketOf(c) || "";
+  const same = k
+    ? est.filter(function (x) {
+        return (bucketOf(x) || "") === k;
+      })
+    : [];
+  /* a verdict with too few established cafes to search among borrows the whole board */
+  return (same.length >= 6 ? same : est).sort(function (a, b) {
+    return eloFor(b) - eloFor(a);
+  });
+}
+/** Where an Elo falls among the references: 0 is at the top, n-1 at the bottom, fractions between. */
+function placementPos(e, refs) {
+  const n = refs.length;
+  if (e >= eloFor(refs[0])) return -Math.min(4, (e - eloFor(refs[0])) / 25);
+  for (let i = 1; i < n; i++) {
+    const hi = eloFor(refs[i - 1]),
+      lo = eloFor(refs[i]);
+    if (e >= lo) return hi > lo ? i - 1 + (hi - e) / (hi - lo) : i;
+  }
+  return n - 1 + Math.min(4, (eloFor(refs[n - 1]) - e) / 25);
+}
+/** The inverse: the Elo at a position among the references. Past either end it extends a little. */
+function placementElo(refs, r) {
+  const n = refs.length;
+  if (r <= 0) return Math.round(eloFor(refs[0]) + Math.min(40, -r * 10 + 8));
+  if (r >= n - 1) return Math.round(eloFor(refs[n - 1]) - Math.min(40, (r - (n - 1)) * 10 + 8));
+  const i = Math.floor(r),
+    f = r - i;
+  return Math.round(eloFor(refs[i]) + (eloFor(refs[i + 1]) - eloFor(refs[i])) * f);
+}
+/** How far one answer moves a cafe that has had m comparisons: a quarter of the list, then a sixth... */
+function placementStep(m, n) {
+  return Math.max(Math.min(3, n / 6), n / (2 * (m + 2)));
+}
+/** The reference a provisional cafe should meet next, or null when there are too few to search. */
+function placementOpponent(c) {
+  const refs = placementRefs(c);
+  if (refs.length < 3) return null;
+  const r0 = matchCount(c) === 0 ? refs.length / 2 : placementPos(eloFor(c), refs);
+  const mid = Math.max(0, Math.min(refs.length - 1, Math.round(r0)));
+  const order = [0, 1, -1, 2, -2, 3, -3];
+  for (let i = 0; i < order.length; i++) {
+    const x = refs[mid + order[i]];
+    if (x && _chaserSeen.indexOf(pairKey(c.id, x.id)) < 0) return x;
+  }
+  return refs[mid];
 }
 function eloScore(c) {
   return eloScoreNum(c).toFixed(1);
@@ -216,6 +327,9 @@ function renderBoard() {
     .sort(function (a, b) {
       return (chaserLast(b) || "").localeCompare(chaserLast(a) || "");
     });
+  const placing = vis.filter(function (c) {
+    return matchCount(c) > 0 && isProvisional(c);
+  });
   const h2h = Math.round(
     vis.reduce(function (s, c) {
       return s + matchCount(c);
@@ -237,6 +351,7 @@ function renderBoard() {
     h +=
       '<div class="handoff top" role="button" tabindex="0" onclick="boardRank()">⚖️ Rank a pair' +
       (never.length ? " <span>· " + never.length + " never compared</span>" : "") +
+      (placing.length ? " <span>· " + placing.length + " still placing</span>" : "") +
       "</div>";
   if (!board.length) {
     h +=
@@ -325,6 +440,16 @@ function renderBoard() {
         q.length +
         " ▾</button>";
   }
+  /* a short queue of the cafes still being placed, fewest comparisons first */
+  if (isAdmin && placing.length) {
+    const pq = placing
+      .slice()
+      .sort(function (a, b) {
+        return matchCount(a) - matchCount(b);
+      })
+      .slice(0, 5);
+    h += '<div class="statsec">Still placing — ' + placing.length + "</div>" + pq.map(boardQueueRow).join("");
+  }
   h +=
     '<div class="handoff" role="button" tabindex="0" onclick="show(\'stats\')">📊 See the numbers behind this <span>›</span></div>';
   host.innerHTML = '<div class="boardwrap">' + h + "</div>";
@@ -359,7 +484,7 @@ function boardRank(id) {
           .sort(function (a, b) {
             return matchCount(a) - matchCount(b);
           })
-          .slice(0, 12);
+          .slice(0, 12);  /* the fewest-compared first, which is the cafes still being placed */
     anchor = pool[Math.floor(Math.random() * pool.length)];
   }
   if (!anchor) return;
@@ -451,6 +576,25 @@ function chaserArm(id) {
   if (!base.length) return;
   const fresh = chaserFresh(c),
     fam = fresh ? chaserFam(fresh.n) : null;
+  /* A cafe still being placed meets a reference from its own verdict, whatever it just drank. */
+  if (isProvisional(c)) {
+    const ref = placementOpponent(c);
+    if (ref) {
+      _chaser = {
+        cafe: c.id,
+        opp: ref.id,
+        tier: "P",
+        fam: fam,
+        myDrink: fresh ? fresh.n : null,
+        theirDrink: null,
+        flip: Math.random() < 0.5,
+        ts: Date.now(),
+        res: null,
+        board: false,
+      };
+      return;
+    }
+  }
   let tier = "C",
     cand = base;
   if (fresh) {
@@ -483,6 +627,7 @@ function chaserArm(id) {
       if (!lv) cost += 0.6;
       else if ((Date.now() - new Date(lv).getTime()) / 86400000 > 180) cost += 1.2;
       if (x.area && c.area && x.area.trim() === c.area.trim()) cost -= 0.4;
+      if ((bucketOf(x) || "") !== (bucketOf(c) || "")) cost += 1.0;
       if (_chaserSeen.indexOf(pairKey(c.id, x.id)) >= 0) cost += 2.0;
       return { x: x, cost: cost + Math.random() * 0.3 };
     })
@@ -577,10 +722,31 @@ function chaserApply(winId, loseId, draw) {
   const Ra = eloFor(a),
     Rb = eloFor(b);
   const Ea = 1 / (1 + Math.pow(10, (Rb - Ra) / 400));
-  const K = Math.max(16, 32 - matchCount(a));
-  const delta = draw ? Math.round(K * (0.5 - Ea)) : Math.max(1, Math.round(K * (1 - Ea)));
-  a.elo = Ra + delta;
-  b.elo = Rb - delta;
+  const placing = isProvisional(a) !== isProvisional(b) ? (isProvisional(a) ? a : b) : null;
+  const refs = placing ? placementRefs(placing) : [];
+  if (placing && refs.length >= 3) {
+    /* One of them is still being placed: it searches, the established one barely moves. The search is
+       anchored on the cafe it actually met, so it stays right whichever way the pair was found. */
+    const q = placing === a ? b : a,
+      won = !draw && placing === a;
+    const qi = refs.findIndex(function (x) {
+      return x.id === q.id;
+    });
+    const base = qi >= 0 ? qi : placementPos(eloFor(placing), refs);
+    const step = placementStep(matchCount(placing), refs.length);
+    const pos = draw ? base : won ? base - step : base + step;
+    const Sp = draw ? 0.5 : won ? 1 : 0,
+      Ep = placing === a ? Ea : 1 - Ea;
+    const qOld = eloFor(q);
+    placing.elo = placementElo(refs, pos);
+    q.elo = qOld + Math.round(kFor(q) * (Ep - Sp));
+  } else {
+    /* both established, or both new: ordinary Elo, each side at its own K */
+    const Ka = kFor(a),
+      Kb = kFor(b);
+    a.elo = Ra + (draw ? Math.round(Ka * (0.5 - Ea)) : Math.max(1, Math.round(Ka * (1 - Ea))));
+    b.elo = Rb - (draw ? Math.round(Kb * (0.5 - Ea)) : Math.max(1, Math.round(Kb * (1 - Ea))));
+  }
   a.matches = matchCount(a) + 1;
   b.matches = matchCount(b) + 1;
   saveCafe(a.id);
