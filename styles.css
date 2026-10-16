@@ -3,7 +3,7 @@
    and [data-theme="dark"] = manually chosen dark. Keep any new colour in all three.
    --acc stays the identity orange for fills/pins/underlines; --acc-strong is the only
    one that may sit under white text (--acc is 3.01:1 there, --acc-strong is 4.94:1). */
-:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a8551a; --on-acc:#fff; --acc2:#c0374b; --bg:#f4f4f5; --surface:#fff; --surface2:#ececee; --text:#18181b; --soft:#5a5a63; --faint:#666670; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d6d6db; --border:rgba(20,20,40,.11); --shadow:0 2px 4px rgba(30,24,16,.06),0 14px 32px rgba(30,24,16,.14); --shadow-sm:0 1px 2px rgba(30,24,16,.07),0 2px 6px rgba(30,24,16,.06); --glass:rgba(255,255,255,.9); --glass-strong:rgba(244,244,245,.88); --gold-a:#f6d77f; --gold-b:#dca13a; --gold-ink:#3b2606; --amber-bg:rgba(213,128,59,.14); --amber-ink:#7a3f0a; --wash:rgba(120,120,150,.08); }
+:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a5521a; --on-acc:#fff; --acc2:#c0374b; --bg:#f4f4f5; --surface:#fff; --surface2:#ececee; --text:#18181b; --soft:#5a5a63; --faint:#666670; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d6d6db; --border:rgba(20,20,40,.11); --shadow:0 2px 4px rgba(30,24,16,.06),0 14px 32px rgba(30,24,16,.14); --shadow-sm:0 1px 2px rgba(30,24,16,.07),0 2px 6px rgba(30,24,16,.06); --glass:rgba(255,255,255,.9); --glass-strong:rgba(244,244,245,.88); --gold-a:#f6d77f; --gold-b:#dca13a; --gold-ink:#3b2606; --amber-bg:rgba(213,128,59,.14); --amber-ink:#7a3f0a; --wash:rgba(120,120,150,.08); }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.10); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); } }
 :root[data-theme="dark"]{ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.10); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); }
 /* ---------- the scale ----------
@@ -527,7 +527,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .listtabs{ display:flex; gap:var(--sp-1); padding:4px; background:var(--surface2); border-radius:var(--r-2); }
 .listtabs button{ min-height:44px; padding:0 10px; border:none; border-radius:var(--r-1); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:600; white-space:nowrap; cursor:pointer; }
 .listtabs button[aria-pressed="true"]{ background:var(--surface); color:var(--acc-strong); font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.1); }
-.listtabs .tabn{ font-weight:700; font-variant-numeric:tabular-nums; opacity:.6; }
+.listtabs .tabn{ font-weight:700; font-variant-numeric:tabular-nums; }
 /* Admin only, and the one thing in the row that does not fit beside the tabs on a phone.
    Given its own line on purpose rather than shoving the controls around as its text changes. */
 .listbar #save-state{ flex-basis:100%; }
@@ -1079,3 +1079,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .sc-svg{ max-width:520px; }
 .sc-svg.donut{ max-width:132px; }
 .statgrid:has(> :only-child){ grid-template-columns:1fr; }
+
+/* ---------- contrast and focus, checked in both themes (v92) ----------
+   Over a bright photo the round buttons were white on 2.4:1 and the amber rank badge 3.8:1; the dark scrim is
+   deeper now so the worst photo still clears 3:1 for a glyph and 4.5:1 for the badge text. The accent under white
+   text is a shade darker, so it also reads on the grey tile (4.7:1). The row-summary focus ring is the full accent. */
+.round{ background:rgba(0,0,0,.5); }
+.rankbadge.r-amber{ background:rgba(32,18,6,.76); }
+.drinksum:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:-3px; }
