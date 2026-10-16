@@ -45,7 +45,7 @@ const fs = require("fs"), path = require("path");
     await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
     await pg.waitForTimeout(900);
     const out = await pg.evaluate(() => {
-      isAdmin = false; applyMode && applyMode(); show("list"); renderList();
+      isAdmin = false; applyMode && applyMode(); setListLayout(false); show("list"); renderList();
       const g = document.getElementById("grid"), c = g.querySelector(".card");
       return { card: c ? Math.round(c.getBoundingClientRect().width) : null,
                cols: getComputedStyle(g).gridTemplateColumns.split(" ").length,

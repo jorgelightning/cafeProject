@@ -28,7 +28,7 @@ const { eq, done } = checker();
         drinks: [{ n: i % 2 ? "Hojicha latte" : "Flat white", orders: [{ date: day(i), p: i === 1 ? 7.25 : "", reorder: i <= 3 ? "yes" : "" }] }] });
     cafes.push({ id: "u", name: "Unranked One", area: "Area 0", rating: 3, drinks: [{ n: "Drip", orders: [{ date: day(90), p: 4 }] }] });
     cafes.push({ id: "w", name: "Someday", wish: true, drinks: [] });
-    show("list"); renderList();
+    setListLayout(false); show("list"); renderList();
     const q = s => [...document.querySelectorAll(s)];
     const names = () => q("#grid .card .n").map(e => e.textContent);
     return { ok: true, n: names().length };
@@ -41,14 +41,14 @@ const { eq, done } = checker();
     const cards = [...document.querySelectorAll("#grid .card")];
     const tops = [...new Set(cards.slice(0, 4).map(c => Math.round(c.getBoundingClientRect().top)))];
     return { shown: !row.hidden, labels: btns.map(x => x.textContent.trim()), tall: btns.every(x => x.getBoundingClientRect().height >= 44),
-             ph: document.getElementById("q").placeholder, again: !!document.querySelector(".card .again") && getComputedStyle(document.querySelector(".card .again")).display !== "none",
+             ph: document.getElementById("q").placeholder, again: !!document.querySelector(".card .again"),
              cols: tops.length, doc: document.documentElement.scrollWidth, win: window.innerWidth };
   });
   eq(v.shown, true, "a viewer sees the guide row under the tabs");
   eq(v.labels.length, 4, "…four guides");
   eq(v.tall, true, "…each at the 44px touch floor");
   eq(/^13 spots/.test(v.ph), true, "the search box says how many spots there are (" + v.ph + ")");
-  eq(v.again, false, "a viewer never sees the + log-again button");
+  eq(v.again, false, "no card carries a + any more: the order line is information, the bottom bar is the way to log");
   eq(v.cols, 2, "the first four cards sit in two rows of two at 375px, not one long column");
   eq(v.doc <= v.win + 1, true, "nothing scrolls sideways");
 
@@ -85,25 +85,17 @@ const { eq, done } = checker();
   // ---- the owner ----
   await seed(true);
   const o = await pg.evaluate(() => {
-    const again = [...document.querySelectorAll("#grid .card .again")], row = document.getElementById("guiderow");
+    const row = document.getElementById("guiderow");
     const chips = [...document.querySelectorAll("#quickchips .chip")].map(c => c.textContent.replace(/\s+/g, " ").trim());
-    return { rowHidden: row.hidden, again: again.length, tall: again.every(x => x.getBoundingClientRect().height >= 44), chips };
+    return { rowHidden: row.hidden, plus: document.querySelectorAll("#grid .card .again").length, chips };
   });
   eq(o.rowHidden, true, "the owner has no guide row, so their chrome does not grow");
-  eq(o.again > 0 && o.tall, true, "every card with a usual drink has a 44px + beside it");
+  eq(o.plus, 0, "the owner's cards carry no + either: logging again is the bar at the bottom of the cafe page");
   eq(o.chips.length, 3, "Recent, Unranked and Needs price live inside Filters");
   const un = await pg.evaluate(() => { setGuide("unranked"); return { names: [...document.querySelectorAll("#grid .card .n")].map(e => e.textContent), badge: document.getElementById("fcount").textContent }; });
   eq(un.names, ["Unranked One"], "Unranked shows the cafe that has never been compared");
   eq(un.badge, "1", "…and the Filters badge counts it, because the panel is where it lives");
   await pg.evaluate(() => clearAll());
-
-  const logged = await pg.evaluate(() => new Promise(res => {
-    logAgainFrom("c1");
-    setTimeout(() => res({ view: app.dataset.view, rows: [...document.querySelectorAll("#f-drinks .dn")].map(e => e.value), name: document.getElementById("f-name").value }), 700);
-  }));
-  eq(logged.view, "form", "the + opens the visit form");
-  eq(logged.name, "Cafe 1", "…for that cafe");
-  eq(logged.rows.includes("Hojicha latte"), true, "…with its usual drink already added");
 
   eq(errs, [], "no page errors");
   await ctx.close(); await b.close(); srv.close(); process.exit(done() ? 0 : 1);

@@ -637,8 +637,28 @@ function renderList() {
   /* Card meta reads distance · area · time — shortest and most perishable token first, so
    only the time clips. The rating now lives in the tile pill, and the liked tally is gone:
    its denominator was degenerate (all-yes or all-no in every non-zero case). */
+  /* In the row layout a long list needs landmarks: sticky bands that follow the sort (Top 10, This week,
+     Within a mile...). Not while searching, filtering by a guide, or in the photo layout, where the
+     list is short or a grid. */
+  const bandsOn = listCompact && !q && !activeGuide;
+  const bandOf = bandsOn ? bandFor : null;
+  const bandCount = {};
+  if (bandOf)
+    items.forEach(function (c) {
+      const l = bandOf(c);
+      bandCount[l] = (bandCount[l] || 0) + 1;
+    });
+  let lastBand = null;
   grid.innerHTML = items
     .map(function (c) {
+      let band = "";
+      if (bandOf) {
+        const l = bandOf(c);
+        if (l !== lastBand) {
+          band = '<div class="band" role="presentation">' + esc(l) + " \u00b7 " + bandCount[l] + "</div>";
+          lastBand = l;
+        }
+      }
       const gp = gphotoFor(c);
       const dkm = userLoc && c.lat != null ? distKm(userLoc.lat, userLoc.lng, c.lat, c.lng) : null;
       const dstr = dkm != null ? fmtDist(dkm) : "";
@@ -665,8 +685,10 @@ function renderList() {
       const _tp = _td ? cardPrice(_td.d) : "";
       const _lv = c.wish ? "" : lastVisitedStr(c, true);
       if (_lv) M.push(_lv);
+      const _rk = !c.wish && typeof rankOf === "function" ? rankOf(c, _cardRanks || undefined) : null;
 
       return (
+        band +
         '<div class="card" data-id="' +
         c.id +
         '" role="button" tabindex="0" onclick="openDetail(\'' +
@@ -697,13 +719,7 @@ function renderList() {
         '<span class="compact-stars">' +
         (bucketLabel(c) || "Not rated yet") +
         "</span>" +
-        (_td
-          ? '<button type="button" class="again admin-only" aria-label="Log ' +
-            esc(_td.d.n) +
-            ' again" onclick="event.stopPropagation();logAgainFrom(\'' +
-            c.id +
-            "')\">\uff0b</button>"
-          : "") +
+        (_rk ? '<span class="rkcol' + (_rk <= 10 ? " g" : "") + '">#' + _rk + "</span>" : "") +
         "</div>"
       );
     })
@@ -712,6 +728,23 @@ function renderList() {
   /* Photos are verified after the markup lands, so a stale URL can swap the tile in place
    rather than blocking the render. */
   lazyCardPhotos();
+}
+/** The landmark a cafe sits under, for the sort in force. */
+function bandFor(c) {
+  if (sortMode === "ranked") {
+    const r = typeof rankOf === "function" && !c.wish ? rankOf(c, _cardRanks || undefined) : null;
+    return !r ? "Not ranked yet" : r <= 10 ? "Top 10" : r <= 30 ? "11 to 30" : r <= 60 ? "31 to 60" : "The rest";
+  }
+  if (sortMode === "rating") return bucketLabel(c) || "Not rated yet";
+  if (sortMode === "near") {
+    if (!userLoc || c.lat == null) return "Distance unknown";
+    const mi = distKm(userLoc.lat, userLoc.lng, latOf(c), lngOf(c)) * 0.621371;
+    return mi <= 1 ? "Within a mile" : mi <= 5 ? "Within 5 miles" : mi <= 25 ? "Within 25 miles" : "Further out";
+  }
+  const iso = sortMode === "visited" ? visitDates(c).slice(-1)[0] || "" : c.updated || "";
+  if (!iso) return "No date";
+  const days = (Date.now() - new Date(iso).getTime()) / 86400000;
+  return days <= 7 ? "This week" : days <= 31 ? "This month" : days <= 365 ? "Earlier this year" : "Earlier";
 }
 /* Photos load when a card nears the screen, not all at once. They are CSS backgrounds, so the
    browser's loading="lazy" cannot apply, and each card also probed its URL with a new Image()
@@ -752,7 +785,8 @@ function lazyCardPhotos() {
     _photoIO.observe(el);
   });
 }
-let listCompact = localStorage.getItem("cafemap.listLayout") === "compact";
+/* Rows are the default now: 111 cards were 12,000px of scroll on a phone. Photo cards stay one tap away in Settings. */
+let listCompact = localStorage.getItem("cafemap.listLayout") !== "grid";
 /* Set explicitly from Settings; toggleListLayout stays for any caller that only wants the
    other one of the two. */
 function setListLayout(compact) {

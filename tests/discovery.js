@@ -99,11 +99,12 @@ const { eq, done } = checker();
     const k = by("Kettle & Kiln");
     const order = [...k.querySelectorAll(".b > div")].map(d => d.className);
     setListLayout(true); const hiddenCompact = getComputedStyle([...document.querySelectorAll("#grid .card")].find(c => c.querySelector(".n").textContent === "Kettle & Kiln").querySelector(".cdrink")).display; setListLayout(false);
+    const rowsShow = hiddenCompact !== "none";
     setListTab("want"); const wishDrink = document.querySelectorAll("#grid .cdrink").length; setListTab("been");
-    return { text: k.querySelector(".cdrink .cdn").textContent, order, hiddenCompact, wishDrink }; });
+    return { text: k.querySelector(".cdrink .cdn").textContent, order, hiddenCompact, rowsShow, wishDrink }; });
   eq(r.text, "Order the Matcha latte", "a card says what to order");
   eq(r.order, ["n", "m", "cdrink"], "…in the order name, where, then the drink");
-  eq([r.hiddenCompact, r.wishDrink], ["none", 0], "the compact list stays one line per cafe, and a place you have not been has no order to suggest");
+  eq([r.rowsShow, r.wishDrink], [true, 0], "a row says what to order under the name, and a place you have not been has no order to suggest");
 
   // ---- U3: empty states -----------------------------------------------------------
   r = await pg.evaluate(() => { cafes = cafes.filter(c => !c.wish); setListTab("want");

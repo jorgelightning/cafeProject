@@ -683,7 +683,7 @@ function renderSyncStatus() {
   if (state)
     state.textContent = keys.length
       ? "Saved on this phone"
-      : syncFailure || (syncLastConfirmed && navigator.onLine ? "Synced ✓" : "No pending edits");
+      : syncFailure || (syncLastConfirmed && navigator.onLine ? "Synced ✓" : "");
 }
 window.addEventListener("online", () => {
   flushSync();
