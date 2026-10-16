@@ -60,12 +60,12 @@ const { eq, done } = checker();
     setBucket("loved"); $("f-review").value = "Vibes are super good, the coffee is strong here";
     const sc = document.querySelector("#pane-form .scroll");
     const bottom = sel => document.querySelector(sel).getBoundingClientRect().bottom;
-    const fold = document.querySelector(".tabbar").getBoundingClientRect().top;
+    const fold = innerHeight; /* the tab bar steps aside while you log, so the fold is the screen's own bottom */
     return { tall: sc.scrollHeight, fold, scrolled: sc.scrollTop,
              seen: ["#f-name", "#f-where", "#f-drinks .dn", "#f-drinks .dp", "#f-rate", "#f-review", "#f-more", ".savebar"]
                      .filter(s => bottom(s) > fold) };
   });
-  eq(r.seen, [], "name, place, drink, price, verdict, note, More and Save all sit above the tab bar");
+  eq(r.seen, [], "name, place, drink, price, verdict, note, More and Save all sit on the one screen");
   eq(r.tall <= 844, true, "the whole form is one phone screen (" + r.tall + "px, was 2,424px)");
 
   // ---- the first drink ---------------------------------------------------

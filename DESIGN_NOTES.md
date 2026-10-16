@@ -1413,3 +1413,11 @@ anything that reads the page (and `tests/stats-charts.js`, `stats-wrapped.js`) l
 data change. Headings are plain words (no emoji), and the long chart note under Monthly activity is a caption:
 "Bar: spend. Green line: share of drinks with a price."
 
+
+**Logging gets the whole screen (v90).** The form stacked three layers at the bottom: its own Save bar, the tab
+bar, and the raised Log, which was the tab you were already on. While you log (phone and iPad widths) the tab bar
+steps aside — Back is at the top, Save at the bottom — and `tests/one-screen.js` now measures against the screen's
+own bottom instead of the tab bar's top. The currency and the price are one joined field (the select's right border
+meets the price input) instead of two controls side by side; nothing about their markup, `syncCcy` or the frozen
+rate changed. Not done, on purpose: "Add pin", "Add another drink" and the Log again chips stay accent-coloured —
+they are the form's own actions, and `tests/keyboard.js` pins `.hintbtn` to `--acc-strong`.
