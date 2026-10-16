@@ -1087,3 +1087,21 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .round{ background:rgba(0,0,0,.5); }
 .rankbadge.r-amber{ background:rgba(32,18,6,.76); }
 .drinksum:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:-3px; }
+
+/* ---------- Go board rows (v93) ----------
+   Rank, name, place and the drink to order on two lines. The owner's sentence and the bookkeeping sit behind a
+   chevron; the row itself still opens the cafe. */
+.lbrow.guide{ flex-wrap:wrap; align-items:center; padding:0 2px; gap:0 var(--sp-3); }
+.lbrow.guide .lbhit{ flex:1; min-width:0; display:flex; align-items:center; gap:var(--sp-3); padding:11px 0; cursor:pointer; }
+.lbrow.guide .lbrank{ padding-top:0; }
+.lbrow.guide .lbmain{ gap:0; }
+.lbrow.guide .lbsub{ display:flex; min-width:0; }
+.lbplace{ flex:0 0 auto; min-width:0; max-width:58%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lbdot{ flex:none; white-space:pre; }
+.lbrow.guide .lborder{ flex:0 10 auto; min-width:9ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+.lbmore{ flex:none; width:44px; height:44px; margin-right:-8px; display:inline-flex; align-items:center; justify-content:center; border:none; background:none; color:var(--soft); font-size:var(--fs-3); cursor:pointer; border-radius:var(--r-3); transition:transform .15s ease; }
+.lbrow.open .lbmore{ transform:rotate(180deg); }
+.lbextra{ flex:1 0 100%; display:flex; flex-direction:column; gap:var(--sp-1); padding:0 0 12px 38px; }
+.lbextra[hidden]{ display:none; }
+.lbbook{ font-size:var(--fs-1); color:var(--soft); font-variant-numeric:tabular-nums; }
+@media (prefers-reduced-motion:reduce){ .lbmore{ transition:none; } }

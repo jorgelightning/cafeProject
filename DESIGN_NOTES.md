@@ -1441,3 +1441,11 @@ buttons over a photo were 2.4:1 against a white photo and the amber rank badge 3
 medal, the soft tile wash and `--soft`/`--faint` on every surface already passed. Text over a photo or gradient is
 judged by its scrim, not by the pixels, since the photo is the user's.
 
+
+### Go board rows (v93)
+
+A Go row is rank, name, place and the drink there, on two lines (`Kailua · Hojicha latte`; the place is capped at
+58% so the drink never vanishes, and the drink is what gives way). The owner's sentence, and for the owner the
+bookkeeping (comparisons, score, how often it was ordered), sit behind a 44px chevron `.lbmore` with
+`aria-expanded`; a visitor's row with no note has no chevron. The row's own tap area (`.lbhit`) is its sibling, not
+its parent, so no button nests in a button. `tests/board-guide.js`.
