@@ -41,6 +41,7 @@ const SUITE = [
   ["rank-placement",   "a new cafe is placed by a search among its own verdict, K is per cafe, and the tier is a prior not a wall"],
   ["list-rows",        "the List is rows with sticky landmarks by default; no + on a card; the photo cards are a layout choice"],
   ["stats-tabs",       "Stats is three tabs (You, Habits, Money); the owner's spend is in Money only; no emoji in headings"],
+  ["wide-screens",     "the calmer screens at iPad Mini, laptop and large widths: nothing sticks out, rows are two columns on a tablet, charts stop at 520px"],
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],

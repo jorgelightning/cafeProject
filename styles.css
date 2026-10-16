@@ -1066,3 +1066,16 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .priceline select.dpc{ border-right:0; border-radius:var(--r-2) 0 0 var(--r-2); }
 .priceline select.dpc[hidden] + input.dp{ border-radius:var(--r-2); }
 .priceline input.dp{ border-radius:0 var(--r-2) var(--r-2) 0; }
+
+/* ---------- wide screens (v91) ----------
+   Checked at iPad Mini and laptop widths: rows were one 700px-wide strip with the price a thumb-reach from
+   the name, a chart's text scaled to 2.3 times its size, and a one-card grid left half empty. */
+@media (min-width:700px) and (max-width:899px){
+  .grid.compact-list{ display:grid; grid-template-columns:1fr 1fr; column-gap:var(--sp-5); align-content:start; }
+  .grid.compact-list .band{ grid-column:1 / -1; }
+  .grid.compact-list .emptyx{ grid-column:1 / -1; }
+}
+.grid.compact-list .band{ background:var(--glass); }
+.sc-svg{ max-width:520px; }
+.sc-svg.donut{ max-width:132px; }
+.statgrid:has(> :only-child){ grid-template-columns:1fr; }
