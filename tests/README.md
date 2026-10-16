@@ -48,7 +48,7 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `usuals.js` | Logging a drink you have had before: the one-tap shortcut, the near-match guard, and the cleanup for names already split by a typo. |
 | `audit-fixes.js` | The 16 Sep audit fixes: a refused private write survives, the rule probe, the folded form, update-prompt contrast. |
 | `sync-conflict.js` | Telling two versions of a cafe apart when they collide: what differs, and which is newer. |
-| `board-guide.js` | Every board row carries its reason, and the ranking bookkeeping stays with the owner. |
+| `board-guide.js` | Every board row carries its reason (place and drink on two lines, the note and bookkeeping behind a chevron), and the ranking bookkeeping stays with the owner. |
 | `sync-merge.js` | Two devices merging automatically — and every case where it must refuse and ask instead. Also: id-less legacy orders merge, null/undefined/[]/{} read as absent, deterministic order ids. |
 | `scale.js` | The type/radius/space scale is the whole set, and all three device widths get a sane layout. |
 | `list-clean.js` | The placeholder tint carries the rating with legible ink, and four control rows fold into one. |
