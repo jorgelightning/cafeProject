@@ -1421,3 +1421,13 @@ own bottom instead of the tab bar's top. The currency and the price are one join
 meets the price input) instead of two controls side by side; nothing about their markup, `syncCcy` or the frozen
 rate changed. Not done, on purpose: "Add pin", "Add another drink" and the Log again chips stay accent-coloured —
 they are the form's own actions, and `tests/keyboard.js` pins `.hintbtn` to `--acc-strong`.
+
+### The calmer screens at wider widths (v91)
+
+Overnight check at iPad Mini (744) and laptop (1280, 1600) of everything changed in v86–v90. Found and fixed:
+the List rows were one 700px strip with the price a long way from the name (two columns from 700 to 899px now,
+bands spanning both); a chart's text scaled to 2.3 times its size on a tablet because an SVG fills its card
+(`.sc-svg` stops at 520px); a lone card in a two-column grid (the owner's Spent) left half the row empty; and the
+sticky band was a darker bar than the panel behind it (it takes `--glass`). The laptop panel (422px) needed
+nothing. `tests/wide-screens.js`.
+
