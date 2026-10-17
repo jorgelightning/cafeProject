@@ -1490,3 +1490,11 @@ postcard it is text only, because there is no single cafe to draw. No new stored
 to say (no runner-up, no repeat visit, too few sweetness answers) leaves out its line or itself.
 `tests/wrapped-strip.js`.
 
+### The ⋯ menu stays put until it is put away (v97)
+
+Edit and Delete live in a `<details>` (`#d-more`), and a `<details>` stays open until something closes it.
+Choosing Edit opened the form and left the menu open, so after saving a visit the cafe page came back with the
+menu floating over it, and nothing closed it. `closeMoreMenu()` now runs on Edit, on Delete (before the
+confirmation, so declining leaves it shut), on any tap outside `#d-more`, on Escape (focus returns to the ⋯
+button) and at the top of `openDetail`, so no cafe page opens with it already out. `tests/more-menu.js`.
+
