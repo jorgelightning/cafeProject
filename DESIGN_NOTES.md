@@ -1498,3 +1498,26 @@ menu floating over it, and nothing closed it. `closeMoreMenu()` now runs on Edit
 confirmation, so declining leaves it shut), on any tap outside `#d-more`, on Escape (focus returns to the ⋯
 button) and at the top of `openDetail`, so no cafe page opens with it already out. `tests/more-menu.js`.
 
+### The postcard is a Story, with a drawn cup (v98)
+
+Direction B of the share-card mockup. The picture was typed: whatever emoji was stored, which is the coffee cup
+for 101 of 122 records, on a fade that was the verdict green for every cafe. It is drawn now. `cafeKind(c)`
+reads what the place serves (a chosen emoji first; then boba, gelato, a pastry name; then **the drink you order
+most there**, so Kissaten HiFi is a cup because you go for a flat white; then the name) and picks one of five
+vessels in `CARD_VESSELS` (bowl, cup, boba, gelato, pastry), stroked as `Path2D` in cream on a fade in
+`CARD_KINDS`' colour for that drink. "Loved it" stays in the pill and the rank medal. Drawn art also looks the
+same on every phone, which an emoji does not. `teaKind(text)` is the one judgement call (a tea place that is not
+plainly boba: whisked bowl or tapioca cup).
+
+The canvas is 1080 x 1920 for Instagram Stories, which lays its own bars over the top ~14% and bottom ~13%. The
+colour runs edge to edge; the rank starts below `SAFE_T`, the footer ends above `SAFE_B`, and the note's line
+count is worked out from the room left above the footer rule. The footer says only "JL CAFE PROJECT": there is
+no app to open, it is a web page, so the line "OPEN IN THE APP" is gone. The share message still ends with the
+cafe's link, and the preview shrinks to keep the Share buttons on a small phone's screen. The default-coffee
+guess is for the card only; the emoji on tiles and pins elsewhere is untouched. `tests/postcard-mark.js`.
+
+
+The hero fades into the paper, as in the mockup the owner picked. A rounded-sheet-on-colour variant was tried and
+set aside: it was cleaner at the seam but the owner preferred the fade. What was wrong was the blank white band
+under the footer, so the bottom of the card now takes a soft wash of the drink's colour (30% at the very bottom,
+starting 240px above `SAFE_B`), which mirrors the top and finishes the card without a hard edge.

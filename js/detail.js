@@ -594,6 +594,86 @@ function editCurrent() {
    Like shareCafe() it uses c.area and never areaOf(c): this goes to someone else, and a private
    spot's exact place must not travel with it. */
 let _pcOpener = null;
+/* The picture on a postcard is drawn, not typed. The default cafe emoji is a coffee cup (101 of 122 records), so
+   a hojicha bar went out with a coffee cup, and an emoji is drawn by each phone's own font anyway. The mark is a
+   vessel in cream line art on a fade in the drink's own colour; "Loved it" lives in the pill and the medal. */
+const CARD_KINDS = {
+  matcha: { c1: "#4f8a3c", c2: "#17321f", vessel: "bowl" },
+  coffee: { c1: "#a8733a", c2: "#2a1a0c", vessel: "cup" },
+  boba: { c1: "#c98a72", c2: "#46261f", vessel: "boba" },
+  gelato: { c1: "#d98aa6", c2: "#4a2535", vessel: "gelato" },
+  pastry: { c1: "#d9a24f", c2: "#4a2f10", vessel: "pastry" },
+};
+/* the chosen emoji is a deliberate answer to "what is this place"; ☕ is the default and so is not one */
+const EMOJI_KIND = { "\ud83c\udf75": "matcha", "\ud83e\uddcb": "boba", "\ud83c\udf68": "gelato", "\ud83e\udd50": "pastry" };
+/* Shapes are on a 120-unit square. `main` is the vessel, `faint` the steam, froth and pearls' highlights. */
+const _ring = function (x, y, r) {
+  return "M" + (x - r) + " " + y + "a" + r + " " + r + " 0 1 0 " + 2 * r + " 0a" + r + " " + r + " 0 1 0 " + -2 * r + " 0";
+};
+const CARD_VESSELS = {
+  bowl: {
+    main: ["M18 52h84c0 26-17 42-42 42S18 78 18 52z", "M44 99h32"],
+    faint: ["M26 52c4-7 14-11 34-11s30 4 34 11", "M48 33c-4-5 4-8 0-13M62 33c-4-5 4-8 0-13M76 33c-4-5 4-8 0-13", "M34 68c9 6 17 8 26 8"],
+  },
+  cup: {
+    main: ["M26 48h58v26c0 14-11 24-29 24S26 88 26 74z", "M84 56h8c9 0 9 18 0 18h-8"],
+    faint: ["M16 104h78", "M42 36c-4-5 4-8 0-13M56 36c-4-5 4-8 0-13M70 36c-4-5 4-8 0-13", "M38 62c6 4 14 5 22 3"],
+  },
+  boba: {
+    main: [
+      "M32 36h56l-6 66H38z",
+      "M28 36h64",
+      "M34 26c0-6 52-6 52 0v10H34z",
+      "M66 24l10-18",
+      _ring(48, 92, 4.6),
+      _ring(62, 94, 4.6),
+      _ring(76, 91, 4.6),
+      _ring(55, 83, 4.6),
+      _ring(69, 82, 4.6),
+    ],
+    faint: ["M38 58h44"],
+  },
+  gelato: {
+    main: ["M34 62h52L60 108z", "M30 62c-6-14 4-26 16-24 2-10 24-12 28-1 12-3 20 10 10 25"],
+    faint: ["M42 74l12 14M54 66l14 30M66 66l8 14", "M52 40c4 3 10 3 14 0"],
+  },
+  pastry: {
+    main: ["M14 74c0-22 20-38 46-38s46 16 46 38c0 6-6 10-12 8-6 8-16 10-34 10s-28-2-34-10c-6 2-12-2-12-8z"],
+    faint: ["M40 42c-4 14-4 30 2 42M60 36c-3 16-3 36 0 54M80 42c4 14 4 30-2 42"],
+  },
+};
+/* A tea place that is not plainly boba: a whisked-bowl matcha bar, or a cup of something with tapioca?
+   TODO(human): decide how to tell them apart. `text` is the lowercased name, brand and drink names run together
+   ("oolong tea project cheese foam ruby oolong tea (large)"). Return "matcha" or "boba". */
+function teaKind(text) {
+  return /matcha|hojicha|genmaicha|sencha|chai/.test(text) ? "matcha" : "boba";
+}
+/** What a cafe serves, as one of the CARD_KINDS keys. The drink you order most there counts above the name:
+ *  Kissaten HiFi is a coffeehouse you go to for a flat white, whatever "kissaten" means on a sign. @param {Cafe} c */
+function cafeKind(c) {
+  if (c.emoji && EMOJI_KIND[c.emoji]) return EMOJI_KIND[c.emoji];
+  const top = typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
+  const best = top ? String(top.d.n || "").toLowerCase() : "";
+  const text = [c.name, c.brand, best]
+    .concat(
+      (c.drinks || []).map(function (d) {
+        return d.n;
+      })
+    )
+    .join(" ")
+    .toLowerCase();
+  const name = String(c.name || "").toLowerCase();
+  const tea = /matcha|hojicha|\btea\b|oolong|chai|genmaicha|sencha/;
+  if (/boba|bubble tea|milk tea|cheese foam|brown sugar|taro|heytea|chagee|tiger sugar|gong cha|milksha/.test(text)) return "boba";
+  if (/gelato|ice cream|soft serve/.test(text)) return "gelato";
+  if (/bakery|pastry|croissant|patisserie|boulangerie/.test(name)) return "pastry";
+  if (best) {
+    if (tea.test(best)) return teaKind(text);
+    if (/latte|flat white|espresso|americano|cappuccino|cortado|macchiato|mocha|drip|coffee|cold brew/.test(best)) return "coffee";
+  }
+  if (tea.test(text) && !/coffee|espresso/.test(name)) return teaKind(text);
+  return "coffee";
+}
 function postcardData(c) {
   const td = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
   const rk = !c.wish && typeof rankOf === "function" ? rankOf(c) : null;
@@ -613,6 +693,7 @@ function postcardData(c) {
     review: rv.length > 170 ? rv.slice(0, 167).replace(/\s+\S*$/, "") + "\u2026" : rv,
     emoji: c.emoji || "\u2615",
     tint: tintFor(c),
+    kind: cafeKind(c),
   };
 }
 function postcardText(c) {
@@ -660,30 +741,60 @@ function drawPostcard(canvas, d) {
   const W = canvas.width,
     H = canvas.height,
     PAD = 72,
-    SANS = 'system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif',
-    EMO = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+    SANS = 'system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif';
   const paper = "#fbfaf8",
     ink = "#1d1a17",
     soft = "#5a5a63";
   ctx.fillStyle = paper;
   ctx.fillRect(0, 0, W, H);
-  /* the tile: the rating colour, deepening towards the bottom, with the cafe's own emoji */
-  const top = 540,
+  /* A Story is 1080 x 1920, and Instagram lays its own bars over the top and bottom of it: the profile line
+     across roughly the top 14% and the reply bar across the bottom 13%. The colour runs edge to edge; the rank,
+     the words and the footer stay inside the band between SAFE_T and SAFE_B. */
+  const SAFE_T = Math.round(H * 0.14),
+    SAFE_B = H - Math.round(H * 0.13);
+  /* the tile: a fade in the drink's colour, soft rings, and the vessel in cream line art */
+  const kind = CARD_KINDS[d.kind] || CARD_KINDS.coffee,
+    top = Math.round(H * 0.448),
     g = ctx.createLinearGradient(0, 0, W, top);
-  g.addColorStop(0, d.tint);
-  g.addColorStop(1, "#2a1a0c");
+  g.addColorStop(0, kind.c1);
+  g.addColorStop(1, kind.c2);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, top);
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "300px " + EMO;
-  ctx.fillStyle = "#fff";
-  ctx.fillText(d.emoji, W / 2, top / 2 + 30);
-  const fade = ctx.createLinearGradient(0, top - 220, 0, top);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, top);
+  ctx.clip();
+  ctx.strokeStyle = "rgba(255,255,255,.18)";
+  ctx.lineWidth = 3;
+  for (let r = 73; r < 1300; r += 74) {
+    ctx.beginPath();
+    ctx.arc(W / 2, top * 0.62, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+  const ves = CARD_VESSELS[kind.vessel] || CARD_VESSELS.cup,
+    VS = 480,
+    sc = VS / 120;
+  ctx.save();
+  ctx.translate(W / 2 - VS / 2, top * 0.62 - VS / 2);
+  ctx.scale(sc, sc);
+  ctx.lineWidth = 3.2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#f6efe2";
+  ves.main.forEach(function (pd) {
+    ctx.stroke(new Path2D(pd));
+  });
+  ctx.globalAlpha = 0.6;
+  ves.faint.forEach(function (pd) {
+    ctx.stroke(new Path2D(pd));
+  });
+  ctx.restore();
+  const fade = ctx.createLinearGradient(0, top - 240, 0, top);
   fade.addColorStop(0, "rgba(251,250,248,0)");
   fade.addColorStop(1, paper);
   ctx.fillStyle = fade;
-  ctx.fillRect(0, top - 220, W, 220);
+  ctx.fillRect(0, top - 240, W, 240);
   /* rank medallion: gold for the top ten, dark glass for the rest */
   ctx.textAlign = "left";
   if (d.rk) {
@@ -691,9 +802,9 @@ function drawPostcard(canvas, d) {
       gold = d.rk <= 10;
     ctx.font = "800 72px " + SANS;
     const w = ctx.measureText(label).width + 72;
-    _pcRound(ctx, PAD, PAD, w, 112, 56);
+    _pcRound(ctx, PAD, SAFE_T, w, 112, 56);
     if (gold) {
-      const gg = ctx.createLinearGradient(PAD, PAD, PAD + w, PAD + 112);
+      const gg = ctx.createLinearGradient(PAD, SAFE_T, PAD + w, SAFE_T + 112);
       gg.addColorStop(0, "#f6d77f");
       gg.addColorStop(1, "#dca13a");
       ctx.fillStyle = gg;
@@ -701,18 +812,18 @@ function drawPostcard(canvas, d) {
     ctx.fill();
     ctx.fillStyle = gold ? "#3b2606" : "#fff";
     ctx.textBaseline = "middle";
-    ctx.fillText(label, PAD + 36, PAD + 58);
+    ctx.fillText(label, PAD + 36, SAFE_T + 58);
     ctx.font = "700 36px " + SANS;
     ctx.fillStyle = "#fff";
     ctx.textAlign = "right";
     ctx.shadowColor = "rgba(0,0,0,.5)";
     ctx.shadowBlur = 8;
-    ctx.fillText("of " + d.rn + " on my list", W - PAD, PAD + 58);
+    ctx.fillText("of " + d.rn + " on my list", W - PAD, SAFE_T + 58);
     ctx.shadowBlur = 0;
     ctx.textAlign = "left";
   }
   /* the words */
-  let y = top + 40;
+  let y = top + 30;
   ctx.fillStyle = ink;
   ctx.textBaseline = "alphabetic";
   ctx.font = "800 88px " + SANS;
@@ -757,22 +868,28 @@ function drawPostcard(canvas, d) {
   if (d.review) {
     ctx.fillStyle = ink;
     ctx.font = "500 42px " + SANS;
-    /* as many lines as fit above the footer, never fewer than two */
-    const room = Math.max(2, Math.min(4, Math.floor((H - 130 - y) / 58)));
+    /* as many lines as fit above the footer rule, never fewer than two, never more than four */
+    const room = Math.max(2, Math.min(4, Math.floor((SAFE_B - 120 - (y + 40)) / 58) + 1));
     _pcWrap(ctx, "\u201c" + d.review + "\u201d", W - PAD * 2, room).forEach(function (ln) {
       ctx.fillText(ln, PAD, y + 40);
       y += 58;
     });
   }
-  /* footer */
+  /* the bottom of the card: a soft wash of the drink's colour, so it ends as deliberately as it begins */
+  const _rgb = [1, 3, 5].map(function (i) {
+      return parseInt(kind.c1.slice(i, i + 2), 16);
+    }),
+    wash = ctx.createLinearGradient(0, SAFE_B - 240, 0, H);
+  wash.addColorStop(0, "rgba(" + _rgb.join(",") + ",0)");
+  wash.addColorStop(1, "rgba(" + _rgb.join(",") + ",.30)");
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, SAFE_B - 240, W, H - (SAFE_B - 240));
+  /* footer: just whose list it is */
   ctx.fillStyle = "rgba(0,0,0,.12)";
-  ctx.fillRect(PAD, H - 120, W - PAD * 2, 2);
+  ctx.fillRect(PAD, SAFE_B - 84, W - PAD * 2, 2);
   ctx.font = "800 28px " + SANS;
   ctx.fillStyle = soft;
-  ctx.fillText("JL CAFE PROJECT", PAD, H - 62);
-  ctx.textAlign = "right";
-  ctx.fillText("OPEN IN THE APP \u203a", W - PAD, H - 62);
-  ctx.textAlign = "left";
+  ctx.fillText("JL CAFE PROJECT", PAD, SAFE_B - 30);
 }
 function openPostcard() {
   const c = cafes.find(x => x.id === curId),

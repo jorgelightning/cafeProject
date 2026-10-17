@@ -46,6 +46,7 @@ const SUITE = [
   ["perf-budget",      "the Go board, List and Stats ask for a score a bounded number of times, and the one-pass rank map agrees with the per-cafe walk"],
   ["wrapped-strip",    "the Wrapped strip on Stats > You: counts, the 20-visit floor, viewers, no area/review/money, Share"],
   ["more-menu",        "the cafe page ⋯ menu closes on a choice, an outside tap, Escape and opening another cafe"],
+  ["postcard-mark",    "the postcard is a 9:16 Story: a drawn vessel in the drink's colour chosen from what the place serves, nothing in the unsafe bands, no 'open in the app'"],
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],
