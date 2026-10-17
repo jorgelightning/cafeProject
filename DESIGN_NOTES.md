@@ -1476,3 +1476,17 @@ The whole suite (53 files) ran green four times in a row on this machine, and on
 source file converted to CRLF, which is what a Windows checkout can hand back. The tests that read source files
 (`currency-units`, `beli`, `list-clean`, `settings`, `scale` and others) already cope. If a future test greps a source
 file for a multi-line string, normalise `\r\n` first, as `currency-units.js` does.
+
+### The Wrapped strip (v96)
+
+Direction A from the Wrapped mockup: a row of small swipeable cards at the very top of Stats > You. It reads
+this calendar year (`new Date().getFullYear()`, so it starts over every January): visits and cafés (and how many
+were new), your drink, where you went back, the busiest month with a twelve-bar chart, how you take it (no sugar,
+and the milk if one dominates), and a gold Share card. `wrappedYear(list, year)` is the one pure function behind
+it, so a test can feed it anything. It appears at 20 visits (`WRAP_FLOOR`), goes to viewers (nothing in it is
+money or a review), and reads no area, coordinate or review: a private spot is a name, a count and a date.
+Share is a sentence through `navigator.share`, or the clipboard when there is no share sheet; unlike the cafe
+postcard it is text only, because there is no single cafe to draw. No new stored fields. A card that has nothing
+to say (no runner-up, no repeat visit, too few sweetness answers) leaves out its line or itself.
+`tests/wrapped-strip.js`.
+
