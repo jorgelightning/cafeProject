@@ -44,6 +44,7 @@ const SUITE = [
   ["wide-screens",     "the calmer screens at iPad Mini, laptop and large widths: nothing sticks out, rows are two columns on a tablet, charts stop at 520px"],
   ["a11y",             "text contrast on ten screens in both themes, scrims over a white photo, and a keyboard walk: every stop has a ring and a name"],
   ["perf-budget",      "the Go board, List and Stats ask for a score a bounded number of times, and the one-pass rank map agrees with the per-cafe walk"],
+  ["wrapped-strip",    "the Wrapped strip on Stats > You: counts, the 20-visit floor, viewers, no area/review/money, Share"],
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],
