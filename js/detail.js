@@ -158,9 +158,27 @@ document.addEventListener("keydown", e => {
     if (w && !w.hidden) w.focus();
   }
 });
+/* The ⋯ menu (Edit, Delete) is a <details>, which stays open until told otherwise. It used to survive
+   tapping Edit and come back floating over the cafe page afterwards. It closes on any choice, on a tap
+   anywhere else, on Escape, and whenever a cafe page is opened. */
+function closeMoreMenu(refocus) {
+  const m = $("d-more");
+  if (!m || !m.open) return;
+  m.open = false;
+  const sm = m.querySelector("summary");
+  if (refocus && sm) /** @type {HTMLElement} */ (sm).focus();
+}
+document.addEventListener("click", e => {
+  const t = /** @type {Element|null} */ (e.target);
+  if (!(t && t.closest && t.closest("#d-more"))) closeMoreMenu(false);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeMoreMenu(true);
+});
 function openDetail(id, from) {
   const c = cafes.find(x => x.id === id);
   if (!c) return;
+  closeMoreMenu(false);
   if (from) lastMain = from;
   curId = id;
 
@@ -505,6 +523,7 @@ function toggleWish() {
   toast(c.wish ? "Added to wishlist 🔖" : "Removed from wishlist");
 }
 function deleteCurrent() {
+  closeMoreMenu(false);
   if (!confirm("Delete this cafe?")) return;
   const _gone = curId;
   cafes = cafes.filter(x => x.id !== curId);
@@ -563,6 +582,7 @@ function addBranch(id) {
   if (isAdmin) openForm({ branchOf: id });
 }
 function editCurrent() {
+  closeMoreMenu(false);
   openForm(curId);
 }
 
