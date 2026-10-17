@@ -94,7 +94,7 @@ const { eq, done } = checker();
              modal: m.getAttribute("aria-modal"), text: postcardText(cafes[0]) };
   });
   eq(p.open, true, "Share spot opens the postcard");
-  eq(p.size, [1080, 1350], "…a 4:5 picture");
+  eq(p.size, [1080, 1920], "…a 9:16 Story picture");
   eq(p.focus, "pc-share", "…with focus moved into it");
   eq(p.modal, "true", "…as a modal dialog");
   eq(p.header !== p.body, true, "…drawn, not blank: the tile and the card are different colours");

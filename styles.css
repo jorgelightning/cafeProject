@@ -1121,3 +1121,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .wdots i{ width:6px; height:6px; border-radius:50%; display:block; border:1px solid var(--soft); background:transparent; opacity:.5; }
 .wdots i.on{ background:var(--acc-strong); border-color:var(--acc-strong); opacity:1; }
 @media (min-width:700px){ .wc{ flex-basis:232px; } }
+
+/* ---------- the postcard is a Story (v98) ----------
+   1080 x 1920, so the preview is tall: it shrinks to leave the share buttons on screen instead of pushing them below the fold. */
+.pccol canvas{ width:auto; max-width:100%; max-height:calc(100vh - 190px); max-height:calc(100dvh - 190px); align-self:center; }
