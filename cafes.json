@@ -1273,28 +1273,54 @@
   {
     "area": "Outer Sunset",
     "brand": "Kiss of matcha",
+    "custom": false,
     "drinks": [
       {
+        "count": 2,
+        "dates": [
+          "2026-10-16"
+        ],
         "ice": "Warm",
         "milk": "Oat",
         "n": "Hojicha latte",
-        "p": "7.84",
+        "orders": [
+          {
+            "ice": "Warm",
+            "id": "mvc0vw88ikua",
+            "milk": "Oat",
+            "p": "7.84",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "100%"
+          },
+          {
+            "date": "2026-10-16",
+            "ice": "Warm",
+            "id": "mvc0vwcb944b",
+            "milk": "Oat",
+            "p": "8.14",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "8.14",
         "reorder": "yes",
-        "size": "16 oz",
-        "sweet": "100%"
+        "size": "12 oz",
+        "sweet": "0%"
       }
     ],
-    "elo": 1486,
+    "elo": 1541,
     "emoji": "☕",
     "fav": false,
     "id": "mqreywab3gfz",
     "lat": 37.76319,
     "lng": -122.48086,
-    "matches": 1,
+    "matches": 2,
     "name": "Kiss of Matcha",
     "rating": 4,
     "review": "That nice hojicha taste is prominent",
-    "updated": "2026-06-24T01:48:00.370Z",
+    "updated": "2026-10-17T06:36:05.932Z",
     "wish": false
   },
   {
@@ -1747,13 +1773,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1493,
+    "elo": 1474,
     "emoji": "☕",
     "fav": false,
     "id": "msu1j50kxltv",
     "lat": 37.74058,
     "lng": -122.46647,
-    "matches": 3,
+    "matches": 4,
     "name": "Hardware Coffee Co.",
     "rating": 4,
     "review": "Great study spot! Hojicha is ok!",
@@ -3209,6 +3235,7 @@
   {
     "area": "San Francisco, CA",
     "brand": "Kiss of matcha",
+    "custom": false,
     "drinks": [
       {
         "dates": [
@@ -3217,29 +3244,41 @@
         "elo": 1435,
         "matches": 5,
         "n": "Hojicha latte",
-        "p": ""
+        "orders": [
+          {
+            "date": "2026-02-17",
+            "id": "mvc0td9cpse7"
+          }
+        ]
       },
       {
         "dates": [
           "2026-03-24"
         ],
         "n": "Hojicha tea",
-        "p": ""
+        "orders": [
+          {
+            "date": "2026-03-24",
+            "id": "mvc0td99x0rq"
+          }
+        ]
       }
     ],
-    "elo": 1487,
+    "elo": 1495,
     "emoji": "🍵",
     "fav": false,
     "id": "tea-kiss-of-matcha",
     "lat": 37.78296,
     "lng": -122.46745,
-    "matches": 7,
+    "matches": 8,
     "name": "Kiss of Matcha",
     "rating": 4,
     "review": "Good hojicha — low sugar and earthy.",
     "tags": [
       "matcha"
-    ]
+    ],
+    "updated": "2026-10-17T06:35:13.736Z",
+    "wish": false
   },
   {
     "area": "San Francisco, CA",
@@ -4162,13 +4201,13 @@
         "p": ""
       }
     ],
-    "elo": 1484,
+    "elo": 1476,
     "emoji": "🧋",
     "fav": false,
     "id": "tea-yokee",
     "lat": 37.49373,
     "lng": -121.9302,
-    "matches": 5,
+    "matches": 6,
     "name": "Yokee Milk Tea",
     "rating": 4,
     "review": "Reliable — the oolong-based teas are the best picks."
