@@ -33,6 +33,11 @@ const { eq, done } = checker();
       bare: k({ name: "Nothing Yet", drinks: [] }),
       chosenTea: k({ name: "Corner Coffee", emoji: "🍵", drinks: [d("Latte")] }),
       chosenBoba: k({ name: "Kiss of Matcha", emoji: "🧋", drinks: [d("Hojicha latte")] }),
+      komeya: k({ name: "Komeya No Bento", emoji: "☕", tags: ["matcha", "to-go"], drinks: [d("Hojicha latte", [{ date: "2026-09-01" }, { date: "2026-09-02" }]), d("Jasmine Yuzu Tea Aiyu Jelly"), d("Iced Hojicha Latte w/ Salted Cheese Foam")] }),
+      misspelt: k({ name: "8 Grams Matcha", emoji: "☕", drinks: [d("Mattcha Latte (Kuro blend)")] }),
+      teaLatte: k({ name: "Chicha San Chen", emoji: "☕", drinks: [d("Honey Cassia Black Tea Latte")] }),
+      toppingOnly: k({ name: "Some Place", emoji: "☕", drinks: [d("Hojicha latte w/ cheese foam")] }),
+      tagOnly: k({ name: "Quiet Room", emoji: "☕", tags: ["matcha"], drinks: [d("Seasonal special")] }),
       coffeeNamedTeaTop: k({ name: "Origin Lab Coffee & Matcha", emoji: "☕", drinks: [d("Hojicha latte")] })
     };
   });
@@ -44,6 +49,11 @@ const { eq, done } = checker();
   eq(kinds.pastry, "pastry", "a pastry shop is pastry");
   eq([kinds.plain, kinds.bare], ["coffee", "coffee"], "a plain cafe, or one with nothing logged, is a coffee cup");
   eq([kinds.chosenTea, kinds.chosenBoba], ["matcha", "boba"], "an emoji you chose beats the guess");
+  eq(kinds.komeya, "matcha", "Komeya No Bento is matcha: a salted cheese foam topping on a hojicha latte does not make it boba");
+  eq(kinds.misspelt, "matcha", "a double-t \"Mattcha\" is still matcha");
+  eq(kinds.teaLatte, "boba", "a black tea latte is tea, not coffee, whatever the word latte says");
+  eq(kinds.toppingOnly, "matcha", "…a topping never outvotes the drink it sits on");
+  eq(kinds.tagOnly, "matcha", "…and the cafe's own matcha tag counts when no drink says anything");
   eq(kinds.coffeeNamedTeaTop, "matcha", "what you order there outranks the word 'coffee' in the name");
 
   /* ---- drawing it ---- */
@@ -77,6 +87,10 @@ const { eq, done } = checker();
   eq(texts.some(t => /[\u{1F300}-\u{1FAFF}☕]/u.test(t)), false, "nothing is typed as an emoji any more");
   eq(texts.some(t => /OPEN IN THE APP/i.test(t)), false, "the card no longer says 'open in the app'");
   eq(texts.includes("JL CAFE PROJECT"), true, "…the footer is just whose list it is");
+
+  /* ---- the rank and where it stands are a pair, not two ends of the card ---- */
+  const rk = imgs.matcha.calls.find(c => /^#\d+$/.test(c.t)), st = imgs.matcha.calls.find(c => /^of \d+ on my list$/.test(c.t));
+  eq(!!rk && !!st && st.y > rk.y && Math.abs(st.x - rk.x) < 120, true, "\"of 111 on my list\" sits directly under the rank, not at the far edge (rank " + (rk && Math.round(rk.x)) + "," + (rk && Math.round(rk.y)) + "; standing " + (st && Math.round(st.x)) + "," + (st && Math.round(st.y)) + ")");
 
   /* ---- Story safe zones: 14% top, 13% bottom ---- */
   const inside = calls => ({ min: Math.min(...calls.map(c => c.y)), max: Math.max(...calls.map(c => c.y)) });

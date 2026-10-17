@@ -1521,3 +1521,14 @@ The hero fades into the paper, as in the mockup the owner picked. A rounded-shee
 set aside: it was cleaner at the seam but the owner preferred the fade. What was wrong was the blank white band
 under the footer, so the bottom of the card now takes a soft wash of the drink's colour (30% at the very bottom,
 starting 240px above `SAFE_B`), which mirrors the top and finishes the card without a hard edge.
+
+**What the mark is guessed from (v99).** In order: a chosen emoji; the name or brand saying it outright (boba, gelato,
+a bakery); the drink you order most there; then a vote across its other drinks weighted by orders, plus the cafe's own
+`matcha`/`boba` tag; then the name. Each drink is read by `drinkKind`, where matcha words beat boba words (a hojicha
+latte with salted cheese foam is a hojicha latte, the foam is a topping), `tea` beats `latte` (a black tea latte is
+tea), and "Mattcha" counts. The first version ran the boba keywords over every drink name before looking at what you
+order, so one cheese-foam topping turned Komeya No Bento, a matcha shop, into a boba cup. A scan of all 111 cafes
+after the fix: 38 bowls, 46 boba cups, 25 cups, 1 gelato, 1 pastry.
+
+On the card the rank and "of 111 on my list" are stacked (rank on top, where it stands directly under it), not split to the
+two edges of the card, where they read as two unrelated facts.
