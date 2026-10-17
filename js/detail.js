@@ -648,30 +648,44 @@ const CARD_VESSELS = {
 function teaKind(text) {
   return /matcha|hojicha|genmaicha|sencha|chai/.test(text) ? "matcha" : "boba";
 }
-/** What a cafe serves, as one of the CARD_KINDS keys. The drink you order most there counts above the name:
- *  Kissaten HiFi is a coffeehouse you go to for a flat white, whatever "kissaten" means on a sign. @param {Cafe} c */
+/** One drink name, as a kind, or null when it says nothing. Matcha words win over boba words on purpose: a hojicha
+ *  latte with salted cheese foam is a hojicha latte, the foam is a topping. */
+function drinkKind(n) {
+  const t = String(n || "").toLowerCase();
+  if (/matt?cha|hojicha|genmaicha|sencha|chai/.test(t)) return "matcha";
+  if (/boba|bubble|milk tea|cheese foam|brown sugar|taro|pearl|jelly|oolong|fruit tea/.test(t)) return "boba";
+  /* a "black tea latte" is tea, whatever the word latte says */
+  if (/\btea\b/.test(t)) return teaKind(t);
+  if (/latte|flat white|espresso|americano|cappuccino|cortado|macchiato|mocha|drip|coffee|cold brew/.test(t)) return "coffee";
+  return null;
+}
+/** What a cafe serves, as one of the CARD_KINDS keys. In order of how much it says about the place:
+ *  a chosen emoji; the name or brand saying it outright (boba, gelato, a bakery); the drink you order most
+ *  there (so Kissaten HiFi is a cup, you go for the flat white); then what its other drinks and tags suggest,
+ *  a vote weighted by how often you ordered each. @param {Cafe} c */
 function cafeKind(c) {
   if (c.emoji && EMOJI_KIND[c.emoji]) return EMOJI_KIND[c.emoji];
+  const who = [c.name, c.brand].join(" ").toLowerCase();
+  if (/boba|bubble tea|milk tea|heytea|chagee|tiger sugar|gong cha|milksha/.test(who)) return "boba";
+  if (/gelato|ice cream|soft serve/.test(who)) return "gelato";
+  if (/bakery|pastry|croissant|patisserie|boulangerie/.test(who)) return "pastry";
   const top = typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
-  const best = top ? String(top.d.n || "").toLowerCase() : "";
-  const text = [c.name, c.brand, best]
-    .concat(
-      (c.drinks || []).map(function (d) {
-        return d.n;
-      })
-    )
-    .join(" ")
-    .toLowerCase();
-  const name = String(c.name || "").toLowerCase();
-  const tea = /matcha|hojicha|\btea\b|oolong|chai|genmaicha|sencha/;
-  if (/boba|bubble tea|milk tea|cheese foam|brown sugar|taro|heytea|chagee|tiger sugar|gong cha|milksha/.test(text)) return "boba";
-  if (/gelato|ice cream|soft serve/.test(text)) return "gelato";
-  if (/bakery|pastry|croissant|patisserie|boulangerie/.test(name)) return "pastry";
-  if (best) {
-    if (tea.test(best)) return teaKind(text);
-    if (/latte|flat white|espresso|americano|cappuccino|cortado|macchiato|mocha|drip|coffee|cold brew/.test(best)) return "coffee";
-  }
-  if (tea.test(text) && !/coffee|espresso/.test(name)) return teaKind(text);
+  const best = top ? drinkKind(top.d.n) : null;
+  if (best) return best;
+  const votes = {};
+  (c.drinks || []).forEach(function (d) {
+    const k = drinkKind(d.n);
+    if (k) votes[k] = (votes[k] || 0) + Math.max(1, drinkOrders(d).length);
+  });
+  (c.tags || []).forEach(function (t) {
+    if (t === "matcha") votes.matcha = (votes.matcha || 0) + 1;
+    if (t === "boba") votes.boba = (votes.boba || 0) + 1;
+  });
+  const win = Object.keys(votes).sort(function (x, y) {
+    return votes[y] - votes[x];
+  })[0];
+  if (win) return win;
+  if (/matcha|hojicha|\btea\b/.test(who) && !/coffee|espresso/.test(who)) return teaKind(who);
   return "coffee";
 }
 function postcardData(c) {
@@ -813,14 +827,14 @@ function drawPostcard(canvas, d) {
     ctx.fillStyle = gold ? "#3b2606" : "#fff";
     ctx.textBaseline = "middle";
     ctx.fillText(label, PAD + 36, SAFE_T + 58);
-    ctx.font = "700 36px " + SANS;
+    /* the standing sits directly under the rank, not out at the far edge from it */
+    ctx.font = "700 34px " + SANS;
     ctx.fillStyle = "#fff";
-    ctx.textAlign = "right";
+    ctx.textAlign = "left";
     ctx.shadowColor = "rgba(0,0,0,.5)";
     ctx.shadowBlur = 8;
-    ctx.fillText("of " + d.rn + " on my list", W - PAD, SAFE_T + 58);
+    ctx.fillText("of " + d.rn + " on my list", PAD + 8, SAFE_T + 112 + 44);
     ctx.shadowBlur = 0;
-    ctx.textAlign = "left";
   }
   /* the words */
   let y = top + 30;
