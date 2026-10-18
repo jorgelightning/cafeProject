@@ -327,10 +327,10 @@ function boardQueueRow(c) {
   return (
     '<div class="gorow" role="button" tabindex="0" onclick="' +
     act +
-    '"><span class="gotile" style="background:' +
-    tintFor(c) +
+    '"><span class="gotile" style="' +
+    nophotoStyle(c) +
     '">' +
-    esc(cafeMark(c)) +
+    markArt(c) +
     "</span>" +
     '<div class="lbmain"><div class="lbname">' +
     esc(c.name) +
@@ -879,7 +879,7 @@ function chaserOpt(c, drink, side) {
   const th =
     gp && !_imgFail[c.id]
       ? '<span class="ch-th" style="background-image:url(\'' + safeUrl(gp) + "')\"></span>"
-      : '<span class="ch-th" style="' + nophotoStyle(c) + '">' + esc(initials(c)) + "</span>";
+      : '<span class="ch-th" style="' + nophotoStyle(c) + '">' + markArt(c) + "</span>";
   const sub = [drink ? esc(drink) : "", chaserWhen(chaserLast(c))].filter(Boolean).join(" · ");
   return (
     '<button class="ch-opt" onclick="chaserPick(' +

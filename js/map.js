@@ -980,6 +980,9 @@ let pendingMarkerId = null;
 let peekId = null;
 function onMarkerClick(c, m) {
   mapOwned = true;
+  /* one overlay at a time: the region menu and the legend fold away when a pin opens its card */
+  setMapPanel(false);
+  toggleLegend(false);
   selectPin(c.id);
   if (window.innerWidth >= 900) {
     openDetail(c.id, "map");

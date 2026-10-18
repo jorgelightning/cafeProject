@@ -215,14 +215,6 @@ function safeUrl(u) {
 }
 const _imgFail = {};
 let _photoRetried = {};
-function initials(c) {
-  const n = ((c && c.name) || "").trim();
-  if (!n) return "?";
-  const w = n.split(/\s+/).filter(Boolean);
-  let s = (w[0] && w[0][0]) || "";
-  if (w.length > 1 && w[1][0]) s += w[1][0];
-  return s.toUpperCase();
-}
 /* ---------- how much you liked it ----------
    Five stars had stopped separating anything: 75 of the 90 rated cafes sat on 4 or 5, and only
    five on 1-2. So the input is now the three-way call a comparison ranking wants — it says
@@ -295,20 +287,19 @@ function inkOn(hex) {
      that the ink has to be dark, which on every tint here is 9:1 or better. */
   return L > 0.3 ? "rgba(0,0,0,.72)" : "#fff";
 }
-/* 111 of 111 tiles are placeholders, so a saturated block per cafe was the loudest thing on the List and
-   said nothing the name did not. The tint is now a 22% wash over the surface, with the cafe's own
-   emoji on it: the colour still carries the verdict (the same scale the map pins use), and a photo,
-   when there is one, is the only loud thing. */
+/* A tile with no photo is the cafe's drawn mark on its drink's colour, the same as its share card. It used to be a
+   wash of the verdict colour, and with 79 of 111 cafes Loved, 71% of the List was the same pale green: the colour
+   said almost nothing, and the verdict is the dot beside the name. What a place serves varies (matcha, boba,
+   coffee, tea), so the colour now carries that. The map pins keep the verdict colour: there it is the point. */
 function nophotoBg(c) {
-  return "color-mix(in srgb," + tintFor(c) + " 22%,var(--surface2))";
+  return typeof markBg === "function" ? markBg(c) : "color-mix(in srgb," + tintFor(c) + " 22%,var(--surface2))";
 }
-/* background and ink together; the ink is the theme's own, since the wash is light in both themes */
+/* background and ink together: cream line art on a deep colour, the same in both themes */
 function nophotoStyle(c) {
-  return "background:" + nophotoBg(c) + ";color:var(--text)";
+  return "background:" + nophotoBg(c) + ";color:#f6efe2";
 }
-/* emoji only: the initials were a second mark for the same cafe, and broke on "HEYTEA (Cupertino)" ("H(") */
 function nophotoHTML(c) {
-  return '<span class="em">' + esc(cafeMark(c)) + "</span>";
+  return '<span class="em">' + (typeof markArt === "function" ? markArt(c) : esc(cafeMark(c))) + "</span>";
 }
 /* Local calendar date. Plain toISOString() would hand back yesterday (or tomorrow) when
    logging from Hawaii or Taipei, so shift by the timezone offset before slicing. */
