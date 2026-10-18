@@ -51,6 +51,8 @@ const SUITE = [
   ["stories",            "the year and top 5 as 9:16 Stories: five best ranked, no private or wishlist cafes, safe band, owner-only button"],
   ["data-copy",          "Settings' Your data card: Download a copy, what it holds, the backup date, and the unsynced flag untouched"],
   ["same-cafe",          "the same-cafe check at logging: spelling, case and a branch suffix no longer hide a duplicate; branches stay separate"],
+  ["sync-resolve",       "answering a sync conflict decides only the fields that clashed; both devices' visits survive either answer"],
+  ["private-hardening",  "no place id on a private spot (app and backup), no exact address left in the browser after sign-out, verdict in the score cache"],
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],

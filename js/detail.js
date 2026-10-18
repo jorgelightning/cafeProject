@@ -1180,7 +1180,8 @@ function top5Items() {
   const rm = rankMap();
   return cafes
     .filter(function (c) {
-      return !c.wish && !c.custom && rm[c.id];
+      /* only cafes past placement: a newcomer that won its first two answers can sit high for a day */
+      return !c.wish && !c.custom && rm[c.id] && !isProvisional(c);
     })
     .sort(function (a, b) {
       return rm[a.id] - rm[b.id];

@@ -144,7 +144,10 @@ function syncById(list) {
 /* Orders merge by id. Legacy records predate ids, and merging those by position would
    reshuffle prices between dates, so a single id-less order anywhere makes the whole drinks
    list all-or-nothing. New orders always get one (form.js), so this heals as you edit. */
-function syncMergeOrders(base, mine, theirs, note, label) {
+/* `prefer` is the side a clash goes to: "mine" while merging in the background, or the side the person picked when
+   they answer a conflict. Only clashes use it; a field or order only one side moved is merged either way. */
+function syncMergeOrders(base, mine, theirs, note, label, prefer) {
+  const P = prefer === "theirs";
   const B = syncById(base),
     M = syncById(mine),
     T = syncById(theirs);
@@ -166,7 +169,8 @@ function syncMergeOrders(base, mine, theirs, note, label) {
       const kept = inM ? M[id] : T[id];
       if (kept && !syncEqual(kept, B[id])) {
         note(label, inM ? M[id] : null, inT ? T[id] : null);
-        if (inM) out.push(M[id]);
+        const side = P ? (inT ? T[id] : null) : inM ? M[id] : null;
+        if (side) out.push(side);
       }
       return;
     }
@@ -191,14 +195,15 @@ function syncMergeOrders(base, mine, theirs, note, label) {
       return;
     }
     note(label, M[id], T[id]);
-    out.push(M[id]);
+    out.push(P ? T[id] : M[id]);
   });
   out.sort(function (a, b) {
     return String(a.date || "").localeCompare(String(b.date || ""));
   });
   return out;
 }
-function syncMergeDrinks(base, mine, theirs, note) {
+function syncMergeDrinks(base, mine, theirs, note, prefer) {
+  const P = prefer === "theirs";
   const key = function (d) {
     return String((d && d.n) || "")
       .trim()
@@ -229,7 +234,8 @@ function syncMergeDrinks(base, mine, theirs, note) {
       const kept = inM ? M[k] : T[k];
       if (kept && !syncEqual(kept, B[k])) {
         note("drinks", inM ? M[k] : null, inT ? T[k] : null);
-        if (inM) out.push(syncDrinkSummaryFor(M[k]));
+        const side = P ? (inT ? T[k] : null) : inM ? M[k] : null;
+        if (side) out.push(syncDrinkSummaryFor(side));
       }
       return;
     }
@@ -245,8 +251,8 @@ function syncMergeDrinks(base, mine, theirs, note) {
       out.push(M[k]);
       return;
     }
-    const merged = Object.assign({}, T[k], M[k]);
-    merged.orders = syncMergeOrders((B[k] || {}).orders, (M[k] || {}).orders, (T[k] || {}).orders, note, "drinks");
+    const merged = P ? Object.assign({}, M[k], T[k]) : Object.assign({}, T[k], M[k]);
+    merged.orders = syncMergeOrders((B[k] || {}).orders, (M[k] || {}).orders, (T[k] || {}).orders, note, "drinks", prefer);
     /* A drink's ranking follows the side that has seen more comparisons, like the cafe's. */
     const bm = (T[k] || {}).matches || 0,
       am = (M[k] || {}).matches || 0;
@@ -275,7 +281,8 @@ function syncWithOrderIds(c) {
   ensureOrderIds(copy);
   return copy;
 }
-function syncMerge(base, mine, theirs) {
+function syncMerge(base, mine, theirs, prefer) {
+  const P = prefer === "theirs";
   const conflicts = [];
   const note = function (field, m, t) {
     if (
@@ -290,7 +297,8 @@ function syncMerge(base, mine, theirs) {
   if (mine === null || theirs === null) {
     const live = mine || theirs;
     if (!syncEqual(live, base)) note("deleted", mine, theirs);
-    return { value: mine === null ? null : mine, conflicts: conflicts };
+    const kept = P ? theirs : mine;
+    return { value: kept === null ? null : kept, conflicts: conflicts };
   }
   /* Legacy orders without an id get the same deterministic one on every side, so a drink that
      holds one is merged by id like any other instead of all-or-nothing. */
@@ -311,7 +319,7 @@ function syncMerge(base, mine, theirs) {
     else if (syncEqual(t, b)) v = m;
     else {
       note(k, m, t);
-      v = m;
+      v = P ? t : m;
     }
     if (v !== undefined) out[k] = v;
   });
@@ -321,7 +329,7 @@ function syncMerge(base, mine, theirs) {
   const src = (theirs.matches || 0) > (mine.matches || 0) ? theirs : mine;
   if (src.elo !== undefined) out.elo = src.elo;
   if (src.matches !== undefined) out.matches = src.matches;
-  const drinks = syncMergeDrinks(B.drinks, mine.drinks, theirs.drinks, note);
+  const drinks = syncMergeDrinks(B.drinks, mine.drinks, theirs.drinks, note, prefer);
   if (mine.drinks !== undefined || theirs.drinks !== undefined) out.drinks = drinks;
   return { value: out, conflicts: conflicts };
 }
@@ -467,23 +475,26 @@ function resolveSyncConflict(useLocal) {
   const id = Object.keys(syncPending).find(k => syncPending[k].conflict);
   if (!id) return;
   const op = syncPending[id];
-  if (useLocal) {
-    op.base = syncCopy(op.remote);
-    delete op.conflict;
-    delete op.remote;
-  } else {
+  /* The question was only about the fields that clashed ("everything else was merged for you"), so the answer
+     only decides those. It used to keep one whole version, which threw away the other side's merged edits with
+     it: a visit logged on the other device, gone, right after being told it was merged. */
+  const merged = syncMerge(op.base, op.value, op.remote, useLocal ? "mine" : "theirs").value;
+  if (syncEqual(merged, op.remote)) {
     delete syncPending[id];
     /* the cloud's copy is now also what this device believes the cloud has */
     if (op.remote) syncRemote[id] = syncCopy(op.remote);
     else delete syncRemote[id];
-    cafes = cafes.filter(c => c.id !== id);
-    if (op.remote) cafes.push(op.remote);
-    try {
-      _localSave();
-    } catch (e) {
-      syncFailure = "Storage full — keep this page open";
-      warn("sync", e);
-    }
+  } else {
+    /* written against what the cloud holds now, so the next flush lands it unless the cloud moves again */
+    syncPending[id] = { token: uid(), base: syncCopy(op.remote), value: syncCopy(merged) };
+  }
+  cafes = cafes.filter(c => c.id !== id);
+  if (merged) cafes.push(adoptCafes([syncCopy(merged)])[0]);
+  try {
+    _localSave();
+  } catch (e) {
+    syncFailure = "Storage full — keep this page open";
+    warn("sync", e);
   }
   syncPersist();
   flushSync();

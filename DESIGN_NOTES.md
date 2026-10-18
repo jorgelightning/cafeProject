@@ -1569,3 +1569,25 @@ that rule is the one marked `TODO(human)` in `form.js`.
 `ready(page)`; 23 fixed `waitForTimeout(900)` warm-ups in 21 test files now wait for it. `offline.js` and `updates.js` keep
 fixed waits: they are about a service worker and a new build, not about boot.
 
+## The risk review fixes
+
+Found by a read-only review of sync, private spots and the ranking, each proven before it was fixed.
+
+**A conflict answer decides only what clashed.** The prompt says "Everything else was merged for you", but the two
+buttons kept one whole version: a phone and an iPad that each logged a visit and both changed the rating lost one
+of the visits whichever was picked. `syncMerge` takes a `prefer` side, used only for a clash, and
+`resolveSyncConflict` writes the merge (against what the cloud holds now) and shows it. `tests/sync-resolve.js`.
+
+**No place id on a private spot.** `redactPrivate` drops `pid`, which opens the exact place on Google Maps, and
+`adoptCafes` heals an old record that has one; the backup job drops it too and refuses a file that still carries one.
+The owner loses nothing: private spots skip Google photos, and directions use the owner-only address.
+
+**Signing out forgets the exact addresses.** `forgetPrivateHere` empties the browser's copy of the owner-only
+addresses when the owner signs out, keeping only a write still waiting for the cloud (dropping it would lose the
+address). It was readable in the developer tools of any browser you had ever signed in on.
+
+**Small ones.** The cache behind the verdict averages now changes with a verdict (rating) and the wishlist flag, so
+moving a cafe from Loved to Fine moves the averages at once. The Top 5 Story only takes cafes past placement (5+
+comparisons). Two devices ranking the same cafe before syncing still keep only one comparison's effect: fixing that
+needs a stored log of comparisons, more risk than the drift.
+

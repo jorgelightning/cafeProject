@@ -361,6 +361,9 @@ function redactPrivate(c) {
   c.lat = blurCoord(c.lat);
   c.lng = blurCoord(c.lng);
   c.area = privateArea(c.area);
+  /* A Google place id opens the exact place on Google Maps, so it says more than the pin it came with. Nothing
+     the owner sees needs it on a private spot (they skip Google photos), so it is dropped, not kept aside. */
+  delete c.pid;
   return c;
 }
 /* The exact address of a private spot, keyed by cafe id. Deliberately NOT merged into
@@ -456,9 +459,11 @@ function adoptCafes(list) {
     const n = function (v) {
       return v == null ? null : v;
     };
-    const exact = { area: c.area || "", lat: n(c.lat), lng: n(c.lng) };
+    const exact = { area: c.area || "", lat: n(c.lat), lng: n(c.lng) },
+      hadPid = !!c.pid;
     redactPrivate(c);
-    if (exact.area !== (c.area || "") || exact.lat !== n(c.lat) || exact.lng !== n(c.lng)) _needsHeal[c.id] = exact;
+    /* a place id in the public copy is healed like a precise pin: the public copy is rewritten without it */
+    if (hadPid || exact.area !== (c.area || "") || exact.lat !== n(c.lat) || exact.lng !== n(c.lng)) _needsHeal[c.id] = exact;
   });
   return out;
 }

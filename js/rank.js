@@ -26,7 +26,11 @@ let _priorSig = -1,
   _prior = {};
 function tierPriors() {
   let sig = cafes.length;
-  for (let i = 0; i < cafes.length; i++) sig = (sig * 31 + matchCount(cafes[i]) * 7 + Math.round(eloFor(cafes[i]))) % 1000003;
+  /* the verdict (rating) and the wishlist flag decide which average a cafe counts towards, so they are in it too:
+     without them, moving a cafe from Loved to Fine kept the old averages until something else changed */
+  for (let i = 0; i < cafes.length; i++)
+    sig =
+      (sig * 31 + matchCount(cafes[i]) * 7 + Math.round(eloFor(cafes[i])) + (cafes[i].rating || 0) * 131 + (cafes[i].wish ? 17 : 0)) % 1000003;
   if (sig === _priorSig) return _prior;
   const sum = {},
     n = {};

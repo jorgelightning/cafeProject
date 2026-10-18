@@ -171,6 +171,26 @@ function persistPrivate() {
 /* A queue entry is {base, value}: what this device last knew the cloud held, and what it wants
    there. Older releases queued the bare value (or null for a removal), and those still work — they
    just carry no base, so they write unconditionally as before. */
+/* Signing out leaves this browser holding no exact address. It used to keep the whole owner-only copy in local
+   storage, readable by anyone who opens the browser's developer tools afterwards: fine on your own phone, not on
+   a borrowed laptop. A write still waiting for the cloud is the one thing kept, with only what it needs, because
+   dropping it would lose the address; it leaves the device the next time you sign in and it lands. */
+function forgetPrivateHere() {
+  const waiting = Object.keys(privPending);
+  const keep = {};
+  waiting.forEach(function (id) {
+    if (Object.prototype.hasOwnProperty.call(privDetail, id)) keep[id] = privDetail[id];
+  });
+  privDetail = keep;
+  try {
+    if (Object.keys(keep).length) lsSet(PRIV_MIRROR, JSON.stringify(keep));
+    else localStorage.removeItem(PRIV_MIRROR);
+    if (!waiting.length) localStorage.removeItem(PRIV_QUEUE);
+  } catch (e) {
+    warn("storage.js", e);
+  }
+  return waiting.length;
+}
 function _privOp(e) {
   if (e && typeof e === "object" && Object.prototype.hasOwnProperty.call(e, "value")) return e;
   return { value: e === undefined ? null : e, legacy: true };
@@ -593,6 +613,8 @@ function initAuth() {
     } else if (!ok && isAdmin) {
       isAdmin = false;
       localStorage.removeItem(ADMIN_FLAG);
+      const waiting = forgetPrivateHere();
+      if (waiting) toast(waiting + " private address" + (waiting === 1 ? " is" : "es are") + " still waiting to sync, so kept on this device until you sign in again");
       applyMode();
       load().then(() => {
         if (gReady) renderMarkers();

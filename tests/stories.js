@@ -24,6 +24,7 @@ const { eq, done } = checker();
     cafes = [
       mk("a", "Kiss of Matcha", 1800, d("Hojicha latte", ["02-01", "03-01", "04-01"])),
       mk("pv", "Friend's Place", 1790, d("Flat white", ["02-02"]), { custom: true, area: "SECRETAREA 12", emoji: "🏠" }),
+      mk("np", "Hot Newcomer", 1950, d("Latte", ["02-09"]), { matches: 2 }),
       mk("b", "Boba Corner Tea", 1700, d("Cheese Foam Oolong", ["02-03"])),
       mk("c", "Morning Glass", 1600, d("Drip", ["02-04", "05-04"])),
       mk("e", "Scoop Gelato", 1500, d("Affogato", ["06-05"])),
@@ -43,7 +44,7 @@ const { eq, done } = checker();
     return { btn: btn ? btn.textContent.replace(/\s+/g, " ").trim() : null, items: top5Items().map(i => i.name) }; }, admin);
   const o = await go(true);
   eq(o.items, ["Kiss of Matcha", "Boba Corner Tea", "Morning Glass", "Scoop Gelato", "Quiet Roasters"],
-     "the top five is the five best ranked: no private spot (Friend's Place is second by score), no wishlist, nothing unranked");
+     "the top five is the five best ranked: no private spot (Friend's Place is second by score), no wishlist, nothing unranked, and no cafe still being placed (Hot Newcomer scores highest after two answers)");
   eq(/Share my top 5/.test(o.btn || ""), true, "the owner gets \"Share my top 5\" on the Go tab");
   eq((await go(false)).btn, null, "…a visitor does not (it is the owner's list to send)");
 
