@@ -3,9 +3,9 @@
    Loaded by index.html; script order matters (config first, boot last). */
 /* ---------- detail ---------- */
 function photoLabel(c) {
-  if (c && c.photo) return "📷 My drink";
+  if (c && c.photo) return ico("camera") + " My drink";
   const u = gphotoFor(c);
-  if (u) return "📷 Google Maps";
+  if (u) return ico("camera") + " Google Maps";
   return "";
 }
 function setHeroTag(c) {
@@ -13,7 +13,7 @@ function setHeroTag(c) {
   if (!t) return;
   const l = photoLabel(c);
   if (l) {
-    t.textContent = l;
+    t.innerHTML = l; /* photoLabel() is a fixed label and an icon, never user text */
     t.style.display = "";
   } else {
     t.style.display = "none";
@@ -296,10 +296,10 @@ function openDetail(id, from) {
   } catch (e) {
     warn("detail.js renderChaser", e);
   }
-  $("d-fav").textContent = c.fav ? "❤️" : "🤍";
+  $("d-fav").setAttribute("aria-pressed", String(!!c.fav));
   if ($("d-wish")) {
-    $("d-wish").textContent = "🔖";
-    $("d-wish").style.opacity = c.wish ? "1" : ".45";
+    $("d-wish").setAttribute("aria-pressed", String(!!c.wish));
+    $("d-wish").setAttribute("aria-pressed", String(!!c.wish));
   }
   $("d-tags").innerHTML = (c.tags || []).map(t => '<span class="chip">' + esc(t) + "</span>").join("");
 
@@ -508,7 +508,7 @@ function toggleFav() {
   if (!c) return;
   c.fav = !c.fav;
   saveCafe(c.id);
-  $("d-fav").textContent = c.fav ? "❤️" : "🤍";
+  $("d-fav").setAttribute("aria-pressed", String(!!c.fav));
   renderMarkers();
   toast(c.fav ? "Added to favorites" : "Removed from favorites");
 }
@@ -517,7 +517,7 @@ function toggleWish() {
   if (!c) return;
   c.wish = !c.wish;
   saveCafe(c.id);
-  $("d-wish").style.opacity = c.wish ? "1" : ".45";
+  $("d-wish").setAttribute("aria-pressed", String(!!c.wish));
   renderMarkers();
   toast(c.wish ? "Added to wishlist 🔖" : "Removed from wishlist");
 }

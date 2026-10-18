@@ -291,6 +291,12 @@ function inkOn(hex) {
    wash of the verdict colour, and with 79 of 111 cafes Loved, 71% of the List was the same pale green: the colour
    said almost nothing, and the verdict is the dot beside the name. What a place serves varies (matcha, boba,
    coffee, tea), so the colour now carries that. The map pins keep the verdict colour: there it is the point. */
+/* One line-icon set for every control, in the tab bar's stroke: the symbols live once in index.html, and this draws
+   one by name. Emoji stay where they are content (a cafe's own mark, a drink, an answer), never as a button, since
+   each phone draws them in its own font and they sat oddly beside the line icons. */
+function ico(name, cls) {
+  return '<svg class="ico' + (cls ? " " + cls : "") + '" aria-hidden="true" focusable="false"><use href="#i-' + name + '"/></svg>';
+}
 function nophotoBg(c) {
   return typeof markBg === "function" ? markBg(c) : "color-mix(in srgb," + tintFor(c) + " 22%,var(--surface2))";
 }
@@ -819,7 +825,7 @@ let _cardRanks = null;
    of been, so it still separates. */
 function phInner(c, hasPhoto) {
   let h = hasPhoto ? "" : nophotoHTML(c);
-  if (c && c.fav) h += '<span class="favbadge">❤️</span>';
+  if (c && c.fav) h += '<span class="favbadge" aria-label="Favourite">' + ico("heart", "fill") + "</span>";
   return h + (typeof rankBadge === "function" ? rankBadge(c, _cardRanks) : "");
 }
 function verifyCardPhoto(id, url) {

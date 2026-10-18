@@ -391,7 +391,7 @@ function renderFilterChips() {
     h +=
       '<span class="chip' +
       (favOnly ? " on" : "") +
-      '" role="button" tabindex="0" onclick="toggleFavFilter()">❤️ ' +
+      '" role="button" tabindex="0" onclick="toggleFavFilter()" aria-label="Favourites">' + ico("heart", "fill") + " " +
       nFav +
       "</span>";
   CHIP_DEFS.forEach(d => {

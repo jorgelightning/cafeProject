@@ -127,7 +127,7 @@ function updateBrandBtn() {
   if (!b) return;
   const n = isAdmin ? backfillBrands(true).length : 0;
   b.style.display = n ? "" : "none";
-  if (n) b.textContent = "🏷 Fill in " + n + " brand" + (n === 1 ? "" : "s");
+  if (n) b.innerHTML = ico("tag") + " Fill in " + n + " brand" + (n === 1 ? "" : "s");
 }
 /** @param {string|{branchOf:string}} [id] a cafe id to edit, or {branchOf} to add another branch of that cafe's brand */
 function openForm(id) {
@@ -1114,7 +1114,7 @@ function updateMilkBtn() {
   if (!b) return;
   const n = isAdmin ? milkCleanupPlan().length : 0;
   b.style.display = n ? "" : "none";
-  if (n) b.textContent = "🥛 Fix milk in " + n + " name" + (n === 1 ? "" : "s");
+  if (n) b.innerHTML = ico("drop") + " Fix milk in " + n + " name" + (n === 1 ? "" : "s");
 }
 /* ---------- fix drinks already split by a typo ----------
    Prevention does nothing for the ones already on record. A variant is a name that is one or
@@ -1200,7 +1200,7 @@ function updateSpellBtn() {
   if (!b) return;
   const n = isAdmin ? spellingFixPlan().length : 0;
   b.style.display = n ? "" : "none";
-  if (n) b.textContent = "🔤 Fix " + n + " misspelled drink" + (n === 1 ? "" : "s");
+  if (n) b.innerHTML = ico("spell") + " Fix " + n + " misspelled drink" + (n === 1 ? "" : "s");
 }
 function fixDrinkSpellings() {
   if (!isAdmin) {
@@ -1416,7 +1416,7 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
     '<span class="drtitle">' +
     title +
     "</span>" +
-    '<span class="dredit">✎</span>' +
+    '<span class="dredit">' + ico("edit") + "</span>" +
     "</button>";
 
   /* The currency <select> IS this row's storage for .pc — it round-trips through the form the
@@ -1561,7 +1561,7 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
     iceRow +
     rateRow +
     '<button type="button" class="orderdone" onclick="toggleDrinkRow(this.closest(\'.dr\').querySelector(\'.drhead\'))">Done editing this order</button>' +
-    '<button class="delrow" onclick="delDrinkRow(this)">✕</button>';
+    '<button class="delrow" onclick="delDrinkRow(this)" aria-label="Remove this drink">' + ico("x") + "</button>";
 
   if (old) {
     div.classList.add("dr-old");

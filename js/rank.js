@@ -374,19 +374,31 @@ function renderBoard() {
       (h2h ? " \u00b7 " + h2h + " head-to-head" + (h2h === 1 ? "" : "s") : "")
     : vis.length + " cafes \u00b7 " + countries + " countr" + (countries === 1 ? "y" : "ies") + " \u00b7 best first";
   let h =
-    '<div class="cmp-head left"><div class="ct">\ud83c\udfc6 Where to go</div><div class="cs">' + sub + "</div></div>";
+    '<div class="cmp-head left"><div class="ct">Where to go</div><div class="cs">' + sub + "</div></div>";
+  /* Go's actions are one row of chips under the heading, so the first cafe is up the screen instead of under three
+     full-width grey bars. Rank a pair is the filled one: on this tab it is the owner's job, and its count is what
+     is left to place. */
+  const _t5 = isAdmin && typeof top5Items === "function" ? top5Items().length : 0,
+    _todo = never.length + placing.length,
+    _chips = [];
   if (isAdmin && vis.length > 1)
-    h +=
-      '<div class="handoff top" role="button" tabindex="0" onclick="boardRank()">⚖️ Rank a pair' +
-      (never.length ? " <span>· " + never.length + " never compared</span>" : "") +
-      (placing.length ? " <span>· " + placing.length + " still placing</span>" : "") +
-      "</div>";
-  const _t5 = isAdmin && typeof top5Items === "function" ? top5Items().length : 0;
-  if (_t5 >= 3)
-    h += '<div class="handoff" role="button" tabindex="0" onclick="openTop5Story()">📤 Share my top ' + _t5 + " <span>›</span></div>";
+    _chips.push(
+      '<button type="button" class="gochip p" onclick="boardRank()" title="' +
+        (never.length ? never.length + " never compared" : "") +
+        (never.length && placing.length ? ", " : "") +
+        (placing.length ? placing.length + " still placing" : "") +
+        '">' +
+        ico("scale") +
+        "Rank a pair" +
+        (_todo ? " <em>" + _todo + "</em>" : "") +
+        "</button>"
+    );
+  if (_t5 >= 3) _chips.push('<button type="button" class="gochip" onclick="openTop5Story()" aria-label="Share my top ' + _t5 + '">' + ico("podium") + "Top " + _t5 + "</button>");
+  if (!userLoc && board.length) _chips.push('<button type="button" class="gochip" onclick="locate()">' + ico("pin") + "Near me</button>");
+  if (_chips.length) h += '<div class="gochips" role="group" aria-label="On this tab">' + _chips.join("") + "</div>";
   if (!board.length) {
     h +=
-      '<div class="empty"><div class="big">🏆</div>Nothing ranked yet.' +
+      '<div class="empty"><div class="big">' + ico("trophy") + "</div>Nothing ranked yet." +
       (isAdmin ? " Tap “Rank a pair”, or log a visit and answer the question that follows." : "") +
       "</div>";
   } else {
@@ -412,8 +424,6 @@ function renderBoard() {
     if (!userLoc) {
       /* Nothing here may raise the location prompt on its own — only a tap may, which is the
          rule locate() exists to keep. */
-      h +=
-        '<div class="handoff top" role="button" tabindex="0" onclick="locate()">📍 Show what\u2019s near me <span>›</span></div>';
       h += boardChunk(rows);
     } else if (!near.length) {
       const closest = rows.slice().sort(function (a, b) {
@@ -428,7 +438,7 @@ function renderBoard() {
         "</div>";
       h += boardChunk(rows);
     } else {
-      h += '<div class="statsec">📍 Near you — ' + near.length + " within " + NEAR_MI + " miles</div>";
+      h += '<div class="statsec">' + ico("pin") + " Near you — " + near.length + " within " + NEAR_MI + " miles</div>";
       h += boardChunk(near);
       if (far.length) {
         h += '<div class="statsec">Further afield — ' + far.length + "</div>";
@@ -483,7 +493,7 @@ function renderBoard() {
     h += '<div class="statsec">Still placing — ' + placing.length + "</div>" + pq.map(boardQueueRow).join("");
   }
   h +=
-    '<div class="handoff" role="button" tabindex="0" onclick="show(\'stats\')">📊 See the numbers behind this <span>›</span></div>';
+    '<div class="handoff" role="button" tabindex="0" onclick="show(\'stats\')">' + ico("bars") + " See the numbers behind this <span>›</span></div>";
   host.innerHTML = '<div class="boardwrap">' + h + "</div>";
 }
 /* On-demand ranking. Anchors on a never-compared cafe when there is one, so the button
@@ -955,7 +965,7 @@ function chaserPaint() {
         "</span></div>" +
         '<div class="ch-done">' +
         (_chaser.board
-          ? '<button class="ch-lnk" onclick="chaserAgain()">↻ Rank another</button>'
+          ? '<button class="ch-lnk" onclick="chaserAgain()">' + ico("refresh") + " Rank another</button>"
           : '<button class="ch-lnk" onclick="chaserDismiss();openRank()">See where to go ›</button>') +
         '<button class="ch-close" onclick="chaserDismiss()">Done</button></div>'
     );
@@ -977,7 +987,7 @@ function chaserPaint() {
     '<div class="ch-hd"><span class="ch-qwrap">' +
       (eyebrow ? '<span class="ch-why">' + eyebrow + "</span>" : "") +
       '<span class="ch-q">Which would you go back to?</span></span>' +
-      '<button class="ch-x" onclick="chaserDismiss()" aria-label="Not now">✕</button></div>' +
+      '<button class="ch-x" onclick="chaserDismiss()" aria-label="Not now">' + ico("x") + "</button></div>" +
       '<div class="ch-pair">' +
       chaserOpt(L, LD, 0) +
       chaserOpt(R, RD, 1) +

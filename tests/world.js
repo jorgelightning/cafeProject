@@ -233,7 +233,7 @@ const { eq, done } = checker();
     const sel = document.getElementById("locsel");
     return { first: sel.options[0].textContent, val: sel.options[0].value };
   });
-  eq(r, { first: "🌐 World", val: "" }, "the dropdown's first choice is called World");
+  eq(r, { first: "World", val: "" }, "the dropdown's first choice is called World");
   r = await ph.pg.evaluate(() => {
     jumpToLocation("");
     return new Promise(res =>

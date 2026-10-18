@@ -1247,14 +1247,14 @@ function renderStats() {
     return matchCount(c) > 0;
   }).length;
   h += isAdmin
-    ? '<div class="handoff" role="button" tabindex="0" onclick="openRank()">⚖️ ' +
+    ? '<div class="handoff" role="button" tabindex="0" onclick="openRank()">' + ico("scale") + " " +
       rankedN +
       " of " +
       nonWish.length +
       " cafes ranked" +
       (nonWish.length - rankedN ? " <span>· " + (nonWish.length - rankedN) + " to go</span>" : "") +
       "</div>"
-    : '<div class="handoff" role="button" tabindex="0" onclick="openRank()">🏆 Where to go <span>›</span></div>';
+    : '<div class="handoff" role="button" tabindex="0" onclick="openRank()">' + ico("trophy") + " Where to go <span>›</span></div>";
 
   _marks.push([h.length, "end"]);
   /** @type {Record<string, string>} */

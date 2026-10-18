@@ -46,7 +46,7 @@ const { eq, done } = checker();
   eq(r.lines, ["n", "m", "cdrink"], "each row is name, place and time, then the order (the order is moved up by CSS)");
   eq(r.price, "$7.25", "the price rides on the order line");
   eq(r.oHidden, "none", "…and the words 'Order the' are put away in a row: the drink name is the answer");
-  eq(/color-mix/.test(r.tile), true, "a placeholder tile is a soft wash of the verdict colour, not a loud block");
+  eq(/linear-gradient/.test(r.tile), true, "a placeholder tile is the drink's colour with its drawn mark, like its share card (v101), not a verdict wash");
   eq(r.doc <= r.win + 1, true, "nothing scrolls sideways at 375px");
 
   const other = await pg.evaluate(() => {

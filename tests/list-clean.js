@@ -60,8 +60,11 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
   eq(/nophoto/.test(tints.a.cls), true, "a cafe with no photo gets the placeholder tile");
   eq(tints.a.bg === tints.z.bg, true,
      "two 5-star cafes with unrelated names are now the same colour");
-  eq(tints.a.bg !== tints.m.bg, true, "…and a 3-star cafe is a different one");
-  eq(tints.m.bg !== tints.u.bg, true, "…and an unrated cafe is different again");
+  /* The tile's colour now says what a place serves, not the verdict (v101): with most cafes Loved, the verdict colour
+     made the List one green. The verdict is the dot by the name, and tintFor() still colours the map pins. */
+  eq([tints.a.bg === tints.m.bg, tints.m.bg === tints.u.bg], [true, true], "…and the tile no longer changes with the verdict: a 3-star and an unrated cafe serving the same are the same colour");
+  const kinds = await pg.evaluate(() => [nophotoStyle({ name: "Matcha Bar", drinks: [{ n: "Matcha latte", orders: [{ date: "2026-09-01" }] }] }), nophotoStyle({ name: "Corner", drinks: [{ n: "Flat white", orders: [{ date: "2026-09-01" }] }] })]);
+  eq(kinds[0] !== kinds[1], true, "…while a matcha bar and a coffee bar are different colours");
 
   const uniq = [...new Set(tints.steps)];
   /* Four, not six: 4 and 5 were two names for "loved" and 1 and 2 for "not for me". The rank
