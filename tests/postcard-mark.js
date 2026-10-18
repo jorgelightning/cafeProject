@@ -28,7 +28,13 @@ const { eq, done } = checker();
       oolong: k({ name: "Oolong Tea Project", emoji: "☕", drinks: [d("Cheese Foam Ruby Oolong Tea (Large)")] }),
       boba: k({ name: "Boba Guys Fillmore", emoji: "☕", drinks: [] }),
       gelato: k({ name: "Zen Gelato & Bar", emoji: "☕", drinks: [d("Matcha latte")] }),
+      gelatoOnly: k({ name: "Scoop Gelato", emoji: "☕", drinks: [d("Affogato")] }),
       pastry: k({ name: "Diamond Coffee n' Pastry", emoji: "☕", drinks: [d("Latte")] }),
+      pastryOnly: k({ name: "Rue Bakery", emoji: "☕", drinks: [d("Croissant")] }),
+      plainTea: k({ name: "Charlie's Tea", emoji: "☕", drinks: [d("Ceylon black tea")] }),
+      teaShopNoDrinks: k({ name: "Song Tea & Ceramics", emoji: "☕", drinks: [] }),
+      comebuy: k({ name: "COMEBUY", emoji: "☕", drinks: [] }),
+      teapioca: k({ name: "Teapioca Lounge", emoji: "☕", drinks: [] }),
       plain: k({ name: "Morning Glass", emoji: "☕", drinks: [d("Drip")] }),
       bare: k({ name: "Nothing Yet", drinks: [] }),
       chosenTea: k({ name: "Corner Coffee", emoji: "🍵", drinks: [d("Latte")] }),
@@ -45,13 +51,16 @@ const { eq, done } = checker();
   eq(kinds.kissaten, "coffee", "…and a place you go to for a flat white is a cup, whatever its name says");
   eq(kinds.oolong, "boba", "cheese-foam oolong is boba");
   eq(kinds.boba, "boba", "…and so is a name that says it");
-  eq(kinds.gelato, "gelato", "gelato wins even when the drink is a matcha latte");
-  eq(kinds.pastry, "pastry", "a pastry shop is pastry");
+  eq(kinds.gelato, "matcha", "what you order beats the name: Zen Gelato, where you order the matcha latte, is a bowl");
+  eq([kinds.gelatoOnly, kinds.pastryOnly], ["gelato", "pastry"], "…but a gelato or bakery name still decides when nothing you ordered says otherwise");
+  eq(kinds.pastry, "coffee", "…so a coffee-and-pastry place where you order lattes is a cup");
+  eq([kinds.plainTea, kinds.teaShopNoDrinks], ["tea", "tea"], "plain tea is a teacup, not boba");
+  eq([kinds.comebuy, kinds.teapioca], ["boba", "boba"], "COMEBUY and Teapioca are boba");
   eq([kinds.plain, kinds.bare], ["coffee", "coffee"], "a plain cafe, or one with nothing logged, is a coffee cup");
   eq([kinds.chosenTea, kinds.chosenBoba], ["matcha", "boba"], "an emoji you chose beats the guess");
   eq(kinds.komeya, "matcha", "Komeya No Bento is matcha: a salted cheese foam topping on a hojicha latte does not make it boba");
   eq(kinds.misspelt, "matcha", "a double-t \"Mattcha\" is still matcha");
-  eq(kinds.teaLatte, "boba", "a black tea latte is tea, not coffee, whatever the word latte says");
+  eq(kinds.teaLatte, "tea", "a black tea latte is tea, not coffee, whatever the word latte says");
   eq(kinds.toppingOnly, "matcha", "…a topping never outvotes the drink it sits on");
   eq(kinds.tagOnly, "matcha", "…and the cafe's own matcha tag counts when no drink says anything");
   eq(kinds.coffeeNamedTeaTop, "matcha", "what you order there outranks the word 'coffee' in the name");
@@ -73,14 +82,16 @@ const { eq, done } = checker();
   }, spec);
 
   const imgs = {};
-  for (const kd of ["matcha", "coffee", "boba", "gelato", "pastry"]) imgs[kd] = await draw({ kind: kd });
+  for (const kd of ["matcha", "coffee", "boba", "gelato", "pastry", "tea"]) imgs[kd] = await draw({ kind: kd });
   const [mr, mg] = imgs.matcha.corner, [cr, cg, cb] = imgs.coffee.corner, [br, bg] = imgs.boba.corner, [gr, gg, gb] = imgs.gelato.corner;
   eq(mg > mr, true, "a matcha card fades green, not brown (" + imgs.matcha.corner + ")");
   eq(cr > cg && cg > cb, true, "a coffee card roasts brown (" + imgs.coffee.corner + ")");
   eq(br > bg, true, "a boba card is warm rose (" + imgs.boba.corner + ")");
   eq(gr > gg && gb > gg, true, "a gelato card is pink (" + imgs.gelato.corner + ")");
   eq(Object.values(imgs).every(i => i.cream > 400), true, "every kind draws its vessel in cream line art (" + Object.values(imgs).map(i => i.cream).join(", ") + " cream pixels)");
-  eq(new Set(Object.values(imgs).map(i => i.url)).size, 5, "…and the five pictures are all different");
+  eq(new Set(Object.values(imgs).map(i => i.url)).size, 6, "…and the six pictures are all different");
+  const [tr, tg, tb] = imgs.tea.corner;
+  eq(tg > tr && tb > tr, true, "a tea card fades jade, between the green of matcha and the rose of boba (" + imgs.tea.corner + ")");
 
   /* ---- no emoji, no app, only the brand ---- */
   const texts = imgs.matcha.calls.map(c => c.t);

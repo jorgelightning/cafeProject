@@ -603,6 +603,7 @@ const CARD_KINDS = {
   boba: { c1: "#c98a72", c2: "#46261f", vessel: "boba" },
   gelato: { c1: "#d98aa6", c2: "#4a2535", vessel: "gelato" },
   pastry: { c1: "#d9a24f", c2: "#4a2f10", vessel: "pastry" },
+  tea: { c1: "#5f9c8a", c2: "#1d3b36", vessel: "teacup" },
 };
 /* the chosen emoji is a deliberate answer to "what is this place"; ☕ is the default and so is not one */
 const EMOJI_KIND = { "\ud83c\udf75": "matcha", "\ud83e\uddcb": "boba", "\ud83c\udf68": "gelato", "\ud83e\udd50": "pastry" };
@@ -637,17 +638,15 @@ const CARD_VESSELS = {
     main: ["M34 62h52L60 108z", "M30 62c-6-14 4-26 16-24 2-10 24-12 28-1 12-3 20 10 10 25"],
     faint: ["M42 74l12 14M54 66l14 30M66 66l8 14", "M52 40c4 3 10 3 14 0"],
   },
+  teacup: {
+    main: ["M28 54h64c0 24-13 38-32 38S28 78 28 54z", "M18 100h84"],
+    faint: ["M36 54c6-6 42-6 48 0", "M46 40c-4-5 4-8 0-13M60 40c-4-5 4-8 0-13M74 40c-4-5 4-8 0-13"],
+  },
   pastry: {
     main: ["M14 74c0-22 20-38 46-38s46 16 46 38c0 6-6 10-12 8-6 8-16 10-34 10s-28-2-34-10c-6 2-12-2-12-8z"],
     faint: ["M40 42c-4 14-4 30 2 42M60 36c-3 16-3 36 0 54M80 42c4 14 4 30-2 42"],
   },
 };
-/* A tea place that is not plainly boba: a whisked-bowl matcha bar, or a cup of something with tapioca?
-   TODO(human): decide how to tell them apart. `text` is the lowercased name, brand and drink names run together
-   ("oolong tea project cheese foam ruby oolong tea (large)"). Return "matcha" or "boba". */
-function teaKind(text) {
-  return /matcha|hojicha|genmaicha|sencha|chai/.test(text) ? "matcha" : "boba";
-}
 /** One drink name, as a kind, or null when it says nothing. Matcha words win over boba words on purpose: a hojicha
  *  latte with salted cheese foam is a hojicha latte, the foam is a topping. */
 function drinkKind(n) {
@@ -655,23 +654,23 @@ function drinkKind(n) {
   if (/matt?cha|hojicha|genmaicha|sencha|chai/.test(t)) return "matcha";
   if (/boba|bubble|milk tea|cheese foam|brown sugar|taro|pearl|jelly|oolong|fruit tea/.test(t)) return "boba";
   /* a "black tea latte" is tea, whatever the word latte says */
-  if (/\btea\b/.test(t)) return teaKind(t);
+  if (/\btea\b/.test(t)) return "tea";
   if (/latte|flat white|espresso|americano|cappuccino|cortado|macchiato|mocha|drip|coffee|cold brew/.test(t)) return "coffee";
   return null;
 }
 /** What a cafe serves, as one of the CARD_KINDS keys. In order of how much it says about the place:
- *  a chosen emoji; the name or brand saying it outright (boba, gelato, a bakery); the drink you order most
- *  there (so Kissaten HiFi is a cup, you go for the flat white); then what its other drinks and tags suggest,
- *  a vote weighted by how often you ordered each. @param {Cafe} c */
+ *  a chosen emoji; a name that is plainly a boba chain; the drink you order most there (so Kissaten HiFi is a cup,
+ *  you go for the flat white, and Zen Gelato is a bowl, you go for the matcha latte); a gelato or bakery name; then
+ *  a vote across its other drinks weighted by how often you ordered each, and the cafe's own tags. @param {Cafe} c */
 function cafeKind(c) {
   if (c.emoji && EMOJI_KIND[c.emoji]) return EMOJI_KIND[c.emoji];
   const who = [c.name, c.brand].join(" ").toLowerCase();
-  if (/boba|bubble tea|milk tea|heytea|chagee|tiger sugar|gong cha|milksha/.test(who)) return "boba";
-  if (/gelato|ice cream|soft serve/.test(who)) return "gelato";
-  if (/bakery|pastry|croissant|patisserie|boulangerie/.test(who)) return "pastry";
+  if (/boba|bubble tea|milk tea|heytea|chagee|tiger sugar|gong cha|milksha|comebuy|teapioca|tapioca/.test(who)) return "boba";
   const top = typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
   const best = top ? drinkKind(top.d.n) : null;
   if (best) return best;
+  if (/gelato|ice cream|soft serve/.test(who)) return "gelato";
+  if (/bakery|pastry|croissant|patisserie|boulangerie/.test(who)) return "pastry";
   const votes = {};
   (c.drinks || []).forEach(function (d) {
     const k = drinkKind(d.n);
@@ -685,7 +684,8 @@ function cafeKind(c) {
     return votes[y] - votes[x];
   })[0];
   if (win) return win;
-  if (/matcha|hojicha|\btea\b/.test(who) && !/coffee|espresso/.test(who)) return teaKind(who);
+  if (/matcha|hojicha/.test(who) && !/coffee|espresso/.test(who)) return "matcha";
+  if (/\btea\b/.test(who) && !/coffee|espresso/.test(who)) return "tea";
   return "coffee";
 }
 function postcardData(c) {
