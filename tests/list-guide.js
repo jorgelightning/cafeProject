@@ -5,7 +5,7 @@
    card that says what to order and what it costs. The owner gets three working views inside
    Filters, where they cost no height at rest, and a + on each card that opens that cafe's visit
    with the usual drink already in it. Two columns at 375px, not one. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -16,7 +16,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const seed = admin => pg.evaluate(a => {
     isAdmin = a; applyMode(); userLoc = null; clearAll(); listTab = "been";

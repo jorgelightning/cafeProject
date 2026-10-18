@@ -12,7 +12,7 @@
    chrome is offset past the browse column on a laptop; the full-pane map message was not, and
    at z-index 5 against the sidebar's 2 a Google Maps failure painted its error over the whole
    app — header, nav, search box and all 111 cafes. */
-const { serve, launch, checker, ROOT } = require("./harness");
+const { serve, launch, checker, ROOT, ready } = require("./harness");
 const { eq, done } = checker();
 const fs = require("fs"), path = require("path");
 
@@ -26,7 +26,7 @@ const fs = require("fs"), path = require("path");
     await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
     const errs = []; pg.on("pageerror", e => errs.push(String(e)));
     await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-    await pg.waitForTimeout(900);
+    await ready(pg);
     return { ctx, pg, errs };
   };
 
@@ -199,7 +199,7 @@ const fs = require("fs"), path = require("path");
                        .every(g => g.getAttribute("aria-labelledby") &&
                                    document.getElementById(g.getAttribute("aria-labelledby"))) };
   });
-  eq(reach.count, 8, "back, three appearance states, two layouts, sign-out and the photo fetch");
+  eq(reach.count, 9, "back, three appearance states, two layouts, sign-out, the data copy and the photo fetch");
   eq(reach.small, [], "nothing is under the 44px touch floor");
   eq(reach.labelled, true, "every control says what it does");
   eq(reach.groups, true, "…and each group of segments points at its own heading");

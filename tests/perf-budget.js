@@ -4,7 +4,7 @@
    cafe's score. The Go board used to rank each row by walking the whole board (111 rows x 111 scores, about
    12,000 calls, 49ms, 215ms on a slow phone); it uses the one-pass rank map now. A screen that goes quadratic
    again will blow through these ceilings long before a person feels it. The positions must not change. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -15,7 +15,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const r = await pg.evaluate(() => {
     isAdmin = true; applyMode();

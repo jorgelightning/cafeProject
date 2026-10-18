@@ -33,10 +33,13 @@ function regionTerms(c) {
   return t.join(" ");
 }
 function typeTerms(c) {
-  const e = c.emoji || "";
+  /* the same guess the tile and the postcard use, so a cafe you never gave an emoji is still found by "boba" */
+  const e = cafeMark(c);
   let s = "cafe";
   if (e === "🧋") s += " boba bubble milk tea";
   else if (e === "🍵") s += " matcha tea";
+  else if (e === "🍨") s += " gelato ice cream dessert";
+  else if (e === "🥐") s += " pastry bakery";
   else s += " coffee";
   return s;
 }

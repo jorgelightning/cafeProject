@@ -7,7 +7,7 @@
 
    These tests hold the scale and the two layout rules. They are deliberately about ratios and
    relationships rather than exact pixels, so a later type tweak does not turn them red. */
-const { serve, launch, checker, ROOT } = require("./harness");
+const { serve, launch, checker, ROOT, ready } = require("./harness");
 const { eq, done } = checker();
 const fs = require("fs"), path = require("path");
 
@@ -43,7 +43,7 @@ const fs = require("fs"), path = require("path");
     const pg = await ctx.newPage();
     await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
     await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-    await pg.waitForTimeout(900);
+    await ready(pg);
     const out = await pg.evaluate(() => {
       isAdmin = false; applyMode && applyMode(); setListLayout(false); show("list"); renderList();
       const g = document.getElementById("grid"), c = g.querySelector(".card");
@@ -87,7 +87,7 @@ const fs = require("fs"), path = require("path");
     const pg = await ctx.newPage();
     await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
     await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-    await pg.waitForTimeout(900);
+    await ready(pg);
     const out = await pg.evaluate(() => {
       isAdmin = false; applyMode && applyMode();
       cafes = [{ id: "x", name: "Test Cafe", area: "Oakland", rating: 4, elo: 1500, matches: 3,
@@ -135,7 +135,7 @@ const fs = require("fs"), path = require("path");
     const pg = await ctx.newPage();
     await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
     await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-    await pg.waitForTimeout(900);
+    await ready(pg);
     const split = await pg.evaluate(() => {
       isAdmin = false; applyMode && applyMode();
       const probe = (v) => { show(v);

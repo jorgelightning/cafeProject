@@ -288,7 +288,7 @@ function wrappedYear(list, year) {
     cafeN++;
     visits += vd.length;
     if (all[0].slice(0, 4) === Y) fresh++;
-    if (!back || vd.length > back.n) back = { name: c.name || "", n: vd.length };
+    if (!c.custom && (!back || vd.length > back.n)) back = { name: c.name || "", n: vd.length };
     vd.forEach(function (d) {
       series[parseInt(d.slice(5, 7), 10) - 1]++;
     });
@@ -358,10 +358,18 @@ function wrappedYear(list, year) {
     milk: milkN >= 5 && milks[0] ? { name: milks[0].name, pct: Math.round((milks[0].n / milkN) * 100) } : null,
   };
 }
-function wrappedCards(w) {
+/** This year once it has WRAP_FLOOR visits; until then last year's, so the year in review is there in January. */
+function wrappedPick(list) {
+  const y = new Date().getFullYear(),
+    now = wrappedYear(list, y);
+  if (now) return { w: now, review: false };
+  const last = wrappedYear(list, y - 1);
+  return last ? { w: last, review: true } : null;
+}
+function wrappedCards(w, review) {
   const cards = [];
   cards.push({
-    k: w.year + " so far",
+    k: w.year + (review ? " in review" : " so far"),
     big: String(w.visits),
     unit: "visits",
     cap:
@@ -420,9 +428,10 @@ function wrappedCards(w) {
   return cards;
 }
 function wrappedHTML(list) {
-  const w = wrappedYear(list, new Date().getFullYear());
-  if (!w) return "";
-  const cards = wrappedCards(w);
+  const pick = wrappedPick(list);
+  if (!pick) return "";
+  const w = pick.w,
+    cards = wrappedCards(w, pick.review);
   const bars = function (series, hi) {
     const mx = Math.max.apply(null, series) || 1;
     return (
@@ -445,13 +454,13 @@ function wrappedHTML(list) {
     );
   });
   html.push(
-    '<div class="wc share"><span class="wk">Keep it</span><div class="wcap strong">Send your ' +
+    '<div class="wc share admin-only"><span class="wk">Keep it</span><div class="wcap strong">Send your ' +
       w.year +
-      ' in caf\u00e9s to someone.</div><button type="button" onclick="shareWrapped()">Share \u203a</button></div>'
+      ' in caf\u00e9s to someone.</div><button type="button" class="admin-only" onclick="openYearStory()">Share \u203a</button></div>'
   );
   return (
     '<section class="wrapped" aria-label="Your ' + w.year + '">' +
-    '<div class="sech"><b>Your ' + w.year + '</b><button type="button" onclick="shareWrapped()">Share \u203a</button></div>' +
+    '<div class="sech"><b>Your ' + w.year + "</b>" + (pick.review ? '<span class="wrev">in review</span>' : "") + '<button type="button" class="admin-only" onclick="openYearStory()">Share \u203a</button></div>' +
     '<div class="wstrip" role="region" aria-label="Your ' + w.year + ', swipe for more" tabindex="0" onscroll="wrappedDots(this)">' +
     html.join("") +
     "</div>" +
@@ -477,32 +486,6 @@ function wrappedText(w) {
   if (w.back) bits.push("Went back to " + w.back.name + " " + w.back.n + " times.");
   return bits.join(" ");
 }
-function shareWrapped() {
-  const w = wrappedYear(
-    cafes.filter(function (c) {
-      return !c.wish;
-    }),
-    new Date().getFullYear()
-  );
-  if (!w) return;
-  const text = wrappedText(w),
-    url = location.origin + location.pathname;
-  if (navigator.share) {
-    navigator.share({ title: "My " + w.year + " in caf\u00e9s", text: text, url: url }).catch(function () {});
-    return;
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text + " " + url).then(
-      function () {
-        toast("Message copied");
-      },
-      function () {
-        toast("Couldn't copy");
-      }
-    );
-  } else toast("Couldn't copy");
-}
-
 function renderStats() {
   const host = $("stats-body");
   if (!host) return;

@@ -5,7 +5,7 @@
    large text. Text over a photo or gradient is judged by its scrim instead (the worst case is a white photo). Then a
    keyboard walk through the List: every stop shows a focus ring, has a name, and nothing jumps the order with a
    positive tabindex. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 const audit = () => {
@@ -72,7 +72,7 @@ const audit = () => {
     await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
     const errs = []; pg.on("pageerror", e => errs.push(String(e)));
     await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-    await pg.waitForTimeout(900);
+    await ready(pg);
     const low = [];
     for (const k of Object.keys(screens)) {
       await pg.evaluate("(" + screens[k].toString() + ")()");

@@ -10,7 +10,7 @@
    position in that search, so nothing new is stored on a cafe. Established cafes keep ordinary Elo, each
    side at its own K. The verdict is a prior (a provisional cafe is shrunk towards its tier's average),
    not a wall. tests/beli.js still pins the scores and positions of well-compared cafes. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -21,7 +21,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   /* a board: 36 established Loved cafes, 10 Fine, 4 Not for me — spaced evenly, so a position is easy to read */
   const setup = () => pg.evaluate(() => {

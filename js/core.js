@@ -308,7 +308,7 @@ function nophotoStyle(c) {
 }
 /* emoji only: the initials were a second mark for the same cafe, and broke on "HEYTEA (Cupertino)" ("H(") */
 function nophotoHTML(c) {
-  return '<span class="em">' + esc((c && c.emoji) || "☕") + "</span>";
+  return '<span class="em">' + esc(cafeMark(c)) + "</span>";
 }
 /* Local calendar date. Plain toISOString() would hand back yesterday (or tomorrow) when
    logging from Hawaii or Taipei, so shift by the timezone offset before slicing. */
@@ -361,6 +361,9 @@ function redactPrivate(c) {
   c.lat = blurCoord(c.lat);
   c.lng = blurCoord(c.lng);
   c.area = privateArea(c.area);
+  /* A Google place id opens the exact place on Google Maps, so it says more than the pin it came with. Nothing
+     the owner sees needs it on a private spot (they skip Google photos), so it is dropped, not kept aside. */
+  delete c.pid;
   return c;
 }
 /* The exact address of a private spot, keyed by cafe id. Deliberately NOT merged into
@@ -456,9 +459,11 @@ function adoptCafes(list) {
     const n = function (v) {
       return v == null ? null : v;
     };
-    const exact = { area: c.area || "", lat: n(c.lat), lng: n(c.lng) };
+    const exact = { area: c.area || "", lat: n(c.lat), lng: n(c.lng) },
+      hadPid = !!c.pid;
     redactPrivate(c);
-    if (exact.area !== (c.area || "") || exact.lat !== n(c.lat) || exact.lng !== n(c.lng)) _needsHeal[c.id] = exact;
+    /* a place id in the public copy is healed like a precise pin: the public copy is rewritten without it */
+    if (hadPid || exact.area !== (c.area || "") || exact.lat !== n(c.lat) || exact.lng !== n(c.lng)) _needsHeal[c.id] = exact;
   });
   return out;
 }

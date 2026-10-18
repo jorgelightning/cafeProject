@@ -5,7 +5,7 @@
    bar of its whole spread under the sentence it adds up to, next to the drink you order most and the
    one you took a chance on. "Worth it" reads the reorder verdict nothing used to read. Chains are the
    same brand groups the cafe page uses for branches. Nothing here reads a place. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -16,7 +16,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const r = await pg.evaluate(() => {
     isAdmin = false; applyMode();

@@ -7,7 +7,7 @@
    table). Elements are named in the failure so the offender is obvious.
 
    It also holds the type floor: no text smaller than 12px. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -18,7 +18,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const audit = label => pg.evaluate(([label, W]) => {
     const scrolls = el => { for (let p = el.parentElement; p; p = p.parentElement) { const o = getComputedStyle(p).overflowX; if (o === "auto" || o === "scroll" || o === "hidden" || o === "clip") return true; } return false; };

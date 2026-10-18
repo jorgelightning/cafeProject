@@ -9,7 +9,7 @@
    A: the input is the three-way call a comparison ranking wants. B: position goes everywhere,
    because it is the one number that is actually a given cafe's own. C: been and want-to-try
    are the two lists, not a filter. E: Stats opens with the collection. */
-const { serve, launch, checker, ROOT } = require("./harness");
+const { serve, launch, checker, ROOT, ready } = require("./harness");
 const { eq, done } = checker();
 const fs = require("fs"), path = require("path");
 
@@ -21,7 +21,7 @@ const fs = require("fs"), path = require("path");
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   // ================= A: three buckets =================
   const buckets = await pg.evaluate(() => ({

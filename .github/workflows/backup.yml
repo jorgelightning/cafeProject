@@ -31,13 +31,15 @@ jobs:
                           .lat   = (if .lat == null then null else ((.lat * 100) | round) / 100 end)
                         | .lng   = (if .lng == null then null else ((.lng * 100) | round) / 100 end)
                         | .area  = (if ((.area // "") | test("[0-9]")) then "" else (.area // "") end)
+                        | del(.pid)
                         else . end)' > cafes.json
           # Safety: never commit an empty/invalid snapshot over a good backup
           jq -e 'type=="array" and length>0' cafes.json > /dev/null
           # ...and never commit one that still carries a private address
           jq -e 'all(.[] | select(.custom == true);
                       ((.lat == null) or (.lat == ((.lat * 100 | round) / 100)))
-                      and ((.area // "") | test("[0-9]") | not))' cafes.json > /dev/null
+                      and ((.area // "") | test("[0-9]") | not)
+                      and (has("pid") | not))' cafes.json > /dev/null
 
       - name: Commit if changed
         run: |

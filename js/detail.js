@@ -184,7 +184,7 @@ function openDetail(id, from) {
 
   /* ---- hero photo ---- */
   const hero = $("d-hero");
-  if ($("d-hero-emoji")) $("d-hero-emoji").textContent = c.emoji || "☕";
+  if ($("d-hero-emoji")) $("d-hero-emoji").textContent = cafeMark(c);
   const gp0 = _imgFail[c.id] ? null : gphotoFor(c);
   if (gp0) {
     hero.className = "hero";
@@ -603,6 +603,7 @@ const CARD_KINDS = {
   boba: { c1: "#c98a72", c2: "#46261f", vessel: "boba" },
   gelato: { c1: "#d98aa6", c2: "#4a2535", vessel: "gelato" },
   pastry: { c1: "#d9a24f", c2: "#4a2f10", vessel: "pastry" },
+  tea: { c1: "#5f9c8a", c2: "#1d3b36", vessel: "teacup" },
 };
 /* the chosen emoji is a deliberate answer to "what is this place"; ☕ is the default and so is not one */
 const EMOJI_KIND = { "\ud83c\udf75": "matcha", "\ud83e\uddcb": "boba", "\ud83c\udf68": "gelato", "\ud83e\udd50": "pastry" };
@@ -637,17 +638,15 @@ const CARD_VESSELS = {
     main: ["M34 62h52L60 108z", "M30 62c-6-14 4-26 16-24 2-10 24-12 28-1 12-3 20 10 10 25"],
     faint: ["M42 74l12 14M54 66l14 30M66 66l8 14", "M52 40c4 3 10 3 14 0"],
   },
+  teacup: {
+    main: ["M28 54h64c0 24-13 38-32 38S28 78 28 54z", "M18 100h84"],
+    faint: ["M36 54c6-6 42-6 48 0", "M46 40c-4-5 4-8 0-13M60 40c-4-5 4-8 0-13M74 40c-4-5 4-8 0-13"],
+  },
   pastry: {
     main: ["M14 74c0-22 20-38 46-38s46 16 46 38c0 6-6 10-12 8-6 8-16 10-34 10s-28-2-34-10c-6 2-12-2-12-8z"],
     faint: ["M40 42c-4 14-4 30 2 42M60 36c-3 16-3 36 0 54M80 42c4 14 4 30-2 42"],
   },
 };
-/* A tea place that is not plainly boba: a whisked-bowl matcha bar, or a cup of something with tapioca?
-   TODO(human): decide how to tell them apart. `text` is the lowercased name, brand and drink names run together
-   ("oolong tea project cheese foam ruby oolong tea (large)"). Return "matcha" or "boba". */
-function teaKind(text) {
-  return /matcha|hojicha|genmaicha|sencha|chai/.test(text) ? "matcha" : "boba";
-}
 /** One drink name, as a kind, or null when it says nothing. Matcha words win over boba words on purpose: a hojicha
  *  latte with salted cheese foam is a hojicha latte, the foam is a topping. */
 function drinkKind(n) {
@@ -655,23 +654,23 @@ function drinkKind(n) {
   if (/matt?cha|hojicha|genmaicha|sencha|chai/.test(t)) return "matcha";
   if (/boba|bubble|milk tea|cheese foam|brown sugar|taro|pearl|jelly|oolong|fruit tea/.test(t)) return "boba";
   /* a "black tea latte" is tea, whatever the word latte says */
-  if (/\btea\b/.test(t)) return teaKind(t);
+  if (/\btea\b/.test(t)) return "tea";
   if (/latte|flat white|espresso|americano|cappuccino|cortado|macchiato|mocha|drip|coffee|cold brew/.test(t)) return "coffee";
   return null;
 }
 /** What a cafe serves, as one of the CARD_KINDS keys. In order of how much it says about the place:
- *  a chosen emoji; the name or brand saying it outright (boba, gelato, a bakery); the drink you order most
- *  there (so Kissaten HiFi is a cup, you go for the flat white); then what its other drinks and tags suggest,
- *  a vote weighted by how often you ordered each. @param {Cafe} c */
+ *  a chosen emoji; a name that is plainly a boba chain; the drink you order most there (so Kissaten HiFi is a cup,
+ *  you go for the flat white, and Zen Gelato is a bowl, you go for the matcha latte); a gelato or bakery name; then
+ *  a vote across its other drinks weighted by how often you ordered each, and the cafe's own tags. @param {Cafe} c */
 function cafeKind(c) {
   if (c.emoji && EMOJI_KIND[c.emoji]) return EMOJI_KIND[c.emoji];
   const who = [c.name, c.brand].join(" ").toLowerCase();
-  if (/boba|bubble tea|milk tea|heytea|chagee|tiger sugar|gong cha|milksha/.test(who)) return "boba";
-  if (/gelato|ice cream|soft serve/.test(who)) return "gelato";
-  if (/bakery|pastry|croissant|patisserie|boulangerie/.test(who)) return "pastry";
+  if (/boba|bubble tea|milk tea|heytea|chagee|tiger sugar|gong cha|milksha|comebuy|teapioca|tapioca/.test(who)) return "boba";
   const top = typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
   const best = top ? drinkKind(top.d.n) : null;
   if (best) return best;
+  if (/gelato|ice cream|soft serve/.test(who)) return "gelato";
+  if (/bakery|pastry|croissant|patisserie|boulangerie/.test(who)) return "pastry";
   const votes = {};
   (c.drinks || []).forEach(function (d) {
     const k = drinkKind(d.n);
@@ -685,9 +684,34 @@ function cafeKind(c) {
     return votes[y] - votes[x];
   })[0];
   if (win) return win;
-  if (/matcha|hojicha|\btea\b/.test(who) && !/coffee|espresso/.test(who)) return teaKind(who);
+  if (/matcha|hojicha/.test(who) && !/coffee|espresso/.test(who)) return "matcha";
+  if (/\btea\b/.test(who) && !/coffee|espresso/.test(who)) return "tea";
   return "coffee";
 }
+/* The emoji a cafe shows everywhere that is not the postcard (tile, cafe page, pin, search, the Go queue): the
+   one you chose, else the guess from what it serves. ☕ is the default, so it counts as "not chosen". */
+const KIND_EMOJI = { matcha: "🍵", coffee: "☕", boba: "🧋", gelato: "🍨", pastry: "🥐", tea: "🍵" };
+/** @param {Cafe|null|undefined} c */
+function cafeMark(c) {
+  if (!c) return "☕";
+  if (c.emoji && c.emoji !== "☕") return c.emoji;
+  /* A search runs this for every cafe on every keystroke, so remember the answer for as long as the fields the
+     guess reads are unchanged (name, brand, tags, and each drink's name and how many orders it has). */
+  const sig =
+    [c.name, c.brand, (c.tags || []).join(",")].join("|") +
+    "#" +
+    (c.drinks || [])
+      .map(function (d) {
+        return d.n + ":" + (d.orders ? d.orders.length : 0) + ":" + (d.dates ? d.dates.length : 0);
+      })
+      .join(",");
+  const hit = _markMemo.get(c);
+  if (hit && hit.sig === sig) return hit.mark;
+  const mark = KIND_EMOJI[cafeKind(c)] || "☕";
+  _markMemo.set(c, { sig: sig, mark: mark });
+  return mark;
+}
+const _markMemo = new WeakMap();
 function postcardData(c) {
   const td = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
   const rk = !c.wish && typeof rankOf === "function" ? rankOf(c) : null;
@@ -749,6 +773,79 @@ function _pcRound(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
 }
+/* Pieces every Story card is built from: soft rings, a vessel in cream line art, a wash of the drink's colour at the
+   bottom, the footer, and a rank medal. The cafe postcard, the year and the top 5 all draw with these. */
+function _pcRings(ctx, W, clipH, cx, cy) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, clipH);
+  ctx.clip();
+  ctx.strokeStyle = "rgba(255,255,255,.18)";
+  ctx.lineWidth = 3;
+  for (let r = 73; r < 1300; r += 74) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function _pcVessel(ctx, kind, cx, cy, size, color, alpha) {
+  const ves = CARD_VESSELS[kind.vessel] || CARD_VESSELS.cup,
+    sc = size / 120;
+  ctx.save();
+  ctx.translate(cx - size / 2, cy - size / 2);
+  ctx.scale(sc, sc);
+  ctx.lineWidth = 3.2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = color;
+  ves.main.forEach(function (pd) {
+    ctx.stroke(new Path2D(pd));
+  });
+  ctx.globalAlpha = alpha;
+  ves.faint.forEach(function (pd) {
+    ctx.stroke(new Path2D(pd));
+  });
+  ctx.restore();
+}
+function _pcWash(ctx, kind, W, H, safeB) {
+  const rgb = [1, 3, 5].map(function (i) {
+      return parseInt(kind.c1.slice(i, i + 2), 16);
+    }),
+    wash = ctx.createLinearGradient(0, safeB - 240, 0, H);
+  wash.addColorStop(0, "rgba(" + rgb.join(",") + ",0)");
+  wash.addColorStop(1, "rgba(" + rgb.join(",") + ",.30)");
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, safeB - 240, W, H - (safeB - 240));
+}
+function _pcFoot(ctx, W, PAD, safeB, SANS) {
+  ctx.fillStyle = "rgba(0,0,0,.12)";
+  ctx.fillRect(PAD, safeB - 84, W - PAD * 2, 2);
+  ctx.font = "800 28px " + SANS;
+  ctx.fillStyle = "#5a5a63";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText("JL CAFE PROJECT", PAD, safeB - 30);
+}
+/** The rank medal: gold for the top three or ten, dark glass for the rest. Returns its width. */
+function _pcMedal(ctx, x, y, n, h, gold, SANS) {
+  const label = "#" + n;
+  ctx.font = "800 " + Math.round(h * 0.62) + "px " + SANS;
+  const w = ctx.measureText(label).width + h * 0.6;
+  _pcRound(ctx, x, y, w, h, h / 2);
+  if (gold) {
+    const gg = ctx.createLinearGradient(x, y, x + w, y + h);
+    gg.addColorStop(0, "#f6d77f");
+    gg.addColorStop(1, "#dca13a");
+    ctx.fillStyle = gg;
+  } else ctx.fillStyle = "rgba(20,13,8,.62)";
+  ctx.fill();
+  ctx.fillStyle = gold ? "#3b2606" : "#fff";
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+  ctx.fillText(label, x + h * 0.3, y + h / 2 + 2);
+  return w;
+}
 function drawPostcard(canvas, d) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -774,36 +871,8 @@ function drawPostcard(canvas, d) {
   g.addColorStop(1, kind.c2);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, top);
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, 0, W, top);
-  ctx.clip();
-  ctx.strokeStyle = "rgba(255,255,255,.18)";
-  ctx.lineWidth = 3;
-  for (let r = 73; r < 1300; r += 74) {
-    ctx.beginPath();
-    ctx.arc(W / 2, top * 0.62, r, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.restore();
-  const ves = CARD_VESSELS[kind.vessel] || CARD_VESSELS.cup,
-    VS = 480,
-    sc = VS / 120;
-  ctx.save();
-  ctx.translate(W / 2 - VS / 2, top * 0.62 - VS / 2);
-  ctx.scale(sc, sc);
-  ctx.lineWidth = 3.2;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = "#f6efe2";
-  ves.main.forEach(function (pd) {
-    ctx.stroke(new Path2D(pd));
-  });
-  ctx.globalAlpha = 0.6;
-  ves.faint.forEach(function (pd) {
-    ctx.stroke(new Path2D(pd));
-  });
-  ctx.restore();
+  _pcRings(ctx, W, top, W / 2, top * 0.62);
+  _pcVessel(ctx, kind, W / 2, top * 0.62, 480, "#f6efe2", 0.6);
   const fade = ctx.createLinearGradient(0, top - 240, 0, top);
   fade.addColorStop(0, "rgba(251,250,248,0)");
   fade.addColorStop(1, paper);
@@ -890,37 +959,261 @@ function drawPostcard(canvas, d) {
     });
   }
   /* the bottom of the card: a soft wash of the drink's colour, so it ends as deliberately as it begins */
-  const _rgb = [1, 3, 5].map(function (i) {
-      return parseInt(kind.c1.slice(i, i + 2), 16);
-    }),
-    wash = ctx.createLinearGradient(0, SAFE_B - 240, 0, H);
-  wash.addColorStop(0, "rgba(" + _rgb.join(",") + ",0)");
-  wash.addColorStop(1, "rgba(" + _rgb.join(",") + ",.30)");
-  ctx.fillStyle = wash;
-  ctx.fillRect(0, SAFE_B - 240, W, H - (SAFE_B - 240));
+  _pcWash(ctx, kind, W, H, SAFE_B);
   /* footer: just whose list it is */
+  _pcFoot(ctx, W, PAD, SAFE_B, SANS);
+}
+/* The year, as a Story: your drink's vessel, the big number, three facts. `w` is wrappedYear()'s answer. */
+function drawYearStory(canvas, w) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const W = canvas.width,
+    H = canvas.height,
+    PAD = 72,
+    SANS = 'system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif',
+    paper = "#fbfaf8",
+    ink = "#1d1a17",
+    soft = "#5a5a63",
+    SAFE_T = Math.round(H * 0.14),
+    SAFE_B = H - Math.round(H * 0.13);
+  const kindKey = (w.drink && drinkKind(w.drink.name)) || "coffee",
+    kind = CARD_KINDS[kindKey] || CARD_KINDS.coffee,
+    top = Math.round(H * 0.396);
+  ctx.fillStyle = paper;
+  ctx.fillRect(0, 0, W, H);
+  const g = ctx.createLinearGradient(0, 0, W, top);
+  g.addColorStop(0, kind.c1);
+  g.addColorStop(1, kind.c2);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, top);
+  _pcRings(ctx, W, top, W / 2, 500);
+  _pcVessel(ctx, kind, W / 2, 500, 480, "#f6efe2", 0.6);
+  const fade = ctx.createLinearGradient(0, top - 240, 0, top);
+  fade.addColorStop(0, "rgba(251,250,248,0)");
+  fade.addColorStop(1, paper);
+  ctx.fillStyle = fade;
+  ctx.fillRect(0, top - 240, W, 240);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "800 40px " + SANS;
+  ctx.fillStyle = "#fff";
+  ctx.shadowColor = "rgba(0,0,0,.45)";
+  ctx.shadowBlur = 8;
+  ctx.fillText("MY " + w.year + " IN CAF\u00c9S", PAD, SAFE_T + 30);
+  ctx.shadowBlur = 0;
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = ink;
+  ctx.font = "800 230px " + SANS;
+  ctx.fillText(String(w.visits), PAD, 1010);
+  const nw = ctx.measureText(String(w.visits)).width;
+  ctx.font = "800 64px " + SANS;
+  ctx.fillStyle = soft;
+  ctx.fillText(w.visits === 1 ? "visit" : "visits", PAD + nw + 24, 1010);
+  ctx.font = "600 44px " + SANS;
+  ctx.fillText("at " + w.cafes + (w.cafes === 1 ? " caf\u00e9" : " caf\u00e9s") + (w.fresh ? " \u00b7 " + w.fresh + " new to me" : ""), PAD, 1082);
+  const rows = [];
+  if (w.drink) rows.push(["MY DRINK", w.drink.name + "  \u00d7" + w.drink.n]);
+  if (w.back) rows.push(["I WENT BACK TO", w.back.name + "  \u00b7  " + w.back.n + " visits"]);
+  if (w.months >= 2) rows.push(["BUSIEST MONTH", WRAP_MONTHS[w.peak.i] + "  \u00b7  " + w.peak.n + " visits"]);
+  let y = 1150;
+  rows.forEach(function (r) {
+    _pcRound(ctx, PAD, y, W - PAD * 2, 124, 28);
+    ctx.fillStyle = "#f0ebe4";
+    ctx.fill();
+    ctx.fillStyle = soft;
+    ctx.font = "800 24px " + SANS;
+    ctx.fillText(r[0], PAD + 36, y + 46);
+    ctx.fillStyle = ink;
+    ctx.font = "800 46px " + SANS;
+    ctx.fillText(_pcWrap(ctx, r[1], W - PAD * 2 - 72, 1)[0], PAD + 36, y + 98);
+    y += 140;
+  });
+  _pcWash(ctx, kind, W, H, SAFE_B);
+  _pcFoot(ctx, W, PAD, SAFE_B, SANS);
+}
+/* The top five, as a Story: a list where each row carries its own drawn mark. `items` are {n, name, area, drink,
+   kind}; `total` is how many cafes are ranked. */
+function drawTop5Story(canvas, items, total) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const W = canvas.width,
+    H = canvas.height,
+    PAD = 72,
+    SANS = 'system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif',
+    paper = "#fbfaf8",
+    ink = "#1d1a17",
+    soft = "#5a5a63",
+    SAFE_T = Math.round(H * 0.14),
+    SAFE_B = H - Math.round(H * 0.13);
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, "#3a2a1c");
+  g.addColorStop(1, "#16100b");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  _pcRings(ctx, W, 560, W / 2, 330);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "#f6efe2";
+  ctx.font = "800 44px " + SANS;
+  ctx.fillText("MY TOP " + items.length, PAD, SAFE_T + 40);
+  ctx.font = "800 120px " + SANS;
+  ctx.fillText("Where to go", PAD, SAFE_T + 160);
+  ctx.font = "600 42px " + SANS;
+  ctx.fillStyle = "rgba(246,239,226,.8)";
+  ctx.fillText("out of " + total + " caf\u00e9s I have ranked", PAD, SAFE_T + 224);
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,.3)";
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetY = 12;
+  _pcRound(ctx, 48, 520, W - 96, SAFE_B - 520 + 24, 56);
+  ctx.fillStyle = paper;
+  ctx.fill();
+  ctx.restore();
+  const textW = W - 96 - 300 - 48;
+  let y = 560;
+  items.forEach(function (it, i) {
+    const k = CARD_KINDS[it.kind] || CARD_KINDS.coffee,
+      disc = 132,
+      dx = 96,
+      dy = y + 14,
+      gg = ctx.createLinearGradient(dx, dy, dx + disc, dy + disc);
+    gg.addColorStop(0, k.c1);
+    gg.addColorStop(1, k.c2);
+    ctx.beginPath();
+    ctx.arc(dx + disc / 2, dy + disc / 2, disc / 2, 0, 7);
+    ctx.fillStyle = gg;
+    ctx.fill();
+    _pcVessel(ctx, k, dx + disc / 2, dy + disc / 2 + 4, 96, "#f6efe2", 0.6);
+    _pcMedal(ctx, dx + disc - 22, dy + disc - 30, it.n, 48, it.n <= 3, SANS);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = ink;
+    ctx.font = "800 54px " + SANS;
+    ctx.fillText(_pcWrap(ctx, it.name, textW, 1)[0], 270, y + 66);
+    ctx.fillStyle = soft;
+    ctx.font = "500 36px " + SANS;
+    ctx.fillText(_pcWrap(ctx, it.area, textW, 1)[0] || "", 270, y + 114);
+    ctx.fillStyle = "#a5521a";
+    ctx.font = "700 36px " + SANS;
+    ctx.fillText(_pcWrap(ctx, it.drink, textW, 1)[0] || "", 270, y + 160);
+    if (i < items.length - 1) {
+      ctx.fillStyle = "rgba(0,0,0,.08)";
+      ctx.fillRect(96, y + 188, W - 192, 2);
+    }
+    y += 204;
+  });
   ctx.fillStyle = "rgba(0,0,0,.12)";
-  ctx.fillRect(PAD, SAFE_B - 84, W - PAD * 2, 2);
+  ctx.fillRect(PAD + 24, SAFE_B - 84, W - PAD * 2 - 48, 2);
   ctx.font = "800 28px " + SANS;
   ctx.fillStyle = soft;
-  ctx.fillText("JL CAFE PROJECT", PAD, SAFE_B - 30);
+  ctx.fillText("JL CAFE PROJECT", PAD + 24, SAFE_B - 30);
 }
-function openPostcard() {
-  const c = cafes.find(x => x.id === curId),
-    m = $("pcmodal"),
+/* The postcard dialog is shared by every Story card. What is being shared lives in _pcSubject: its title, the message
+   that goes with it (and the link), the file name of the picture, and how the canvas is described. */
+let _pcSubject = null;
+function _pcOpen(subject, draw) {
+  const m = $("pcmodal"),
     cv = $("pc-canvas");
-  if (!c || !m || !cv) return;
+  if (!m || !cv) return;
   _pcOpener = document.activeElement;
-  drawPostcard(cv, postcardData(c));
-  cv.setAttribute("aria-label", "Postcard for " + c.name);
+  _pcSubject = subject;
+  draw(cv);
+  cv.setAttribute("aria-label", subject.aria);
+  m.setAttribute("aria-label", subject.dialog);
   const note = $("pc-note");
-  if (note)
-    note.textContent = navigator.canShare
-      ? "Shares the picture with a link to this cafe."
-      : "Saves the picture, or copies the message.";
+  if (note) note.textContent = navigator.canShare ? subject.noteShare : "Saves the picture, or copies the message.";
   m.hidden = false;
   const b = $("pc-share");
   if (b) b.focus();
+}
+function openPostcard() {
+  const c = cafes.find(x => x.id === curId);
+  if (!c) return;
+  const d = postcardData(c);
+  _pcOpen(
+    {
+      title: d.name,
+      text: postcardText(c),
+      message: postcardText(c).split("\n").slice(0, -1).join("\n"),
+      url: cafeShareUrl(c.id),
+      slug: String(c.name || "cafe").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "cafe",
+      aria: "Postcard for " + c.name,
+      dialog: "Share this spot",
+      noteShare: "Shares the picture with a link to this cafe.",
+    },
+    function (cv) {
+      drawPostcard(cv, d);
+    }
+  );
+}
+/* The year, from the Wrapped strip: this year once it has enough visits, else last year's. */
+function openYearStory() {
+  const pick = wrappedPick(
+    cafes.filter(function (c) {
+      return !c.wish;
+    })
+  );
+  if (!pick) return;
+  const w = pick.w,
+    url = location.origin + location.pathname,
+    message = wrappedText(w);
+  _pcOpen(
+    {
+      title: "My " + w.year + " in caf\u00e9s",
+      text: message + " " + url,
+      message: message,
+      url: url,
+      slug: "my-" + w.year + "-in-cafes",
+      aria: "Your " + w.year + " in caf\u00e9s",
+      dialog: "Share your " + w.year,
+      noteShare: "Shares the picture.",
+    },
+    function (cv) {
+      drawYearStory(cv, w);
+    }
+  );
+}
+/* Your top five, from the Go tab. Private spots are left out: they are somebody's home. */
+function top5Items() {
+  /* one pass over the ranking: asking rankOf() per cafe, and again per comparison in a sort, walks the whole board
+     each time, which on 111 cafes was a million score calls every time the Go tab drew */
+  const rm = rankMap();
+  return cafes
+    .filter(function (c) {
+      /* only cafes past placement: a newcomer that won its first two answers can sit high for a day */
+      return !c.wish && !c.custom && rm[c.id] && !isProvisional(c);
+    })
+    .sort(function (a, b) {
+      return rm[a.id] - rm[b.id];
+    })
+    .slice(0, 5)
+    .map(function (c, i) {
+      const td = topDrinkAt(c);
+      /* numbered 1 to 5 on the card itself: a private spot left out of the list must not leave a gap in it */
+      return { n: i + 1, name: c.name, area: c.area || "", drink: td ? td.d.n : "", kind: cafeKind(c) };
+    });
+}
+function openTop5Story() {
+  const items = top5Items();
+  if (items.length < 3) return;
+  const total = rankMap()._n,
+    url = location.origin + location.pathname,
+    message = "My top " + items.length + " caf\u00e9s: " + items.map(function (it) { return it.n + ". " + it.name; }).join(", ") + ".";
+  _pcOpen(
+    {
+      title: "My top " + items.length + " caf\u00e9s",
+      text: message + " " + url,
+      message: message,
+      url: url,
+      slug: "my-top-" + items.length + "-cafes",
+      aria: "Your top " + items.length + " caf\u00e9s",
+      dialog: "Share your top " + items.length,
+      noteShare: "Shares the picture.",
+    },
+    function (cv) {
+      drawTop5Story(cv, items, total);
+    }
+  );
 }
 function closePostcard() {
   const m = $("pcmodal");
@@ -930,9 +1223,8 @@ function closePostcard() {
   _pcOpener = null;
 }
 function copyPostcardText() {
-  const c = cafes.find(x => x.id === curId);
-  if (!c) return;
-  const t = postcardText(c);
+  if (!_pcSubject) return;
+  const t = _pcSubject.text;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(t).then(
       () => toast("Message copied"),
@@ -941,28 +1233,27 @@ function copyPostcardText() {
   } else toast("Couldn't copy");
 }
 function sendPostcard() {
-  const c = cafes.find(x => x.id === curId),
+  const sub = _pcSubject,
     cv = $("pc-canvas");
-  if (!c || !cv) return;
-  const url = cafeShareUrl(c.id),
-    d = postcardData(c),
-    text = postcardText(c).split("\n").slice(0, -1).join("\n");
+  if (!sub || !cv) return;
+  const url = sub.url,
+    text = sub.message;
   const byLink = function () {
-    if (navigator.share) navigator.share({ title: d.name, text: text, url: url }).catch(function () {});
+    if (navigator.share) navigator.share({ title: sub.title, text: text, url: url }).catch(function () {});
     else copyPostcardText();
   };
   if (!cv.toBlob) return byLink();
   cv.toBlob(function (blob) {
     if (!blob) return byLink();
-    const slug = String(c.name || "cafe").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const slug = sub.slug;
     let file = null;
     try {
-      file = new File([blob], (slug || "cafe") + ".png", { type: "image/png" });
+      file = new File([blob], slug + ".png", { type: "image/png" });
     } catch (e) {
       warn("detail.js postcard", e);
     }
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: d.name, text: text, url: url }).catch(function (e) {
+      navigator.share({ files: [file], title: sub.title, text: text, url: url }).catch(function (e) {
         if (e && e.name !== "AbortError") byLink();
       });
       return;
@@ -970,7 +1261,7 @@ function sendPostcard() {
     /* no picture sharing here (most desktops): hand over the picture itself */
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = (slug || "cafe") + ".png";
+    a.download = slug + ".png";
     document.body.appendChild(a);
     a.click();
     a.remove();

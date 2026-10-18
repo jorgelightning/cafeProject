@@ -1572,12 +1572,37 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
   if (!target && !old) activateDrinkRow(div);
   return div;
 }
+/* What makes two names the same name. "MoonTea" and "Moon Tea", and "Sunright Tea Studio" and
+   "Sunright Tea Studio - Burlingame", are one cafe written two ways; the exact-match check missed both, and each
+   became a second record. Returns a key: two names with the same key are the same name.
+   TODO(human): decide how forgiving this is. Too loose and two different places merge into one record (the visit
+   is merged silently, with only a toast); too strict and the next duplicate slips through. The placeholder below
+   ignores case, accents, spacing, punctuation, a "(branch)" in brackets and a " - suffix". */
+function sameCafeKey(name) {
+  return String(name || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\(.*?\)/g, " ")
+    .replace(/\s[-–—•|].*$/, " ")
+    .replace(/[^a-z0-9぀-ヿ一-鿿]+/g, "");
+}
 function findSameCafe(name, area, lat, lng) {
   const nm = (name || "").trim().toLowerCase();
   if (!nm) return null;
+  const key = sameCafeKey(name);
   return (
     cafes.find(c => {
-      if ((c.name || "").trim().toLowerCase() !== nm) return false;
+      const exact = (c.name || "").trim().toLowerCase() === nm;
+      /* a different spelling of the name only counts when it is the same spot: pinned within about 150 m, or, with
+         no pins, written with the same area. Branches of a chain are further apart than that. */
+      if (!exact) {
+        if (key.length < 3 || sameCafeKey(c.name) !== key) return false;
+        if (lat != null && c.lat != null) return Math.abs(lat - c.lat) < 0.0015 && Math.abs(lng - c.lng) < 0.0015;
+        const b1 = (area || "").trim().toLowerCase(),
+          b2 = (c.area || "").trim().toLowerCase();
+        return !!b1 && b1 === b2;
+      }
       if (lat != null && c.lat != null) return Math.abs(lat - c.lat) < 0.004 && Math.abs(lng - c.lng) < 0.004;
       const a1 = (area || "").trim().toLowerCase(),
         a2 = (c.area || "")

@@ -26,7 +26,11 @@ let _priorSig = -1,
   _prior = {};
 function tierPriors() {
   let sig = cafes.length;
-  for (let i = 0; i < cafes.length; i++) sig = (sig * 31 + matchCount(cafes[i]) * 7 + Math.round(eloFor(cafes[i]))) % 1000003;
+  /* the verdict (rating) and the wishlist flag decide which average a cafe counts towards, so they are in it too:
+     without them, moving a cafe from Loved to Fine kept the old averages until something else changed */
+  for (let i = 0; i < cafes.length; i++)
+    sig =
+      (sig * 31 + matchCount(cafes[i]) * 7 + Math.round(eloFor(cafes[i])) + (cafes[i].rating || 0) * 131 + (cafes[i].wish ? 17 : 0)) % 1000003;
   if (sig === _priorSig) return _prior;
   const sum = {},
     n = {};
@@ -326,7 +330,7 @@ function boardQueueRow(c) {
     '"><span class="gotile" style="background:' +
     tintFor(c) +
     '">' +
-    esc(c.emoji || "☕") +
+    esc(cafeMark(c)) +
     "</span>" +
     '<div class="lbmain"><div class="lbname">' +
     esc(c.name) +
@@ -377,6 +381,9 @@ function renderBoard() {
       (never.length ? " <span>· " + never.length + " never compared</span>" : "") +
       (placing.length ? " <span>· " + placing.length + " still placing</span>" : "") +
       "</div>";
+  const _t5 = isAdmin && typeof top5Items === "function" ? top5Items().length : 0;
+  if (_t5 >= 3)
+    h += '<div class="handoff" role="button" tabindex="0" onclick="openTop5Story()">📤 Share my top ' + _t5 + " <span>›</span></div>";
   if (!board.length) {
     h +=
       '<div class="empty"><div class="big">🏆</div>Nothing ranked yet.' +

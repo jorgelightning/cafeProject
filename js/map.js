@@ -719,7 +719,7 @@ function renderMarkers() {
     m._bucket = c.wish ? "" : bucketOf(c);
     m._id = c.id;
     m._name = c.name;
-    m._emoji = c.emoji || "";
+    m._emoji = cafeMark(c);
     m._fav = !!c.fav;
     m._rk = _rm[c.id] || 0;
     m.addListener("mouseover", function () {
