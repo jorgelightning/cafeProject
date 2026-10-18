@@ -53,6 +53,12 @@ function launch() {
   return chromium.launch(exe ? { executablePath: exe } : {});
 }
 
+/* Waits until the app says it has finished starting (boot.js sets data-ready on <html>), instead of sleeping and
+   hoping: a fixed 900ms is a bet that the machine is not busy. Resolves as soon as it is true, so it is also faster. */
+function ready(pg, timeout) {
+  return pg.waitForFunction(() => document.documentElement.dataset.ready === "1", null, { timeout: timeout || 20000 });
+}
+
 /* Keeps a tally and prints one line per failure with both sides, so a red run says what
    broke without needing a debugger. */
 function checker() {
@@ -70,4 +76,4 @@ function checker() {
   return { eq, done, counts: () => ({ pass, fail }) };
 }
 
-module.exports = { ROOT, serve, launch, checker, chromium };
+module.exports = { ROOT, serve, launch, checker, chromium, ready };

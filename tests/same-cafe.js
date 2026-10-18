@@ -4,7 +4,7 @@
    Studio" beside "Sunright Tea Studio - Burlingame" (both real, both 20 to 30 m apart), each became a second
    record. A different spelling now counts as the same cafe when it is also the same spot: within about 150 m, or,
    with no pins, written with the same area. Branches of a chain, which are further apart, stay separate. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -15,7 +15,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const r = await pg.evaluate(() => {
     const c = (id, name, area, lat, lng) => ({ id, name, area, lat, lng, drinks: [] });

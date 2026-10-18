@@ -4,7 +4,7 @@
    Share card. It is counted from what Stats already counts, appears only once the year has 20 visits, goes to
    viewers too (nothing in it is money or a review), and reads no area, coordinate or review, so a private spot
    is a name, a count and a date and nothing more. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -15,7 +15,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const seed = n => pg.evaluate(count => {
     const Y = new Date().getFullYear(), pad = x => String(x).padStart(2, "0");

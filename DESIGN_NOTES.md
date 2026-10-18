@@ -1532,3 +1532,40 @@ after the fix: 38 bowls, 46 boba cups, 25 cups, 1 gelato, 1 pastry.
 
 On the card the rank and "of 111 on my list" are stacked (rank on top, where it stands directly under it), not split to the
 two edges of the card, where they read as two unrelated facts.
+
+## The picks batch (v100)
+
+Seven things picked from the overnight findings, built together.
+
+**A teacup, and the order beats the name.** A sixth drawn vessel, jade, for plain tea (a tea shop selling Ceylon
+black tea is not a boba shop); `teaKind` is gone. A gelato or bakery name now only decides when nothing you ordered
+says otherwise, so Zen Gelato, where you order the matcha latte, is a bowl. COMEBUY and Teapioca are boba.
+
+**The smart mark everywhere.** `cafeMark(c)` is the one place that decides the emoji a cafe shows: the one you chose,
+else the guess the postcard uses (cached per cafe, since a search asks for every cafe on every keystroke). It feeds the
+List tile, the cafe page, the map pin, the Go queue and the List's search, which reads the emoji as a type word:
+"boba" finds 32 cafes instead of 16 and "matcha" 40 instead of 29. ☕ is the default, so a deliberate coffee cup on a tea
+shop cannot be told from "not chosen"; any other emoji you pick always wins.
+
+**Year and Top 5 Stories.** The Wrapped Share opens the year as a 9:16 Story, and the Go tab has "Share my top 5" (the
+owner's, three ranked cafes minimum). Both use the cafe postcard's pieces (`_pcRings`, `_pcVessel`, `_pcWash`, `_pcFoot`,
+`_pcMedal`) and its dialog, which now shares through `_pcSubject` (title, message, link, file name) instead of assuming
+"the current cafe". The top five is numbered 1 to 5 on the card, leaves out private spots (somebody's home) and
+wishlist cafes, and a private spot is never named as where you "went back". Share on the strip is the owner's.
+
+**Wrapped falls back to last year.** `wrappedPick` shows this year's strip once it has 20 visits and last year's, marked
+"in review", until then, so the year in review is there in January.
+
+**Your data.** Settings has a Your data card (owner only): Download a copy (a dated file of every cafe) and the daily
+backup's date, read from the backup file. The old `exportJSON` also cleared the unsynced-edits flag, which a download
+must never do, so `downloadCopy` replaces it. Restore was not built: GitHub history is the safety net.
+
+**The same-cafe check.** `findSameCafe` compares names through `sameCafeKey`, so "MoonTea" beside "Moon Tea" and a
+" - Burlingame" suffix are one cafe when also within about 150 m (or the same area, with no pins). Branches of a chain are
+further apart. A match merges the visit into the existing record with a toast, so how forgiving the key is matters:
+that rule is the one marked `TODO(human)` in `form.js`.
+
+**A ready signal for the tests.** `boot.js` sets `data-ready` on `<html>` after the first paint; the harness exports
+`ready(page)`; 23 fixed `waitForTimeout(900)` warm-ups in 21 test files now wait for it. `offline.js` and `updates.js` keep
+fixed waits: they are about a service worker and a new build, not about boot.
+

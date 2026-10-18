@@ -4,7 +4,7 @@
    land. Rows are the default now (three lines: name, what to order and its price, place and time; the rank
    at the right), grouped under sticky bands that follow the sort: Top 10 / 11 to 30 / 31 to 60 / the rest by
    rank, This week / This month by recency, a verdict by rating. The photo cards stay a layout choice. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -15,7 +15,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const seeded = await pg.evaluate(() => {
     localStorage.removeItem("cafemap.listLayout");

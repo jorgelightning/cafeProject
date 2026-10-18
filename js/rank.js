@@ -377,11 +377,9 @@ function renderBoard() {
       (never.length ? " <span>· " + never.length + " never compared</span>" : "") +
       (placing.length ? " <span>· " + placing.length + " still placing</span>" : "") +
       "</div>";
-  if (isAdmin && typeof top5Items === "function" && top5Items().length >= 3)
-    h +=
-      '<div class="handoff" role="button" tabindex="0" onclick="openTop5Story()">📤 Share my top ' +
-      Math.min(5, top5Items().length) +
-      " <span>›</span></div>";
+  const _t5 = isAdmin && typeof top5Items === "function" ? top5Items().length : 0;
+  if (_t5 >= 3)
+    h += '<div class="handoff" role="button" tabindex="0" onclick="openTop5Story()">📤 Share my top ' + _t5 + " <span>›</span></div>";
   if (!board.length) {
     h +=
       '<div class="empty"><div class="big">🏆</div>Nothing ranked yet.' +

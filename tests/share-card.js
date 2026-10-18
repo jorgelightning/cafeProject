@@ -5,7 +5,7 @@
    is set as a quotation. "Share spot" draws a postcard to a canvas — rank, name, what to get, the
    owner's line — and sends it as a picture where the device can, as the link where it cannot.
    It is built from c.area and never areaOf(c): it goes to someone else. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -16,7 +16,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const seed = admin => pg.evaluate(a => {
     isAdmin = a; applyMode();

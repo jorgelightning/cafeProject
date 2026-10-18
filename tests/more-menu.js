@@ -3,7 +3,7 @@
    It is a <details>, which stays open until told to close. Choosing Edit left it open, so after saving the
    visit it was back on the cafe page, floating over the content, and nothing put it away. It closes on any
    choice, on a tap anywhere else, on Escape (returning focus to the button), and whenever a cafe page opens. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -15,7 +15,7 @@ const { eq, done } = checker();
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   pg.on("dialog", d => d.dismiss());
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const ids = await pg.evaluate(() => { isAdmin = true; applyMode(); _formSnap = null; return [rankOf0(1), rankOf0(2)]; function rankOf0(n) { return cafes.find(c => rankOf(c) === n).id; } });
   const open = id => pg.evaluate(i => { openDetail(i, "list"); }, id);

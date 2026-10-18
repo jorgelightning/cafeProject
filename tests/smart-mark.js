@@ -3,7 +3,7 @@
    Most records hold the default coffee cup, so a hojicha bar showed a cup on its tile, its cafe page and its map
    pin, and searching "boba" or "matcha" missed it (search reads the emoji as a type word). cafeMark() is the one
    place that decides: the emoji you chose, else the guess the postcard already uses. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -14,7 +14,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const r = await pg.evaluate(() => {
     isAdmin = true; applyMode(); _formSnap = null;

@@ -4,7 +4,7 @@
    leave the top 14% and bottom 13% clear for Instagram's own bars. The top five is the owner's to send: its
    button is on the Go tab for the owner only, it needs three ranked cafes, and it leaves out private spots,
    which are somebody's home, and wishlist cafes, which are not ranked. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -15,7 +15,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const seed = () => pg.evaluate(() => {
     const Y = new Date().getFullYear();

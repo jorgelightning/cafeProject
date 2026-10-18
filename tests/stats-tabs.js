@@ -3,7 +3,7 @@
    Stats was one scroll of fourteen cards, 4,800px on a phone, with an emoji on every heading. It is You (who you
    are as a drinker), Habits (when you go) and Money (what it costs) now. Every card is still rendered, so nothing
    that reads the page loses anything; only the active tab shows. What you spent is a Money fact and the owner's alone. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -14,7 +14,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const probe = admin => pg.evaluate(a => {
     isAdmin = a; applyMode(); _statsTab = "you";

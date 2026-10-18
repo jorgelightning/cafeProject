@@ -4,7 +4,7 @@
    with the longest streak and the weekday split, the spread of drink prices with a monthly trend
    and the verdict split with the wishlist and
    tags. They are plain SVG and CSS on the theme tokens, and they must never carry a location. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -15,7 +15,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const seed = async admin => pg.evaluate(a => {
     isAdmin = a; applyMode();

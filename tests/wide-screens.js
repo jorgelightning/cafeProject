@@ -4,7 +4,7 @@
    way from the name, a chart's text scaled to 2.3 times its size, and a single-card grid left half empty. Rows are
    two columns on a tablet, charts stop growing at 520px, a lone card takes the row, and nothing on any screen
    sticks out at any of the three widths. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -27,7 +27,7 @@ const { eq, done } = checker();
     await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
     const errs = []; pg.on("pageerror", e => errs.push(String(e)));
     await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-    await pg.waitForTimeout(900);
+    await ready(pg);
     const sticking = [];
     for (const k of Object.keys(screens)) {
       await pg.evaluate("(" + screens[k].toString() + ")()");

@@ -4,7 +4,7 @@
    you want it. It is the owner's, it reads the list and writes nothing (the old export also cleared the
    "edits not synced yet" flag, which a download must never do), and it says what is in it and when the last
    automatic backup ran. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -15,7 +15,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   const seed = () => pg.evaluate(() => {
     cafes = [

@@ -238,6 +238,9 @@ load()
     const _sp = new URLSearchParams(location.search);
     const _sc = _sp.get("cafe");
     show("map");
+    /* Tells anything watching (the test suite) that the first paint from the saved data is done. It is set before
+       the map starts, so a map that cannot load cannot hold it back. */
+    document.documentElement.dataset.ready = "1";
     startMaps();
     subscribeCloud();
     probePrivateRule();

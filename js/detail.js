@@ -1175,18 +1175,21 @@ function openYearStory() {
 }
 /* Your top five, from the Go tab. Private spots are left out: they are somebody's home. */
 function top5Items() {
+  /* one pass over the ranking: asking rankOf() per cafe, and again per comparison in a sort, walks the whole board
+     each time, which on 111 cafes was a million score calls every time the Go tab drew */
+  const rm = rankMap();
   return cafes
     .filter(function (c) {
-      return !c.wish && !c.custom && rankOf(c);
+      return !c.wish && !c.custom && rm[c.id];
     })
     .sort(function (a, b) {
-      return rankOf(a) - rankOf(b);
+      return rm[a.id] - rm[b.id];
     })
     .slice(0, 5)
     .map(function (c, i) {
-      const d = postcardData(c);
+      const td = topDrinkAt(c);
       /* numbered 1 to 5 on the card itself: a private spot left out of the list must not leave a gap in it */
-      return { n: i + 1, name: d.name, area: d.area, drink: d.drink, kind: d.kind };
+      return { n: i + 1, name: c.name, area: c.area || "", drink: td ? td.d.n : "", kind: cafeKind(c) };
     });
 }
 function openTop5Story() {

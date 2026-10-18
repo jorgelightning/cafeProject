@@ -5,7 +5,7 @@
    line art (bowl, cup, boba, gelato, pastry) on a fade in the drink's own colour, chosen from what the place
    serves, and a deliberately chosen emoji still wins. The picture is 1080 x 1920 for Instagram Stories: the colour
    runs edge to edge while every word stays out of the bands the app lays over the top and bottom. */
-const { serve, launch, checker } = require("./harness");
+const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -16,7 +16,7 @@ const { eq, done } = checker();
   await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
   const errs = []; pg.on("pageerror", e => errs.push(String(e)));
   await pg.goto(srv.origin + "/index.html", { waitUntil: "load" });
-  await pg.waitForTimeout(900);
+  await ready(pg);
 
   /* ---- what a place serves ---- */
   const kinds = await pg.evaluate(() => {
