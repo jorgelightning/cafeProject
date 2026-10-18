@@ -184,7 +184,7 @@ function openDetail(id, from) {
 
   /* ---- hero photo ---- */
   const hero = $("d-hero");
-  if ($("d-hero-emoji")) $("d-hero-emoji").textContent = c.emoji || "☕";
+  if ($("d-hero-emoji")) $("d-hero-emoji").textContent = cafeMark(c);
   const gp0 = _imgFail[c.id] ? null : gphotoFor(c);
   if (gp0) {
     hero.className = "hero";
@@ -688,6 +688,30 @@ function cafeKind(c) {
   if (/\btea\b/.test(who) && !/coffee|espresso/.test(who)) return "tea";
   return "coffee";
 }
+/* The emoji a cafe shows everywhere that is not the postcard (tile, cafe page, pin, search, the Go queue): the
+   one you chose, else the guess from what it serves. ☕ is the default, so it counts as "not chosen". */
+const KIND_EMOJI = { matcha: "🍵", coffee: "☕", boba: "🧋", gelato: "🍨", pastry: "🥐", tea: "🍵" };
+/** @param {Cafe|null|undefined} c */
+function cafeMark(c) {
+  if (!c) return "☕";
+  if (c.emoji && c.emoji !== "☕") return c.emoji;
+  /* A search runs this for every cafe on every keystroke, so remember the answer for as long as the fields the
+     guess reads are unchanged (name, brand, tags, and each drink's name and how many orders it has). */
+  const sig =
+    [c.name, c.brand, (c.tags || []).join(",")].join("|") +
+    "#" +
+    (c.drinks || [])
+      .map(function (d) {
+        return d.n + ":" + (d.orders ? d.orders.length : 0) + ":" + (d.dates ? d.dates.length : 0);
+      })
+      .join(",");
+  const hit = _markMemo.get(c);
+  if (hit && hit.sig === sig) return hit.mark;
+  const mark = KIND_EMOJI[cafeKind(c)] || "☕";
+  _markMemo.set(c, { sig: sig, mark: mark });
+  return mark;
+}
+const _markMemo = new WeakMap();
 function postcardData(c) {
   const td = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
   const rk = !c.wish && typeof rankOf === "function" ? rankOf(c) : null;

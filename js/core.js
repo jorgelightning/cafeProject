@@ -308,7 +308,7 @@ function nophotoStyle(c) {
 }
 /* emoji only: the initials were a second mark for the same cafe, and broke on "HEYTEA (Cupertino)" ("H(") */
 function nophotoHTML(c) {
-  return '<span class="em">' + esc((c && c.emoji) || "☕") + "</span>";
+  return '<span class="em">' + esc(cafeMark(c)) + "</span>";
 }
 /* Local calendar date. Plain toISOString() would hand back yesterday (or tomorrow) when
    logging from Hawaii or Taipei, so shift by the timezone offset before slicing. */

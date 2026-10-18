@@ -326,7 +326,7 @@ function boardQueueRow(c) {
     '"><span class="gotile" style="background:' +
     tintFor(c) +
     '">' +
-    esc(c.emoji || "☕") +
+    esc(cafeMark(c)) +
     "</span>" +
     '<div class="lbmain"><div class="lbname">' +
     esc(c.name) +
