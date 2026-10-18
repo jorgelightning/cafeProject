@@ -679,17 +679,45 @@ function importPublished() {
     })
     .catch(() => toast("Couldn't load cafes.json"));
 }
-function exportJSON() {
+/* A copy of your cafes as a file you can keep anywhere. It reads the list and writes nothing: in particular it does
+   not touch the "edits not synced yet" flag (the old export cleared it, which a download must never do). It holds
+   what the app holds, so a private spot is as blurred in it as it is in the cloud. */
+function downloadCopy() {
   const blob = new Blob([JSON.stringify(cafes, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "cafes.json";
+  a.download = "cafes-" + localToday() + ".json";
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1500);
-  localStorage.removeItem(DIRTY_FLAG);
-  toast("Backup downloaded ✓");
+  toast("Copy downloaded \u2713");
+}
+/* The card in Settings: what a copy would hold, and when the automatic daily backup last ran, read from the
+   backup file's own date. Offline or unreadable, it says what the backup is rather than when. */
+function renderDataCard() {
+  const n = $("ab-copynote"),
+    bk = $("ab-backup");
+  if (n) {
+    const visited = cafes.filter(function (c) {
+      return !c.wish;
+    }).length;
+    n.textContent = visited + " visited cafes" + (cafes.length > visited ? " and " + (cafes.length - visited) + " to try" : "") + ". Saves a file you can keep anywhere.";
+  }
+  if (!bk) return;
+  bk.textContent = "Backed up automatically every day, and every version is kept on GitHub.";
+  if (typeof fetch !== "function") return;
+  fetch(DATA_URL + "?t=" + Date.now(), { method: "HEAD" })
+    .then(function (r) {
+      const lm = r.ok && r.headers.get("last-modified"),
+        d = lm && new Date(lm);
+      if (d && !isNaN(d.getTime()))
+        bk.textContent =
+          "\u2713 Backed up automatically every day. The last one was " +
+          d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
+          ", and every version is kept on GitHub.";
+    })
+    .catch(function () {});
 }
 function revertPublished() {
   if (!confirm("Reload the latest saved data and discard unsynced local edits?")) return;
