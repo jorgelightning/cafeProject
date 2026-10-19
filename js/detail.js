@@ -841,17 +841,18 @@ function _pcWash(ctx, kind, W, H, safeB) {
   ctx.fillStyle = wash;
   ctx.fillRect(0, safeB - 240, W, H - (safeB - 240));
 }
-function _pcFoot(ctx, W, PAD, safeB, SANS) {
-  ctx.fillStyle = "rgba(0,0,0,.12)";
+function _pcFoot(ctx, W, PAD, safeB, SANS, onDark) {
+  ctx.fillStyle = onDark ? "rgba(246,239,226,.14)" : "rgba(0,0,0,.12)";
   ctx.fillRect(PAD, safeB - 84, W - PAD * 2, 2);
   ctx.font = "800 28px " + SANS;
-  ctx.fillStyle = "#5a5a63";
+  ctx.fillStyle = onDark ? "rgba(246,239,226,.6)" : "#5a5a63";
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillText("JL CAFE PROJECT", PAD, safeB - 30);
 }
-/** The rank medal: gold for the top three or ten, dark glass for the rest. Returns its width. */
-function _pcMedal(ctx, x, y, n, h, gold, SANS) {
+/** The rank medal: gold for the top three or ten; for the rest, dark glass on a light card or cream on a dark one
+    (dark glass vanishes on espresso). Returns its width. */
+function _pcMedal(ctx, x, y, n, h, gold, SANS, onDark) {
   const label = "#" + n;
   ctx.font = "800 " + Math.round(h * 0.62) + "px " + SANS;
   const w = ctx.measureText(label).width + h * 0.6;
@@ -861,9 +862,9 @@ function _pcMedal(ctx, x, y, n, h, gold, SANS) {
     gg.addColorStop(0, "#f6d77f");
     gg.addColorStop(1, "#dca13a");
     ctx.fillStyle = gg;
-  } else ctx.fillStyle = "rgba(20,13,8,.62)";
+  } else ctx.fillStyle = onDark ? "#e9dfcf" : "rgba(20,13,8,.62)";
   ctx.fill();
-  ctx.fillStyle = gold ? "#3b2606" : "#fff";
+  ctx.fillStyle = gold ? "#3b2606" : onDark ? "#2a1d12" : "#fff";
   ctx.textBaseline = "middle";
   ctx.textAlign = "left";
   ctx.fillText(label, x + h * 0.3, y + h / 2 + 2);
@@ -1063,20 +1064,47 @@ function drawTop5Story(canvas, items, total) {
     H = canvas.height,
     PAD = 72,
     SANS = 'system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif',
-    paper = "#fbfaf8",
-    ink = "#1d1a17",
-    soft = "#5a5a63",
+    cream = "#f6efe2",
     SAFE_T = Math.round(H * 0.14),
     SAFE_B = H - Math.round(H * 0.13);
-  const g = ctx.createLinearGradient(0, 0, W, H);
+  /* All espresso, edge to edge: no inset sheet (which left a dark frame round a white card) and no white. The list
+     sits straight on the espresso in cream, like a menu board. */
+  const g = ctx.createLinearGradient(0, 0, W * 0.3, H);
   g.addColorStop(0, "#3a2a1c");
-  g.addColorStop(1, "#16100b");
+  g.addColorStop(1, "#140e09");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  _pcRings(ctx, W, 560, W / 2, 330);
+  /* The rings are drawn on their own layer and faded out with a mask, so they melt into the espresso behind the
+     title instead of stopping at an edge. The mask eases in and out (smoothstep stops); a straight one leaves a
+     visible line where it ends. */
+  const RH = 760,
+    rl = document.createElement("canvas");
+  rl.width = W;
+  rl.height = RH;
+  const rc = rl.getContext("2d");
+  if (rc) {
+    _pcRings(rc, W, RH, W / 2, 330);
+    const m = rc.createLinearGradient(0, 380, 0, 720);
+    for (let t = 0; t <= 1.001; t += 0.125) m.addColorStop(Math.min(t, 1), "rgba(0,0,0," + (t * t * (3 - 2 * t)).toFixed(3) + ")");
+    rc.globalCompositeOperation = "destination-out";
+    rc.fillStyle = m;
+    rc.fillRect(0, 380, W, RH - 380);
+    ctx.drawImage(rl, 0, 0);
+  }
+  /* the bottom glows in the colour of the #1 cafe's drink */
+  if (items.length) {
+    const rgb = [1, 3, 5].map(function (i) {
+        return parseInt((CARD_KINDS[items[0].kind] || CARD_KINDS.coffee).c1.slice(i, i + 2), 16);
+      }),
+      glow = ctx.createLinearGradient(0, SAFE_B - 360, 0, H);
+    glow.addColorStop(0, "rgba(" + rgb.join(",") + ",0)");
+    glow.addColorStop(1, "rgba(" + rgb.join(",") + ",.55)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, SAFE_B - 360, W, H - (SAFE_B - 360));
+  }
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = "#f6efe2";
+  ctx.fillStyle = cream;
   ctx.font = "800 44px " + SANS;
   ctx.fillText("MY TOP " + items.length, PAD, SAFE_T + 40);
   ctx.font = "800 120px " + SANS;
@@ -1084,20 +1112,12 @@ function drawTop5Story(canvas, items, total) {
   ctx.font = "600 42px " + SANS;
   ctx.fillStyle = "rgba(246,239,226,.8)";
   ctx.fillText("out of " + total + " caf\u00e9s I have ranked", PAD, SAFE_T + 224);
-  ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,.3)";
-  ctx.shadowBlur = 40;
-  ctx.shadowOffsetY = 12;
-  _pcRound(ctx, 48, 520, W - 96, SAFE_B - 520 + 24, 56);
-  ctx.fillStyle = paper;
-  ctx.fill();
-  ctx.restore();
-  const textW = W - 96 - 300 - 48;
-  let y = 560;
+  const textW = W - 246 - PAD;
+  let y = 590;
   items.forEach(function (it, i) {
     const k = CARD_KINDS[it.kind] || CARD_KINDS.coffee,
       disc = 132,
-      dx = 96,
+      dx = PAD,
       dy = y + 14,
       gg = ctx.createLinearGradient(dx, dy, dx + disc, dy + disc);
     gg.addColorStop(0, k.c1);
@@ -1106,30 +1126,30 @@ function drawTop5Story(canvas, items, total) {
     ctx.arc(dx + disc / 2, dy + disc / 2, disc / 2, 0, 7);
     ctx.fillStyle = gg;
     ctx.fill();
-    _pcVessel(ctx, k, dx + disc / 2, dy + disc / 2 + 4, 96, "#f6efe2", 0.6);
-    _pcMedal(ctx, dx + disc - 22, dy + disc - 30, it.n, 48, it.n <= 3, SANS);
+    /* a faint cream rim keeps the darker discs (coffee) from sinking into the espresso */
+    ctx.strokeStyle = "rgba(246,239,226,.18)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    _pcVessel(ctx, k, dx + disc / 2, dy + disc / 2 + 4, 96, cream, 0.6);
+    _pcMedal(ctx, dx + disc - 22, dy + disc - 30, it.n, 48, it.n <= 3, SANS, true);
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = ink;
+    ctx.fillStyle = cream;
     ctx.font = "800 54px " + SANS;
-    ctx.fillText(_pcWrap(ctx, it.name, textW, 1)[0], 270, y + 66);
-    ctx.fillStyle = soft;
+    ctx.fillText(_pcWrap(ctx, it.name, textW, 1)[0], 246, y + 66);
+    ctx.fillStyle = "rgba(246,239,226,.66)";
     ctx.font = "500 36px " + SANS;
-    ctx.fillText(_pcWrap(ctx, it.area, textW, 1)[0] || "", 270, y + 114);
-    ctx.fillStyle = "#a5521a";
+    ctx.fillText(_pcWrap(ctx, it.area, textW, 1)[0] || "", 246, y + 114);
+    ctx.fillStyle = "#e9a866";
     ctx.font = "700 36px " + SANS;
-    ctx.fillText(_pcWrap(ctx, it.drink, textW, 1)[0] || "", 270, y + 160);
+    ctx.fillText(_pcWrap(ctx, it.drink, textW, 1)[0] || "", 246, y + 160);
     if (i < items.length - 1) {
-      ctx.fillStyle = "rgba(0,0,0,.08)";
-      ctx.fillRect(96, y + 188, W - 192, 2);
+      ctx.fillStyle = "rgba(246,239,226,.12)";
+      ctx.fillRect(PAD, y + 180, W - PAD * 2, 2);
     }
-    y += 204;
+    y += 196;
   });
-  ctx.fillStyle = "rgba(0,0,0,.12)";
-  ctx.fillRect(PAD + 24, SAFE_B - 84, W - PAD * 2 - 48, 2);
-  ctx.font = "800 28px " + SANS;
-  ctx.fillStyle = soft;
-  ctx.fillText("JL CAFE PROJECT", PAD + 24, SAFE_B - 30);
+  _pcFoot(ctx, W, PAD, SAFE_B, SANS, true);
 }
 /* The postcard dialog is shared by every Story card. What is being shared lives in _pcSubject: its title, the message
    that goes with it (and the link), the file name of the picture, and how the canvas is described. */

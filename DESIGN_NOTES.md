@@ -1635,3 +1635,16 @@ Google has not loaded yet, the request waits for the first draw. And drawing the
 placed: once you or a shared link has positioned it, redraws leave it alone. Finding where you are already respected
 `mapOwned`. `tests/shared-link.js`.
 
+## The Top 5 Story loses its frame (v103)
+
+The Top 5 was the last Story still drawn as a rounded cream sheet with a shadow on espresso, which left a dark frame
+down both sides and along the bottom, and a hard edge under the title. A first try faded the header into the cream
+paper like the postcard, but a list of five on cream read as too white. So it is all espresso now, like a menu board:
+the dark runs edge to edge, the list sits straight on it in cream (names), cream at 66% (areas) and caramel (drinks)
+at the same 72px margins as the other cards, and the bottom glows in the colour of the #1 cafe's drink. The rings are
+drawn on their own layer and faded out with an eased mask, since a straight fade leaves a line where it ends. Two
+things change for the dark: the medals for #4 and #5 are cream (`_pcMedal`'s `onDark`), because dark glass vanishes
+on espresso, and the discs get a faint cream rim so the coffee ones don't sink in; the footer is cream too
+(`_pcFoot`'s `onDark`). `tests/stories.js` checks there is no jump between the card's edge and the space inside it, and
+that the list sits on dark.
+

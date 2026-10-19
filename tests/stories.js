@@ -62,7 +62,13 @@ const { eq, done } = checker();
     openTop5Story();
     CanvasRenderingContext2D.prototype.fillText = orig;
     const cv = document.getElementById("pc-canvas");
-    return { open: !document.getElementById("pcmodal").hidden, size: [cv.width, cv.height], aria: cv.getAttribute("aria-label"), dialog: document.getElementById("pcmodal").getAttribute("aria-label"),
+    /* No frame: the very edge of the card is the same colour as the open space just inside it, beside the list and
+       below it. (A sheet on a background shows as a jump between the two.) And the names are light on dark. */
+    const cx = cv.getContext("2d"), lum = (x, y) => { const p = cx.getImageData(x, y, 1, 1).data; return Math.round(0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]); };
+    const edges = [[[6, 900], [60, 900]], [[1073, 900], [1020, 900]], [[6, 1500], [60, 1500]], [[1073, 1500], [1020, 1500]], [[540, 1914], [540, 1860]]]
+      .map(pr => Math.abs(lum(pr[0][0], pr[0][1]) - lum(pr[1][0], pr[1][1])));
+    const ground = [lum(1020, 900), lum(1020, 1300)];
+    return { edges, ground, open: !document.getElementById("pcmodal").hidden, size: [cv.width, cv.height], aria: cv.getAttribute("aria-label"), dialog: document.getElementById("pcmodal").getAttribute("aria-label"),
              texts: calls.map(c => c.t), ys: calls.map(c => c.y), title: _pcSubject.title, message: _pcSubject.message, slug: _pcSubject.slug };
   });
   eq([shot.open, shot.size], [true, [1080, 1920]], "Share my top 5 opens a 9:16 Story in the share dialog");
@@ -71,6 +77,8 @@ const { eq, done } = checker();
   eq(shot.texts.some(t => /Friend|SECRETAREA|Someday|Never Compared/.test(t)) || /Friend|SECRETAREA/.test(shot.message), false, "…and no private spot, no address, no wishlist cafe");
   eq(Math.min(...shot.ys) >= 269 && Math.max(...shot.ys) <= 1670, true, "…everything inside the Story's safe band (" + Math.round(Math.min(...shot.ys)) + " to " + Math.round(Math.max(...shot.ys)) + ")");
   eq(/^My top 5 cafés: 1\. Kiss of Matcha, 2\. Boba Corner Tea/.test(shot.message), true, "…and the message lists them in order");
+  eq(shot.edges.every(d => d <= 6), true, "…the background runs to the edges, with no frame down the sides or along the bottom (jumps " + shot.edges.join(", ") + ")");
+  eq(shot.ground.every(l => l < 60), true, "…and the list sits on espresso, not a white sheet (" + shot.ground.join(", ") + ")");
   await pg.evaluate(() => closePostcard());
 
   /* the year Story: the same rule, with nothing private named */
