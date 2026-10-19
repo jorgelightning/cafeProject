@@ -170,13 +170,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1428,
+    "elo": 1423,
     "emoji": "☕",
     "fav": false,
     "id": "mqf9w1vzajpl",
     "lat": 21.32908,
     "lng": -158.0914,
-    "matches": 12,
+    "matches": 13,
     "name": "Island Vintage Coffee and Wine Bar Kapolei",
     "rating": 3,
     "review": "Flat white are known for their micro foam and there was none here!",
@@ -3030,6 +3030,23 @@
     "wish": true
   },
   {
+    "area": "Phường",
+    "brand": "",
+    "cc": "VN",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mveg6wqq15rk",
+    "lat": 21.03136,
+    "lng": 105.85412,
+    "name": "giao mùa",
+    "pid": "ChIJXRkpawCrNTERXuocoSwNd_A",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-18T23:19:45.217Z",
+    "wish": true
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
@@ -3286,7 +3303,7 @@
     "custom": false,
     "drinks": [
       {
-        "count": 11,
+        "count": 12,
         "dates": [
           "2026-03-24",
           "2026-07-09",
@@ -3298,7 +3315,8 @@
           "2026-09-24",
           "2026-10-07",
           "2026-10-14",
-          "2026-10-15"
+          "2026-10-15",
+          "2026-10-17"
         ],
         "ice": "Warm",
         "milk": "Oat",
@@ -3408,6 +3426,16 @@
             "date": "2026-10-15",
             "ice": "Warm",
             "id": "mv9wwgzcjgu5",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-17",
+            "ice": "Warm",
+            "id": "mved46znxltj",
             "milk": "Oat",
             "p": "5",
             "reorder": "yes",
@@ -3614,20 +3642,20 @@
         ]
       }
     ],
-    "elo": 1586,
+    "elo": 1591,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 24,
+    "matches": 25,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.\n\nAshley Cafe is next around the corner for a good bagel and sandwiches!",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-10-16T05:43:27.259Z",
+    "updated": "2026-10-18T21:54:00.713Z",
     "wish": false
   },
   {
