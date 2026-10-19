@@ -226,7 +226,8 @@ const { eq, done } = checker();
     const f = window.__fits[window.__fits.length - 1] || [];
     return { world: _worldOn(), lat: f.map(p => Math.round(p.lat)) };
   });
-  eq(r, { world: false, lat: [21, 21] }, "an update that redraws the pins keeps you in Hawaii instead of zooming back out to the world");
+  /* picking a region places the map, so a redraw leaves it on Hawaii without fitting anything again */
+  eq(r, { world: false, lat: [] }, "an update that redraws the pins keeps you in Hawaii instead of zooming back out to the world");
 
   // ---- the dropdown ----
   r = await ph.pg.evaluate(() => {

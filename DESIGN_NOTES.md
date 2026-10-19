@@ -1622,3 +1622,16 @@ controls, their own family.
 White was a soda cup on one and a coffee cup on the other). Nothing tapped on the Log form is under 44px. Tapping a pin
 closes the region menu and the legend before its card opens. `tests/redesign.js`.
 
+## A shared link keeps the map on its cafe (v102)
+
+Opening `?cafe=<id>` opened the cafe's page, but the map behind it (and the one you go back to) framed the whole list,
+and a second later framed it again: `renderMarkers()` reframed the map on every call, and it runs on the first draw,
+on the cloud's update, and on every favourite, save and sign-in. So a friend tapping a shared link, or anyone who had
+panned somewhere, was thrown back to the full map.
+
+Two changes. A shared cafe now asks the map to open on it (`focusCafeOnMap`): centred, zoom 15 (13 for a private
+spot, at its blurred pin, so the zoom matches the blur), its pin picked, and the map counts as placed (`mapOwned`). If
+Google has not loaded yet, the request waits for the first draw. And drawing the pins only frames a map nobody has
+placed: once you or a shared link has positioned it, redraws leave it alone. Finding where you are already respected
+`mapOwned`. `tests/shared-link.js`.
+

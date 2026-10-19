@@ -743,7 +743,13 @@ function renderMarkers() {
   if ($("map-sub"))
     $("map-sub").textContent = cafes.length + " cafe" + (cafes.length === 1 ? "" : "s") + " · tap a pin";
   renderLocationSelect();
-  if (_worldOn()) fitWorld();
+  /* Drawing the pins is not a reason to move the map. This runs on every cloud update, every favourite and every
+     save, and it used to reframe the map each time: a friend who opened a shared link, or anyone who had panned
+     somewhere, was thrown back to the whole map a second later. It frames only a map nobody has placed yet, and
+     a shared cafe counts as placed. */
+  if (_focusCafeId) _applyCafeFocus();
+  else if (mapOwned) return;
+  else if (_worldOn()) fitWorld();
   else if (_focusVal) fitList(locationList(_focusVal));
   else if (_homeVal()) fitList(locationList(_homeVal()));
   else if (n === 1) {
@@ -752,6 +758,29 @@ function renderMarkers() {
   } else if (n > 1) {
     gmap.fitBounds(b, fitPad());
   }
+}
+/* A shared link (?cafe=<id>) opens the map on that cafe with its pin picked, and the map counts as placed, so
+   neither the first draw, the cloud's update a moment later, nor finding where you are moves it away. If the map
+   is not ready yet, the focus waits for the first draw. A private spot is shown at its blurred pin, zoomed out to
+   match. */
+let _focusCafeId = null;
+function focusCafeOnMap(id) {
+  _focusCafeId = id;
+  mapOwned = true;
+  if (gmap && gmarkers.length) _applyCafeFocus();
+}
+function _applyCafeFocus() {
+  const c = cafes.find(function (x) {
+    return x.id === _focusCafeId;
+  });
+  if (!c || !gmap) return;
+  _focusCafeId = null;
+  const lat = latOf(c),
+    lng = lngOf(c);
+  if (lat == null || lng == null) return;
+  gmap.setCenter({ lat: +lat, lng: +lng });
+  gmap.setZoom(c.custom ? 13 : 15);
+  selectPin(c.id);
 }
 const COUNTRY_INFO = {
   "United States USA America": { flag: "🇺🇸", name: "United States" },

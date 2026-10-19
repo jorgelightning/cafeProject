@@ -249,6 +249,8 @@ load()
       const _wait = tries => {
         const _fc = cafes.find(x => x.id === _sc);
         if (_fc) {
+          /* the map behind the cafe (and the one you go back to) opens on it, and stays there */
+          focusCafeOnMap(_fc.id);
           setTimeout(() => openDetail(_fc.id, "map"), 400);
         } else if (tries > 0) {
           setTimeout(() => _wait(tries - 1), 600);
