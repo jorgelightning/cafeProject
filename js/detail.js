@@ -3,9 +3,9 @@
    Loaded by index.html; script order matters (config first, boot last). */
 /* ---------- detail ---------- */
 function photoLabel(c) {
-  if (c && c.photo) return "📷 My drink";
+  if (c && c.photo) return ico("camera") + " My drink";
   const u = gphotoFor(c);
-  if (u) return "📷 Google Maps";
+  if (u) return ico("camera") + " Google Maps";
   return "";
 }
 function setHeroTag(c) {
@@ -13,7 +13,7 @@ function setHeroTag(c) {
   if (!t) return;
   const l = photoLabel(c);
   if (l) {
-    t.textContent = l;
+    t.innerHTML = l; /* photoLabel() is a fixed label and an icon, never user text */
     t.style.display = "";
   } else {
     t.style.display = "none";
@@ -96,12 +96,11 @@ function modPills(o) {
     ? '<span class="dmods">' + m.map(x => '<span class="mpill ' + x[0] + '">' + esc(x[1]) + "</span>").join("") + "</span>"
     : "";
 }
+/* A drink's glyph follows the same rule as the cafe's mark (drinkKind), so a Flat White is a coffee cup on the cafe
+   page as it is on its card. It used to have its own list, which disagreed on 15 of 126 drinks. */
+const DRINK_GLYPH = { matcha: "🍵", tea: "🍵", boba: "🧋", coffee: "☕", gelato: "🍨", pastry: "🥐" };
 function drinkGlyph(n) {
-  n = (n || "").toLowerCase();
-  if (/matcha|hojicha|green tea/.test(n)) return "🍵";
-  if (/boba|milk tea|oolong|\btea\b/.test(n)) return "🧋";
-  if (/coffee|espresso|americano|latte|mocha|cappuccino|cold brew/.test(n)) return "☕";
-  return "🥤";
+  return DRINK_GLYPH[drinkKind(n)] || "🥤";
 }
 function drinkHistoryPrice(d, latest) {
   const range = drinkPriceRange(d);
@@ -184,7 +183,7 @@ function openDetail(id, from) {
 
   /* ---- hero photo ---- */
   const hero = $("d-hero");
-  if ($("d-hero-emoji")) $("d-hero-emoji").textContent = cafeMark(c);
+  if ($("d-hero-emoji")) $("d-hero-emoji").innerHTML = markArt(c, "hero-v");
   const gp0 = _imgFail[c.id] ? null : gphotoFor(c);
   if (gp0) {
     hero.className = "hero";
@@ -297,10 +296,10 @@ function openDetail(id, from) {
   } catch (e) {
     warn("detail.js renderChaser", e);
   }
-  $("d-fav").textContent = c.fav ? "❤️" : "🤍";
+  $("d-fav").setAttribute("aria-pressed", String(!!c.fav));
   if ($("d-wish")) {
-    $("d-wish").textContent = "🔖";
-    $("d-wish").style.opacity = c.wish ? "1" : ".45";
+    $("d-wish").setAttribute("aria-pressed", String(!!c.wish));
+    $("d-wish").setAttribute("aria-pressed", String(!!c.wish));
   }
   $("d-tags").innerHTML = (c.tags || []).map(t => '<span class="chip">' + esc(t) + "</span>").join("");
 
@@ -509,7 +508,7 @@ function toggleFav() {
   if (!c) return;
   c.fav = !c.fav;
   saveCafe(c.id);
-  $("d-fav").textContent = c.fav ? "❤️" : "🤍";
+  $("d-fav").setAttribute("aria-pressed", String(!!c.fav));
   renderMarkers();
   toast(c.fav ? "Added to favorites" : "Removed from favorites");
 }
@@ -518,7 +517,7 @@ function toggleWish() {
   if (!c) return;
   c.wish = !c.wish;
   saveCafe(c.id);
-  $("d-wish").style.opacity = c.wish ? "1" : ".45";
+  $("d-wish").setAttribute("aria-pressed", String(!!c.wish));
   renderMarkers();
   toast(c.wish ? "Added to wishlist 🔖" : "Removed from wishlist");
 }
@@ -687,6 +686,30 @@ function cafeKind(c) {
   if (/matcha|hojicha/.test(who) && !/coffee|espresso/.test(who)) return "matcha";
   if (/\btea\b/.test(who) && !/coffee|espresso/.test(who)) return "tea";
   return "coffee";
+}
+/* The cafe's mark, drawn: the same vessel as its share card, in cream line art, on its drink's colour. Tiles, the
+   cafe page, the Go queue and the rank sheet all use it, so the app and what you share speak one language. An
+   emoji you chose that names a kind (🍵 🧋 🍨 🥐) draws that kind; any other one you chose (🏠, say) is shown as
+   itself, on the colour of what the place serves. */
+function markKind(c) {
+  return c && c.emoji && EMOJI_KIND[c.emoji] ? EMOJI_KIND[c.emoji] : cafeKind(c || {});
+}
+function markArt(c, cls) {
+  const own = c && c.emoji && c.emoji !== "\u2615" && !EMOJI_KIND[c.emoji] ? c.emoji : "";
+  if (own) return '<span class="mke">' + esc(own) + "</span>";
+  const kind = markKind(c),
+    k = CARD_KINDS[kind] || CARD_KINDS.coffee,
+    v = CARD_VESSELS[k.vessel] || CARD_VESSELS.cup;
+  return (
+    '<svg class="mkv' + (cls ? " " + cls : "") + '" data-k="' + kind + '" viewBox="0 0 120 120" aria-hidden="true" focusable="false">' +
+    v.main.map(function (p) { return '<path d="' + p + '"/>'; }).join("") +
+    v.faint.map(function (p) { return '<path class="f" d="' + p + '"/>'; }).join("") +
+    "</svg>"
+  );
+}
+function markBg(c) {
+  const k = CARD_KINDS[markKind(c)] || CARD_KINDS.coffee;
+  return "linear-gradient(135deg," + k.c1 + "," + k.c2 + ")";
 }
 /* The emoji a cafe shows everywhere that is not the postcard (tile, cafe page, pin, search, the Go queue): the
    one you chose, else the guess from what it serves. ☕ is the default, so it counts as "not chosen". */

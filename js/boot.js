@@ -94,7 +94,7 @@ function renderSettings() {
   const m = $("set-mode"),
     b = $("set-admin"),
     n = $("set-adminnote");
-  if (m) m.textContent = isAdmin ? "\u{1F513} Editing" : "\u{1F512} Viewer";
+  if (m) m.innerHTML = isAdmin ? ico("unlock") + " Editing" : ico("lock") + " Viewer";
   if (b) b.textContent = isAdmin ? "Sign out" : "Sign in to edit";
   if (n)
     n.textContent = isAdmin

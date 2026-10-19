@@ -20,27 +20,28 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=100">
+<link rel="stylesheet" href="styles.css?v=101">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
+<svg class="icosprite" width="0" height="0" aria-hidden="true" focusable="false"><defs><symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1.4" fill="currentColor" stroke="none"/></symbol><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 2.5 3M16 6h2.5a2.5 2.5 0 0 1-2.5 3"/><path d="M12 13v4M9 21h6M10 17h4"/></symbol><symbol id="i-bars" viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></symbol><symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></symbol><symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/></symbol><symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M7 3.5h10V21l-5-4-5 4z"/></symbol><symbol id="i-nav" viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></symbol><symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></symbol><symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></symbol><symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><path d="M6 11h12v9H6z"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></symbol><symbol id="i-unlock" viewBox="0 0 24 24"><path d="M6 11h12v9H6z"/><path d="M8.5 11V8a3.5 3.5 0 0 1 6.6-1.6"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"/></symbol><symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3s-6 6.5-6 11a6 6 0 0 0 12 0c0-4.5-6-11-6-11z"/></symbol><symbol id="i-spell" viewBox="0 0 24 24"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 8h14"/><path d="M5 8l-3 6a3 3 0 0 0 6 0zM19 8l-3 6a3 3 0 0 0 6 0z"/></symbol><symbol id="i-podium" viewBox="0 0 24 24"><path d="M3 20h18M5 20v-6h4v6M10 20V9h4v11M15 20v-8h4v8"/></symbol><symbol id="i-cup" viewBox="0 0 24 24"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16M8 3c-.7 1 .7 2 0 3M11 3c-.7 1 .7 2 0 3"/></symbol></defs></svg>
 <div id="app" data-view="map" data-mode="viewer">
 <aside class="sidebar">
-<div class="side-head"><div style="flex:1"><p class="apptitle">☕ JL Cafe Project</p></div></div>
+<div class="side-head"><div style="flex:1"><p class="apptitle"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-cup"/></svg> JL Cafe Project</p></div></div>
 <div class="side-nav">
-<button id="n-list" onclick="show('list')"><span aria-hidden="true">☰</span> List</button>
-<button id="n-rank" onclick="openRank()"><span aria-hidden="true">🏆</span> Go</button>
-<button id="n-stats" onclick="show('stats')"><span aria-hidden="true">📊</span> Stats</button>
-<button id="n-settings" class="setdoor" onclick="show('settings')"><span aria-hidden="true">⚙︎</span> Settings<span class="gcount" hidden></span></button>
+<button id="n-list" onclick="show('list')"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-list"/></svg> List</button>
+<button id="n-rank" onclick="openRank()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-trophy"/></svg> Go</button>
+<button id="n-stats" onclick="show('stats')"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-bars"/></svg> Stats</button>
+<button id="n-settings" class="setdoor" onclick="show('settings')"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-sliders"/></svg> Settings<span class="gcount" hidden></span></button>
 <button id="n-add" class="admin-only navlog" onclick="openForm()"><span aria-hidden="true">＋</span> Log a visit</button>
 </div>
 <div id="sync-status" class="sync-status admin-only" role="status" hidden><span class="sync-label"></span><button class="sync-retry" onclick="flushSync()">Retry sync</button><div class="sync-review" hidden></div></div>
 <div class="panes">
 <section class="pane" id="pane-list">
-<div class="search">🔍<input id="q" placeholder="Search name, city, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
+<div class="searchrow"><div class="search"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-search"/></svg><input id="q" placeholder="Search name, city, drink…" oninput="renderList()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-sliders"/></svg><span class="gcount" hidden></span></button></div>
 
 
-<div class="listbar"><div class="listtabs" id="listtabs" role="group" aria-label="Been or want to try"></div><button class="filterbtn" id="filterbtn" onclick="toggleListFilters()" aria-expanded="false" aria-controls="listpanel">Filters<span class="fcount" id="fcount" hidden></span><span class="fchev">▾</span></button><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" aria-label="Show these on the map" style="margin-left:4px">🗺️</button><span id="save-state" class="admin-only" role="status"></span><div class="guiderow" id="guiderow" role="group" aria-label="Quick filters" hidden></div></div><div class="listpanel" id="listpanel" hidden><label class="lp-row"><span>Sort</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="visited">Recently visited</option><option value="ranked">Top ranked</option><option value="rating">Loved first</option><option value="near">📍 Nearest to me</option></select></label><div class="lp-group"><div class="lp-label" id="lab-type">Type</div><div class="chiprow" id="filterchips" role="group" aria-labelledby="lab-type"></div><div class="chiprow tagrow" id="tagchips" style="display:none"></div></div>
+<div class="listbar"><div class="listtabs" id="listtabs" role="group" aria-label="Been or want to try"></div><button class="filterbtn" id="filterbtn" onclick="toggleListFilters()" aria-expanded="false" aria-controls="listpanel">Filters<span class="fcount" id="fcount" hidden></span><span class="fchev">▾</span></button><button class="iconbtn" onclick="showFilteredOnMap()" title="Show on map" aria-label="Show these on the map" style="margin-left:4px"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-map"/></svg></button><span id="save-state" class="admin-only" role="status"></span><div class="guiderow" id="guiderow" role="group" aria-label="Quick filters" hidden></div></div><div class="listpanel" id="listpanel" hidden><label class="lp-row"><span>Sort</span><select id="sortsel" onchange="setSort(this.value)"><option value="recent">Recently updated</option><option value="visited">Recently visited</option><option value="ranked">Top ranked</option><option value="rating">Loved first</option><option value="near">📍 Nearest to me</option></select></label><div class="lp-group"><div class="lp-label" id="lab-type">Type</div><div class="chiprow" id="filterchips" role="group" aria-labelledby="lab-type"></div><div class="chiprow tagrow" id="tagchips" style="display:none"></div></div>
 <div class="lp-group admin-only" id="quickgroup"><div class="lp-label" id="lab-quick">Quick views</div><div class="chiprow" id="quickchips" role="group" aria-labelledby="lab-quick"></div></div>
 <div class="lp-group" id="verdictgroup"><div class="lp-label" id="lab-verdict">Verdict</div><div class="chiprow" id="verdictchips" role="group" aria-labelledby="lab-verdict"></div></div>
 <div class="lp-group" id="areagroup"><div class="lp-label" id="lab-area">Area</div><div class="chiprow" id="areachips" role="group" aria-labelledby="lab-area"></div></div></div>
@@ -52,8 +53,8 @@
 <div class="scroll">
 <div class="hero" id="d-hero">
 <div class="hero-emoji" id="d-hero-emoji">☕</div>
-<div class="nav"><button class="round" onclick="goBack()" aria-label="Back">‹</button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()" aria-label="Toggle favorite">🤍</button><button class="round admin-only" id="d-wish" onclick="toggleWish()" aria-label="Toggle wishlist" style="opacity:.45">🔖</button></div></div>
-<div class="tagphoto" id="d-tagphoto">📷 My drink</div>
+<div class="nav"><button class="round" onclick="goBack()" aria-label="Back"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-back"/></svg></button><div style="display:flex; gap:8px"><button class="round admin-only" id="d-fav" onclick="toggleFav()" aria-label="Toggle favorite" aria-pressed="false"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-heart"/></svg></button><button class="round admin-only" id="d-wish" onclick="toggleWish()" aria-label="Toggle wishlist" aria-pressed="false"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-bookmark"/></svg></button></div></div>
+<div class="tagphoto" id="d-tagphoto"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-camera"/></svg> My drink</div>
 <div class="dranktile" id="d-rank" hidden></div>
 </div>
 <div class="dbody">
@@ -70,7 +71,7 @@
 <div class="chips" id="d-tags"></div>
 <div class="lab drinklab"><span>Drinks I had</span><small>Tap for order history</small></div><div id="d-drinks"></div>
 <div class="lab">My thoughts</div><div class="review" id="d-review"></div>
-<div class="dactions"><button class="btn" id="d-dir" onclick="navigateTo()">🧭 Directions</button><button class="btn ghost" id="d-share" onclick="openPostcard()">↗ Share spot</button><details class="dmore admin-only" id="d-more"><summary aria-label="More: edit or delete">⋯</summary><div class="dmorepop"><button type="button" class="btn ghost" onclick="editCurrent()">✎ Edit</button><button type="button" class="btn danger" onclick="deleteCurrent()">Delete</button></div></details></div>
+<div class="dactions"><button class="btn" id="d-dir" onclick="navigateTo()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-nav"/></svg> Directions</button><button class="btn ghost" id="d-share" onclick="openPostcard()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-share"/></svg> Share spot</button><details class="dmore admin-only" id="d-more"><summary aria-label="More: edit or delete"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-more"/></svg></summary><div class="dmorepop"><button type="button" class="btn ghost" onclick="editCurrent()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-edit"/></svg> Edit</button><button type="button" class="btn danger" onclick="deleteCurrent()">Delete</button></div></details></div>
 <details class="det admin-only" id="d-details"><summary>Details</summary><div class="dscoreline" id="d-score" hidden></div></details>
 </div>
 <div class="dstickybar admin-only"><button class="btn" onclick="logDrinkHere()">＋ Log a drink here</button></div>
@@ -117,12 +118,12 @@
 </div>
 <div class="setcard">
 <div class="setlabel" id="lab-editing">Editing</div>
-<div class="setrow"><span class="setmode" id="set-mode">🔒 Viewer</span><button type="button" class="btn" id="set-admin" onclick="toggleAdmin()">Sign in to edit</button></div>
+<div class="setrow"><span class="setmode" id="set-mode"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-lock"/></svg> Viewer</span><button type="button" class="btn" id="set-admin" onclick="toggleAdmin()">Sign in to edit</button></div>
 <p class="setnote" id="set-adminnote">Signing in lets you add cafes, log visits and rank them.</p>
 </div>
 <div class="setcard admin-only" id="card-data">
 <div class="setlabel">Your data</div>
-<div class="setactions"><button type="button" id="ab-download" onclick="downloadCopy()">⬇️ Download a copy</button></div>
+<div class="setactions"><button type="button" id="ab-download" onclick="downloadCopy()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-download"/></svg> Download a copy</button></div>
 <p class="setnote" id="ab-copynote"></p>
 <p class="setnote" id="ab-backup"></p>
 </div>
@@ -130,10 +131,10 @@
 <div class="setlabel">Admin</div>
 <p class="setnote" id="ab-cloud">Admin mode</p>
 <div class="setactions">
-<button type="button" onclick="fetchAllPhotos()">📷 Fetch all photos</button>
-<button type="button" id="ab-milk" onclick="cleanupMilkNames()" style="display:none">🥛 Fix milk in names</button>
-<button type="button" id="ab-brand" onclick="fillBrands()" style="display:none">🏷 Fill in brands</button>
-<button type="button" id="ab-spell" onclick="fixDrinkSpellings()" style="display:none">🔤 Fix misspelled drinks</button>
+<button type="button" onclick="fetchAllPhotos()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-camera"/></svg> Fetch all photos</button>
+<button type="button" id="ab-milk" onclick="cleanupMilkNames()" style="display:none"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-drop"/></svg> Fix milk in names</button>
+<button type="button" id="ab-brand" onclick="fillBrands()" style="display:none"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-tag"/></svg> Fill in brands</button>
+<button type="button" id="ab-spell" onclick="fixDrinkSpellings()" style="display:none"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-spell"/></svg> Fix misspelled drinks</button>
 </div>
 <p class="setnote" id="ab-idle">Nothing needs tidying right now.</p>
 </div>
@@ -143,10 +144,10 @@
 </aside>
 <main class="mapwrap">
 <h1 class="sr-only">JL Cafe Project</h1>
-<div class="mobile-topbar"><div style="flex:1"><p class="apptitle">☕ JL Cafe Project</p><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div>
+<div class="mobile-topbar"><div style="flex:1"><p class="apptitle"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-cup"/></svg> JL Cafe Project</p><div class="sub" id="map-sub">Loading…</div></div><button class="iconbtn setdoor" onclick="show('settings')" aria-label="Settings"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-sliders"/></svg><span class="gcount" hidden></span></button></div>
 <div class="mapbox">
 <div id="map"></div>
-<div class="mapsearch" id="mapsearch" data-open="false"><button type="button" class="mappill" id="map-pill" aria-expanded="false" aria-controls="map-panel" onclick="toggleMapPanel()"><span id="pill-lbl">🌐 World</span><span class="pilldots" aria-hidden="true"><i style="background:#2e9e5b"></i><i style="background:#f0a93b"></i><i style="background:#6b3fbf"></i></span><span class="pillcar" aria-hidden="true">▾</span></button><div class="mappanel" id="map-panel"><select id="locsel" aria-label="Jump to a country or state" onchange="jumpToLocation(this.value)"></select><div class="panelrow"><button type="button" class="wantchip" id="btn-want" aria-pressed="false" onclick="toggleWantOnly()" hidden><svg class="bm" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3h12v18l-6-4.6L6 21z"/></svg><span class="wantlbl">Want to try</span><span class="wantn" id="want-n">0</span></button><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div><div class="panelegend" aria-label="Legend"><span><i style="background:#2e9e5b"></i>loved</span><span><i style="background:#f0a93b"></i>fine</span><span><i style="background:#c0374b"></i>not for me</span><span><svg class="wl" viewBox="-8 -8 16 16" aria-hidden="true" focusable="false"><circle r="6.5"/><path d="M-2 -3.2h4v6.4l-2-1.6-2 1.6z"/></svg>want to try</span></div></div></div>
+<div class="mapsearch" id="mapsearch" data-open="false"><button type="button" class="mappill" id="map-pill" aria-expanded="false" aria-controls="map-panel" onclick="toggleMapPanel()"><span id="pill-lbl"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-globe"/></svg> World</span><span class="pilldots" aria-hidden="true"><i style="background:#2e9e5b"></i><i style="background:#f0a93b"></i><i style="background:#6b3fbf"></i></span><span class="pillcar" aria-hidden="true">▾</span></button><div class="mappanel" id="map-panel"><select id="locsel" aria-label="Jump to a country or state" onchange="jumpToLocation(this.value)"></select><div class="panelrow"><button type="button" class="wantchip" id="btn-want" aria-pressed="false" onclick="toggleWantOnly()" hidden><svg class="bm" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3h12v18l-6-4.6L6 21z"/></svg><span class="wantlbl">Want to try</span><span class="wantn" id="want-n">0</span></button><button class="iconbtn mobonly setdoor" onclick="show('settings')" aria-label="Settings">⚙︎<span class="gcount" hidden></span></button></div><div class="panelegend" aria-label="Legend"><span><i style="background:#2e9e5b"></i>loved</span><span><i style="background:#f0a93b"></i>fine</span><span><i style="background:#c0374b"></i>not for me</span><span><svg class="wl" viewBox="-8 -8 16 16" aria-hidden="true" focusable="false"><circle r="6.5"/><path d="M-2 -3.2h4v6.4l-2-1.6-2 1.6z"/></svg>want to try</span></div></div></div>
 <div class="wantbar" id="wantbar" role="status" hidden><span id="wantbar-text">Only want to try</span><button type="button" onclick="toggleWantOnly(false)">Show all</button></div>
 <button type="button" class="qbtn" id="btn-legend" aria-expanded="false" aria-controls="map-legend" aria-label="What the colours mean" onclick="toggleLegend()">?</button>
 <div class="maplegend" id="map-legend"><span><i style="background:#2e9e5b"></i>loved</span><span><i style="background:#f0a93b"></i>fine</span><span><i style="background:#c0374b"></i>not for me</span><span><svg class="wl" viewBox="-8 -8 16 16" aria-hidden="true" focusable="false"><circle r="6.5"/><path d="M-2 -3.2h4v6.4l-2-1.6-2 1.6z"/></svg>want to try</span></div>
@@ -166,7 +167,7 @@
 <button class="tab" id="t-stats" onclick="show('stats')"><span class="ti" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 20V11M12 20V5M18 20v-6"/></svg></span>Stats</button>
 </nav>
 <div id="d-chaser"></div>
-<div class="updatebar" id="updatebar" role="button" tabindex="0" onclick="reloadLatest()">🔄 New version available — tap to reload</div>
+<div class="updatebar" id="updatebar" role="button" tabindex="0" onclick="reloadLatest()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg> New version available — tap to reload</div>
 <div class="pcmodal" id="pcmodal" role="dialog" aria-modal="true" aria-label="Share this spot" hidden><div class="pccol"><canvas id="pc-canvas" width="1080" height="1920" role="img" aria-label="Postcard preview"></canvas><div class="pcact"><button type="button" class="btn" id="pc-share" onclick="sendPostcard()">Share</button><button type="button" class="btn ghost" onclick="copyPostcardText()">Copy message</button><button type="button" class="btn ghost" onclick="closePostcard()">Close</button></div><p class="pcnote" id="pc-note"></p></div></div>
 <div class="toast" id="toast"></div>
 </div>
@@ -179,18 +180,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=100"></script>
-<script src="js/core.js?v=100"></script>
-<script src="js/storage.js?v=100"></script>
-<script src="js/sync.js?v=100"></script>
-<script src="js/nav.js?v=100"></script>
-<script src="js/map.js?v=100"></script>
-<script src="js/photos.js?v=100"></script>
-<script src="js/list.js?v=100"></script>
-<script src="js/stats.js?v=100"></script>
-<script src="js/rank.js?v=100"></script>
-<script src="js/detail.js?v=100"></script>
-<script src="js/form.js?v=100"></script>
-<script src="js/boot.js?v=100"></script>
+<script src="js/config.js?v=101"></script>
+<script src="js/core.js?v=101"></script>
+<script src="js/storage.js?v=101"></script>
+<script src="js/sync.js?v=101"></script>
+<script src="js/nav.js?v=101"></script>
+<script src="js/map.js?v=101"></script>
+<script src="js/photos.js?v=101"></script>
+<script src="js/list.js?v=101"></script>
+<script src="js/stats.js?v=101"></script>
+<script src="js/rank.js?v=101"></script>
+<script src="js/detail.js?v=101"></script>
+<script src="js/form.js?v=101"></script>
+<script src="js/boot.js?v=101"></script>
 </body>
 </html>

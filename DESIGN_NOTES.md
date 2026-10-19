@@ -1591,3 +1591,34 @@ moving a cafe from Loved to Fine moves the averages at once. The Top 5 Story onl
 comparisons). Two devices ranking the same cafe before syncing still keep only one comparison's effect: fixing that
 needs a stored log of comparisons, more risk than the drift.
 
+## The redesign: one visual language (v101)
+
+From a read-only audit of every screen. The share cards had found a better language (the cafe drawn in line art,
+coloured by what it serves) than the app they came from, which still used a pale verdict-green tile with an emoji,
+and a mix of 27 emoji and 5 line icons for its controls.
+
+**The drawn mark everywhere.** `markArt(c)` draws a cafe's vessel (the card's own six) and `markBg(c)` its drink's
+colour; `nophotoStyle`/`nophotoHTML` use them, so every tile without a photo, the cafe page hero (with the card's
+rings), the Go queue and the rank sheet show the same mark. The tile used to carry the verdict, and with 79 of 111
+cafes Loved, 71% of the List was one green; the verdict is the dot by the name, and `tintFor` still colours the map
+pins, where it is the point. A chosen emoji that names a kind draws that kind; any other (🏠) is shown as itself. The
+rank sheet's initials are gone, and `initials()` with them.
+
+**One line-icon set.** The symbols live once, in a hidden sprite at the top of `index.html`; `ico(name)` draws one
+anywhere. Every control (the sidebar, search, the cafe page's back, favourite, wishlist, Directions, Share and ⋯,
+Settings' tools, the map pill, the Go chips, the update bar) uses them. Emoji stay only where they are content: a
+cafe's own mark, a drink's glyph, the 👍 😐 👎 answers, the drink-type filters. A `<select>` option cannot hold an
+icon, so the map's region list reads "World" in plain words.
+
+**Content first on Go.** Rank a pair, Share top 5 and Near me are one row of chips under the heading (Rank a pair the
+filled one, with what is left to place inside it), not three full-width grey bars that read as disabled. The first
+cafe moved from 279px to about 150px. On the List, Settings left the inside of the search field and sits beside it.
+
+**Three button styles.** Primary (the accent, filled), secondary (the surface with a hairline: `.btn.ghost`,
+Settings' tools, the links between tabs, Show more) and quiet (accent text). Chips and segmented tabs are selection
+controls, their own family.
+
+**Smaller fixes.** A drink's glyph follows `drinkKind`, so the cafe page and the card agree on every drink (a Flat
+White was a soda cup on one and a coffee cup on the other). Nothing tapped on the Log form is under 44px. Tapping a pin
+closes the region menu and the legend before its card opens. `tests/redesign.js`.
+

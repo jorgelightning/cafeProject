@@ -201,7 +201,7 @@ const { eq, done } = checker();
     const order = [...host.querySelectorAll(".lbrow.guide .lbname")]
       .map(e => { const p = e.querySelector(".bkpill"); if (p) p.remove(); return e.textContent.trim(); });
     return { without, secs, order, body: host.textContent.replace(/\s+/g, " "),
-             prompt: /Show what’s near me/.test(without) };
+             prompt: /Near me/.test(without) };
   }, SF);
   eq(r.prompt, true, "with no location known, it offers to find out rather than asking on its own");
   eq(/Near you — 2 within 25 miles/.test(r.secs.join(" ")), true,

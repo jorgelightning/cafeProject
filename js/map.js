@@ -31,7 +31,7 @@ function gm_authFailure() {
 }
 function showMapError(msg) {
   const el = $("map-msg");
-  el.innerHTML = '<div class="big">🗺️</div><div>' + msg + "</div>";
+  el.innerHTML = '<div class="big">' + ico("map") + "</div><div>" + msg + "</div>";
   el.classList.add("show");
   if ($("map-sub")) $("map-sub").textContent = "Map unavailable";
 }
@@ -783,7 +783,7 @@ function countryCount(list) {
 function cafeCountryLabel(c) {
   const t = countryTerms(c);
   const info = COUNTRY_INFO[t];
-  return info ? info.flag + " " + info.name : "🌐 Other";
+  return info ? info.flag + " " + info.name : "Other";
 }
 function cafeStateName(c) {
   const m = /,\s*([A-Za-z]{2})\b/.exec(c.area || "");
@@ -830,7 +830,7 @@ function renderLocationSelect() {
   const prev = sel.value;
   const groups = buildLocationIndex();
   const names = Object.keys(groups).sort((a, b) => (a === "Other" ? 1 : b === "Other" ? -1 : a.localeCompare(b)));
-  let html = '<option value="">🌐 World</option>';
+  let html = '<option value="">World</option>';
   names.forEach(name => {
     const g = groups[name];
     html += '<optgroup label="' + esc(g.label) + '">';
@@ -930,7 +930,7 @@ function setPillLabel(val) {
     sel = $("locsel");
   if (!l) return;
   const o = val && sel ? [].slice.call(sel.options).filter(x => x.value === val)[0] : null;
-  l.textContent = o ? "📍 " + o.textContent.trim() : "🌐 World";
+  l.innerHTML = (o ? ico("pin") : ico("globe")) + " " + esc(o ? o.textContent.trim() : "World");
 }
 function jumpToLocation(val) {
   if (!gmap) {
@@ -980,6 +980,9 @@ let pendingMarkerId = null;
 let peekId = null;
 function onMarkerClick(c, m) {
   mapOwned = true;
+  /* one overlay at a time: the region menu and the legend fold away when a pin opens its card */
+  setMapPanel(false);
+  toggleLegend(false);
   selectPin(c.id);
   if (window.innerWidth >= 900) {
     openDetail(c.id, "map");

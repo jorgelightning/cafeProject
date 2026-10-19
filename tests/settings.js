@@ -41,14 +41,14 @@ const fs = require("fs"), path = require("path");
     const vis = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
     const on = sel => [...document.querySelectorAll(sel + ' button')]
       .filter(vis).map(x => (x.getAttribute("aria-label") || x.textContent).trim());
-    show("list"); const list = on(".search");
+    show("list"); const list = on(".search"), header = on(".searchrow").filter(x => x === "Settings");
     show("map");  const mapClosed = on(".mapsearch");
     /* on a phone the map's controls sit behind one pill; open it to reach the gear */
     toggleMapPanel(); const map = on(".mapsearch"); toggleMapPanel();
-    return { list, map, mapClosed, cyclerGone: typeof window.cycleTheme === "undefined",
+    return { list, header, map, mapClosed, cyclerGone: typeof window.cycleTheme === "undefined",
              lockButtons: document.querySelectorAll(".lockbtn").length };
   });
-  eq(doors.list, ["Settings"], "the List search bar carries one button now, not a lock and a theme cycler");
+  eq([doors.list, doors.header], [[], ["Settings"]], "the search field is only a search field now; Settings is one button beside it, not a lock and a theme cycler");
   eq(doors.mapClosed.length, 1, "the map overlay is one compact pill while closed");
   eq(doors.map.includes("Settings"), true, "…and the same Settings door is one tap behind it");
   eq(doors.cyclerGone, true, "the blind cycle is gone, not left behind unused");
@@ -154,7 +154,7 @@ const fs = require("fs"), path = require("path");
                                     .filter(b => b.offsetParent).map(b => b.textContent.trim()) }; };
 
     isAdmin = true; applyMode(); show("list"); renderList();
-    const on = { doors: doors(), todo: adminTodo(), label: document.querySelector(".search .setdoor").getAttribute("aria-label"),
+    const on = { doors: doors(), todo: adminTodo(), label: document.querySelector(".searchrow .setdoor").getAttribute("aria-label"),
                  idle: document.getElementById("ab-idle").hidden };
     show("settings");
     const shown = card();
@@ -162,7 +162,7 @@ const fs = require("fs"), path = require("path");
     /* the one variant renamed away, nothing left to tidy */
     cafes[4].drinks[0].n = "Hojicha Latte"; renderList();
     const off = { doors: doors(), todo: adminTodo(),
-                  label: document.querySelector(".search .setdoor").getAttribute("aria-label"),
+                  label: document.querySelector(".searchrow .setdoor").getAttribute("aria-label"),
                   idle: document.getElementById("ab-idle").hidden };
 
     isAdmin = false; applyMode();
@@ -178,7 +178,7 @@ const fs = require("fs"), path = require("path");
   eq(admin.on.label, "Settings, 1 to tidy", "…including the icon-only ones, for a screen reader");
   eq(admin.on.idle, true, "…so the screen does not also claim there is nothing to do");
   eq(admin.shown.adminOnly, true, "the actions live on an admin-only card");
-  eq(admin.shown.actions, ["📷 Fetch all photos", "🔤 Fix 1 misspelled drink"],
+  eq(admin.shown.actions, ["Fetch all photos", "Fix 1 misspelled drink"],
      "…and only the ones with work to do are offered");
   eq(admin.off.todo, 0, "fixing it empties the queue");
   eq(admin.off.doors, ["-", "-", "-", "-"], "…the badges go away");

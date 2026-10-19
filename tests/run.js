@@ -53,6 +53,7 @@ const SUITE = [
   ["same-cafe",          "the same-cafe check at logging: spelling, case and a branch suffix no longer hide a duplicate; branches stay separate"],
   ["sync-resolve",       "answering a sync conflict decides only the fields that clashed; both devices' visits survive either answer"],
   ["private-hardening",  "no place id on a private spot (app and backup), no exact address left in the browser after sign-out, verdict in the score cache"],
+  ["redesign",         "one visual language: drawn marks everywhere, line icons on every control, content first on Go, three button styles, one drink rule"],
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],

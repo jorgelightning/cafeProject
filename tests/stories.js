@@ -40,17 +40,17 @@ const { eq, done } = checker();
 
   await seed();
   const go = admin => pg.evaluate(a => { isAdmin = a; applyMode(); _formSnap = null; show("compare"); renderBoard();
-    const btn = [...document.querySelectorAll("#cmp-body .handoff")].find(x => /Share my top/.test(x.textContent));
+    const btn = [...document.querySelectorAll("#cmp-body .gochip")].find(x => /^Share my top/.test(x.getAttribute("aria-label") || ""));
     return { btn: btn ? btn.textContent.replace(/\s+/g, " ").trim() : null, items: top5Items().map(i => i.name) }; }, admin);
   const o = await go(true);
   eq(o.items, ["Kiss of Matcha", "Boba Corner Tea", "Morning Glass", "Scoop Gelato", "Quiet Roasters"],
      "the top five is the five best ranked: no private spot (Friend's Place is second by score), no wishlist, nothing unranked, and no cafe still being placed (Hot Newcomer scores highest after two answers)");
-  eq(/Share my top 5/.test(o.btn || ""), true, "the owner gets \"Share my top 5\" on the Go tab");
+  eq(/Top 5/.test(o.btn || ""), true, "the owner gets \"Top 5\" (labelled \"Share my top 5\") among the Go tab's actions");
   eq((await go(false)).btn, null, "…a visitor does not (it is the owner's list to send)");
 
   /* three ranked cafes is the floor */
   const few = await pg.evaluate(() => { const keep = cafes; cafes = keep.filter(c => ["a", "b"].includes(c.id)); isAdmin = true; applyMode(); show("compare"); renderBoard();
-    const has = [...document.querySelectorAll("#cmp-body .handoff")].some(x => /Share my top/.test(x.textContent)); cafes = keep; return has; });
+    const has = [...document.querySelectorAll("#cmp-body .gochip")].some(x => /^Share my top/.test(x.getAttribute("aria-label") || "")); cafes = keep; return has; });
   eq(few, false, "with fewer than three ranked cafes there is nothing to share yet");
 
   /* the picture: dialog, size, and what is on it */
@@ -93,7 +93,7 @@ const { eq, done } = checker();
 
   /* the dialog still closes the way it did, with focus back */
   const closed = await pg.evaluate(() => {
-    const opener = document.querySelector("#cmp-body .handoff"); opener.focus(); openTop5Story();
+    const opener = [...document.querySelectorAll("#cmp-body .gochip")].find(x => /^Share my top/.test(x.getAttribute("aria-label") || "")); opener.focus(); openTop5Story();
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     return { hidden: document.getElementById("pcmodal").hidden, back: document.activeElement === opener };
   });

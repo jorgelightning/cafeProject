@@ -155,7 +155,7 @@ const { eq, done } = checker();
     updateBrandBtn();
     return { on, off: $("ab-brand").style.display };
   });
-  eq(r, { on: ["", "🏷 Fill in 2 brands"], off: "none" }, "Settings offers the backfill with a count, and hides it when there is nothing to do");
+  eq({ on: r.on.map(x => x.trim()), off: r.off }, { on: ["", "Fill in 2 brands"], off: "none" }, "Settings offers the backfill with a count, and hides it when there is nothing to do");
 
   // ---- the real data: dry run only ----
   r = await pg.evaluate(async () => {
