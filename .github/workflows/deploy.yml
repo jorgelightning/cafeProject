@@ -63,7 +63,7 @@ jobs:
           mkdir _site
           cp -r index.html sw.js manifest.json cafes.json icon-180.png icon-192.png icon-512.png js styles.css _site/
           [ -d vendor ] && cp -r vendor _site/ || true
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
