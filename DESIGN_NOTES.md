@@ -1648,3 +1648,30 @@ on espresso, and the discs get a faint cream rim so the coffee ones don't sink i
 (`_pcFoot`'s `onDark`). `tests/stories.js` checks there is no jump between the card's edge and the space inside it, and
 that the list sits on dark.
 
+
+## A note on one cup (v104)
+
+At Jandii with a bad drink there was nowhere to say so: the closest was the 👍 😐 👎 for "Would order again?", three
+taps deep in the visit's Edit form. Now every drink on the cafe page has a ⋯ (owner only) that opens a sheet about its
+newest cup: Add a note, Would order again? (saves on the tap), Log another today (a new cup of that drink, dated today,
+at the last price and options), and Edit in the visit.
+
+**The note belongs to the cup, not the drink.** A drink can be great on the 5th and bad on the 21st. So `note` and
+`tags` live on the order. `drinkOrders()` copies them, but they are not in `DRINK_ORDER_FIELDS`, so
+`syncDrinkSummary()` never mirrors them onto the drink's top-level summary. Under the drink, the newest cup with a note
+shows its verdict, tags and words, tinted for the verdict, with a line saying which cup it was and, when another cup
+went the other way, that one ("Today's cup · Oct 5 was 👍"), so one bad cup does not read as the drink always being bad.
+Each cup's row in the history shows its own note. Everyone sees notes, as they see My thoughts.
+
+**Tags.** What was off (too sweet, not sweet enough, too bitter, burnt, watery, too much ice, too milky, overpriced) for
+👎, 😐 or no answer; what was good (just right, rich, smooth, great value, pretty) for 👍. A tag you picked stays on show
+if you change the answer, so nothing you chose disappears.
+
+**The form carries it.** `saveForm()` rebuilds every order from the form, so a field the form does not hold is dropped
+on the next save. Each cup in the Edit form has a "Note on this cup" box, and its tags ride in a hidden field.
+
+**Sync.** Notes merge like any change to an order, by order id. A drink logged before orders had ids gets them the first
+time the sheet writes to it, as the form gives them.
+
+**Layout.** The ⋯ takes 40px from the drink row, so a long drink name now wraps to a second line instead of being cut.
+`tests/drink-notes.js`.

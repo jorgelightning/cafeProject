@@ -206,6 +206,8 @@ function formSnapshot() {
         g(".dmk"),
         g(".dre"),
         g(".dpc"),
+        g(".dnt"),
+        g(".dtg"),
       ].join("|");
     })
     .filter(s => s.split("|")[0].trim())
@@ -742,7 +744,7 @@ function renderDrinkRows(drinks) {
           false,
           o.milk,
           orderQty(o),
-          { pl: o.pl, pc: o.pc, pr: o.pr, pd: o.pd, id: o.id },
+          { pl: o.pl, pc: o.pc, pr: o.pr, pd: o.pd, id: o.id, note: o.note, tags: o.tags },
           body,
           true
         );
@@ -1546,6 +1548,16 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
     '">' +
     "</div>";
 
+  /* The cup's note, written here or from the drink's ⋯ on the cafe page. The tags have no control in this form
+     (the ⋯ sheet sets them); the hidden field only carries them through a save. */
+  const noteRow =
+    '<label class="dnotef">Note on this cup<textarea class="dnt" rows="2" maxlength="280" placeholder="What stood out?">' +
+    esc(fx.note || "") +
+    "</textarea></label>" +
+    '<input type="hidden" class="dtg" value="' +
+    esc((Array.isArray(fx.tags) ? fx.tags : []).join("|")) +
+    '">';
+
   const dateRow =
     '<div class="orderdate"><label>Order date<input class="dd" type="date" value="' +
     esc(date || "") +
@@ -1560,6 +1572,7 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
     sweetRow +
     iceRow +
     rateRow +
+    noteRow +
     '<button type="button" class="orderdone" onclick="toggleDrinkRow(this.closest(\'.dr\').querySelector(\'.drhead\'))">Done editing this order</button>' +
     '<button class="delrow" onclick="delDrinkRow(this)" aria-label="Remove this drink">' + ico("x") + "</button>";
 
@@ -1699,7 +1712,9 @@ function saveForm() {
           dqt = q(".dqt"),
           dpc = q(".dpc"),
           dprt = q(".dpr"),
-          dpdt = q(".dpd");
+          dpdt = q(".dpd"),
+          dnt = q(".dnt"),
+          dtg = q(".dtg");
         return {
           /* carried so the guard below can write a correction back into the field the user is
          looking at; `raw` is filtered, so an index into the row list would not line up.
@@ -1718,6 +1733,8 @@ function saveForm() {
           pc: dpc ? dpc.value : "USD",
           pr: dprt ? parseFloat(dprt.value) || 0 : 0,
           pd: dpdt ? dpdt.value : "",
+          note: dnt ? dnt.value.trim() : "",
+          tags: dtg && dtg.value ? dtg.value.split("|").filter(Boolean) : [],
         };
       })
       .filter(function (d) {
@@ -1790,6 +1807,8 @@ function saveForm() {
       if (d.ice) o.ice = d.ice;
       if (d.milk) o.milk = d.milk;
       if (d.reorder) o.reorder = d.reorder;
+      if (d.note) o.note = d.note;
+      if (d.tags.length) o.tags = d.tags;
       e.orders.push(o);
     });
 

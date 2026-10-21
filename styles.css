@@ -1193,3 +1193,63 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .gochips::-webkit-scrollbar{ display:none; }
 .gochip{ padding:0 var(--sp-3); flex:none; }
 @media (max-width:899px){ .searchrow{ margin-top:var(--sp-3); } }
+
+/* ---------- a note on one cup (v104) ----------
+   The drink card's top row holds the summary and, for the owner, a ⋯ that opens a sheet for that drink. A cup's note
+   sits under the drink, tinted by its verdict. */
+.drinktop{ display:flex; align-items:stretch; }
+.drinktop .drinksum{ flex:1; min-width:0; }
+.drinkmore{ flex:none; width:40px; display:flex; align-items:center; justify-content:center; border:0; background:transparent; color:var(--soft); cursor:pointer; }
+.drinktop:has(.drinkmore) .drinksum{ padding-right:2px; }
+/* the ⋯ takes 40px from the row, so a long name wraps to a second line rather than losing its end */
+.drinkcopy .dtop{ white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.drinkcopy .dsub{ white-space:normal; }
+.drinkmore .ico{ width:20px; height:20px; }
+.drinkmore:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:-3px; }
+.drinknote{ display:flex; flex-direction:column; gap:var(--sp-1); margin:0 11px 11px 61px; padding:var(--sp-2) var(--sp-3); border-radius:var(--r-2); background:var(--wash); color:var(--text); font-size:var(--fs-2); }
+.drinknote.v-no{ background:color-mix(in srgb,var(--bad) 11%,transparent); }
+.drinknote.v-yes{ background:color-mix(in srgb,var(--good) 11%,transparent); }
+.drinknote.v-neutral{ background:color-mix(in srgb,var(--mid) 12%,transparent); }
+.nts{ display:flex; flex-wrap:wrap; gap:var(--sp-1); }
+.nt{ display:inline-flex; align-items:center; padding:1px 8px; border-radius:var(--r-pill); background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:var(--fs-1); font-weight:700; }
+.ntq{ quotes:"\201C" "\201D"; overflow-wrap:anywhere; }
+.ntwho{ color:var(--soft); font-size:var(--fs-1); font-weight:600; }
+.dordernote{ grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:baseline; gap:var(--sp-1); color:var(--text); font-size:var(--fs-2); }
+.dordernote .ntq{ flex-basis:100%; }
+.dnotef{ display:flex; flex-direction:column; gap:var(--sp-1); margin-top:var(--sp-3); font-size:var(--fs-2); font-weight:600; color:var(--soft); }
+.dnotef textarea, .dntext{ width:100%; min-height:64px; resize:vertical; padding:var(--sp-2) var(--sp-3); border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-3); font-weight:400; }
+.dntext:focus, .dnotef textarea:focus{ outline:none; border-color:var(--acc-strong); box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent); }
+
+.dnsheet{ position:fixed; inset:0; z-index:85; display:flex; flex-direction:column; justify-content:flex-end; }
+.dnsheet[hidden]{ display:none; }
+.dnscrim{ position:absolute; inset:0; background:rgba(10,8,6,.45); }
+.dnpanel{ position:relative; width:100%; max-width:520px; max-height:88%; margin:0 auto; overflow-y:auto; display:flex; flex-direction:column; gap:var(--sp-3); padding:var(--sp-2) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom, 0px)); border-radius:var(--r-4) var(--r-4) 0 0; background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
+@media (min-width:900px){ .dnsheet{ justify-content:center; } .dnpanel{ border-radius:var(--r-4); padding-bottom:var(--sp-4); } }
+.dngrab{ align-self:center; width:36px; height:4px; border-radius:var(--r-pill); background:var(--surface2); }
+.dnhead h2{ margin:0; font-size:var(--fs-4); font-weight:800; }
+.dnhead p{ margin:0; color:var(--soft); font-size:var(--fs-2); }
+.dnmenu{ display:flex; flex-direction:column; }
+.dnmi{ display:flex; align-items:center; gap:var(--sp-3); min-height:48px; padding:var(--sp-2) 2px; border:0; border-bottom:1px solid var(--border); background:transparent; color:var(--text); font:inherit; font-size:var(--fs-3); font-weight:600; text-align:left; cursor:pointer; }
+.dnmi:last-child{ border-bottom:0; }
+.dnmi .ico, .dnmi .g{ width:22px; height:22px; flex:none; color:var(--acc-strong); text-align:center; }
+.dnmi small{ margin-left:auto; color:var(--faint); font-size:var(--fs-1); font-weight:500; }
+.dnrow{ cursor:default; }
+.dnvs{ margin-left:auto; display:flex; gap:var(--sp-1); }
+.dnvs.big{ margin-left:0; display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-2); }
+.dnv{ min-width:44px; min-height:44px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-1); padding:var(--sp-1) var(--sp-2); border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--soft); font:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; }
+.dnv .e{ font-size:var(--fs-4); line-height:1; filter:grayscale(.6); opacity:.55; }
+.dnvs.big .dnv .e{ font-size:var(--fs-5); }
+.dnv[aria-pressed="true"] .e{ filter:none; opacity:1; }
+.dnv.yes[aria-pressed="true"]{ border-color:var(--good); background:color-mix(in srgb,var(--good) 13%,transparent); color:var(--good); }
+.dnv.neutral[aria-pressed="true"]{ border-color:var(--mid); background:color-mix(in srgb,var(--mid) 13%,transparent); color:var(--mid); }
+.dnv.no[aria-pressed="true"]{ border-color:var(--bad); background:color-mix(in srgb,var(--bad) 13%,transparent); color:var(--bad); }
+.dnq{ display:flex; flex-direction:column; gap:var(--sp-2); }
+.dnlab{ color:var(--faint); font-size:var(--fs-1); font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.dntags{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.dntag{ min-height:36px; padding:0 var(--sp-3); border:1px solid var(--border); border-radius:var(--r-pill); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
+.dntag[aria-pressed="true"]{ border-color:var(--acc-strong); background:color-mix(in srgb,var(--acc) 16%,transparent); color:var(--text); font-weight:700; }
+.dnact{ display:flex; gap:var(--sp-2); }
+.dnact .btn{ flex:1; padding:12px; }
+.dnact .dnrm{ color:var(--bad); }
+.dnclose{ padding:12px; }
+.dnmi:focus-visible, .dnv:focus-visible, .dntag:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:2px; }

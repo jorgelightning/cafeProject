@@ -11,6 +11,7 @@ const SUITE = [
   ["order-prices",     "same drink keeps separate dated prices"],
   ["drink-taps",       "tap controls preserve optional drink attributes"],
   ["order-editor",     "editing dates above history preserves separate purchases"],
+  ["drink-notes",      "a drink's ⋯ puts a note, tags and 👍 😐 👎 on its newest cup; shown under the drink, kept by Edit, merged by sync"],
   ["audit-upgrades",   "stable order editing, compact layout and Stats origin"],
   ["currency-source",  "where a cafe's currency comes from, and that nothing is metered"],
   ["rates-dated",      "the rate for the day a drink was ordered"],

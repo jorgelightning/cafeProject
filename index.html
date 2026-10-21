@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CafeMap">
-<link rel="stylesheet" href="styles.css?v=103">
+<link rel="stylesheet" href="styles.css?v=104">
 <script>try{var _t=localStorage.getItem("cafemap.theme");if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 </head>
 <body>
@@ -168,6 +168,7 @@
 </nav>
 <div id="d-chaser"></div>
 <div class="updatebar" id="updatebar" role="button" tabindex="0" onclick="reloadLatest()"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg> New version available — tap to reload</div>
+<div class="dnsheet" id="dnsheet" role="dialog" aria-modal="true" aria-labelledby="dns-title" hidden><div class="dnscrim"></div><div class="dnpanel" id="dns-panel"></div></div>
 <div class="pcmodal" id="pcmodal" role="dialog" aria-modal="true" aria-label="Share this spot" hidden><div class="pccol"><canvas id="pc-canvas" width="1080" height="1920" role="img" aria-label="Postcard preview"></canvas><div class="pcact"><button type="button" class="btn" id="pc-share" onclick="sendPostcard()">Share</button><button type="button" class="btn ghost" onclick="copyPostcardText()">Copy message</button><button type="button" class="btn ghost" onclick="closePostcard()">Close</button></div><p class="pcnote" id="pc-note"></p></div></div>
 <div class="toast" id="toast"></div>
 </div>
@@ -180,18 +181,18 @@
      bump the ?v= number on every tag below (and the stylesheet link in <head>).
      That updates index.html, which triggers the in-app "new version" banner and
      busts the browser cache for the changed files. -->
-<script src="js/config.js?v=103"></script>
-<script src="js/core.js?v=103"></script>
-<script src="js/storage.js?v=103"></script>
-<script src="js/sync.js?v=103"></script>
-<script src="js/nav.js?v=103"></script>
-<script src="js/map.js?v=103"></script>
-<script src="js/photos.js?v=103"></script>
-<script src="js/list.js?v=103"></script>
-<script src="js/stats.js?v=103"></script>
-<script src="js/rank.js?v=103"></script>
-<script src="js/detail.js?v=103"></script>
-<script src="js/form.js?v=103"></script>
-<script src="js/boot.js?v=103"></script>
+<script src="js/config.js?v=104"></script>
+<script src="js/core.js?v=104"></script>
+<script src="js/storage.js?v=104"></script>
+<script src="js/sync.js?v=104"></script>
+<script src="js/nav.js?v=104"></script>
+<script src="js/map.js?v=104"></script>
+<script src="js/photos.js?v=104"></script>
+<script src="js/list.js?v=104"></script>
+<script src="js/stats.js?v=104"></script>
+<script src="js/rank.js?v=104"></script>
+<script src="js/detail.js?v=104"></script>
+<script src="js/form.js?v=104"></script>
+<script src="js/boot.js?v=104"></script>
 </body>
 </html>

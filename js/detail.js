@@ -102,6 +102,62 @@ const DRINK_GLYPH = { matcha: "🍵", tea: "🍵", boba: "🧋", coffee: "☕", 
 function drinkGlyph(n) {
   return DRINK_GLYPH[drinkKind(n)] || "🥤";
 }
+/* ---------- a note on one cup ----------
+   A drink can be great one day and bad the next, so the note belongs to the cup (the order), not the drink. The
+   tags come in two sets: what was off, offered for 👎, 😐 or no answer yet, and what was good, offered for 👍. A tag
+   you picked stays shown even if you change the answer, so nothing you chose disappears from under you. */
+const NOTE_TAGS = {
+  off: ["Too sweet", "Not sweet enough", "Too bitter", "Burnt", "Watery", "Too much ice", "Too milky", "Overpriced"],
+  good: ["Just right", "Rich", "Smooth", "Great value", "Pretty"],
+};
+const REORDER_EMOJI = { yes: "👍", neutral: "😐", no: "👎" };
+/** @param {Order} o */
+function hasCupNote(o) {
+  return !!(o && (o.note || (o.tags && o.tags.length)));
+}
+/** "Oct 5" this year, "Oct 5, 2025" before it: a date in the middle of a sentence. @param {string} s */
+function _noteDay(s) {
+  return s.slice(0, 4) === localToday().slice(0, 4) ? fmtDate(s).replace(/, \d{4}$/, "") : fmtDate(s);
+}
+/** "Today's cup", or "Oct 5 cup". @param {Order} o */
+function cupLabel(o) {
+  if (!o || !o.date) return "This cup";
+  return o.date === localToday() ? "Today’s cup" : _noteDay(o.date) + " cup";
+}
+/** The line under a note: which cup it is about, and, when another cup went the other way, that one, so a single
+    bad cup does not read as the drink always being bad. `orders` are newest first. @param {Order[]} orders @param {Order} o */
+function noteContext(orders, o) {
+  const v = reorderVal(o);
+  const other = orders.find(function (x) {
+    return x !== o && reorderVal(x) && reorderVal(x) !== v;
+  });
+  return cupLabel(o) + (other ? " · " + (other.date ? _noteDay(other.date) : "another cup") + " was " + REORDER_EMOJI[reorderVal(other)] : "");
+}
+/** The verdict and tags as small pills, then the note. @param {Order} o */
+function cupNoteBody(o) {
+  const v = reorderVal(o),
+    tags = (o.tags || []).slice();
+  const pills = (v ? ['<span class="nt v">' + REORDER_EMOJI[v] + "</span>"] : []).concat(
+    tags.map(function (t) {
+      return '<span class="nt">' + esc(t) + "</span>";
+    })
+  );
+  return (
+    (pills.length ? '<span class="nts">' + pills.join("") + "</span>" : "") +
+    (o.note ? '<q class="ntq">' + esc(o.note) + "</q>" : "")
+  );
+}
+/** The newest cup that has a note, shown under the drink. `orders` are newest first. @param {Order[]} orders */
+function drinkNoteHTML(orders) {
+  const o = orders.find(hasCupNote);
+  if (!o) return "";
+  const v = reorderVal(o);
+  return (
+    '<div class="drinknote' + (v ? " v-" + v : "") + '">' +
+    cupNoteBody(o) +
+    '<span class="ntwho">' + esc(noteContext(orders, o)) + "</span></div>"
+  );
+}
 function drinkHistoryPrice(d, latest) {
   const range = drinkPriceRange(d);
   if (range && Math.abs(range.max - range.min) >= 0.0001) {
@@ -119,6 +175,303 @@ function toggleDrinkHistory(btn) {
   const chev = btn.querySelector(".drinkchev");
   if (chev) chev.textContent = open ? "▾" : "▸";
 }
+/* ---------- the drink's ⋯ sheet ----------
+   One drink, one cup: everything here is about the newest order of the drink you tapped. "Would order again?"
+   saves on the tap from the menu; inside the note it is part of what Save keeps, with the tags and the words. */
+/** @type {{n:string, id:string, mode:"menu"|"note", reorder:string, tags:string[], opener:any}|null} */
+let _dm = null;
+/** The cafe, the drink and its newest cup, looked up fresh each time so a cloud update in between is respected. */
+function _dmFind() {
+  const c = cafes.find(x => x.id === curId);
+  if (!c || !_dm) return null;
+  const key = _dm.n.toLowerCase();
+  const d = (c.drinks || []).find(x => (x.n || "").toLowerCase() === key);
+  if (!d) return null;
+  const orders = drinkOrders(d).sort(function (a, b) {
+    return (b.date || "").localeCompare(a.date || "");
+  });
+  const o = (_dm.id && orders.find(x => x.id === _dm.id)) || orders[0];
+  return o ? { c: c, d: d, orders: orders, o: o } : null;
+}
+function openDrinkMenu(btn) {
+  if (!isAdmin) return;
+  _dm = { n: btn.dataset.drink || "", id: "", mode: "menu", reorder: "", tags: [], opener: btn };
+  const f = _dmFind();
+  if (!f) return;
+  _dm.id = f.o.id || "";
+  renderDrinkMenu();
+  $("dnsheet").hidden = false;
+  const first = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector("button"));
+  if (first) first.focus();
+}
+function closeDrinkMenu() {
+  const m = $("dnsheet");
+  if (!m || m.hidden) return;
+  m.hidden = true;
+  const back = _dm && _dm.opener;
+  _dm = null;
+  /* the card is redrawn when something is saved, so find this drink's ⋯ again rather than trusting the old one */
+  const again =
+    back && back.dataset && document.querySelector('.drinkmore[data-drink="' + CSS.escape(back.dataset.drink || "") + '"]');
+  const to = again || (back && back.isConnected ? back : null);
+  if (to) to.focus();
+}
+function _verdictButtons(cur, big) {
+  return [
+    ["yes", "👍", "Yes"],
+    ["neutral", "😐", "Maybe"],
+    ["no", "👎", "No"],
+  ]
+    .map(function (v) {
+      return (
+        '<button type="button" class="dnv ' +
+        v[0] +
+        '" aria-pressed="' +
+        (cur === v[0]) +
+        '" aria-label="Would order again: ' +
+        v[2].toLowerCase() +
+        '" onclick="setDrinkVerdict(\'' +
+        v[0] +
+        "')\">" +
+        '<span class="e" aria-hidden="true">' +
+        v[1] +
+        "</span>" +
+        (big ? '<span aria-hidden="true">' + v[2] + "</span>" : "") +
+        "</button>"
+      );
+    })
+    .join("");
+}
+/** "today's cup", "Oct 5 cup": the label in the middle of a sentence. @param {Order} o */
+function _cupInSentence(o) {
+  const s = cupLabel(o);
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+function renderDrinkMenu() {
+  const f = _dmFind(),
+    p = $("dns-panel");
+  if (!f || !p || !_dm) return;
+  const o = f.o;
+  const facts = [o.date ? (o.date === localToday() ? "Today" : fmtDate(o.date)) : "Undated", o.size || ""].filter(Boolean);
+  if (_dm.mode === "menu") {
+    p.innerHTML =
+      '<span class="dngrab" aria-hidden="true"></span>' +
+      '<div class="dnhead"><h2 id="dns-title">' +
+      esc(f.d.n) +
+      "</h2><p>" +
+      esc(facts.join(" · ")) +
+      "</p></div>" +
+      '<div class="dnmenu">' +
+      '<button type="button" class="dnmi" onclick="startDrinkNote()">' +
+      ico("edit") +
+      "<span>" +
+      (hasCupNote(o) ? "Edit the note" : "Add a note") +
+      "</span><small>for " +
+      esc(_cupInSentence(o)) +
+      "</small></button>" +
+      '<div class="dnmi dnrow" role="group" aria-label="Would order again?"><span>Would order again?</span><span class="dnvs">' +
+      _verdictButtons(reorderVal(o), false) +
+      "</span></div>" +
+      '<button type="button" class="dnmi" onclick="logDrinkAgain()"><span class="g" aria-hidden="true">＋</span><span>Log another today</span></button>' +
+      '<button type="button" class="dnmi" onclick="editDrinkInVisit()">' +
+      ico("sliders") +
+      "<span>Edit in the visit…</span></button>" +
+      "</div>" +
+      '<button type="button" class="btn ghost dnclose" onclick="closeDrinkMenu()">Close</button>';
+    return;
+  }
+  const good = _dm.reorder === "yes",
+    set = NOTE_TAGS[good ? "good" : "off"];
+  const shown = set.concat(
+    _dm.tags.filter(function (t) {
+      return set.indexOf(t) < 0;
+    })
+  );
+  const what = good ? "What was good" : "What was off";
+  p.innerHTML =
+    '<span class="dngrab" aria-hidden="true"></span>' +
+    '<div class="dnhead"><h2 id="dns-title">A note on ' +
+    esc(_cupInSentence(o)) +
+    "</h2><p>" +
+    esc(f.d.n) +
+    "</p></div>" +
+    '<div class="dnq" role="group" aria-label="Would order again?"><span class="dnlab">Would order again?</span><span class="dnvs big">' +
+    _verdictButtons(_dm.reorder, true) +
+    "</span></div>" +
+    '<div class="dnq" role="group" aria-label="' +
+    what +
+    '"><span class="dnlab">' +
+    what +
+    '</span><span class="dntags">' +
+    shown
+      .map(function (t) {
+        return (
+          '<button type="button" class="dntag" aria-pressed="' +
+          (_dm.tags.indexOf(t) >= 0) +
+          '" data-tag="' +
+          esc(t) +
+          '" onclick="toggleNoteTag(this)">' +
+          esc(t) +
+          "</button>"
+        );
+      })
+      .join("") +
+    "</span></div>" +
+    '<label class="dnlab" for="dns-text">In your words</label>' +
+    '<textarea id="dns-text" class="dntext" rows="3" maxlength="280" placeholder="What stood out about this cup?">' +
+    esc(o.note || "") +
+    "</textarea>" +
+    '<div class="dnact">' +
+    (hasCupNote(o) ? '<button type="button" class="btn ghost dnrm" onclick="removeDrinkNote()">Remove note</button>' : "") +
+    '<button type="button" class="btn ghost" onclick="closeDrinkMenu()">Cancel</button>' +
+    '<button type="button" class="btn" onclick="saveDrinkNote()">Save note</button></div>';
+}
+function startDrinkNote() {
+  const f = _dmFind();
+  if (!f || !_dm) return;
+  _dm.mode = "note";
+  _dm.reorder = reorderVal(f.o);
+  _dm.tags = (f.o.tags || []).slice();
+  renderDrinkMenu();
+  const t = /** @type {HTMLTextAreaElement|null} */ ($("dns-text"));
+  if (t) t.focus({ preventScroll: true });
+}
+/** Writes to the cup and redraws the cafe page. Every order gets an id on the way, as the form gives them, so the
+    sync can tell this cup from the others. @param {(o: Order) => void} change */
+function _dmWrite(change) {
+  const f = _dmFind();
+  if (!f) return false;
+  f.orders.forEach(function (x) {
+    if (!x.id) x.id = uid();
+  });
+  change(f.o);
+  f.d.orders = f.orders;
+  syncDrinkSummary(f.d);
+  saveCafe(f.c.id);
+  if (_dm) _dm.id = f.o.id || "";
+  openDetail(f.c.id);
+  return true;
+}
+function setDrinkVerdict(v) {
+  if (!_dm) return;
+  if (_dm.mode === "note") {
+    /* inside the note it is a choice that Save keeps, and the tags offered follow it; the words typed so far stay */
+    const t = /** @type {HTMLTextAreaElement|null} */ ($("dns-text"));
+    const draft = t ? t.value : "";
+    _dm.reorder = _dm.reorder === v ? "" : v;
+    renderDrinkMenu();
+    const t2 = /** @type {HTMLTextAreaElement|null} */ ($("dns-text"));
+    if (t2) t2.value = draft;
+    const b = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector(".dnv." + v));
+    if (b) b.focus();
+    return;
+  }
+  let now = "";
+  _dmWrite(function (o) {
+    now = reorderVal(o) === v ? "" : v;
+    if (now) o.reorder = /** @type {any} */ (now);
+    else delete o.reorder;
+  });
+  renderDrinkMenu();
+  const b = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector(".dnv." + v));
+  if (b) b.focus();
+  toast(
+    now === "yes"
+      ? "👍 Would order again"
+      : now === "no"
+        ? "👎 Wouldn’t order again"
+        : now === "neutral"
+          ? "😐 Maybe again"
+          : "Cleared"
+  );
+}
+function toggleNoteTag(btn) {
+  if (!_dm) return;
+  const t = btn.dataset.tag || "",
+    i = _dm.tags.indexOf(t);
+  if (i >= 0) _dm.tags.splice(i, 1);
+  else _dm.tags.push(t);
+  btn.setAttribute("aria-pressed", String(i < 0));
+}
+function saveDrinkNote() {
+  if (!_dm) return;
+  const t = /** @type {HTMLTextAreaElement|null} */ ($("dns-text"));
+  const note = t ? t.value.trim().slice(0, 280) : "",
+    tags = _dm.tags.slice(),
+    rv = _dm.reorder;
+  const ok = _dmWrite(function (o) {
+    if (note) o.note = note;
+    else delete o.note;
+    if (tags.length) o.tags = tags;
+    else delete o.tags;
+    if (rv) o.reorder = /** @type {any} */ (rv);
+    else delete o.reorder;
+  });
+  closeDrinkMenu();
+  if (ok) toast(note || tags.length ? "Note saved" : "Saved");
+}
+function removeDrinkNote() {
+  if (!_dm) return;
+  const ok = _dmWrite(function (o) {
+    delete o.note;
+    delete o.tags;
+  });
+  closeDrinkMenu();
+  if (ok) toast("Note removed");
+}
+/* Another of this drink, dated today, with the options and the price of the last one: you are most likely standing
+   at the same counter. */
+function logDrinkAgain() {
+  const f = _dmFind();
+  if (!f) return;
+  const o = f.o,
+    n = f.d.n;
+  closeDrinkMenu();
+  openForm(f.c.id);
+  if ($("f-wish") && $("f-wish").checked) {
+    $("f-wish").checked = false;
+    syncWishMode();
+    syncMore(false);
+  }
+  setTimeout(function () {
+    const row = addDrinkRow(n, o.p, localToday(), o.sweet, o.ice, o.size, "", false, o.milk, 1, { pl: o.pl, pc: o.pc });
+    activateDrinkRow(row);
+    row.scrollIntoView({ block: "start" });
+    toast("Added " + n + " for today");
+  }, 140);
+}
+function editDrinkInVisit() {
+  const f = _dmFind();
+  if (!f) return;
+  closeDrinkMenu();
+  openForm(f.c.id);
+}
+/* A tap on the dimmed page behind the sheet puts it away. Wired here rather than as an onclick on the scrim: a
+   backdrop is not a control, and the keyboard already has Escape and Close. */
+document.addEventListener("click", e => {
+  const t = /** @type {Element|null} */ (e.target);
+  if (t && t.classList && t.classList.contains("dnscrim")) closeDrinkMenu();
+});
+document.addEventListener("keydown", e => {
+  const m = $("dnsheet");
+  if (!m || m.hidden) return;
+  if (e.key === "Escape") {
+    e.preventDefault();
+    closeDrinkMenu();
+  } else if (e.key === "Tab") {
+    const f = [].slice.call(m.querySelectorAll("button, textarea")).filter(b => !b.disabled);
+    if (!f.length) return;
+    const first = f[0],
+      last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+});
 let _branchOpen = false; /* the branch list is open; survives the cloud repaint, closes on another cafe */
 let _branchFor = null;
 /* Monochrome marks: they take the colour of the text they sit in, so they follow both themes. */
@@ -427,6 +780,12 @@ function openDetail(id, from) {
                     opts.map(x => '<span class="mpill">' + esc(x) + "</span>").join("") +
                     "</div>"
                   : "") +
+                (o.note || (o.tags && o.tags.length)
+                  ? '<div class="dordernote">' +
+                    (o.tags && o.tags.length ? o.tags.map(t => '<span class="nt">' + esc(t) + "</span>").join("") : "") +
+                    (o.note ? '<q class="ntq">' + esc(o.note) + "</q>" : "") +
+                    "</div>"
+                  : "") +
                 "</div>"
               );
             })
@@ -436,6 +795,7 @@ function openDetail(id, from) {
             (open ? " open" : "") +
             (v ? " v-" + v : "") +
             '">' +
+            '<div class="drinktop">' +
             '<button type="button" class="drinksum" aria-expanded="' +
             (open ? "true" : "false") +
             '" aria-controls="' +
@@ -462,6 +822,18 @@ function openDetail(id, from) {
             (open ? "▾" : "▸") +
             "</span>" +
             "</button>" +
+            /* the owner's menu for this drink: a note on the latest cup, would you order it again, log another */
+            (isAdmin
+              ? '<button type="button" class="drinkmore" aria-haspopup="dialog" aria-label="' +
+                esc("More for " + d.n) +
+                '" data-drink="' +
+                esc(d.n) +
+                '" onclick="openDrinkMenu(this)">' +
+                ico("more") +
+                "</button>"
+              : "") +
+            "</div>" +
+            drinkNoteHTML(orders) +
             '<div class="drinkhistory" id="' +
             hid +
             '">' +

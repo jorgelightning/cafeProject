@@ -595,6 +595,9 @@ function priceFields(amt, code, rate, date) {
    without changing the stored object. Once a cafe is saved, syncDrinkSummary() keeps the
    old top-level shape as a compatibility summary while `orders` becomes the source of truth. */
 const DRINK_ORDER_FIELDS = ["p", "pl", "pc", "pr", "pd", "size", "sweet", "ice", "milk", "reorder"];
+/* An order's note and tags (what you thought of that one cup) are copied by drinkOrders() below but are not in
+   this list, so syncDrinkSummary() never mirrors them onto the drink's top-level summary: a bad cup on Tuesday is
+   not what the drink is. */
 /** @param {Order|null|undefined} o @returns {number} */
 function orderQty(o) {
   return Math.max(1, Math.min(99, parseInt(String(o && o.qty), 10) || 1));
@@ -609,6 +612,8 @@ function drinkOrders(d) {
       DRINK_ORDER_FIELDS.forEach(function (k) {
         if (src[k] !== undefined && src[k] !== "") o[k] = src[k];
       });
+      if (src.note) o.note = String(src.note);
+      if (Array.isArray(src.tags) && src.tags.length) o.tags = src.tags.slice();
       if (src.date) o.date = src.date;
       const q = orderQty(src);
       if (q > 1) o.qty = q;

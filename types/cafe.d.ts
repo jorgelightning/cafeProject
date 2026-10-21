@@ -20,6 +20,9 @@ interface Order {
   ice?: string;
   milk?: string;
   reorder?: "yes" | "no" | "neutral";
+  /** what you thought of this cup: a sentence, and tags from NOTE_TAGS */
+  note?: string;
+  tags?: string[];
 }
 
 /** A drink, with its orders. Top-level fields mirror the latest order for older clients. */
