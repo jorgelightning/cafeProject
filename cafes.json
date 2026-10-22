@@ -1141,6 +1141,31 @@
     "drinks": [
       {
         "dates": [
+          "2026-10-21"
+        ],
+        "ice": "Regular ice",
+        "milk": "Oat",
+        "n": "Jandii brew on tap",
+        "orders": [
+          {
+            "date": "2026-10-21",
+            "ice": "Regular ice",
+            "id": "mvif3bujvevu",
+            "milk": "Oat",
+            "note": "The workers seems really not on it today",
+            "p": "8.47",
+            "reorder": "neutral",
+            "size": "14 oz",
+            "sweet": "25%"
+          }
+        ],
+        "p": "8.47",
+        "reorder": "neutral",
+        "size": "14 oz",
+        "sweet": "25%"
+      },
+      {
+        "dates": [
           "2026-10-05"
         ],
         "ice": "Regular ice",
@@ -1240,20 +1265,20 @@
         "reorder": "yes"
       }
     ],
-    "elo": 1476,
+    "elo": 1469,
     "emoji": "☕",
     "fav": false,
     "id": "mqm06fjnsrlj",
     "lat": 37.74313,
     "lng": -122.47803,
-    "matches": 8,
+    "matches": 9,
     "name": "Jandii Cafe",
     "rating": 4,
     "review": "I like the taste of hojicha and I like it! Great for study!",
     "tags": [
       "cozy"
     ],
-    "updated": "2026-10-05T17:52:11.130Z",
+    "updated": "2026-10-21T18:02:02.912Z",
     "wish": false
   },
   {
@@ -2451,6 +2476,7 @@
           {
             "date": "2026-09-02",
             "ice": "Warm",
+            "id": "lg-mtl3m4gs7el5-hojichalatte-2026-09-02-1",
             "milk": "Oat",
             "p": "7",
             "reorder": "yes",
@@ -2495,6 +2521,7 @@
           {
             "date": "2026-09-06",
             "ice": "Less ice",
+            "id": "lg-mtqn96pbnv35-dahongpaomilktea-2026-09-06-1",
             "milk": "Lactose-free",
             "p": "6.50",
             "reorder": "yes",
@@ -2508,13 +2535,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1530,
+    "elo": 1526,
     "emoji": "☕",
     "fav": false,
     "id": "mtqn96pbnv35",
     "lat": 37.32234,
     "lng": -122.01675,
-    "matches": 2,
+    "matches": 3,
     "name": "MoonTea",
     "pid": "ChIJ77mZztW1j4ARA7L4u49X9AU",
     "rating": 4,
