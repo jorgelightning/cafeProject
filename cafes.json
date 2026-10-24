@@ -1117,13 +1117,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1524,
+    "elo": 1515,
     "emoji": "☕",
     "fav": true,
     "id": "mqlipq5e1fwo",
     "lat": 37.77591,
     "lng": -122.49649,
-    "matches": 6,
+    "matches": 7,
     "name": "Constance Tea & Matcha",
     "rating": 5,
     "review": "Freshly milled! Great information from the staff!",
@@ -3071,6 +3071,103 @@
     "rating": 0,
     "review": "",
     "updated": "2026-10-18T23:19:45.217Z",
+    "wish": true
+  },
+  {
+    "area": "Central LA",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-23"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Houjicha CORTADO",
+        "orders": [
+          {
+            "date": "2026-10-23",
+            "ice": "Warm",
+            "id": "mvl4b4fqjgtc",
+            "milk": "Oat",
+            "note": "No sweet, cup size is 6-7oz",
+            "p": "5.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5.25",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1566,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvl4fc0pr7m8",
+    "lat": 34.101,
+    "lng": -118.29114,
+    "matches": 1,
+    "name": "Kettl Los Feliz",
+    "pid": "ChIJ38srNQDBwoARIKkqo5hENTQ",
+    "rating": 5,
+    "review": "Awesome, good vibes and parking too! Welcoming staff, they have a latte and cortado option",
+    "updated": "2026-10-23T15:24:46.105Z",
+    "wish": false
+  },
+  {
+    "area": "Diamond Bar",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvlk9wmgam6z",
+    "lat": 33.99773,
+    "lng": -117.85362,
+    "name": "Outpost Coffee",
+    "pid": "ChIJ39-jrWQrw4ARshcWh9ianY4",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-23T22:48:26.727Z",
+    "wish": true
+  },
+  {
+    "area": "Diamond Bar",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvlkch3a038h",
+    "lat": 33.99694,
+    "lng": -117.81402,
+    "name": "torotea",
+    "pid": "ChIJwfVYPAAtw4ARnxXw5DtVOSE",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-23T22:50:26.565Z",
+    "wish": true
+  },
+  {
+    "area": "City of Industry",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvlkd4clywf6",
+    "lat": 33.99573,
+    "lng": -117.89989,
+    "name": "Dumbstruck Coffee - Industry",
+    "pid": "ChIJ5f5chRErw4ARDzVoYlLxoO8",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-23T22:50:56.709Z",
     "wish": true
   },
   {
