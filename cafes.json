@@ -2907,17 +2907,46 @@
     "brand": "Airoma Cafe",
     "cc": "US",
     "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-24"
+        ],
+        "ice": "Regular ice",
+        "milk": "Oat",
+        "n": "Matcha oak latte",
+        "orders": [
+          {
+            "date": "2026-10-24",
+            "ice": "Regular ice",
+            "id": "mvn17mlqyuc2",
+            "milk": "Oat",
+            "note": "Nothing special lol",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "20 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.25",
+        "reorder": "yes",
+        "size": "20 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1495,
     "emoji": "☕",
     "fav": false,
     "id": "mv63pi7wj1sg",
     "lat": 33.72789,
     "lng": -117.95629,
+    "matches": 1,
     "name": "Airoma Cafe",
     "pid": "ChIJY-pH4GAn3YAR4bj6YBXHXN4",
-    "rating": 0,
-    "review": "",
-    "updated": "2026-10-13T03:08:08.444Z",
-    "wish": true
+    "rating": 3,
+    "review": "Super busy but seems like a good space to chill and study",
+    "updated": "2026-10-24T23:32:16.092Z",
+    "wish": false
   },
   {
     "area": "Garden Grove",
@@ -3411,7 +3440,7 @@
     "id": "tea-kiss-of-matcha",
     "lat": 37.78296,
     "lng": -122.46745,
-    "matches": 8,
+    "matches": 9,
     "name": "Kiss of Matcha",
     "rating": 4,
     "review": "Good hojicha — low sugar and earthy.",
