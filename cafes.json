@@ -752,9 +752,9 @@
     "lng": 139.70636,
     "matches": 5,
     "name": "The Matcha Tokyo Omotesandō",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-15T23:45:05.049Z"
+    "updated": "2026-10-26T10:37:24.258Z"
   },
   {
     "area": "Flushing",
@@ -767,9 +767,9 @@
     "lng": -73.83206,
     "matches": 4,
     "name": "Teazzi Tea Shop",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-15T23:45:54.734Z"
+    "updated": "2026-10-26T10:37:28.817Z"
   },
   {
     "area": "Kaimuki",
@@ -965,9 +965,9 @@
     "lng": 139.71544,
     "matches": 2,
     "name": "Mermaid Coffee Roasters Ikebukuro",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-17T09:46:27.745Z"
+    "updated": "2026-10-26T10:37:36.905Z"
   },
   {
     "area": "12",
@@ -996,9 +996,9 @@
     "lng": -106.51431,
     "matches": 3,
     "name": "Teapioca Lounge",
-    "rating": 0,
+    "rating": 3,
     "review": "",
-    "updated": "2026-06-17T11:51:52.740Z"
+    "updated": "2026-10-26T10:37:42.368Z"
   },
   {
     "area": "Capitol Hill",
@@ -2061,12 +2061,12 @@
     "lng": -121.8841,
     "matches": 3,
     "name": "Academic Coffee",
-    "rating": 0,
+    "rating": 3,
     "review": "",
     "tags": [
       "cozy"
     ],
-    "updated": "2026-08-17T19:33:28.562Z",
+    "updated": "2026-10-26T10:37:47.607Z",
     "wish": false
   },
   {
@@ -2137,7 +2137,7 @@
     "id": "mt6wojizh8ca",
     "lat": 49.28251,
     "lng": -123.11126,
-    "matches": 6,
+    "matches": 7,
     "name": "Saunter Coffee",
     "rating": 5,
     "review": "Great atmosphere to work in the front and there is something on the back for more of a quiet experience. The flat white is so good, strong espresso and the matcha has a good strong matcha taste too!",
@@ -3200,6 +3200,113 @@
     "wish": true
   },
   {
+    "area": "Downtown Los Angeles",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-25"
+        ],
+        "ice": "Hot",
+        "milk": "Oat",
+        "n": "Hojicha Latte",
+        "orders": [
+          {
+            "date": "2026-10-25",
+            "ice": "Hot",
+            "id": "mvnzr6upf3d6",
+            "milk": "Oat",
+            "note": "Amazing taste!",
+            "p": "7.75",
+            "size": "10 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.75",
+        "size": "10 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1560,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvnzv1yoafwb",
+    "lat": 34.04049,
+    "lng": -118.23153,
+    "matches": 2,
+    "name": "DAMO",
+    "pid": "ChIJLYrDcwDHwoAR3zrYLEtPXP0",
+    "rating": 5,
+    "review": "Outstanding interior, great to hang and work/study.",
+    "updated": "2026-10-26T10:37:54.738Z",
+    "wish": false
+  },
+  {
+    "area": "Silver Lake",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvo02k1ssq3t",
+    "lat": 34.09529,
+    "lng": -118.28381,
+    "name": "Dinosaur Coffee",
+    "pid": "ChIJfaYfR0zHwoARAqzXr3o2bEA",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-25T15:46:10.048Z",
+    "wish": true
+  },
+  {
+    "area": "Downtown Los Angeles",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-25"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Breve white",
+        "orders": [
+          {
+            "date": "2026-10-25",
+            "ice": "Warm",
+            "id": "mvosl19netd6",
+            "milk": "Oat",
+            "note": "Strong coffee taste but the sweet because of the top, def will keep you awake!",
+            "p": "7.50",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.50",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1566,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvo03c1otixs",
+    "lat": 34.03095,
+    "lng": -118.23017,
+    "matches": 1,
+    "name": "Maru Coffee",
+    "pid": "ChIJ_zD6ESDGwoAR-wg2QUIAySo",
+    "rating": 5,
+    "review": "Great vibe and good coffee!",
+    "updated": "2026-10-26T05:09:31.371Z",
+    "wish": false
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
@@ -3434,13 +3541,13 @@
         ]
       }
     ],
-    "elo": 1495,
+    "elo": 1487,
     "emoji": "🍵",
     "fav": false,
     "id": "tea-kiss-of-matcha",
     "lat": 37.78296,
     "lng": -122.46745,
-    "matches": 9,
+    "matches": 10,
     "name": "Kiss of Matcha",
     "rating": 4,
     "review": "Good hojicha — low sugar and earthy.",
@@ -4106,13 +4213,13 @@
         "p": ""
       }
     ],
-    "elo": 1516,
+    "elo": 1508,
     "emoji": "☕",
     "fav": false,
     "id": "tea-q-specialty",
     "lat": 37.78683,
     "lng": -122.45162,
-    "matches": 15,
+    "matches": 16,
     "name": "Q Specialty Coffee",
     "rating": 4,
     "review": "My regular for a reliable hojicha latte.",
