@@ -1997,14 +1997,7 @@ function _qcSource(c, n) {
 }
 /** @param {any} o */
 function _qcSpecText(o) {
-  return [
-    o.size,
-    o.milk ? String(o.milk).toLowerCase() : "",
-    o.sweet ? (o.sweet === "0%" ? "no sugar" : o.sweet + " sweet") : "",
-    o.ice ? String(o.ice).toLowerCase() : "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  return orderOptsText(o);
 }
 /** @param {string} [n] a drink to start on (from the drink's own ⋯) */
 function openQuickCup(n) {

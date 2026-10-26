@@ -39,12 +39,12 @@ const { eq, done } = checker();
     const hero = document.getElementById("d-hero"), more = document.getElementById("d-more"), det = document.getElementById("d-details");
     return {
       banner: ba.querySelector(".oa-name").textContent + " | " + ba.querySelector(".oa-meta").textContent,
-      glyph: ba.querySelector(".oa-gl").textContent, bannerButtons: ba.querySelectorAll("button").length,
+      glyph: (ba.querySelector(".oa-gl svg.mkv") || { dataset: {} }).dataset.k || "", bannerButtons: ba.querySelectorAll("button").length,
       medalInHero: hero.contains(rk), moreShown: getComputedStyle(more).display !== "none", detailsShown: getComputedStyle(det).display !== "none",
       detailsOpen: det.open, folded: document.querySelectorAll("#d-drinks .foldbox .drinkcard").length,
       moreBtn: (document.querySelector("#d-drinks .morebtn") || {}).textContent || "",
       gold: rk.classList.contains("top"), rankText: rk.textContent,
-      pills: [...document.querySelectorAll("#d-drinks .drinksum .mpill")].map(x => x.textContent),
+      pills: [...document.querySelectorAll("#d-drinks .drinksum .dopts")].map(x => x.textContent),
       quote: getComputedStyle(document.getElementById("d-review"), "::before").content,
       doc: document.documentElement.scrollWidth, win: window.innerWidth
     };
@@ -52,12 +52,12 @@ const { eq, done } = checker();
 
   const v = await seed(false);
   eq(v.banner, "Hojicha latte | $7.25 · 2× ordered · last Sep 23, 2026", "what to order leads: the drink, its price, how often, and when last");
-  eq(v.glyph, "🍵", "…with a glyph for the kind of drink");
+  eq(v.glyph, "matcha", "…with the drawn mark for the kind of drink (the same vessel as the cafe tiles)");
   eq(v.bannerButtons, 0, "the order block is information, not a second way to log: the bar at the bottom is the one");
   eq(v.medalInHero, true, "the rank is a medal on the hero, not a tile beside the name");
   eq([v.moreShown, v.detailsShown], [false, false], "a viewer has no edit menu and no bookkeeping");
   eq(v.gold, true, "a top-ten cafe gets the gold rank tile");
-  eq(v.pills, ["12 oz", "0% sweet", "Warm", "🥛 Oat"], "a drink's options read as pills, not one grey line");
+  eq(v.pills, ["12 oz · oat · no sugar · warm"], "a drink's options read as one quiet line (the UI audit undid the four coloured pills)");
   eq(/201C/i.test(JSON.stringify(v.quote)) || /“/.test(v.quote), true, "the note is set as a quotation");
   eq(v.doc <= v.win + 1, true, "nothing scrolls sideways at 375px");
 

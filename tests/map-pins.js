@@ -57,10 +57,11 @@ const { eq, done } = checker();
     return { a: kind(by("a")), b: kind(by("b")), c: kind(by("c")), wish: w.icon.url ? "svg" + w.icon.scaledSize.width : "other", wz: w.zIndex };
   }, z);
 
-  let r = await state(12);
+  /* thresholds moved in the UI audit (26 Oct): larger dots from 11.5, names from 13 */
+  let r = await state(10);
   eq(r.wish, "svg20", "zoomed out a want-to-try pin is the small dot too (20px with its edge)");
   eq([r.a, r.b, r.c], ["dot8", "dot6", "dot6"], "zoomed out every cafe is a small dot, a favourite a little larger");
-  r = await state(14.6);
+  r = await state(12);
   eq(r.wish, "svg26", "in between it is the larger dot, 26px, violet with its bookmark");
   eq([r.a, r.b, r.c], ["dot11", "dot9", "dot9"], "in between they are larger dots");
   r = await state(16);
@@ -81,7 +82,7 @@ const { eq, done } = checker();
   eq(pill.w > 120, true, "…sized to the text (" + pill.w + "px)");
 
   const pick = await pg.evaluate(() => {
-    window.__zoom = 12; gmarkers.forEach(m => { m._mode = null; }); refreshPinIcons();
+    window.__zoom = 10; gmarkers.forEach(m => { m._mode = null; }); refreshPinIcons();
     selectPin("c");
     const o = gmarkers.find(m => m._id === "c").o;
     const sel = { pill: !!o.icon.url, ring: /#1d1a17/.test(decodeURIComponent(o.icon.url || "")), z: o.zIndex };

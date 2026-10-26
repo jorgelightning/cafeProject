@@ -71,7 +71,9 @@ const { eq, done } = checker();
   eq([v.priv.go, v.priv.hours], [["Share"], "#"], "a private spot has neither Directions nor Hours: it is somebody's home");
 
   /* ---- ties ---- */
+  /* positions are the owner's (a visitor reads tiers on the List since the UI audit) */
   const t = await pg.evaluate(() => {
+    isAdmin = true; applyMode();
     show("list"); renderList();
     const ranks = [...document.querySelectorAll("#grid .card")].filter(c => /Cafe (29|30)$/.test(c.querySelector(".n").textContent)).map(c => c.querySelector(".rkcol").textContent);
     show("compare"); renderBoard();

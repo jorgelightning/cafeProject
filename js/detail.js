@@ -84,17 +84,47 @@ function setReorder(btn, v) {
   if (hid.value) wrap.querySelector(".rbtn." + hid.value).classList.add("on");
 }
 /* The options of an order as pills — size, sweetness, ice, milk — in place of one grey line. */
-function modPills(o) {
+/* \u2026and since the UI audit (26 Oct) as words: "8 oz \u00b7 oat \u00b7 no sugar \u00b7 warm". Four pills in four colours (size grey,
+   sweetness amber, ice grey, milk purple with an emoji) meant nothing a reader could learn, and three drinks filled
+   the screen. One quiet line, the same phrasing the quick cup uses. */
+/** @param {any} o an order */
+function orderOptsText(o) {
   if (!o) return "";
-  const m = [
-    o.size ? ["", o.size] : null,
-    o.sweet ? ["k-sw", o.sweet + " sweet"] : null,
-    o.ice ? ["k-ic", o.ice] : null,
-    o.milk ? ["k-mk", "\ud83e\udd5b " + o.milk] : null,
-  ].filter(Boolean);
-  return m.length
-    ? '<span class="dmods">' + m.map(x => '<span class="mpill ' + x[0] + '">' + esc(x[1]) + "</span>").join("") + "</span>"
-    : "";
+  return [
+    o.size || "",
+    o.milk ? String(o.milk).toLowerCase() : "",
+    o.sweet ? (o.sweet === "0%" ? "no sugar" : o.sweet + " sweet") : "",
+    o.ice ? String(o.ice).toLowerCase() : "",
+  ]
+    .filter(Boolean)
+    .join(" \u00b7 ");
+}
+function modPills(o) {
+  const t = orderOptsText(o);
+  return t ? '<span class="dopts">' + esc(t) + "</span>" : "";
+}
+/* A drink's mark: the same drawn vessel as its cafe's tile, small, on its kind's colour, so the app speaks one icon
+   language (UI audit). A drink no rule recognises gets a plain cup on grey rather than a guess. */
+/** @param {string} n */
+function drinkMarkBg(n) {
+  const k = CARD_KINDS[drinkKind(n) || ""];
+  return k ? "linear-gradient(135deg," + k.c1 + "," + k.c2 + ")" : "var(--surface2)";
+}
+/** @param {string} n */
+function drinkMarkSVG(n) {
+  const kind = drinkKind(n) || "",
+    k = CARD_KINDS[kind],
+    v = CARD_VESSELS[(k || CARD_KINDS.coffee).vessel] || CARD_VESSELS.cup;
+  return (
+    '<svg class="mkv' +
+    (k ? "" : " plain") +
+    '" data-k="' +
+    (kind || "none") +
+    '" viewBox="0 0 120 120" aria-hidden="true" focusable="false">' +
+    v.main.map(p => '<path d="' + p + '"/>').join("") +
+    v.faint.map(p => '<path class="f" d="' + p + '"/>').join("") +
+    "</svg>"
+  );
 }
 /* A drink's glyph follows the same rule as the cafe's mark (drinkKind), so a Flat White is a coffee cup on the cafe
    page as it is on its card. It used to have its own list, which disagreed on 15 of 126 drinks. */
@@ -652,8 +682,10 @@ function openDetail(id, from) {
       /* The answer to "what do I get here", as the first thing under the name: the drink, what it
          costs, how often, and when last. The owner can log it again from the same place. */
       _oa.innerHTML =
-        '<span class="oa-gl" aria-hidden="true">' +
-        drinkGlyph(td.d.n) +
+        '<span class="oa-gl" aria-hidden="true" style="background:' +
+        drinkMarkBg(td.d.n) +
+        '">' +
+        drinkMarkSVG(td.d.n) +
         '</span><span class="oa-tx"><small>What to order</small><strong class="oa-name">' +
         esc(td.d.n) +
         '</strong><span class="oa-meta">' +
@@ -801,7 +833,7 @@ function openDetail(id, from) {
                 (ov || opts.length
                   ? '<div class="dordermeta">' +
                     reorderChip(o) +
-                    opts.map(x => '<span class="mpill">' + esc(x) + "</span>").join("") +
+                    (opts.length ? '<span class="dopts">' + esc(orderOptsText(o)) + "</span>" : "") +
                     "</div>"
                   : "") +
                 (o.note || (o.tags && o.tags.length)
@@ -825,8 +857,10 @@ function openDetail(id, from) {
             '" aria-controls="' +
             hid +
             '" onclick="toggleDrinkHistory(this)">' +
-            '<span class="drinkicon" aria-hidden="true">' +
-            drinkGlyph(d.n) +
+            '<span class="drinkicon" aria-hidden="true" style="background:' +
+            drinkMarkBg(d.n) +
+            '">' +
+            drinkMarkSVG(d.n) +
             "</span>" +
             '<span class="drinkcopy"><span class="dtop">' +
             esc(d.n) +

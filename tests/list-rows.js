@@ -41,7 +41,8 @@ const { eq, done } = checker();
              tile: first.querySelector(".ph").style.background, doc: document.documentElement.scrollWidth, win: innerWidth };
   });
   eq(r.bands, ["Top 10 · 10", "11 to 30 · 20", "31 to 60 · 10"], "sorted by rank, the list has Top 10, 11 to 30 and 31 to 60 landmarks with their counts");
-  eq(r.rk.slice(0, 2).concat(r.rk.slice(10, 11)), ["#1*", "#2*", "#11"], "the rank sits at the right, gold for the top ten");
+  /* a visitor reads the tier at the right since the UI audit; positions are the owner's (tests/ui-system.js) */
+  eq(r.rk.slice(0, 2).concat(r.rk.slice(10, 11)), ["Must go", "Must go", "Great"], "the standing sits at the right, as the tier word a visitor reads");
   eq(r.plus, 0, "no card carries a +");
   eq(r.lines, ["n", "m", "cdrink"], "each row is name, place and time, then the order (the order is moved up by CSS)");
   eq(r.price, "$7.25", "the price rides on the order line");

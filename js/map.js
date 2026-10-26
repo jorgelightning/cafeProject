@@ -101,6 +101,7 @@ function initMap() {
   gmap.addListener("idle", function () {
     if (mapWantOnly) updateWantBar();
     refreshPinIcons();
+    syncPillToView();
   });
   const _mapEl = $("map");
   if (_mapEl)
@@ -392,7 +393,13 @@ function _showPins() {
   });
   if (!mapWantOnly) {
     if (window.markerClusterer && markerClusterer.MarkerClusterer && been.length) {
-      gclusterer = new markerClusterer.MarkerClusterer({ map: gmap, markers: been, renderer: _clusterRenderer });
+      /* bubbles only for a country or a state; from a city view in, every cafe is its own pin (UI audit) */
+      gclusterer = new markerClusterer.MarkerClusterer({
+        map: gmap,
+        markers: been,
+        renderer: _clusterRenderer,
+        algorithm: markerClusterer.SuperClusterAlgorithm ? new markerClusterer.SuperClusterAlgorithm({ maxZoom: 11, radius: 60 }) : undefined,
+      });
     } else
       been.forEach(function (m) {
         m.setMap(gmap);
@@ -546,9 +553,23 @@ const MAP_STYLES = [
   "poi.attraction",
   "poi.medical",
   "poi.place_of_worship",
-].map(function (f) {
-  return { featureType: f, stylers: [{ visibility: "off" }] };
-});
+]
+  .map(function (f) {
+    /** @type {any} */
+    const rule = { featureType: f, stylers: [{ visibility: "off" }] };
+    return rule;
+  })
+  /* …and quieter still since the UI audit (26 Oct): no transit or road icons, no place labels, greyer roads and
+     softer parks and water, so the cafes are the loudest thing on the map. Neighbourhood and street names stay. */
+  .concat([
+    { featureType: "transit", stylers: [{ visibility: "off" }] },
+    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+    { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ saturation: -100 }, { lightness: 25 }] },
+    { featureType: "poi.park", elementType: "geometry", stylers: [{ saturation: -55 }, { lightness: 15 }] },
+    { featureType: "landscape", stylers: [{ saturation: -40 }] },
+    { featureType: "water", stylers: [{ saturation: -35 }, { lightness: 10 }] },
+  ]);
 /* ---------- pins that scale with the zoom ----------
    A pin was one 24px disc at every zoom, which at street level hid the street and said nothing
    about which cafe it was. Now: a small dot zoomed out, a larger one in between, and a pill with the
@@ -648,8 +669,11 @@ function refreshPinIcons() {
   near.forEach(function (it) {
     const m = it.m,
       sel = m._id === _selPin;
-    let mode = z >= 14.4 ? "big" : "small";
-    if (sel || m._hover || z >= 15.4) {
+    /* Larger dots from a city view and names from a neighbourhood view (UI audit): they used to wait for 14.4 and
+       15.4, so a whole city was 9px dots and clusters on a map louder than they were. The give-way rule below keeps
+       the earlier names from piling up. */
+    let mode = z >= 11.5 ? "big" : "small";
+    if (sel || m._hover || z >= 13) {
       const w = Math.ceil(_pinTextWidth(String(m._name || "").toUpperCase().slice(0, 17))) + 58;
       const box = { x0: it.x - w / 2, x1: it.x + w / 2, y0: it.y - 18, y1: it.y + 18 };
       const clash = !sel && !m._hover && taken.some(function (b) {
@@ -964,10 +988,14 @@ function toggleMapPanel() {
   const m = $("mapsearch");
   setMapPanel(!(m && m.dataset.open === "true"));
 }
-function setPillLabel(val) {
+/* the place the pill names, so the pill can tell when the map has moved off it */
+let _pillVal = "";
+/** @param {string} val @param {string} [fallback] what to say when it names no place */
+function setPillLabel(val, fallback) {
   const l = $("pill-lbl"),
     sel = $("locsel");
   if (!l) return;
+  _pillVal = val || "";
   const o = val && sel ? [].slice.call(sel.options).filter(x => x.value === val)[0] : null;
   /* The map opens on the region with the most pins, whose value is spelled the way regionOf() spells it, not
      the way the menu does, so the pill used to find no match and say "World" over a map of California. */
@@ -976,7 +1004,21 @@ function setPillLabel(val) {
     const r = worldRegions().filter(g => g.val === val)[0];
     name = r ? r.label : "";
   }
-  l.innerHTML = (name ? ico("pin") : ico("globe")) + " " + esc(name || "World");
+  l.innerHTML = (name ? ico("pin") : ico("globe")) + " " + esc(name || fallback || "World");
+}
+/* The pill must name what the map shows. On the live site it said "California" over the whole Pacific after the
+   welcome closed and the map refitted. When most of the pins in view are no longer in the place it names, it says
+   "All places" instead (UI audit, 26 Oct). */
+function syncPillToView() {
+  if (!_pillVal || !gmap || _worldOn() || typeof gmap.getBounds !== "function") return;
+  const b = gmap.getBounds();
+  if (!b) return;
+  const inView = cafes.filter(c => latOf(c) != null && b.contains({ lat: +latOf(c), lng: +lngOf(c) }));
+  if (inView.length < 2) return;
+  const mine = {};
+  locationList(_pillVal).forEach(c => (mine[c.id] = 1));
+  const share = inView.filter(c => mine[c.id]).length / inView.length;
+  if (share < 0.6) setPillLabel("", "All places");
 }
 function jumpToLocation(val) {
   if (!gmap) {
@@ -1117,16 +1159,22 @@ function openPeek(id) {
     el = $("peek");
   if (!c || !el) return;
   peekId = id;
-  const rk = typeof rankOf === "function" ? rankOf(c) : null,
-    rn = rk ? rankMap()._n : 0;
+  const rm = typeof rankMap === "function" ? rankMap() : null,
+    rk = rm ? rankOf(c, rm) : null,
+    rn = rk && rm ? rm._n : 0;
   const dkm = userLoc && latOf(c) != null ? distKm(userLoc.lat, userLoc.lng, latOf(c), lngOf(c)) : null;
   const where = [areaOf(c) ? esc(areaOf(c)) : "", dkm != null ? fmtDist(dkm) : ""].filter(Boolean).join(" \u00b7 ");
   const top = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
-  const judge = c.wish ? '<span class="bkpill wantpill"><i></i>Want to try</span>' : bucketPill(c, "");
+  /* a visitor reads the same one word here as on the cafe page and the List (UI audit); the owner keeps the number */
+  const judge = c.wish
+    ? '<span class="bkpill wantpill"><i></i>Want to try</span>'
+    : (!isAdmin && rm && tierPill(c, rm)) || bucketPill(c, "");
   el.innerHTML =
     '<div class="peekgrab" aria-hidden="true"></div>' +
     '<div class="peekhead">' +
-    (rk ? '<div class="dranktile"><b>#' + rk + "</b><span>of " + rn + "</span></div>" : "") +
+    (rk && isAdmin
+      ? '<div class="dranktile"><b>' + rankText(rk, rm) + "</b><span>of " + rn + "</span></div>"
+      : '<span class="peektile" aria-hidden="true" style="background:' + markBg(c) + '">' + markArt(c) + "</span>") +
     '<div class="peekmain"><div class="peekname">' +
     esc(c.name) +
     "</div>" +

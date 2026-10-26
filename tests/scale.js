@@ -147,7 +147,8 @@ const fs = require("fs"), path = require("path");
       return { list: probe("list"), go: probe("compare"), stats: probe("stats"), settings: probe("settings") };
     });
     ["list", "go", "stats", "settings"].forEach(v =>
-      eq(split[v], { map: true, side: 475 }, "the map keeps its panel beside " + v));
+      /* clamp(420px, 38vw, 660px) at 1440 is 547 (the UI audit widened it from 33vw, which was 475) */
+      eq(split[v], { map: true, side: 547 }, "the map keeps its panel beside " + v));
     await ctx.close();
   }
 

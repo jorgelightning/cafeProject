@@ -117,7 +117,7 @@ const { eq, done } = checker();
     names: [...document.querySelectorAll("#grid .card .n")].map(e => e.textContent),
     chip: [...document.querySelectorAll("#guiderow button")].find(x => x.getAttribute("aria-pressed") === "true").textContent,
   }));
-  eq(after, { open: false, names: ["CaCoffeeA", "CaMatcha", "CaCoffeeB", "CaBoba"], chip: "📍 California" }, "…and the guide becomes that region, best first, and says so");
+  eq(after, { open: false, names: ["CaCoffeeA", "CaMatcha", "CaCoffeeB", "CaBoba"], chip: "California" }, "…and the guide becomes that region, best first, and says so");
 
   eq(errs, [], "no page errors");
   await ctx.close();

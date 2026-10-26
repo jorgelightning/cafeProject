@@ -447,6 +447,14 @@ function goControls(board) {
 }
 /* Near me with location off: the toast says why, and the regions are offered where you asked. On Go they are a row
    on the board; on the List the same choice comes up as a sheet. */
+/* The visitor's raised button (UI audit, 26 Oct). It only focused the List's search, which the List tab already does;
+   now it is the thing a friend out and about wants: the best places near here, on Go. With location off, Go offers
+   the regions instead (onLocateFailed). */
+function nearMeTab() {
+  show("compare");
+  renderBoard();
+  if (!userLoc && typeof locate === "function") locate();
+}
 function onLocateFailed() {
   _locFailed = true;
   if (app.dataset.view === "compare") renderBoard();
@@ -510,7 +518,7 @@ function renderBoard() {
       (h2h ? " \u00b7 " + h2h + " head-to-head" + (h2h === 1 ? "" : "s") : "")
     : vis.length + " cafes \u00b7 " + countries + " countr" + (countries === 1 ? "y" : "ies") + " \u00b7 best first";
   let h =
-    '<div class="cmp-head left"><div class="ct">Where to go</div><div class="cs">' + sub + "</div></div>";
+    '<div class="pagehead"><h2 class="ct">Where to go</h2><span class="cs">' + sub + "</span></div>";
   /* Go's actions are one row of chips under the heading, so the first cafe is up the screen instead of under three
      full-width grey bars. Rank a pair is the filled one: on this tab it is the owner's job, and its count is what
      is left to place. */
@@ -952,6 +960,12 @@ function cafeTier(c, m) {
   if (r <= Math.ceil(m._n * 0.4)) return { k: "great", label: "Great", sub: "top 40%" };
   return b === "fine" ? { k: "okay", label: "Okay", sub: "" } : { k: "good", label: "Good", sub: "" };
 }
+/* The small form, for a List row or a photo card: the word alone, on the tier's colour. @param {Cafe} c @param {any} [m]
+   @param {string} [cls] */
+function tierChip(c, m, cls) {
+  const t = cafeTier(c, m);
+  return t ? '<span class="tierchip t-' + t.k + (cls ? " " + cls : "") + '">' + t.label + "</span>" : "";
+}
 /** @param {Cafe} c @param {any} [m] */
 function tierPill(c, m) {
   const t = cafeTier(c, m);
@@ -968,6 +982,7 @@ function tierPill(c, m) {
 /* A badge on the tile, where the stars used to be — the tile colour already carries the
    bucket, so repeating it there said nothing twice. */
 function rankBadge(c, m) {
+  if (!isAdmin) return tierChip(c, m, "rankbadge");
   const r = rankOf(c, m);
   return r ? '<span class="rankbadge' + (r <= 3 ? " r-gold" : r <= 10 ? " r-amber" : "") + '">' + rankText(r, m) + "</span>" : "";
 }

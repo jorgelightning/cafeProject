@@ -163,12 +163,13 @@ function chipMatch(c, chip) {
    height at rest. They are one more filter in filteredCafes, so Clear, the result line, the map
    button and the Filters badge all already know about them. */
 let activeGuide = "";
+/* line icons, not emoji: the guides are app controls, and every phone drew the emoji differently (UI audit) */
 const GUIDE_DEFS = [
-  ["top10", "\ud83c\udfc6 Top 10"],
-  ["coffee", "\u2615 Best coffee"],
-  ["tea", "\ud83c\udf75 Best tea"],
-  ["goto", "\ud83d\udd01 Go-to"],
-  ["near", "\ud83d\udccd Near me"],
+  ["top10", "Top 10", "trophy"],
+  ["coffee", "Best coffee", "cup"],
+  ["tea", "Best tea", "bowl"],
+  ["goto", "Go-to", "refresh"],
+  ["near", "Near me", "pin"],
 ];
 const QUICK_DEFS = [
   ["recent", "Recent"],
@@ -252,7 +253,7 @@ function renderGuideRow() {
     const reg = d[0] === "near" && !userLoc && pickedRegion ? goRegionLabel(pickedRegion) : "";
     return (
       '<button type="button" aria-pressed="' + (activeGuide === d[0] ? "true" : "false") +
-      '" onclick="setGuide(\'' + d[0] + "')\">" + (reg ? "📍 " + esc(reg) : d[1]) + "</button>"
+      '" onclick="setGuide(\'' + d[0] + "')\">" + ico(d[2]) + (reg ? esc(reg) : d[1]) + "</button>"
     );
   }).join("");
 }
@@ -730,13 +731,16 @@ function renderList() {
 
       const M = [];
       if (dstr) M.push(sortMode === "near" ? '<span class="near">' + dstr + "</span>" : dstr);
-      if (areaOf(c)) M.push(esc(areaOf(c)));
+      /* a bare number is not a place ("36" for a cafe in Ikebukuro): fall back to its state or country, as Go does */
+      const _ar = /^\d+$/.test((areaOf(c) || "").trim()) && typeof boardArea === "function" ? boardArea(c) : areaOf(c);
+      if (_ar) M.push(esc(_ar));
       /* "No visit date" on a place you have not been is the definition of the want-to-try tab,
      and it was what truncated the area to "West San Jose · No vis…" seven times over. */
       const _td = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
       const _tp = _td ? cardPrice(_td.d) : "";
       const _lv = c.wish ? "" : lastVisitedStr(c, true);
-      if (_lv) M.push(_lv);
+      /* and "No visit date" says nothing useful on every undated row; the row simply has no date */
+      if (_lv && _lv !== "No visit date") M.push(_lv);
       const _rk = !c.wish && typeof rankOf === "function" ? rankOf(c, _cardRanks || undefined) : null;
 
       return (
@@ -771,7 +775,12 @@ function renderList() {
         '<span class="compact-stars">' +
         (bucketLabel(c) || "Not rated yet") +
         "</span>" +
-        (_rk ? '<span class="rkcol' + (_rk <= 10 ? " g" : "") + '">' + rankText(_rk, _cardRanks || undefined) + "</span>" : "") +
+        /* the owner reads the position; a visitor the same one word as on the cafe page and the map (UI audit) */
+        (_rk
+          ? isAdmin
+            ? '<span class="rkcol' + (_rk <= 10 ? " g" : "") + '">' + rankText(_rk, _cardRanks || undefined) + "</span>"
+            : tierChip(c, _cardRanks || undefined, "rkcol")
+          : "") +
         "</div>"
       );
     })
@@ -851,6 +860,20 @@ function toggleListLayout() {
   setListLayout(!listCompact);
 }
 let sortMode = "recent";
+/* The List used to open "recently updated" for everyone, under bands that said "This week" while the rows showed
+   the last visit ("2mo", "No visit date"). A visitor cannot see edits, so the order looked random. A visitor's List
+   now opens by last visit, the date on every row; the owner's still opens on what they edited last. */
+let _sortChosen = false;
+function defaultSort() {
+  return isAdmin ? "recent" : "visited";
+}
+/* Called when the mode changes (applyMode): until someone picks a sort, the List opens in its reader's default. */
+function applyDefaultSort() {
+  if (_sortChosen) return;
+  sortMode = defaultSort();
+  const ss = /** @type {HTMLSelectElement|null} */ ($("sortsel"));
+  if (ss) ss.value = sortMode;
+}
 /* ---------- one control row ----------
    The List spent 217px — a quarter of a phone screen — on four stacked rows before the first
    cafe: search, filter chips, a count beside a sort menu, and a layout toggle alone on its
@@ -875,7 +898,7 @@ function activeFilterCount() {
   if (activeArea) n++;
   /* the viewer's guide shows itself on the row; the owner's views live inside the panel */
   if (isAdmin && activeGuide) n++;
-  if (sortMode && sortMode !== "recent") n++;
+  if (sortMode && sortMode !== defaultSort()) n++;
   return n;
 }
 function updateFilterBadge() {
@@ -889,6 +912,7 @@ function updateFilterBadge() {
 }
 function setSort(v) {
   sortMode = v;
+  _sortChosen = true;
   renderList();
   if (v === "near") {
     if (navigator.geolocation) showUserLocation(false);

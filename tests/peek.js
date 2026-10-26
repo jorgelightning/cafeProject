@@ -71,8 +71,9 @@ const { eq, done } = checker();
   eq(r.view, "map", "a pin on a phone keeps you on the map");
   eq(r.shown, true, "…and slides up a card instead");
   eq(r.name, "Kissaten HiFi", "the card names the cafe");
-  eq(/^#\d+$/.test(r.rank), true, "…leads with its position (" + r.rank + ")");
-  eq(r.judge, "Loved it", "…says how it was");
+  /* a visitor's card leads with the cafe's mark and says the tier word, as the cafe page does (UI audit) */
+  eq(r.rank, "", "…leads with the cafe's mark, not a position");
+  eq(/^(Must go|Great|Good|Okay|Skip it)/.test(r.judge), true, "…says how good it is in one word (" + r.judge + ")");
   eq(r.order, "Order the Hojicha latte · 2×", "…and what to order there");
   eq(r.buttons, ["Directions", "Open cafe"], "two ways on: go there, or read more");
   eq(r.tall, true, "…both clear the 44px touch floor");

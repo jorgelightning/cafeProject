@@ -104,6 +104,7 @@ function removeCafe(id) {
 }
 function applyMode() {
   app.dataset.mode = isAdmin ? "admin" : "viewer";
+  if (typeof applyDefaultSort === "function") applyDefaultSort();
   if (typeof renderSettings === "function") renderSettings();
   if (!isAdmin && (app.dataset.view === "form" || app.dataset.view === "compare")) {
     if (listTab === "want") show("wish");

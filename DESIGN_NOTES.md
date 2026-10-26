@@ -1739,3 +1739,45 @@ v105 added Directions, Hours and Share under the cafe's name and kept the old Di
 of the page as well. Two of each read as a mistake. The bottom pair is gone; the bottom of the page keeps only the
 owner's ⋯ (Edit, Delete), and `#d-share` (where focus returns after the share card) is now the Share in the top row.
 `tests/visitor-view.js` checks the page has one of each.
+
+## One set of parts (v107)
+
+A UI audit on 26 Oct found the app had grown one feature at a time, each bringing its own chip, card, icon and
+header. What changed:
+
+**One header (U5).** Go, Stats and Settings open with `.pagehead`: the title at `--fs-5`, a quiet line beside it.
+Settings and the form have one back button (`.backbtn`, round, the drawn chevron); the grey squares with a typed "<"
+are gone. Stats is titled "Your numbers" for the owner and "Jorge's numbers" for a visitor. Go's board lost its extra
+16px of inset, so it lines up with every other screen.
+
+**One chip (U1).** List guides, Go's chips and kinds, the Log again chips, a sheet's tags and the filter chips are one
+shape: a pill with a hairline on the surface colour, 600 weight at `--fs-2`, a line icon on the left, a quiet count on
+the right. Chosen is the ink colour, filled; the accent fill stays only for the primary action (Rank a pair).
+Tappable chips keep 44px; a cafe's tags are 28px labels.
+
+**Icons and cards (U2, U6).** A drink is drawn with its kind's vessel on its kind's colour (`drinkMarkSVG`), as cafe
+tiles are, in the drink list and What to order; a drink no rule recognises gets a plain cup on grey. The List guides
+use line icons. Stats has two kinds of card: feature (tinted: the Wrapped strip, Drink DNA) and surface (white, hairline).
+
+**Calmer drink cards (U3).** A cup's options are one line, "8 oz · oat · no sugar · warm" (`orderOptsText`), in the
+drink card and each cup of its history, instead of four coloured pills. The quick cup uses the same phrasing.
+
+**One word for visitors (U4).** A visitor's List row, photo card and map preview show the tier (`tierChip`, Must go to
+Skip it), matching the cafe page. Go keeps positions; the owner keeps numbers everywhere.
+
+**A List a visitor can read (U7).** A visitor's List opens by last visit (`defaultSort`), so its bands match the date on
+each row; the owner's still opens on edits. A choice in Filters sticks. Rows drop "No visit date", and an area that is
+a bare number ("36") falls back to the state or country, as Go already did.
+
+**The map (U8).** A quieter base style: no transit, road icons or place labels, greyer roads, softer parks and water.
+Larger dots from zoom 11.5 and name pills from 13 (they waited for 14.4 and 15.4), with the same give-way rule.
+Clusters stop at zoom 11. The pill tracks the place it names (`_pillVal`) and says "All places" once most pins in view
+are elsewhere (`syncPillToView`, on idle): it said "California" over the whole Pacific after the welcome closed.
+
+**The rest (U9 to U11).** The laptop sidebar is `clamp(420px, 38vw, 660px)`, about 486px at 1280. A visitor's raised
+button is Near me (`nearMeTab`): Go, sorted by distance, or the regions when location is off; it was Find, which only
+focused the List's search. In the form, Log again is a sentence-case label, the currency menu is quieter, and the
+cup's options ("Today · size, sweetness, ice, milk") are a bordered row.
+
+Not done: U12 (moving the 98 literal colours and 18 shadows into tokens) was not picked.
+`tests/ui-system.js`.

@@ -92,7 +92,8 @@ const fs = require("fs"), path = require("path");
     /* the widget block left the form dirty; drop the snapshot or every show() from here on
        stalls on a discard-confirm that the harness auto-dismisses */
     _formSnap = null;
-    isAdmin = false; applyMode(); document.getElementById("q").value = "";
+    /* positions on cards are the owner's; a visitor's card carries the tier word (UI audit, checked below) */
+    isAdmin = true; applyMode(); document.getElementById("q").value = "";
     setListTab("been"); show("list"); renderList();
     const cards = [...document.querySelectorAll(".card")];
     return { cards: cards.length,
@@ -106,6 +107,8 @@ const fs = require("fs"), path = require("path");
   eq(badges.unranked, ["Never compared"], "…and the one that does not is the one never compared");
   /* "=2" when two cafes share the position (rankText, 26 Oct) */
   eq(/^[#=]\d+$/.test(badges.first || ""), true, "the badge is a bare position (" + badges.first + ")");
+  const vbadge = await pg.evaluate(() => { isAdmin = false; applyMode(); renderList(); return [...document.querySelectorAll(".card .rankbadge")].map(x => x.textContent); });
+  eq(vbadge.every(t => /^(Must go|Great|Good|Okay|Skip it)$/.test(t)) && vbadge.length === 4, true, "…and a visitor's card says the tier word instead (" + vbadge.join(", ") + ")");
 
   /* a visitor reads one word for the place instead of the number (cafeTier, 26 Oct); the owner keeps both */
   const visitor = await pg.evaluate(() => { openDetail("b", "list"); return { tile: document.getElementById("d-rank").hidden, pill: document.querySelector("#d-stars .bkpill").className }; });

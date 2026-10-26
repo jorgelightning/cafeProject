@@ -1267,6 +1267,8 @@ function renderStats() {
     ["money", "Money"],
   ];
   host.innerHTML =
+    /* every tab starts with the same header (UI audit, 26 Oct) */
+    '<div class="pagehead"><h2 class="ct">' + youOr("Your numbers", esc(OWNER_NAME) + "’s numbers") + "</h2></div>" +
     '<div class="stabs" role="group" aria-label="Stats sections">' +
     labels
       .map(function (t) {

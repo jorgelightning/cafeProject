@@ -763,7 +763,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    128px cards where a 390px phone drew 173px: more screen, smaller cards. The column now
    grows with the window and the grid fills it, so a card never gets smaller than a phone's. */
 @media (min-width:900px){
-#app{ flex-direction:row; --sidebar:clamp(400px, 33vw, 660px); }
+#app{ flex-direction:row; --sidebar:clamp(420px, 38vw, 660px); }
 .sidebar{ position:absolute; inset:0 auto 0 0; width:var(--sidebar); border-right:1px solid var(--border); display:flex !important; box-shadow:var(--shadow); z-index:2; background:var(--glass); backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4); }
 .mapwrap{ position:absolute; inset:0; display:flex !important; }
 .tabbar{ display:none; }
@@ -1304,3 +1304,70 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* With Directions and Share gone from the bottom, the owner's ⋯ is alone there: it sits at the right, where its menu
    (which opens leftwards from its right edge) has room. */
 .dactions{ justify-content:flex-end; }
+
+/* ---------- the UI audit batch (v107) ---------- */
+/* Every screen starts the same way: a title, a quiet line beside it, and on a screen you were sent to, one round back
+   button with the line icon. Settings and the form used a grey square with a typed "<"; Go had its own heading. */
+.pagehead{ display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-1) var(--sp-3); margin:0 0 var(--sp-3); }
+.pagehead .ct{ margin:0; font-size:var(--fs-5); font-weight:800; letter-spacing:-.02em; line-height:1.15; text-align:left; }
+.pagehead .cs{ margin:0; color:var(--soft); font-size:var(--fs-2); }
+.form-top.pagehead{ margin:0; flex-wrap:nowrap; }
+.form-top.pagehead .ct{ flex:1; min-width:0; }
+.backbtn{ width:44px; height:44px; flex:none; display:grid; place-items:center; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; }
+.backbtn .ico{ width:20px; height:20px; }
+.backbtn:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:2px; }
+
+/* One chip. About twenty-five chip styles had grown up feature by feature. Every chip is now one shape: a pill with a
+   hairline on the surface colour, 600 weight, a line icon on the left when it has one and a quiet count on the right.
+   Chosen is the ink colour, filled. The accent fill is kept for the one primary action on a screen (Rank a pair).
+   Chips you tap keep the 44px floor; a cafe's tags are labels, 28px, not buttons. */
+.chiprow .chip, .guiderow button, .gochip, .gokinds button, .uchip, .dntag{
+  display:inline-flex; align-items:center; gap:var(--sp-2); min-height:44px; padding:0 var(--sp-3);
+  border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text);
+  box-shadow:none; font-family:inherit; font-size:var(--fs-2); font-weight:600; white-space:nowrap; }
+.chiprow .chip.on, .guiderow button[aria-pressed="true"], .gokinds button[aria-pressed="true"], .dntag[aria-pressed="true"]{
+  background:var(--text); color:var(--bg); border-color:transparent; font-weight:700; }
+.uchip .ucount, .dntag small, .chip small{ margin:0; padding:0; background:none; color:var(--faint); font-size:var(--fs-1); font-weight:700; opacity:1; }
+.chiprow .chip.on small, .dntag[aria-pressed="true"] small{ color:inherit; opacity:.75; }
+.gochip.p{ background:var(--acc-strong); color:var(--on-acc); border-color:transparent; }
+.guiderow button .ico, .chiprow .chip .ico, .gochip .ico{ width:16px; height:16px; flex:none; }
+#d-tags .chip{ display:inline-flex; align-items:center; min-height:28px; padding:0 var(--sp-3); border-radius:var(--r-pill); border-color:transparent; background:var(--surface2); color:var(--soft); font-size:var(--fs-1); font-weight:600; }
+
+/* One icon language: a drink is drawn with its kind's vessel on its kind's colour, as cafe tiles are. */
+.drinkicon .mkv, .orderagain .oa-gl .mkv{ color:#f6efe2; width:26px; height:26px; }
+.orderagain .oa-gl .mkv{ width:32px; height:32px; }
+.drinkicon .mkv.plain, .orderagain .oa-gl .mkv.plain{ color:var(--soft); }
+
+/* A drink's options as one quiet line, not four coloured pills. */
+.dopts{ display:block; margin-top:3px; color:var(--soft); font-size:var(--fs-2); }
+.dordermeta .dopts{ display:inline; margin:0; }
+
+/* Two kinds of card. A feature card (tinted, no border) for the one or two things a screen is about: the Wrapped strip
+   and Drink DNA on Stats. A surface card (the surface colour with a hairline, no shadow) for everything else. Stats
+   used four: tinted, white with a border, grey filled, and white with a shadow. */
+.statcard{ background:var(--surface); box-shadow:none; }
+.statcard.usualcard{ background:color-mix(in srgb, var(--acc) 12%, var(--surface)); border-color:transparent; }
+.pfig{ box-shadow:none; }
+
+/* One standing for visitors: the same word on a List row, a photo card, the map preview and the cafe page. */
+.tierchip{ display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:var(--r-pill); background:var(--surface2); color:var(--text); font-size:var(--fs-1); font-weight:800; white-space:nowrap; }
+.tierchip.t-must{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); }
+.tierchip.t-great{ background:color-mix(in srgb, var(--good) 16%, var(--surface)); }
+.tierchip.t-okay{ background:color-mix(in srgb, var(--mid) 16%, var(--surface)); }
+.tierchip.t-skip{ background:color-mix(in srgb, var(--bad) 14%, var(--surface)); }
+.grid.compact-list .card .rkcol.tierchip{ display:inline-flex; min-width:0; padding:0 8px; text-align:center; color:var(--text); font-size:var(--fs-1); font-weight:800; }
+.grid.compact-list .card .rkcol.tierchip.t-must{ color:var(--gold-ink); }
+.rankbadge.tierchip{ background:rgba(20,16,13,.62); color:#fff; }
+.rankbadge.tierchip.t-must{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); }
+.peektile{ width:48px; height:48px; flex:none; display:grid; place-items:center; border-radius:var(--r-2); color:#f6efe2; }
+.peektile .mkv{ width:30px; height:30px; }
+
+/* The form, polished (UI audit): one label style, a quieter currency and a real row for the cup's options. */
+.usuallbl{ font-size:var(--fs-2); font-weight:600; letter-spacing:0; text-transform:none; color:var(--soft); }
+.priceline select.dpc{ max-width:88px; background:var(--surface); color:var(--soft); font-weight:600; }
+.drmore{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2); margin-top:var(--sp-2); padding:0 var(--sp-3); border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); }
+/* Go sat 32px in from the edge (the pane's padding and the board's own); every other screen is 16px. */
+.compare .boardwrap{ padding-left:0; padding-right:0; }
+/* With the wider laptop sidebar, three photo cards fit in a row and each came out narrower than a phone's; more
+   screen must never mean smaller cards. */
+@media (min-width:900px){ .grid{ grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); } }

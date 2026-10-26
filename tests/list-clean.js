@@ -34,7 +34,7 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
 
   const seed = () => pg.evaluate(() => {
     isAdmin = false; applyMode && applyMode();
-    favOnly = false; listTab = "been"; activeChip = null; sortMode = "recent"; listCompact = false;
+    favOnly = false; listTab = "been"; activeChip = null; sortMode = defaultSort(); /* a visitor rests on "visited" since the UI audit */ listCompact = false;
     cafes = [
       { id: "a", name: "Aurora Roasters",  area: "Honolulu", rating: 5, drinks: [] },
       { id: "z", name: "Zephyr & Vine",    area: "Honolulu", rating: 5, drinks: [] },
@@ -166,7 +166,7 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
     renderList(); at.rest = read();
     sortMode = "rating"; renderList(); at.sorted = read();
     favOnly = true; renderList(); at.favSorted = read();
-    favOnly = false; sortMode = "recent"; renderList(); at.back = read();
+    favOnly = false; sortMode = defaultSort(); renderList(); at.back = read();
     return at;
   });
   eq(badge.rest, { n: "", hidden: true, on: false }, "no badge when nothing is filtered");
