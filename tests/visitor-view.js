@@ -60,6 +60,12 @@ const { eq, done } = checker();
   eq(v.fine.pill, "Okay", "…Okay for a “fine” outside the top 40%");
   eq(v.meh.pill, "Skip it", "…and Skip it for a “not for me”, wherever it sits");
   eq(v.first.go, ["Directions", "Hours", "Share"], "Directions, Hours and Share sit under the name");
+  const once = await pg.evaluate(() => {
+    openDetail("c1", "list");
+    const shown = [...document.querySelectorAll("#pane-detail button, #pane-detail a")].filter(e => e.offsetParent && e.getClientRects().length);
+    return ["Directions", "Share"].map(w => shown.filter(e => new RegExp("^" + w).test(e.textContent.trim())).length);
+  });
+  eq(once, [1, 1], "…and only there: the page has one Directions and one Share, not a second pair at the bottom");
   eq(/^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=Cafe%201%20San%20Francisco%2C%20CA$/.test(v.first.hours), true, "Hours opens the cafe on Google Maps (" + v.first.hours + ")");
   eq(/&query_place_id=PLACE123$/.test(v.cup.hours), true, "…the exact place when there is a place id");
   eq([v.priv.go, v.priv.hours], [["Share"], "#"], "a private spot has neither Directions nor Hours: it is somebody's home");

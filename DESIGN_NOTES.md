@@ -1732,3 +1732,10 @@ is in Salt Lake City, which has its own Capitol Hill.
 **One sheet.** The drink menu's sheet (#dnsheet) is now the app's: `openSheet(html, opener, onClose)` and
 `closeSheet()` serve the quick cup, Tidy up, the region picker and the welcome. The test harness marks every page as
 already welcomed, so no other test has to dismiss the welcome, and now serves "/" on Windows.
+
+## One get-there row (v106)
+
+v105 added Directions, Hours and Share under the cafe's name and kept the old Directions and Share spot at the bottom
+of the page as well. Two of each read as a mistake. The bottom pair is gone; the bottom of the page keeps only the
+owner's ⋯ (Edit, Delete), and `#d-share` (where focus returns after the share card) is now the Share in the top row.
+`tests/visitor-view.js` checks the page has one of each.

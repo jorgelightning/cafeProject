@@ -888,8 +888,7 @@ function openDetail(id, from) {
     };
     box.after(more);
   }
-  const _dir = $("d-dir");
-  if (_dir) _dir.style.display = c.custom && c.lat == null ? "none" : "";
+  /* Directions and Share live in one place, the row under the name; the pair that used to close the page is gone */
   $("d-review").textContent = c.review || (isAdmin ? "Tap \u270E Edit to add your thoughts\u2026" : "No notes yet.");
   show("detail");
   if (c.lat != null && gmap)

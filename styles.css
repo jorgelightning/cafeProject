@@ -1301,3 +1301,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .guiderow{ display:flex; overflow-x:auto; scrollbar-width:none; }
 .guiderow::-webkit-scrollbar{ display:none; }
 .guiderow button{ flex:none; padding:0 var(--sp-3); }
+/* With Directions and Share gone from the bottom, the owner's ⋯ is alone there: it sits at the right, where its menu
+   (which opens leftwards from its right edge) has room. */
+.dactions{ justify-content:flex-end; }
