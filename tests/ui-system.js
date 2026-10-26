@@ -116,13 +116,18 @@ const { eq, done } = checker();
     setPillLabel(ca);
     const before = $("pill-lbl").textContent.trim();
     const was = gmap;
-    gmap = { getBounds: () => ({ contains: p => p.lng > 100 }) };
-    syncPillToView();
-    const after = $("pill-lbl").textContent.trim();
+    const at = (lat, lng) => { gmap = { getCenter: () => ({ lat: () => lat, lng: () => lng }) }; syncPillToView(); return $("pill-lbl").textContent.trim(); };
+    const after = at(25.04, 121.5);
+    /* a city named by its area text: a view of one of its neighbourhoods is still the city (v107 said "All places") */
+    renderLocationSelect();
+    const sf = [...$("locsel").options].find(o => o.textContent.trim() === "San Francisco");
+    setPillLabel(sf.value);
+    const hood = at(37.745, -122.48);
     gmap = was;
-    return { before, after, quiet: MAP_STYLES.some(s => s.featureType === "transit") };
+    return { before, after, hood, quiet: MAP_STYLES.some(s => s.featureType === "transit") };
   });
   eq([pill.before, pill.after], ["California", "All places"], "the map pill stops naming California once the map shows somewhere else");
+  eq(pill.hood, "San Francisco", "…but a view of one of the city's own neighbourhoods is still San Francisco");
   eq(pill.quiet, true, "the map style hides transit, among the rest of the noise");
 
   /* ---- the form: one label style ---- */

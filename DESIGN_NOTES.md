@@ -1781,3 +1781,10 @@ cup's options ("Today · size, sweetness, ice, milk") are a bordered row.
 
 Not done: U12 (moving the 98 literal colours and 18 shadows into tokens) was not picked.
 `tests/ui-system.js`.
+
+## The pill, by geography (v108)
+
+v107's pill check counted the pins in view that belong to the place it names. A city in the region menu is the cafes
+whose area text says so, so San Francisco's Parkside and Dogpatch cafes counted as "elsewhere" and the pill said
+"All places" over a map of San Francisco. It now asks whether the middle of the map is inside the box around the
+place's cafes, with a margin of a quarter of its size and at least about 10 km (`syncPillToView`).

@@ -1007,18 +1007,31 @@ function setPillLabel(val, fallback) {
   l.innerHTML = (name ? ico("pin") : ico("globe")) + " " + esc(name || fallback || "World");
 }
 /* The pill must name what the map shows. On the live site it said "California" over the whole Pacific after the
-   welcome closed and the map refitted. When most of the pins in view are no longer in the place it names, it says
-   "All places" instead (UI audit, 26 Oct). */
+   welcome closed and the map refitted. When the middle of the map leaves the place it names, it says "All places"
+   instead (UI audit, 26 Oct).
+
+   By geography, not by which cafes are filed under the name: v107 counted the pins in view that belong to the named
+   place, and "San Francisco" is only the cafes whose area says so, so the city's own Parkside and Dogpatch cafes made
+   it say "All places" over a map of San Francisco. The place is the box around its cafes, with a margin. */
 function syncPillToView() {
-  if (!_pillVal || !gmap || _worldOn() || typeof gmap.getBounds !== "function") return;
-  const b = gmap.getBounds();
-  if (!b) return;
-  const inView = cafes.filter(c => latOf(c) != null && b.contains({ lat: +latOf(c), lng: +lngOf(c) }));
-  if (inView.length < 2) return;
-  const mine = {};
-  locationList(_pillVal).forEach(c => (mine[c.id] = 1));
-  const share = inView.filter(c => mine[c.id]).length / inView.length;
-  if (share < 0.6) setPillLabel("", "All places");
+  if (!_pillVal || !gmap || _worldOn() || typeof gmap.getCenter !== "function") return;
+  const mid = gmap.getCenter();
+  if (!mid) return;
+  const pts = locationList(_pillVal).filter(c => latOf(c) != null);
+  if (!pts.length) return;
+  const lats = pts.map(c => +latOf(c)),
+    lngs = pts.map(c => +lngOf(c));
+  const s = Math.min(...lats),
+    n = Math.max(...lats),
+    w = Math.min(...lngs),
+    e = Math.max(...lngs);
+  /* a quarter of the place's size each way, and never less than about 10 km (a town with one cafe is a point) */
+  const padLat = Math.max(0.1, (n - s) * 0.25),
+    padLng = Math.max(0.1, (e - w) * 0.25);
+  const lat = mid.lat(),
+    lng = mid.lng();
+  const inside = lat >= s - padLat && lat <= n + padLat && lng >= w - padLng && lng <= e + padLng;
+  if (!inside) setPillLabel("", "All places");
 }
 function jumpToLocation(val) {
   if (!gmap) {
