@@ -45,7 +45,7 @@ const { eq, done } = checker();
              cols: tops.length, doc: document.documentElement.scrollWidth, win: window.innerWidth };
   });
   eq(v.shown, true, "a viewer sees the guide row under the tabs");
-  eq(v.labels.length, 4, "…four guides");
+  eq(v.labels, ["🏆 Top 10", "☕ Best coffee", "🍵 Best tea", "🔁 Go-to", "📍 Near me"], "…five guides, Best coffee beside Best tea");
   eq(v.tall, true, "…each at the 44px touch floor");
   eq(/^13 spots/.test(v.ph), true, "the search box says how many spots there are (" + v.ph + ")");
   eq(v.again, false, "no card carries a + any more: the order line is information, the bottom bar is the way to log");

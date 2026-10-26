@@ -376,12 +376,12 @@ function wrappedCards(w, review) {
       "At " +
       w.cafes +
       (w.cafes === 1 ? " caf\u00e9" : " caf\u00e9s") +
-      (w.fresh ? ". " + (w.fresh === w.cafes ? "All" : w.fresh) + " of them new to you." : "."),
+      (w.fresh ? ". " + (w.fresh === w.cafes ? "All" : w.fresh) + youOr(" of them new to you.", " of them new to " + OWNER_NAME + ".") : "."),
     tint: "var(--acc)",
   });
   if (w.drink)
     cards.push({
-      k: "Your drink",
+      k: youOr("Your drink", OWNER_NAME + "’s drink"),
       big: w.drink.name,
       sm: 1,
       unit: "\u00d7" + w.drink.n,
@@ -394,7 +394,7 @@ function wrappedCards(w, review) {
     });
   if (w.back)
     cards.push({
-      k: "You went back",
+      k: youOr("You went back", OWNER_NAME + " went back"),
       big: w.back.name,
       sm: 1,
       unit: w.back.n + " visits",
@@ -414,7 +414,7 @@ function wrappedCards(w, review) {
     });
   if (w.noSugar && w.noSugar.n / w.noSugar.of >= 0.5)
     cards.push({
-      k: "How you take it",
+      k: youOr("How you take it", "How " + OWNER_NAME + " takes it"),
       big: Math.round((w.noSugar.n / w.noSugar.of) * 100) + "%",
       unit: "no sugar",
       cap:
@@ -459,9 +459,9 @@ function wrappedHTML(list) {
       ' in caf\u00e9s to someone.</div><button type="button" class="admin-only" onclick="openYearStory()">Share \u203a</button></div>'
   );
   return (
-    '<section class="wrapped" aria-label="Your ' + w.year + '">' +
-    '<div class="sech"><b>Your ' + w.year + "</b>" + (pick.review ? '<span class="wrev">in review</span>' : "") + '<button type="button" class="admin-only" onclick="openYearStory()">Share \u203a</button></div>' +
-    '<div class="wstrip" role="region" aria-label="Your ' + w.year + ', swipe for more" tabindex="0" onscroll="wrappedDots(this)">' +
+    '<section class="wrapped" aria-label="' + youOr("Your ", OWNER_NAME + "’s ") + w.year + '">' +
+    '<div class="sech"><b>' + youOr("Your ", OWNER_NAME + "’s ") + w.year + "</b>" + (pick.review ? '<span class="wrev">in review</span>' : "") + '<button type="button" class="admin-only" onclick="openYearStory()">Share \u203a</button></div>' +
+    '<div class="wstrip" role="region" aria-label="' + youOr("Your ", OWNER_NAME + "’s ") + w.year + ', swipe for more" tabindex="0" onscroll="wrappedDots(this)">' +
     html.join("") +
     "</div>" +
     '<div class="wdots" aria-hidden="true">' +
@@ -675,7 +675,8 @@ function renderStats() {
     nonWish.filter(function (c) {
       return c.rating;
     }).length +
-    " cafes you rated</div></div>" +
+    youOr(" cafes you rated", " cafes " + OWNER_NAME + " rated") +
+    "</div></div>" +
     "</div>";
   /* what you spent is a Money fact, and the owner's alone */
   mark("money");
@@ -995,7 +996,7 @@ function renderStats() {
     const regret = verdicts.no;
     h +=
       '<div class="statsec">Worth it</div><div class="statcard sc-wide">' +
-      '<div class="sc-head"><b>' + Math.round((verdicts.yes / vTotal) * 100) + "%</b> of your drinks, you would order again</div>" +
+      '<div class="sc-head"><b>' + Math.round((verdicts.yes / vTotal) * 100) + "%</b> " + youOr("of your drinks, you would order again", "of drinks " + OWNER_NAME + " would order again") + "</div>" +
       statStack([
         { label: "Order again", n: verdicts.yes },
         { label: "Neutral", n: verdicts.neutral },
@@ -1053,7 +1054,7 @@ function renderStats() {
     const logged = Math.round((nonWish.length / Math.max(1, cafes.length)) * 100);
     h +=
       '<div class="statsec">Taste</div><div class="statcard sc-wide">' +
-      '<div class="sc-head"><b>' + Math.round((verdictN.loved / ratedN) * 100) + "%</b> of the cafes you rated, you loved</div>" +
+      '<div class="sc-head"><b>' + Math.round((verdictN.loved / ratedN) * 100) + "%</b> " + youOr("of the cafes you rated, you loved", "of the cafes " + OWNER_NAME + " rated were a “Loved it”") + "</div>" +
       '<div class="sc-donutrow">' + statDonut(vItems, ratedN, "Verdicts of " + ratedN + " rated cafes") +
       '<div class="legrows">' +
       vItems
@@ -1071,7 +1072,7 @@ function renderStats() {
           (100 - logged) + '%"></span></div><div class="legrows"><div><i class="lg"></i><span>Logged</span><b>' +
           nonWish.length + '</b></div><div><i class="wsh"></i><span>Still to try</span><b>' + wishN + "</b></div></div>"
         : "") +
-      (tagRows.length ? '<div class="sc-cap">What your tags say</div>' + statBarRows(tagRows) : "") +
+      (tagRows.length ? '<div class="sc-cap">' + youOr("What your tags say", "What " + OWNER_NAME + "’s tags say") + "</div>" + statBarRows(tagRows) : "") +
       '<div class="statnote">Four and five read as loved, three as fine, one and two as not for me. ' + verdictN[""] +
       " visited cafes have no rating yet.</div></div>";
   }
@@ -1132,7 +1133,7 @@ function renderStats() {
       .sort(function (a, b) {
         return b.mi - a.mi;
       })[0];
-    h += '<div class="statsec">Where you go</div>';
+    h += '<div class="statsec">' + youOr("Where you go", "Where " + OWNER_NAME + " goes") + "</div>";
     shown.forEach(function (x) {
       h += magRow(null, x[0], "", x[1] + " cafe" + (x[1] === 1 ? "" : "s"), "");
     });
@@ -1235,7 +1236,7 @@ function renderStats() {
           );
         })
         .join("") +
-      '</div><div class="statnote">Filled dot: a branch you have logged. Ring: still on your want list.</div></div>';
+      '</div><div class="statnote">' + youOr("Filled dot: a branch you have logged. Ring: still on your want list.", "Filled dot: a branch " + OWNER_NAME + " has logged. Ring: still on " + OWNER_NAME + "’s want list.") + "</div></div>";
   }
 
   mark("you");
@@ -1261,7 +1262,7 @@ function renderStats() {
   const tabs = { you: "", habits: "", money: "" };
   for (let i = 0; i < _marks.length - 1; i++) tabs[_marks[i][1]] += h.slice(_marks[i][0], _marks[i + 1][0]);
   const labels = [
-    ["you", "You"],
+    ["you", youOr("You", OWNER_NAME)],
     ["habits", "Habits"],
     ["money", "Money"],
   ];

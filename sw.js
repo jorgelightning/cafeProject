@@ -17,8 +17,8 @@
    CACHE_V would keep serving the old scripts. Anything cross-origin (Maps, Firebase, the FX
    endpoint) is deliberately not intercepted; those must fail normally so their own fallbacks
    run. */
-const CACHE_V = "cafemap-v104";
-const ASSET_V = "?v=104";
+const CACHE_V = "cafemap-v105";
+const ASSET_V = "?v=105";
 
 const SHELL = [
   "./", "./index.html", "./manifest.json", "./cafes.json",
@@ -64,6 +64,10 @@ self.addEventListener("fetch", function(e){
   /* boot.js polls the page itself to detect a new version. It must always hit the network,
      and its cache-busting query must never become a cache entry. */
   if(url.searchParams.has("_chk")) return;
+
+  /* /c/<id> is a share page that forwards to the app (scripts/share-pages.js). Left to the network: offline, the
+     app shell answering under /c/ would load with every relative path one folder off. */
+  if(/\/c\/[^/]*$/.test(url.pathname)) return;
 
   const isDoc  = req.mode === "navigate" || /(^|\/)(index\.html)?$/.test(url.pathname);
   const isData = url.pathname.endsWith("cafes.json");

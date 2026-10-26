@@ -191,6 +191,14 @@ document.addEventListener("keydown", function (e) {
   e.preventDefault(); /* Space would otherwise scroll the page */
   el.click();
 });
+/* Stats and the map speak to whoever is reading. The owner reads "you"; a visitor reads the same facts as the
+   owner's, by name (OWNER_NAME, in config.js), because they are not the visitor's own. Each call gives both
+   phrasings in full rather than swapping one word, so the grammar stays right ("How you take it" / "How Jorge
+   takes it"). */
+/** @param {string} you @param {string} them */
+function youOr(you, them) {
+  return isAdmin ? you : them;
+}
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 function toast(m) {
   const t = $("toast");

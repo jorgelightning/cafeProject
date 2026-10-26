@@ -101,6 +101,7 @@ function renderSettings() {
       ? "You can add cafes, log visits and rank them."
       : "Signing in lets you add cafes, log visits and rank them.";
   if (isAdmin && typeof renderDataCard === "function") renderDataCard();
+  if (isAdmin && typeof renderTidyCard === "function") renderTidyCard();
   /* Read back from the script tag the browser actually loaded, so it cannot drift from
      the deploy version the way a hard-coded string would. */
   const v = $("set-ver");
@@ -257,7 +258,7 @@ load()
         }
       };
       _wait(8);
-    }
+    } else setTimeout(maybeWelcome, 600);
     if (_fbOk && isAdmin) {
       fbDb
         .ref("cafes")

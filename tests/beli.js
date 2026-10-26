@@ -104,9 +104,15 @@ const fs = require("fs"), path = require("path");
   eq(badges.cards, 5, "the five places you have been");
   eq(badges.badged, 4, "…four of which carry a position");
   eq(badges.unranked, ["Never compared"], "…and the one that does not is the one never compared");
-  eq(/^#\d+$/.test(badges.first || ""), true, "the badge is a bare position (" + badges.first + ")");
+  /* "=2" when two cafes share the position (rankText, 26 Oct) */
+  eq(/^[#=]\d+$/.test(badges.first || ""), true, "the badge is a bare position (" + badges.first + ")");
+
+  /* a visitor reads one word for the place instead of the number (cafeTier, 26 Oct); the owner keeps both */
+  const visitor = await pg.evaluate(() => { openDetail("b", "list"); return { tile: document.getElementById("d-rank").hidden, pill: document.querySelector("#d-stars .bkpill").className }; });
+  eq([visitor.tile, /\btier\b/.test(visitor.pill)], [true, true], "a visitor gets a one-word tier and no position");
 
   const detail = await pg.evaluate(() => {
+    isAdmin = true; applyMode();
     openDetail("b", "list");
     const rk = document.getElementById("d-rank");
     const pill = document.querySelector("#d-stars .bkpill");
@@ -126,7 +132,9 @@ const fs = require("fs"), path = require("path");
   });
   /* The header used to be one middot run-on over three wrapping lines, with #1 buried
      mid-sentence and the score pill split by the wrap. Each fact owns an element now. */
-  eq(detail.rank, "#2 of 4", "the position is the first thing on the page, as its own block");
+  /* this seed has two cafes on 2, so the shared position reads "=2" (rankText, 26 Oct) */
+  eq(detail.rank, "=2 of 4", "the position is the first thing on the page, as its own block");
+  await pg.evaluate(() => { isAdmin = false; applyMode(); });
   eq(detail.tileLeads && detail.tileRects === 1, true, "…which leads the header and cannot wrap");
   eq(detail.pill, "Loved it", "the judgement is said in words beside the place");
   eq(detail.areaLine, 1, "the 44-character area stays on one line");

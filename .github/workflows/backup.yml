@@ -41,14 +41,19 @@ jobs:
                       and ((.area // "") | test("[0-9]") | not)
                       and (has("pid") | not))' cafes.json > /dev/null
 
+      - name: Refresh the share pages
+        # one page per public cafe under c/, so a shared link previews as the cafe (private spots never get one)
+        run: node scripts/share-pages.js
+
       - name: Commit if changed
         run: |
-          if git diff --quiet -- cafes.json; then
+          git add -A c
+          if git diff --quiet -- cafes.json && git diff --cached --quiet -- c; then
             echo "No changes since last backup."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898270+github-actions[bot]@users.noreply.github.com"
-          git add cafes.json
+          git add cafes.json c
           git commit -m "Backup cafes.json ($(date -u +%Y-%m-%d))"
           git push

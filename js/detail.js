@@ -204,12 +204,35 @@ function openDrinkMenu(btn) {
   const first = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector("button"));
   if (first) first.focus();
 }
+/* ---------- the sheet ----------
+   One bottom sheet (#dnsheet) serves the drink menu, the quick cup, Tidy up, the region picker and the first-visit
+   welcome. openSheet() fills it and remembers what to give the keyboard back to; Escape, the scrim and closeSheet()
+   put it away. Every filling carries an element with id="dns-title", which names the dialog. */
+let _sheetBack = null;
+let _sheetOnClose = null;
+/** @param {string} html @param {any} [opener] @param {() => void} [onClose] */
+function openSheet(html, opener, onClose) {
+  _dm = null;
+  _sheetBack = opener || document.activeElement;
+  _sheetOnClose = onClose || null;
+  $("dns-panel").innerHTML = html;
+  $("dnsheet").hidden = false;
+  const first = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector("button, input, select, textarea"));
+  if (first) first.focus({ preventScroll: true });
+}
+function closeSheet() {
+  closeDrinkMenu();
+}
 function closeDrinkMenu() {
   const m = $("dnsheet");
   if (!m || m.hidden) return;
   m.hidden = true;
-  const back = _dm && _dm.opener;
+  const back = (_dm && _dm.opener) || _sheetBack;
   _dm = null;
+  _sheetBack = null;
+  const after = _sheetOnClose;
+  _sheetOnClose = null;
+  if (after) after();
   /* the card is redrawn when something is saved, so find this drink's ⋯ again rather than trusting the old one */
   const again =
     back && back.dataset && document.querySelector('.drinkmore[data-drink="' + CSS.escape(back.dataset.drink || "") + '"]');
@@ -424,21 +447,10 @@ function removeDrinkNote() {
 function logDrinkAgain() {
   const f = _dmFind();
   if (!f) return;
-  const o = f.o,
-    n = f.d.n;
+  const n = f.d.n;
   closeDrinkMenu();
-  openForm(f.c.id);
-  if ($("f-wish") && $("f-wish").checked) {
-    $("f-wish").checked = false;
-    syncWishMode();
-    syncMore(false);
-  }
-  setTimeout(function () {
-    const row = addDrinkRow(n, o.p, localToday(), o.sweet, o.ice, o.size, "", false, o.milk, 1, { pl: o.pl, pc: o.pc });
-    activateDrinkRow(row);
-    row.scrollIntoView({ block: "start" });
-    toast("Added " + n + " for today");
-  }, 140);
+  /* the quick cup (form.js), already on this drink: same as last time, last price, Save */
+  openQuickCup(n);
 }
 function editDrinkInVisit() {
   const f = _dmFind();
@@ -591,14 +603,26 @@ function openDetail(id, from) {
   const _brandTitle = (_sibs.length || (c.brand || "").trim()) && _base && _base !== c.name ? _base : "";
   $("d-name").textContent = _brandTitle || c.name;
   $("d-name").title = _brandTitle ? c.name : "";
-  $("d-stars").innerHTML = bucketPill(c, "big");
-  const _rk = typeof rankOf === "function" ? rankOf(c) : null,
-    _rn = typeof rankMap === "function" ? rankMap()._n : 0;
+  const _rm = typeof rankMap === "function" ? rankMap() : null,
+    _rk = _rm ? rankOf(c, _rm) : null,
+    _rn = _rm ? _rm._n : 0;
+  /* the owner reads the verdict and the position; a visitor reads one word made from the position (rank.js) */
+  $("d-stars").innerHTML = (!isAdmin && _rm && tierPill(c, _rm)) || bucketPill(c, "big");
   const _rkEl = $("d-rank");
   if (_rkEl) {
-    _rkEl.hidden = !_rk;
+    _rkEl.hidden = !_rk || !isAdmin;
     _rkEl.className = "dranktile" + (_rk && _rk <= 10 ? " top" : "");
-    _rkEl.innerHTML = _rk ? "<b>#" + _rk + "</b><span>of " + _rn + "</span>" : "";
+    _rkEl.innerHTML = _rk ? "<b>" + rankText(_rk, _rm) + "</b><span>of " + _rn + "</span>" : "";
+  }
+  /* Getting there, under the name: a friend opening a link wants this before the drinks, and it used to be the
+     last thing on the page. Hours opens the cafe on Google Maps, which keeps them current. A private spot has
+     neither: its public pin is blurred, and it is somebody's home. */
+  const _gDir = $("d-go-dir"),
+    _gHrs = /** @type {HTMLAnchorElement|null} */ ($("d-go-hours"));
+  if (_gDir) _gDir.hidden = !!(c.custom && latOf(c) == null);
+  if (_gHrs) {
+    _gHrs.hidden = !!c.custom;
+    _gHrs.href = c.custom ? "#" : hoursUrl(c);
   }
   /* A branch cafe gets a full-width bar under the header that says which branch this is and opens
      the list, so the place leaves the rating row: rating and branch no longer compete for one line
@@ -905,7 +929,9 @@ function deleteCurrent() {
 }
 function cafeShareUrl(id) {
   const base = location.origin + location.pathname;
-  return base + "?cafe=" + encodeURIComponent(id);
+  /* /c/<id> is a small page per cafe (scripts/share-pages.js) so the link previews as the cafe; it forwards to
+     ?cafe=<id>, and 404.html does the same for a cafe too new to have a page yet */
+  return base.replace(/[^/]*$/, "") + "c/" + encodeURIComponent(id);
 }
 /* Deliberately c.area and not areaOf(c): sharing sends this to someone else, so it must carry
    the public value even when the owner is the one tapping share. */
@@ -935,6 +961,12 @@ function directionsUrl(c) {
   const dest =
     _la != null && _ln != null ? _la + "," + _ln : encodeURIComponent(c.name + (areaOf(c) ? " " + areaOf(c) : ""));
   return "https://www.google.com/maps/dir/?api=1&destination=" + dest;
+}
+/* The cafe's Google Maps page, where its hours, address and phone live. With a place id it is that exact place; without
+   one it is a search for the name and area, which finds the right place for a public cafe. Never for a private spot. */
+function hoursUrl(c) {
+  const q = encodeURIComponent(c.name + (c.area ? " " + c.area : ""));
+  return "https://www.google.com/maps/search/?api=1&query=" + q + (c.pid ? "&query_place_id=" + encodeURIComponent(c.pid) : "");
 }
 function goDirections(c) {
   const url = directionsUrl(c);
@@ -1026,8 +1058,16 @@ function drinkKind(n) {
   if (/boba|bubble|milk tea|cheese foam|brown sugar|taro|pearl|jelly|oolong|fruit tea/.test(t)) return "boba";
   /* a "black tea latte" is tea, whatever the word latte says */
   if (/\btea\b/.test(t)) return "tea";
-  if (/latte|flat white|espresso|americano|cappuccino|cortado|macchiato|mocha|drip|coffee|cold brew/.test(t)) return "coffee";
+  if (/latte|flat white|espresso|americano|cappuccino|cortado|macchiato|mocha|drip|coffee|cold brew|pour.?over|v60|chemex|batch brew/.test(t))
+    return "coffee";
   return null;
+}
+/** The kind of place a search is about ("pour over" is coffee, "gelato" is gelato), or null. @param {string} q */
+function queryKind(q) {
+  const t = String(q || "").toLowerCase();
+  if (/gelato|ice cream|soft serve|affogato/.test(t)) return "gelato";
+  if (/bakery|pastry|croissant|bread/.test(t)) return "pastry";
+  return drinkKind(t);
 }
 /** What a cafe serves, as one of the CARD_KINDS keys. In order of how much it says about the place:
  *  a chosen emoji; a name that is plainly a boba chain; the drink you order most there (so Kissaten HiFi is a cup,

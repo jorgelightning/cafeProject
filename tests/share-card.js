@@ -100,7 +100,7 @@ const { eq, done } = checker();
   eq(p.header !== p.body, true, "…drawn, not blank: the tile and the card are different colours");
   eq(p.text.split("\n").slice(0, 4), ["Kissaten HiFi — #1 of 13 on my list", "San Francisco, CA", "What to get: Hojicha latte ($7.25)", "“The hojicha latte is the reason to come. Quiet, tidy, and the records are good too.”"],
      "the message carries rank, place, what to get, and the owner's line");
-  eq(/\?cafe=top$/.test(p.text), true, "…and ends with the link to this cafe");
+  eq(/\/c\/top$/.test(p.text), true, "…and ends with the link to this cafe (its share page, which previews as the cafe)");
 
   const priv = await pg.evaluate(() => { const t = postcardText(cafes[2]); return { t, leaks: /Evergreen|21\.3|-157\.8/.test(t) }; });
   eq(priv.leaks, false, "a private spot's address never travels with the postcard (" + priv.t.split("\n")[1] + ")");
@@ -114,7 +114,7 @@ const { eq, done } = checker();
     setTimeout(() => res(window.__sh), 400);
   }));
   eq(shared.files, ["kissaten-hifi.png:image/png"], "where the device can send files, the picture goes");
-  eq(/\?cafe=top$/.test(shared.url) && shared.title === "Kissaten HiFi", true, "…with the link and the name");
+  eq(/\/c\/top$/.test(shared.url) && shared.title === "Kissaten HiFi", true, "…with the link and the name");
   const dl = await pg.evaluate(() => new Promise(res => {
     navigator.canShare = undefined; window.__dl = null;
     const orig = HTMLAnchorElement.prototype.click;

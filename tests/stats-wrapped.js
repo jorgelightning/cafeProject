@@ -62,7 +62,8 @@ const { eq, done } = checker();
   eq(r.duo[0], "Hojicha latte", "the most loyal order is the drink ordered most");
   eq(r.duo[1], "Egg coffee", "the biggest gamble is the priciest drink you ordered only once");
   eq(r.stacks, 4, "sweetness, ice, milk and size each get a bar of their whole spread");
-  eq(/^\d+% of your drinks, you would order again$/.test(r.worthHead), true, "Worth it leads with the share you would order again (" + r.worthHead + ")");
+  /* a visitor reads it in Jorge's name (youOr, 26 Oct) */
+  eq(/^\d+% of drinks Jorge would order again$/.test(r.worthHead), true, "Worth it leads with the share you would order again (" + r.worthHead + ")");
   eq(r.chainHead, "67% independent, 33% chain branches", "chains are counted as brand groups of two or more, with the want-list branch not counted as visited");
   eq(r.chainDuo[0], "Tadaima", "the most visited brand is named");
   eq(r.dots, "3/1", "three branch dots, one of them a ring for the place still to try");

@@ -61,7 +61,8 @@ jobs:
       - name: "Assemble the site (only the app's files, no tests, notes or tooling)"
         run: |
           mkdir _site
-          cp -r index.html sw.js manifest.json cafes.json icon-180.png icon-192.png icon-512.png js styles.css _site/
+          cp -r index.html 404.html sw.js manifest.json cafes.json icon-180.png icon-192.png icon-512.png js styles.css _site/
+          [ -d c ] && cp -r c _site/ || true
           [ -d vendor ] && cp -r vendor _site/ || true
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

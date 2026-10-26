@@ -174,7 +174,8 @@ const { eq, done } = checker();
     ["California 6", "Canada 3", "Hawaii 2", "Australia 1", "Taiwan 1", "Washington 1"],
     "one row per region, biggest first: US states by name, other places by country — and Vancouver is Canada, not the United States"
   );
-  eq(r.head, "Where you have been · 14 places", "the list says how many it is counting");
+  /* a visitor reads it in Jorge's name (youOr, 26 Oct) */
+  eq(r.head, "Where Jorge has been · 14 places", "the list says how many it is counting");
 
   r = await ph.pg.evaluate(() => ({
     bubbles: gworld.length,

@@ -175,13 +175,14 @@ const { eq, done } = checker();
   /* ---- log another today ---- */
   await pg.locator('.drinkmore[data-drink="Matcha Einspanner Latte"]').click();
   await pg.getByRole("button", { name: "Log another today" }).click();
-  await pg.waitForTimeout(300);
+  await pg.waitForTimeout(100);
   const again = await pg.evaluate(() => {
-    const r = document.querySelector("#f-drinks .dr:not(.collapsed)");
-    return { view: app.dataset.view, n: r && r.querySelector(".dn").value, d: r && r.querySelector(".dd").value, p: r && r.querySelector(".dp").value };
+    const on = document.querySelector('#dns-panel .dntag[aria-pressed="true"]');
+    return { open: !$("dnsheet").hidden, title: $("dns-title").textContent, n: on && on.dataset.n, p: $("qc-price") && $("qc-price").value };
   });
-  eq(again, { view: "form", n: "Matcha Einspanner Latte", d: T, p: "9.60" }, "Log another today opens the visit with a new cup of that drink, dated today, at the last price");
-  await pg.evaluate(() => { _formSnap = null; show("detail"); });
+  eq(again, { open: true, title: "A cup at Jandii Cafe", n: "Matcha Einspanner Latte", p: "9.60" }, "Log another today opens the quick cup on that drink, at the last price (tests/quick-cup.js has the rest)");
+  await pg.evaluate(() => closeSheet());
+  eq(T.length, 10, "today is a date");
 
   /* ---- two devices: a note on one, a price fix on the other, both survive ---- */
   const merged = await pg.evaluate(() => {

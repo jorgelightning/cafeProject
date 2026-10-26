@@ -112,11 +112,16 @@ const { eq, done } = checker();
     return { title: e.querySelector("h3").textContent, art: !!e.querySelector("svg.emptyart[aria-hidden='true']"), btn: (e.querySelector("button") || {}).textContent }; });
   eq(r, { title: "Nothing to try yet", art: true, btn: "Save a place" }, "an empty wishlist says so, shows art, and offers to save a place (owner)");
 
+  /* a search alone, with nothing else on, offers the best places instead of a Clear with nothing to clear
+     (tests/go-filters.js); with a filter on, it is still "No matches" and Clear */
   r = await pg.evaluate(() => { setListTab("been"); document.getElementById("q").value = 'xx<img src=x onerror=1>'; renderList();
     const e = document.querySelector("#grid .emptyx");
-    return { title: e.querySelector("h3").textContent, injected: e.querySelectorAll("img").length, body: e.querySelector("p").textContent, btn: e.querySelector("button").textContent }; });
-  eq([r.title, r.injected, r.btn], ["No matches", 0, "Clear filters"], "no matches offers Clear, and what you typed cannot inject markup");
-  eq(/xx<img src=x onerror=1>/.test(r.body), true, "…it is shown back to you as text");
+    return { title: e.querySelector("h3").textContent, injected: e.querySelectorAll("img").length }; });
+  eq([r.title, r.injected], ["No “xx<img src=x onerror=1>” logged yet", 0], "a search with no match says so, and what you typed cannot inject markup: it is shown back as text");
+  r = await pg.evaluate(() => { activeChip = "coffee"; renderList();
+    const e = document.querySelector("#grid .emptyx");
+    return { title: e.querySelector("h3").textContent, btn: e.querySelector("button").textContent }; });
+  eq([r.title, r.btn], ["No matches", "Clear filters"], "with a filter on as well, it offers Clear");
   r = await pg.evaluate(() => { document.querySelector("#grid .emptyx button").click(); return { q: document.getElementById("q").value, cards: document.querySelectorAll("#grid .card").length }; });
   eq(r, { q: "", cards: 5 }, "…and the button really clears it");
 

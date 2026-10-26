@@ -191,7 +191,9 @@ const fs = require("fs"), path = require("path");
   const reach = await pg.evaluate(() => {
     isAdmin = true; applyMode(); show("settings");
     const btns = [...document.querySelectorAll("#pane-settings button")].filter(b => b.offsetParent);
-    return { count: btns.length,
+    /* Tidy up's four counts (form.js) are buttons too, when there is anything to tidy */
+    const tidy = document.querySelectorAll("#tidy-grid .tidyb").length;
+    return { count: btns.length - tidy, tidy,
              small: btns.filter(b => b.getBoundingClientRect().height < 44)
                         .map(b => (b.getAttribute("aria-label") || b.textContent).trim()),
              labelled: btns.every(b => (b.textContent || "").trim() || b.getAttribute("aria-label")),

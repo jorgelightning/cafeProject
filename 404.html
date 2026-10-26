@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JL Cafe Project</title>
+<meta name="robots" content="noindex">
+<!-- GitHub Pages serves this for any path it does not have. A shared link is /c/<id>, and a cafe newer than the
+     last nightly run of scripts/share-pages.js has no page there yet, so this sends it on to the app's own
+     ?cafe=<id>, which always works. Anything else goes to the app. -->
+<script>
+(function () {
+  var p = location.pathname;
+  var m = /^(.*\/)c\/([A-Za-z0-9_-]{1,64})(?:\.html)?\/?$/.exec(p);
+  var root = /^\/cafeProject\//.test(p) ? "/cafeProject/" : "/";
+  location.replace(m ? m[1] + "?cafe=" + m[2] : root);
+})();
+</script>
+</head><body><p><a href="/cafeProject/">Open JL Cafe Project</a></p></body></html>

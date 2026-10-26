@@ -242,7 +242,7 @@ function lbToggle(btn) {
   row.classList.toggle("open", open);
 }
 function boardRow(c, pos, unique) {
-  const rank = pos <= 3 && unique ? ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"][pos - 1] : "#" + pos;
+  const rank = pos <= 3 && unique ? ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"][pos - 1] : (unique ? "#" : "=") + pos;
   const ar = boardArea(c),
     m = matchCount(c);
   const dkm = boardDistTo(c);
@@ -341,6 +341,142 @@ function boardQueueRow(c) {
     "</div>"
   );
 }
+/* ---------- Go: the best of a kind, in a region ----------
+   One standing mixed a gelato bar, a boba shop and a flat white across six countries, so "the best coffee in
+   California" took scrolling and guessing. A region menu and a row of kinds filter the same standing; nothing is
+   re-ranked, and a position is counted inside what is shown, so the best coffee in California is 1. The kind is the
+   one each cafe's mark is drawn from (cafeKind), so the filter and the tiles agree. */
+let goKind = "";
+let _locFailed = false; /* Near me was asked for and the phone said no: offer regions instead */
+const GO_KINDS = [
+  ["coffee", "Coffee"],
+  ["matcha", "Matcha"],
+  ["tea", "Tea"],
+  ["boba", "Boba"],
+  ["gelato", "Gelato"],
+  ["pastry", "Pastry"],
+];
+/** @param {Cafe} c */
+function goPass(c) {
+  return (!goKind || cafeKind(c) === goKind) && (!pickedRegion || regionOf(c).val === pickedRegion);
+}
+function setGoKind(k) {
+  goKind = goKind === k ? "" : k;
+  renderBoard();
+}
+function setGoRegion(v) {
+  pickedRegion = v || "";
+  renderBoard();
+}
+/** @param {string} v a regionOf() value */
+function goRegionLabel(v) {
+  const c = cafes.find(function (x) {
+    return x.lat != null && regionOf(x).val === v;
+  });
+  return c ? regionOf(c).label : "";
+}
+function goReset() {
+  goKind = "";
+  setGoRegion("");
+}
+/** The regions the standing covers, biggest first. @param {Cafe[]} board */
+function goRegions(board) {
+  /** @type {Record<string, {val:string, label:string, n:number}>} */
+  const by = {};
+  board.forEach(function (c) {
+    const r = regionOf(c);
+    (by[r.val] = by[r.val] || { val: r.val, label: r.label, n: 0 }).n++;
+  });
+  return Object.keys(by)
+    .map(function (k) {
+      return by[k];
+    })
+    .sort(function (a, b) {
+      return b.n - a.n || a.label.localeCompare(b.label);
+    });
+}
+/** @param {Cafe[]} board */
+function goControls(board) {
+  const regs = goRegions(board);
+  const inReg = board.filter(function (c) {
+    return !pickedRegion || regionOf(c).val === pickedRegion;
+  });
+  const kinds = GO_KINDS.filter(function (k) {
+    return inReg.some(function (c) {
+      return cafeKind(c) === k[0];
+    });
+  });
+  let h = "";
+  if (_locFailed && !userLoc && !pickedRegion && regs.length > 1)
+    h +=
+      '<div class="gonear" role="group" aria-label="Pick a region"><span>Location is off. Where are you?</span>' +
+      regs
+        .slice(0, 6)
+        .map(function (g) {
+          return '<button type="button" class="gochip" data-v="' + esc(g.val) + '" onclick="setGoRegion(this.dataset.v)">' + esc(g.label) + "</button>";
+        })
+        .join("") +
+      "</div>";
+  h += '<div class="gofilter">';
+  if (regs.length > 1)
+    h +=
+      '<select class="goreg" aria-label="Region" onchange="setGoRegion(this.value)"><option value="">Everywhere · ' +
+      board.length +
+      "</option>" +
+      regs
+        .map(function (g) {
+          return (
+            '<option value="' + esc(g.val) + '"' + (g.val === pickedRegion ? " selected" : "") + ">" + esc(g.label) + " · " + g.n + "</option>"
+          );
+        })
+        .join("") +
+      "</select>";
+  if (kinds.length > 1)
+    h +=
+      '<div class="gokinds" role="group" aria-label="Kind of place">' +
+      [["", "All"]]
+        .concat(kinds)
+        .map(function (k) {
+          return (
+            '<button type="button" aria-pressed="' + (goKind === k[0]) + '" onclick="setGoKind(\'' + k[0] + "')\">" + k[1] + "</button>"
+          );
+        })
+        .join("") +
+      "</div>";
+  return h + "</div>";
+}
+/* Near me with location off: the toast says why, and the regions are offered where you asked. On Go they are a row
+   on the board; on the List the same choice comes up as a sheet. */
+function onLocateFailed() {
+  _locFailed = true;
+  if (app.dataset.view === "compare") renderBoard();
+  else if (typeof activeGuide !== "undefined" && activeGuide === "near") openRegionSheet();
+}
+function openRegionSheet() {
+  const pool = cafes.filter(function (c) {
+    return !c.wish && c.lat != null;
+  });
+  const regs = goRegions(pool);
+  openSheet(
+    '<span class="dngrab" aria-hidden="true"></span>' +
+      '<div class="dnhead"><h2 id="dns-title">Where are you?</h2><p>Location is off. Pick a region and Near me shows the best places there.</p></div>' +
+      '<div class="dntags">' +
+      regs
+        .map(function (g) {
+          return '<button type="button" class="dntag" data-v="' + esc(g.val) + '" onclick="pickRegion(this.dataset.v)">' + esc(g.label) + " <small>" + g.n + "</small></button>";
+        })
+        .join("") +
+      "</div>" +
+      '<button type="button" class="btn ghost dnclose" onclick="closeSheet()">Not now</button>'
+  );
+}
+/** @param {string} v */
+function pickRegion(v) {
+  pickedRegion = v || "";
+  closeSheet();
+  if (typeof renderList === "function") renderList();
+  if (app.dataset.view === "compare") renderBoard();
+}
 function renderBoard() {
   const host = $("cmp-body");
   if (!host) return;
@@ -379,14 +515,20 @@ function renderBoard() {
      full-width grey bars. Rank a pair is the filled one: on this tab it is the owner's job, and its count is what
      is left to place. */
   const _t5 = isAdmin && typeof top5Items === "function" ? top5Items().length : 0,
-    _todo = never.length + placing.length,
+    _rm = board.length ? rankMap() : null,
+    _ties = isAdmin && _rm ? settledTies(_rm).length : 0,
+    _todo = never.length + placing.length + _ties,
     _chips = [];
   if (isAdmin && vis.length > 1)
     _chips.push(
       '<button type="button" class="gochip p" onclick="boardRank()" title="' +
-        (never.length ? never.length + " never compared" : "") +
-        (never.length && placing.length ? ", " : "") +
-        (placing.length ? placing.length + " still placing" : "") +
+        [
+          never.length ? never.length + " never compared" : "",
+          placing.length ? placing.length + " still placing" : "",
+          _ties ? _ties + (_ties === 1 ? " tie" : " ties") : "",
+        ]
+          .filter(Boolean)
+          .join(", ") +
         '">' +
         ico("scale") +
         "Rank a pair" +
@@ -396,7 +538,15 @@ function renderBoard() {
   if (_t5 >= 3) _chips.push('<button type="button" class="gochip" onclick="openTop5Story()" aria-label="Share my top ' + _t5 + '">' + ico("podium") + "Top " + _t5 + "</button>");
   if (!userLoc && board.length) _chips.push('<button type="button" class="gochip" onclick="locate()">' + ico("pin") + "Near me</button>");
   if (_chips.length) h += '<div class="gochips" role="group" aria-label="On this tab">' + _chips.join("") + "</div>";
-  if (!board.length) {
+  if (board.length) h += goControls(board);
+  const shown = board.filter(goPass);
+  if (board.length && !shown.length) {
+    h +=
+      '<div class="empty">Nothing ' +
+      (goKind ? "like that " : "") +
+      "ranked here yet.<br>" +
+      '<button type="button" class="btn ghost" onclick="goReset()">Show everything</button></div>';
+  } else if (!board.length) {
     h +=
       '<div class="empty"><div class="big">' + ico("trophy") + "</div>Nothing ranked yet." +
       (isAdmin ? " Tap “Rank a pair”, or log a visit and answer the question that follows." : "") +
@@ -404,15 +554,20 @@ function renderBoard() {
   } else {
     /* Competition ranking off the same helper the sheet quotes, so "#2 → #1" in the popup and
        "#1" here can never disagree. Genuine ties share a position. */
-    const rm = rankMap();
-    const pos = board.map(function (c) {
-      return rm[c.id];
+    const rm = _rm || rankMap();
+    /* a position inside what is shown: with no filter this is the standing itself */
+    const pos = shown.map(function (c) {
+      let p = 1;
+      shown.forEach(function (x) {
+        if (rm[x.id] < rm[c.id]) p++;
+      });
+      return p;
     });
     const uniq = {};
     pos.forEach(function (p) {
       uniq[p] = (uniq[p] || 0) + 1;
     });
-    const rows = board.map(function (c, i) {
+    const rows = shown.map(function (c, i) {
       return { html: boardRow(c, pos[i], uniq[pos[i]] === 1), near: boardIsNear(c), c: c };
     });
     const near = rows.filter(function (r) {
@@ -515,25 +670,50 @@ function boardRank(id) {
         return c.id === id;
       })
     : null;
+  /* The question asked is the one whose answer a visitor will see. In order: a cafe never compared (it has no
+     place at all), a cafe still being placed (fewest answers first), then two settled cafes on the same score
+     (printed "=20" until one answer separates them), then whatever has the fewest answers. */
+  let twin = null;
   if (!anchor) {
     const never = vis.filter(function (c) {
       return matchCount(c) === 0;
     });
-    const pool = never.length
-      ? never
-      : vis
-          .slice()
-          .sort(function (a, b) {
-            return matchCount(a) - matchCount(b);
-          })
-          .slice(0, 12);  /* the fewest-compared first, which is the cafes still being placed */
-    anchor = pool[Math.floor(Math.random() * pool.length)];
+    const placing = vis
+      .filter(function (c) {
+        return matchCount(c) > 0 && isProvisional(c);
+      })
+      .sort(function (a, b) {
+        return matchCount(a) - matchCount(b);
+      });
+    const ties = settledTies().filter(function (g) {
+      return _chaserSeen.indexOf(pairKey(g[0].id, g[1].id)) < 0;
+    });
+    if (never.length) anchor = never[Math.floor(Math.random() * never.length)];
+    else if (placing.length) anchor = placing[Math.floor(Math.random() * Math.min(3, placing.length))];
+    else if (ties.length) {
+      anchor = ties[0][0];
+      twin = ties[0][1];
+    } else {
+      const pool = vis
+        .slice()
+        .sort(function (a, b) {
+          return matchCount(a) - matchCount(b);
+        })
+        .slice(0, 12);
+      anchor = pool[Math.floor(Math.random() * pool.length)];
+    }
   }
   if (!anchor) return;
   chaserArm(anchor.id);
   if (!_chaser) {
     toast("No opponent available yet");
     return;
+  }
+  if (twin) {
+    _chaser.opp = twin.id;
+    _chaser.tier = "T";
+    _chaser.myDrink = null;
+    _chaser.theirDrink = null;
   }
   _chaser.board = true;
   chaserPaint();
@@ -669,6 +849,10 @@ function chaserArm(id) {
       if (!lv) cost += 0.6;
       else if ((Date.now() - new Date(lv).getTime()) / 86400000 > 180) cost += 1.2;
       if (x.area && c.area && x.area.trim() === c.area.trim()) cost -= 0.4;
+      /* the easiest question to answer is between two of a kind in one region: two coffee bars in California,
+         not a tea ceremony against a gelato bar an ocean apart */
+      if (cafeKind(x) !== cafeKind(c)) cost += 0.6;
+      if (x.lat != null && c.lat != null && regionOf(x).val !== regionOf(c).val) cost += 0.5;
       if ((bucketOf(x) || "") !== (bucketOf(c) || "")) cost += 1.0;
       if (_chaserSeen.indexOf(pairKey(c.id, x.id)) >= 0) cost += 2.0;
       return { x: x, cost: cost + Math.random() * 0.3 };
@@ -722,7 +906,8 @@ function chaserBoard() {
    in here — sixteen of them share the untouched 5.0, and numbering that is a lie. */
 function rankMap() {
   const board = chaserBoard(),
-    m = { _n: board.length };
+    m = { _n: board.length },
+    tied = {};
   let pos = 0,
     prev = null;
   board.forEach(function (c, i) {
@@ -732,18 +917,59 @@ function rankMap() {
       prev = s;
     }
     m[c.id] = pos;
+    tied[pos] = (tied[pos] || 0) + 1;
   });
+  /* how many cafes share each position; kept out of the enumerable keys, which are cafe ids */
+  Object.defineProperty(m, "_tied", { value: tied, enumerable: false });
   return m;
 }
 function rankOf(c, m) {
   if (!c) return null;
   return (m || rankMap())[c.id] || null;
 }
+/* A position as printed. Two cafes on one score share a position, and two "#20"s one row apart read as a bug, so a
+   shared one is "=20" until a Rank a pair answer separates them. */
+/** @param {number} r @param {any} [m] the rankMap it came from */
+function rankText(r, m) {
+  const t = (m || rankMap())._tied;
+  return (t && t[r] > 1 ? "=" : "#") + r;
+}
+/* ---------- what a visitor reads instead of a position ----------
+   "Loved it" covers about four in five rated cafes, and beside it "#86 of 115" read like a bad grade, so a friend
+   could not tell whether Jandii was good. A visitor gets one word from the position instead; the owner keeps the
+   number. A "Not for me" is always Skip it, whatever its position. A cafe with no position yet has no tier. */
+/** @param {Cafe} c @param {any} [m] @returns {{k:string, label:string, sub:string}|null} */
+function cafeTier(c, m) {
+  if (!c || c.wish) return null;
+  const b = bucketOf(c);
+  if (b === "meh") return { k: "skip", label: "Skip it", sub: "" };
+  m = m || rankMap();
+  const r = rankOf(c, m);
+  if (!r) return null;
+  /* the top tenth, at most ten: on a list of four, the top four are not all must-gos */
+  const must = Math.min(10, Math.max(1, Math.ceil(m._n * 0.1)));
+  if (r <= must) return { k: "must", label: "Must go", sub: "top " + must };
+  if (r <= Math.ceil(m._n * 0.4)) return { k: "great", label: "Great", sub: "top 40%" };
+  return b === "fine" ? { k: "okay", label: "Okay", sub: "" } : { k: "good", label: "Good", sub: "" };
+}
+/** @param {Cafe} c @param {any} [m] */
+function tierPill(c, m) {
+  const t = cafeTier(c, m);
+  if (!t) return "";
+  return (
+    '<span class="bkpill big tier t-' +
+    t.k +
+    '"><i></i>' +
+    t.label +
+    (t.sub ? "<small> · " + t.sub + "</small>" : "") +
+    "</span>"
+  );
+}
 /* A badge on the tile, where the stars used to be — the tile colour already carries the
    bucket, so repeating it there said nothing twice. */
 function rankBadge(c, m) {
   const r = rankOf(c, m);
-  return r ? '<span class="rankbadge' + (r <= 3 ? " r-gold" : r <= 10 ? " r-amber" : "") + '">#' + r + "</span>" : "";
+  return r ? '<span class="rankbadge' + (r <= 3 ? " r-gold" : r <= 10 ? " r-amber" : "") + '">' + rankText(r, m) + "</span>" : "";
 }
 function chaserRank(c, board) {
   let n = 1;
@@ -928,6 +1154,40 @@ function renderChaser(c) {
   }
   chaserPaint();
 }
+/* What two cafes in a question have in common, said over it: "both coffee, both California". A pair from one kind
+   and one region is the easiest to answer, which is why the pairing prefers them. */
+/** @param {Cafe} a @param {Cafe} b */
+function pairWhy(a, b) {
+  const k = cafeKind(a) === cafeKind(b) ? cafeKind(a) : "",
+    ra = a.lat != null ? regionOf(a) : null,
+    rb = b.lat != null ? regionOf(b) : null;
+  const words = { coffee: "coffee", matcha: "matcha", tea: "tea", boba: "boba", gelato: "gelato", pastry: "bakeries" };
+  const bits = [];
+  if (k) bits.push("both " + words[k]);
+  if (ra && rb && ra.val === rb.val) bits.push("both " + ra.label);
+  const s = bits.join(", ");
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+}
+/** Settled cafes (past placing) that share a position with another settled cafe, best first.
+    @param {any} [m] a rankMap already built, so a caller that has one does not rank everything again */
+function settledTies(m) {
+  m = m || rankMap();
+  const by = {};
+  cafes.forEach(function (c) {
+    if (c.wish || isProvisional(c) || !m[c.id]) return;
+    (by[m[c.id]] = by[m[c.id]] || []).push(c);
+  });
+  return Object.keys(by)
+    .filter(function (p) {
+      return by[p].length > 1;
+    })
+    .sort(function (a, b) {
+      return +a - +b;
+    })
+    .map(function (p) {
+      return by[p];
+    });
+}
 function chaserPaint() {
   const host = $("d-chaser");
   if (!host) return;
@@ -972,11 +1232,13 @@ function chaserPaint() {
     return;
   }
   const eyebrow =
-    _chaser.tier === "A"
-      ? "Both do " + esc(_chaser.myDrink)
-      : _chaser.tier === "B"
-        ? "Both do " + esc(_chaser.fam)
-        : "";
+    _chaser.tier === "T"
+      ? esc(["Tied at " + rankText(rankOf(c) || 0), pairWhy(c, opp)].filter(Boolean).join(" · "))
+      : _chaser.tier === "A"
+        ? "Both do " + esc(_chaser.myDrink)
+        : _chaser.tier === "B"
+          ? "Both do " + esc(_chaser.fam)
+          : esc(pairWhy(c, opp));
   const lv = chaserLast(opp);
   const stale = !!lv && (Date.now() - new Date(lv).getTime()) / 86400000 > 120;
   const L = _chaser.flip ? opp : c,

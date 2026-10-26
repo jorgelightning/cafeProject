@@ -20,7 +20,8 @@ function serve() {
   const srv = http.createServer((rq, rs) => {
     const rel = decodeURIComponent(rq.url.split("?")[0]);
     let file = path.join(ROOT, rel);
-    if (file.endsWith("/")) file += "index.html";
+    /* the request, not the joined path: on Windows path.join turns the trailing "/" into "\" */
+    if (rel.endsWith("/")) file = path.join(file, "index.html");
     /* never serve outside the repo, however creative the request is */
     if (!file.startsWith(ROOT)) { rs.writeHead(403); rs.end(); return; }
     fs.readFile(file, (err, data) => {
@@ -48,9 +49,29 @@ function serve() {
    CHROMIUM_PATH to point at one that is already installed instead — a CI image that ships a
    browser, or a machine where Playwright's pinned build and the installed one have drifted
    apart. */
-function launch() {
+/* Every page starts as a returning visitor: the first-visit welcome (map.js) is a sheet over the whole screen, and
+   a test about the list or the map should not have to dismiss it first. tests/welcome.js removes the mark to see it. */
+const WELCOMED = () => {
+  try {
+    localStorage.setItem("cafemap.welcomed", "1");
+  } catch (e) {}
+};
+async function launch() {
   const exe = process.env.CHROMIUM_PATH;
-  return chromium.launch(exe ? { executablePath: exe } : {});
+  const b = await chromium.launch(exe ? { executablePath: exe } : {});
+  const newContext = b.newContext.bind(b),
+    newPage = b.newPage.bind(b);
+  b.newContext = async function (o) {
+    const ctx = await newContext(o);
+    await ctx.addInitScript(WELCOMED);
+    return ctx;
+  };
+  b.newPage = async function (o) {
+    const p = await newPage(o);
+    await p.addInitScript(WELCOMED);
+    return p;
+  };
+  return b;
 }
 
 /* Waits until the app says it has finished starting (boot.js sets data-ready on <html>), instead of sleeping and

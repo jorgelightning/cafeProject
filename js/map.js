@@ -289,7 +289,7 @@ function syncWorldUI() {
   const total = rs.reduce((t, g) => t + g.n, 0);
   el.innerHTML =
     '<div class="wgrab"></div><div class="whead">' +
-    (mapWantOnly ? "Want to try" : "Where you have been") +
+    (mapWantOnly ? "Want to try" : youOr("Where you have been", "Where " + OWNER_NAME + " has been")) +
     " \u00b7 " +
     total +
     (total === 1 ? " place" : " places") +
@@ -751,8 +751,10 @@ function renderMarkers() {
   else if (mapOwned) return;
   else if (_worldOn()) fitWorld();
   else if (_focusVal) fitList(locationList(_focusVal));
-  else if (_homeVal()) fitList(locationList(_homeVal()));
-  else if (n === 1) {
+  else if (_homeVal()) {
+    fitList(locationList(_homeVal()));
+    setPillLabel(_homeVal());
+  } else if (n === 1) {
     gmap.setCenter(gmarkers.filter(_pinShown)[0].getPosition());
     gmap.setZoom(14);
   } else if (n > 1) {
@@ -835,6 +837,14 @@ function cafeStateName(c) {
   }
   return "";
 }
+/* The town a cafe is in, as the region menu names it. "Cupertino, CA" and "Cupertino" are one town: the ", CA" only
+   repeats the state the menu already files it under, and keeping both split one town into two entries (Cupertino,
+   Sunnyvale). Only a real two-letter state is taken off; the cafe's own area text is never changed. */
+function cityOf(c) {
+  const a = ((c && c.area) || "").trim();
+  const m = /^(.*\S),\s*([A-Za-z]{2})$/.exec(a);
+  return m && STATE_NAMES[m[2].toUpperCase()] ? m[1] : a;
+}
 function buildLocationIndex() {
   const groups = {};
   cafes.forEach(c => {
@@ -842,7 +852,7 @@ function buildLocationIndex() {
     const name = cafeCountryName(c);
     const label = cafeCountryLabel(c);
     const st = cafeStateName(c);
-    const city = (c.area || "").trim();
+    const city = cityOf(c);
     if (!groups[name]) groups[name] = { label: label, states: {}, cities: {}, isUS: name === "United States" };
     if (st) {
       if (!groups[name].states[st]) groups[name].states[st] = { cities: {} };
@@ -925,7 +935,7 @@ function locationList(val) {
       c =>
         c.lat != null &&
         cafeCountryName(c) === name &&
-        (c.area || "").trim() === ct &&
+        cityOf(c) === ct &&
         (st ? cafeStateName(c) === st : true)
     );
   }
@@ -959,7 +969,14 @@ function setPillLabel(val) {
     sel = $("locsel");
   if (!l) return;
   const o = val && sel ? [].slice.call(sel.options).filter(x => x.value === val)[0] : null;
-  l.innerHTML = (o ? ico("pin") : ico("globe")) + " " + esc(o ? o.textContent.trim() : "World");
+  /* The map opens on the region with the most pins, whose value is spelled the way regionOf() spells it, not
+     the way the menu does, so the pill used to find no match and say "World" over a map of California. */
+  let name = o ? o.textContent.trim() : "";
+  if (val && !name) {
+    const r = worldRegions().filter(g => g.val === val)[0];
+    name = r ? r.label : "";
+  }
+  l.innerHTML = (name ? ico("pin") : ico("globe")) + " " + esc(name || "World");
 }
 function jumpToLocation(val) {
   if (!gmap) {
@@ -997,7 +1014,80 @@ function jumpToLocation(val) {
     }, 350);
   setTimeout(() => fitList(list), 0);
 }
+/* ---------- a first visit ----------
+   A friend opening the link landed on a map with no word about whose list it was or where to start. The first time a
+   visitor opens the app (not a shared cafe link, never the owner), one sheet says what this is and offers a start:
+   a region, the top 10, or just looking around. It is remembered on that device and never shown again. */
+const WELCOME_KEY = "cafemap.welcomed";
+function maybeWelcome() {
+  if (isAdmin || app.dataset.view !== "map") return;
+  try {
+    if (localStorage.getItem(WELCOME_KEY)) return;
+    localStorage.setItem(WELCOME_KEY, "1");
+  } catch (e) {
+    return; /* no storage, no way to remember: better never than every time */
+  }
+  openWelcome();
+}
+function openWelcome() {
+  const been = cafes.filter(function (c) {
+    return !c.wish;
+  });
+  if (!been.length) return;
+  const kinds = {};
+  been.forEach(function (c) {
+    const k = cafeKind(c);
+    kinds[k] = (kinds[k] || 0) + 1;
+  });
+  const words = { coffee: "coffee", matcha: "matcha", tea: "tea", boba: "boba", gelato: "gelato", pastry: "bakeries" };
+  const top = Object.keys(kinds)
+    .sort(function (a, b) {
+      return kinds[b] - kinds[a];
+    })
+    .slice(0, 3)
+    .map(function (k) {
+      return words[k];
+    });
+  const mostly = top.length > 1 ? top.slice(0, -1).join(", ") + " and " + top[top.length - 1] : top[0];
+  const nC = countryCount(been);
+  const regs = goRegions(
+    been.filter(function (c) {
+      return c.lat != null;
+    })
+  ).slice(0, 6);
+  openSheet(
+    '<span class="dngrab" aria-hidden="true"></span>' +
+      '<div class="dnhead"><h2 id="dns-title">' +
+      esc(OWNER_NAME) +
+      "’s cafe list</h2><p>" +
+      been.length +
+      " cafes in " +
+      nC +
+      (nC === 1 ? " country" : " countries") +
+      ", each ranked head-to-head against the others. Mostly " +
+      esc(mostly) +
+      ".</p></div>" +
+      '<div class="dnq"><span class="dnlab">Where are you?</span><span class="dntags">' +
+      regs
+        .map(function (g) {
+          return '<button type="button" class="dntag" data-v="' + esc(g.val) + '" onclick="welcomeRegion(this.dataset.v)">' + esc(g.label) + " <small>" + g.n + "</small></button>";
+        })
+        .join("") +
+      "</span></div>" +
+      '<button type="button" class="btn" onclick="closeSheet();show(\'compare\')">Show the top 10</button>' +
+      '<button type="button" class="btn ghost dnclose" onclick="closeSheet()">Just let me look around</button>'
+  );
+}
+/** @param {string} v a regionOf() value */
+function welcomeRegion(v) {
+  closeSheet();
+  pickedRegion = v || "";
+  jumpToLocation(v);
+}
 let userLoc = null;
+/* A region picked by hand (a regionOf() value): where Go filters to, and what Near me falls back to when the phone
+   will not give a position. "" is everywhere. */
+let pickedRegion = "";
 let mapOwned = false; /* the person has positioned the map themselves */
 let pendingMarkerId = null;
 /* ---------- the peek card ----------
@@ -1217,7 +1307,11 @@ function locate() {
     true,
     function (ok) {
       setLocateState(ok ? "on" : "idle");
-      if (!ok) toast("Couldn't get your location");
+      if (!ok) {
+        toast("Couldn't get your location");
+        /* and offer the regions instead, so Near me never just stops (rank.js) */
+        if (typeof onLocateFailed === "function") onLocateFailed();
+      }
     },
     true
   );

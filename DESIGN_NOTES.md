@@ -1675,3 +1675,60 @@ time the sheet writes to it, as the form gives them.
 
 **Layout.** The ⋯ takes 40px from the drink row, so a long drink name now wraps to a second line instead of being cut.
 `tests/drink-notes.js`.
+
+## The user test batch (v105)
+
+Five made-up cafe-goers used the app on 26 Oct: four visitors on the live site (a friend with a link, a coffee
+regular, a matcha hunter, someone visiting for a weekend) and the owner on a local copy. What changed:
+
+**Getting there, first (R1).** Directions, Hours and Share sit under a cafe's name; they were the last thing on the
+page. Hours opens the cafe on Google Maps (by place id when there is one), which keeps hours current at no cost. A
+private spot gets neither Directions nor Hours. The bottom buttons stay.
+
+**One word for visitors (R2).** "Loved it" covers about four in five rated cafes, and beside it "#86 of 115" read as a
+bad grade. A visitor reads a tier from the position (`cafeTier` in rank.js): Must go (top 10), Great (top 40%), Good
+(the rest of what was loved), Okay (a fine outside the top 40%), Skip it (any "not for me"). The owner keeps the
+verdict and the number. Two cafes on one score read "=N" everywhere a position is printed (`rankText`); the counts
+live on `rankMap()` as a non-enumerable `_tied`, so its keys are still only cafe ids.
+
+**Stats in Jorge's name (R3).** `OWNER_NAME` in config.js and `youOr(you, them)` in core.js: each phrase is written
+in full both ways ("How you take it" / "How Jorge takes it") rather than swapping a word. The first Stats tab is
+"Jorge" to a visitor.
+
+**Go by kind and region (R4).** A region menu (`regionOf()` values: a US state or a country) and a row of kinds (the
+kind each cafe's mark is drawn from, `cafeKind`) filter the standing. Positions are counted inside what is shown, so
+the best coffee in California is first. The List has Best coffee beside Best tea, by the same kind.
+
+**A first visit (R5).** Once per device, for visitors only and never over a ?cafe= link, a sheet says it is Jorge's
+list, how many cafes in how many countries, and offers regions, the top 10, or looking around. The map pill now names
+the region the map opened on: `regionOf()` spells values differently from the menu, so the pill used to find no match
+and say "World" over a map of California.
+
+**A cup on one sheet (R6).** Log a drink here, and the drink's own ⋯ "Log another today", open the quick cup: this
+cafe's drinks most ordered first, Same as last time (size, milk, sweetness and ice of the last cup), the last price,
+👍 😐 👎, Save. More options is the full form with the cup in it. Saving takes a wishlist cafe off the list and asks the
+ranking question, as the form does.
+
+**No dead ends (R7).** A search with no match offers the best places of the kind it was about (`queryKind`: "pour
+over" is coffee), and Clear filters only when a filter is on. Near me with location off offers the regions: a row on
+Go, a "Where are you?" sheet on the List, and the guide becomes that region (`pickedRegion`, shared with Go).
+
+**Rank a pair (R8).** Never compared, then still placing (fewest answers first), then two settled cafes on one score
+asked against each other, then the fewest compared. A settled cafe's opponent costs more for another kind (+0.6) or
+another region (+0.5). The question says what the two share ("Both coffee, both California").
+
+**Links that preview (R9).** Share hands out `/c/<id>`. `scripts/share-pages.js` writes one page per public cafe with
+its name, place, verdict and what to order, which forwards to `?cafe=<id>`; the nightly backup runs it and commits
+`c/` with cafes.json. `404.html` forwards a link to a cafe newer than the last run. Private spots never get a page,
+and the service worker leaves `/c/` to the network.
+
+**Tidy up (R10).** Settings counts visited cafes with no drink, verdict, price or date and walks them one at a time.
+Skip asks again next time; I don't remember never asks about that cafe again on that device.
+
+**Region names (R11).** The region menu reads "Cupertino, CA" as Cupertino (`cityOf`), so one town is one entry; the
+cafe's own area text is unchanged. The report also said "Capitol Hill under Utah" was wrong. It is right: that cafe
+is in Salt Lake City, which has its own Capitol Hill.
+
+**One sheet.** The drink menu's sheet (#dnsheet) is now the app's: `openSheet(html, opener, onClose)` and
+`closeSheet()` serve the quick cup, Tidy up, the region picker and the welcome. The test harness marks every page as
+already welcomed, so no other test has to dismiss the welcome, and now serves "/" on Windows.

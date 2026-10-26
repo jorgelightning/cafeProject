@@ -59,6 +59,7 @@ const PRIVATE_PATH = "private"; // Firebase node holding private spots' exact ad
 const ADMIN_FLAG = "cafemap.admin"; // remembers admin mode in this browser
 const DIRTY_FLAG = "cafemap.dirty"; // set on local edits, cleared on Export
 const OWNER_EMAIL = "jorgemarco.portillo@gmail.com"; // only this Google account can edit (real security)
+const OWNER_NAME = "Jorge"; // how the app names you to visitors: "Jorge's 2026", "Jorge went back" (you still read "you")
 const DEFAULT_CENTER = [21.3, -157.83]; // Honolulu [lat,lng]
 /* Chains and brands recognised from a cafe's name alone. Add yours: a name that equals an entry, or
    starts with it followed by a space ("Blue Bottle Coffee Oakland"), is filed under that spelling. */

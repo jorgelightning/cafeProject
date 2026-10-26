@@ -165,8 +165,9 @@ function chipMatch(c, chip) {
 let activeGuide = "";
 const GUIDE_DEFS = [
   ["top10", "\ud83c\udfc6 Top 10"],
+  ["coffee", "\u2615 Best coffee"],
   ["tea", "\ud83c\udf75 Best tea"],
-  ["goto", "\u2615 Go-to"],
+  ["goto", "\ud83d\udd01 Go-to"],
   ["near", "\ud83d\udccd Near me"],
 ];
 const QUICK_DEFS = [
@@ -185,11 +186,14 @@ function _hasPrice(o) {
 function guideMatch(c, g) {
   if (g === "top10") return _rankNum(c) <= 10;
   if (g === "tea") return bucketOf(c) === "loved" && (chipMatch(c, "matcha") || chipMatch(c, "boba"));
+  /* coffee by the cafe's mark, as Go's Coffee does, so a "Houjicha cortado" place counts and a matcha bar does not */
+  if (g === "coffee") return bucketOf(c) === "loved" && cafeKind(c) === "coffee";
   if (g === "goto") return !!(typeof topDrinkAt === "function" && topDrinkAt(c) && reorderTally(c).yes > 0);
   /* Near me needs a position. Until the app has one it filters nothing, rather than showing an
      empty list that looks broken; only locate() ever asks the browser for it. */
   if (g === "near") {
-    if (!userLoc) return true;
+    /* with no position, a region picked instead (openRegionSheet) stands in for "near" */
+    if (!userLoc) return !pickedRegion || (latOf(c) != null && regionOf(c).val === pickedRegion);
     return latOf(c) != null && distKm(userLoc.lat, userLoc.lng, latOf(c), lngOf(c)) * 0.621371 <= NEAR_MI;
   }
   if (g === "recent") {
@@ -208,7 +212,8 @@ function guideMatch(c, g) {
 /** The order a guide implies, or null to fall through to the chosen sort. */
 function guideCompare(a, b) {
   const g = activeGuide;
-  if (g === "top10" || g === "tea") return _rankNum(a) - _rankNum(b) || (a.name || "").localeCompare(b.name || "");
+  if (g === "top10" || g === "tea" || g === "coffee" || (g === "near" && !userLoc))
+    return _rankNum(a) - _rankNum(b) || (a.name || "").localeCompare(b.name || "");
   if (g === "goto") {
     const na = (topDrinkAt(a) || { n: 0 }).n,
       nb = (topDrinkAt(b) || { n: 0 }).n;
@@ -243,9 +248,11 @@ function renderGuideRow() {
     return;
   }
   host.innerHTML = GUIDE_DEFS.map(function (d) {
+    /* Near me standing in for a picked region says which */
+    const reg = d[0] === "near" && !userLoc && pickedRegion ? goRegionLabel(pickedRegion) : "";
     return (
       '<button type="button" aria-pressed="' + (activeGuide === d[0] ? "true" : "false") +
-      '" onclick="setGuide(\'' + d[0] + "')\">" + d[1] + "</button>"
+      '" onclick="setGuide(\'' + d[0] + "')\">" + (reg ? "📍 " + esc(reg) : d[1]) + "</button>"
     );
   }).join("");
 }
@@ -618,6 +625,44 @@ function renderList() {
           "Tap the heart on a cafe to keep it here.",
           act("Show everything", "clearAll()")
         );
+      /* Only a search, nothing else on: there are no filters to clear, so offer the closest thing there is, the best
+         ranked places of the kind the search is about ("pour over" is coffee). */
+      const onlyTyped = typed && !activeChip && !activeVerdict && !activeArea && !activeGuide && !favOnly;
+      if (onlyTyped && listTab === "been") {
+        const k = queryKind(typed);
+        const rm = _cardRanks || rankMap();
+        const best = cafes
+          .filter(function (c) {
+            return !c.wish && rankOf(c, rm) && (!k || cafeKind(c) === k);
+          })
+          .sort(function (a, b) {
+            return rankOf(a, rm) - rankOf(b, rm);
+          })
+          .slice(0, 3);
+        const kindWord = k ? { coffee: "coffee", matcha: "matcha", tea: "tea", boba: "boba", gelato: "gelato", pastry: "bakery" }[k] : "";
+        return (
+          '<div class="emptyx nearest" style="grid-column:1/-1">' +
+          art("been") +
+          "<h3>No \u201c" + esc(typed) + "\u201d logged yet</h3>" +
+          (best.length
+            ? "<p>" + (kindWord ? "The " + kindWord + " places " + youOr("you rank", OWNER_NAME + " ranks") + " highest:" : youOr("Your", OWNER_NAME + "\u2019s") + " top places:") + "</p>" +
+              '<div class="nearlist">' +
+              best
+                .map(function (c) {
+                  const td = topDrinkAt(c);
+                  return (
+                    '<button type="button" class="nearrow" onclick="openDetail(\'' + c.id + "','list')\">" +
+                    '<span class="rk">' + rankText(rankOf(c, rm), rm) + "</span>" +
+                    '<span class="nrt"><b>' + esc(c.name) + "</b><small>" + esc([cityOf(c), td ? td.d.n : ""].filter(Boolean).join(" \u00b7 ")) + "</small></span></button>"
+                  );
+                })
+                .join("") +
+              "</div>"
+            : "") +
+          (k === "coffee" && !isAdmin ? act("Show all coffee", "clearAll();setGuide('coffee')") : "") +
+          "</div>"
+        );
+      }
       return box(
         "been",
         "No matches",
@@ -726,7 +771,7 @@ function renderList() {
         '<span class="compact-stars">' +
         (bucketLabel(c) || "Not rated yet") +
         "</span>" +
-        (_rk ? '<span class="rkcol' + (_rk <= 10 ? " g" : "") + '">#' + _rk + "</span>" : "") +
+        (_rk ? '<span class="rkcol' + (_rk <= 10 ? " g" : "") + '">' + rankText(_rk, _cardRanks || undefined) + "</span>" : "") +
         "</div>"
       );
     })

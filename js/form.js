@@ -1977,3 +1977,500 @@ function saveForm() {
     toast("Couldn't save — " + (err && err.message ? err.message : "unexpected error"));
   }
 }
+
+/* ---------- a cup, on one screen ----------
+   "Log a drink here" opened the whole visit, titled Edit visit, and a new cup was a 993px stack of date, name,
+   currency, price, how many, size, milk, sweetness, ice, verdict and note: taller than the phone, at the counter,
+   one-handed. Now it is a sheet. Pick the drink (this cafe's, most ordered first, or something else), and "Same as
+   last time" carries the size, milk, sweetness and ice of the last one; the price is the last price; 👍 😐 👎 if you
+   like; Save. "More options" is the full form with that cup already in it. A new cafe still uses the form. */
+/** @type {{n:string, same:boolean, rv:string, other:boolean, keepPrice?:boolean}|null} */
+let _qc = null;
+/** The last cup of a drink called `n` here, or, for a drink new to this cafe, your usual for it anywhere.
+    @param {Cafe} c @param {string} n @returns {any} */
+function _qcSource(c, n) {
+  const key = (n || "").trim().toLowerCase();
+  const d = (c.drinks || []).find(x => (x.n || "").trim().toLowerCase() === key);
+  if (d) return latestDrinkOrder(d) || {};
+  const e = drinkIndex()[key];
+  return e ? usualSpec(e) : {};
+}
+/** @param {any} o */
+function _qcSpecText(o) {
+  return [
+    o.size,
+    o.milk ? String(o.milk).toLowerCase() : "",
+    o.sweet ? (o.sweet === "0%" ? "no sugar" : o.sweet + " sweet") : "",
+    o.ice ? String(o.ice).toLowerCase() : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+/** @param {string} [n] a drink to start on (from the drink's own ⋯) */
+function openQuickCup(n) {
+  if (!isAdmin || !curId) return;
+  const c = cafes.find(x => x.id === curId);
+  if (!c) return;
+  const opener = document.activeElement;
+  openSheet("", opener, function () {
+    _qc = null;
+  });
+  _qc = { n: n || "", same: true, rv: "", other: false, keepPrice: false };
+  _qcRedraw();
+  _qcFocus();
+}
+function _qcFocus() {
+  const p = $("qc-price") || $("qc-other") || /** @type {HTMLElement|null} */ ($("dns-panel").querySelector(".dntag"));
+  if (p) /** @type {HTMLElement} */ (p).focus({ preventScroll: true });
+}
+/** @param {Cafe} c */
+function _qcHTML(c) {
+  const st = _qc || { n: "", same: true, rv: "", other: false };
+  const mine = (c.drinks || [])
+    .map(function (d) {
+      return {
+        n: d.n,
+        k: drinkOrders(d).reduce(function (t, o) {
+          return t + orderQty(o);
+        }, 0),
+      };
+    })
+    .filter(function (x) {
+      return (x.n || "").trim();
+    })
+    .sort(function (a, b) {
+      return b.k - a.k;
+    })
+    .slice(0, 4);
+  const chips =
+    mine
+      .map(function (x) {
+        const on = !st.other && st.n.toLowerCase() === x.n.toLowerCase();
+        return (
+          '<button type="button" class="dntag" aria-pressed="' + on + '" data-n="' + esc(x.n) + '" onclick="qcPick(this.dataset.n)">' +
+          esc(x.n) + " <small>" + x.k + "</small></button>"
+        );
+      })
+      .join("") +
+    '<button type="button" class="dntag" aria-pressed="' + st.other + '" onclick="qcOther()">Something else</button>';
+  let body = "";
+  if (st.other)
+    body +=
+      '<label class="dnlab" for="qc-other">Drink</label><input id="qc-other" class="dntext qcin" type="text" autocomplete="off" placeholder="What did you get?" value="' +
+      esc(st.n) +
+      '" oninput="qcName(this.value)">';
+  if (st.n.trim()) {
+    const src = _qcSource(c, st.n),
+      spec = _qcSpecText(src);
+    const code = String(src.pc || ccyFor(c)).toUpperCase();
+    const last = code !== "USD" && src.pl != null ? src.pl : src.p;
+    if (spec)
+      body +=
+        '<button type="button" class="qcsame" aria-pressed="' + st.same + '" onclick="qcSame()"><b>' +
+        (st.same ? "✓ " : "") + "Same as last time</b><span>" + esc(spec) + "</span></button>";
+    body +=
+      '<label class="dnlab" for="qc-price">Price' + (code !== "USD" ? " (" + esc(code) + ")" : "") + "</label>" +
+      '<input id="qc-price" class="dntext qcin" type="text" inputmode="decimal" autocomplete="off" placeholder="' +
+      esc(ccyMeta(code).sym || "") + '0.00" value="' + esc(last == null ? "" : String(last)) + '">' +
+      '<div class="dnq" role="group" aria-label="Would order again?"><span class="dnlab">Would order again?</span><span class="dnvs big">' +
+      _verdictButtons(st.rv, true).replace(/setDrinkVerdict/g, "qcVerdict") +
+      "</span></div>";
+  }
+  return (
+    '<span class="dngrab" aria-hidden="true"></span>' +
+    '<div class="dnhead"><h2 id="dns-title">A cup at ' + esc(c.name) + "</h2><p>Today, " + esc(_noteDay(localToday())) + "</p></div>" +
+    '<div class="dnq" role="group" aria-label="Which drink"><span class="dntags">' + chips + "</span></div>" +
+    body +
+    '<div class="dnact"><button type="button" class="btn ghost" onclick="qcMore()">More options</button>' +
+    '<button type="button" class="btn" onclick="qcSave()"' + (st.n.trim() ? "" : " disabled") + ">Save cup</button></div>"
+  );
+}
+function _qcRedraw() {
+  const c = cafes.find(x => x.id === curId);
+  if (!c || !_qc) return;
+  const price = /** @type {HTMLInputElement|null} */ ($("qc-price"));
+  const keep = price ? price.value : null;
+  $("dns-panel").innerHTML = _qcHTML(c);
+  /* a price you had typed survives a redraw for the same drink */
+  const p2 = /** @type {HTMLInputElement|null} */ ($("qc-price"));
+  if (p2 && keep != null && _qc.keepPrice) p2.value = keep;
+}
+/** @param {string} n */
+function qcPick(n) {
+  if (!_qc) return;
+  _qc.n = n;
+  _qc.other = false;
+  _qc.same = true;
+  _qc.keepPrice = false;
+  _qcRedraw();
+  _qcFocus();
+}
+function qcOther() {
+  if (!_qc) return;
+  _qc.other = true;
+  _qc.n = "";
+  _qc.keepPrice = false;
+  _qcRedraw();
+  _qcFocus();
+}
+/* typing a name redraws what depends on it (the usual, the Save button) without taking the cursor out of the box */
+let _qcT = 0;
+/** @param {string} v */
+function qcName(v) {
+  if (!_qc) return;
+  _qc.n = v;
+  clearTimeout(_qcT);
+  _qcT = setTimeout(function () {
+    if (!_qc) return;
+    const box = /** @type {HTMLInputElement|null} */ ($("qc-other"));
+    const pos = box ? box.selectionStart : null;
+    _qc.keepPrice = false;
+    _qcRedraw();
+    const nb = /** @type {HTMLInputElement|null} */ ($("qc-other"));
+    if (nb) {
+      nb.focus({ preventScroll: true });
+      if (pos != null) nb.setSelectionRange(pos, pos);
+    }
+  }, 250);
+}
+function qcSame() {
+  if (!_qc) return;
+  _qc.same = !_qc.same;
+  _qc.keepPrice = true;
+  _qcRedraw();
+  const b = /** @type {HTMLElement|null} */ (document.querySelector(".qcsame"));
+  if (b) b.focus();
+}
+/** @param {string} v */
+function qcVerdict(v) {
+  if (!_qc) return;
+  _qc.rv = _qc.rv === v ? "" : v;
+  _qc.keepPrice = true;
+  _qcRedraw();
+  const b = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector(".dnv." + v));
+  if (b) b.focus();
+}
+function qcSave() {
+  const c = cafes.find(x => x.id === curId);
+  if (!c || !_qc || !_qc.n.trim()) return;
+  const n = _qc.n.trim();
+  const today = localToday();
+  const src = _qcSource(c, n);
+  const code = String(src.pc || ccyFor(c)).toUpperCase();
+  const price = /** @type {HTMLInputElement|null} */ ($("qc-price"));
+  /** @type {any} */
+  const o = Object.assign({ id: uid(), date: today }, priceFields(price ? price.value : "", code, 0, today));
+  if (!o.p) delete o.p;
+  if (_qc.same)
+    ["size", "sweet", "ice", "milk"].forEach(function (k) {
+      if (src[k]) o[k] = src[k];
+    });
+  if (_qc.rv) o.reorder = _qc.rv;
+  let d = (c.drinks || []).find(x => (x.n || "").trim().toLowerCase() === n.toLowerCase());
+  if (d) {
+    const orders = drinkOrders(d);
+    orders.forEach(function (x) {
+      if (!x.id) x.id = uid();
+    });
+    orders.push(o);
+    d.orders = orders;
+  } else {
+    d = { n: n, orders: [o] };
+    c.drinks = (c.drinks || []).concat([d]);
+  }
+  syncDrinkSummary(d);
+  /* logging a drink is the visit, so it takes the cafe off the wishlist, as the form does */
+  if (c.wish) c.wish = false;
+  c.updated = new Date().toISOString();
+  saveCafe(c.id);
+  closeSheet();
+  try {
+    renderMarkers();
+    renderList();
+  } catch (e) {
+    warn("form.js quick cup", e);
+  }
+  toast("Logged " + n);
+  try {
+    chaserArm(c.id);
+  } catch (e) {
+    _chaser = null;
+    warn("form.js chaserArm", e);
+  }
+  openDetail(c.id);
+}
+/* the whole form, with this cup already in it, for anything the sheet does not have */
+function qcMore() {
+  const c = cafes.find(x => x.id === curId);
+  if (!c) return;
+  const n = _qc ? _qc.n.trim() : "";
+  const src = n ? _qcSource(c, n) : {};
+  const price = /** @type {HTMLInputElement|null} */ ($("qc-price"));
+  const amt = price ? price.value : "";
+  const rv = _qc ? _qc.rv : "";
+  closeSheet();
+  if (!n) {
+    logDrinkHere();
+    return;
+  }
+  openForm(c.id);
+  if ($("f-wish") && $("f-wish").checked) {
+    $("f-wish").checked = false;
+    syncWishMode();
+    syncMore(false);
+  }
+  setTimeout(function () {
+    const row = addDrinkRow(n, amt, localToday(), src.sweet, src.ice, src.size, rv, false, src.milk, 1, src.pc ? { pc: src.pc, pl: amt } : null);
+    activateDrinkRow(row);
+    row.scrollIntoView({ block: "start" });
+  }, 140);
+}
+
+/* ---------- Tidy up ----------
+   Seventeen visited cafes had no drink, sixteen no verdict, thirty-two no price and twenty no date, and each gap makes
+   a cafe page or a stat thinner. Settings counts them, and each count opens a sheet that walks the gaps one cafe at
+   a time: answer, Skip (asks again next time) or I don't remember (never asks about that one again, on this
+   device). */
+const TIDY_SKIP_KEY = "cafemap.tidyskip";
+const TIDY_KINDS = [
+  ["drink", "no drink"],
+  ["rating", "no verdict"],
+  ["price", "no price"],
+  ["date", "no date"],
+];
+/** @returns {Record<string, string[]>} */
+function _tidySkips() {
+  try {
+    return JSON.parse(localStorage.getItem(TIDY_SKIP_KEY) || "{}") || {};
+  } catch (e) {
+    return {};
+  }
+}
+/** @param {Cafe} c @param {string} k */
+function tidyNeeds(c, k) {
+  if (c.wish) return false;
+  const ds = c.drinks || [];
+  if (k === "drink") return !ds.length;
+  if (k === "rating") return !c.rating;
+  if (k === "price")
+    return (
+      ds.length > 0 &&
+      ds.every(function (d) {
+        return !_hasPrice(latestDrinkOrder(d));
+      })
+    );
+  if (k === "date")
+    return (
+      ds.length > 0 &&
+      ds.every(function (d) {
+        return drinkOrders(d).every(function (o) {
+          return !o.date;
+        });
+      })
+    );
+  return false;
+}
+/** @param {string} k */
+function tidyQueue(k) {
+  const never = _tidySkips()[k] || [];
+  return cafes.filter(function (c) {
+    return tidyNeeds(c, k) && never.indexOf(c.id) < 0;
+  });
+}
+function renderTidyCard() {
+  const g = $("tidy-grid");
+  if (!g) return;
+  const counts = TIDY_KINDS.map(function (t) {
+    return [t[0], t[1], tidyQueue(t[0]).length];
+  });
+  const any = counts.some(function (x) {
+    return x[2];
+  });
+  g.innerHTML = any
+    ? counts
+        .map(function (x) {
+          return (
+            '<button type="button" class="tidyb"' + (x[2] ? "" : " disabled") + " onclick=\"openTidy('" + x[0] + "')\"><b>" + x[2] + "</b><span>" + x[1] + "</span></button>"
+          );
+        })
+        .join("")
+    : '<p class="setnote">Nothing missing. Every visited cafe has a drink, a verdict, a price and a date.</p>';
+}
+/** @type {{k:string, skipped:string[], done:number}|null} */
+let _tidy = null;
+/** @param {string} k */
+function openTidy(k) {
+  if (!isAdmin) return;
+  const opener = document.activeElement;
+  openSheet("", opener, function () {
+    _tidy = null;
+    renderTidyCard();
+  });
+  _tidy = { k: k, skipped: [], done: 0 };
+  _tidyRedraw();
+}
+function _tidyNext() {
+  if (!_tidy) return null;
+  const sk = _tidy.skipped;
+  return (
+    tidyQueue(_tidy.k).filter(function (c) {
+      return sk.indexOf(c.id) < 0;
+    })[0] || null
+  );
+}
+function _tidyHTML() {
+  if (!_tidy) return "";
+  const t = _tidy,
+    k = t.k,
+    label = (TIDY_KINDS.filter(x => x[0] === k)[0] || ["", ""])[1];
+  const c = _tidyNext();
+  if (!c)
+    return (
+      '<span class="dngrab" aria-hidden="true"></span><div class="dnhead"><h2 id="dns-title">All done</h2><p>' +
+      (t.done ? t.done + " filled in. " : "") + "Nothing left with " + label + ".</p></div>" +
+      '<button type="button" class="btn" onclick="closeSheet()">Close</button>'
+    );
+  const left = tidyQueue(k).filter(function (x) {
+    return t.skipped.indexOf(x.id) < 0;
+  }).length;
+  /** @type {string} */
+  let q;
+  /** @type {string} */
+  let body;
+  if (k === "drink") {
+    q = "What did you have?";
+    body =
+      '<span class="dntags">' +
+      topUsuals(drinkIndex(), 4)
+        .map(function (e) {
+          return '<button type="button" class="dntag" data-n="' + esc(e.n) + '" onclick="tidyDrink(this.dataset.n)">' + esc(e.n) + "</button>";
+        })
+        .join("") +
+      "</span>" +
+      '<label class="dnlab" for="tidy-other">Something else</label><input id="tidy-other" class="dntext qcin" type="text" autocomplete="off" placeholder="Drink name">' +
+      '<button type="button" class="btn" onclick="tidyDrink($(\'tidy-other\').value)">Add drink</button>';
+  } else if (k === "rating") {
+    q = "How was it?";
+    body =
+      '<span class="dnvs big">' +
+      BUCKETS.map(function (b) {
+        return '<button type="button" class="dnv" onclick="tidyRate(\'' + b[0] + "')\"><span>" + esc(b[2]) + "</span></button>";
+      }).join("") +
+      "</span>";
+  } else if (k === "price") {
+    q = "What did it cost?";
+    const code = ccyFor(c);
+    body =
+      (c.drinks || [])
+        .slice(0, 3)
+        .map(function (d, i) {
+          return (
+            '<label class="dnlab" for="tidy-p' + i + '">' + esc(d.n) + '</label><input id="tidy-p' + i + '" class="dntext qcin" data-n="' + esc(d.n) +
+            '" type="text" inputmode="decimal" autocomplete="off" placeholder="' + esc(ccyMeta(code).sym || "") + '0.00">'
+          );
+        })
+        .join("") + '<button type="button" class="btn" onclick="tidyPrices()">Save prices</button>';
+  } else {
+    q = "When did you go?";
+    body =
+      '<input id="tidy-date" class="dntext qcin" type="date" max="' + localToday() + '" aria-label="Visit date">' +
+      '<button type="button" class="btn" onclick="tidyDate()">Save date</button>';
+  }
+  return (
+    '<span class="dngrab" aria-hidden="true"></span>' +
+    '<div class="dnhead"><p>Tidy up · ' + left + " with " + label + '</p><h2 id="dns-title">' + esc(c.name) + "</h2><p>" + esc(c.area || "") + "</p></div>" +
+    '<span class="dnlab">' + q + "</span>" +
+    body +
+    '<div class="dnact"><button type="button" class="btn ghost" onclick="tidySkip(false)">Skip</button><button type="button" class="btn ghost" onclick="tidySkip(true)">I don’t remember</button></div>'
+  );
+}
+function _tidyRedraw() {
+  $("dns-panel").innerHTML = _tidyHTML();
+  const f = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector("input, button"));
+  if (f) f.focus({ preventScroll: true });
+}
+/** @param {(c: Cafe) => boolean} change returns false when nothing was written */
+function _tidyWrite(change) {
+  const c = _tidyNext();
+  if (!c || !_tidy) return;
+  if (change(c) === false) return;
+  c.updated = new Date().toISOString();
+  saveCafe(c.id);
+  _tidy.done++;
+  _tidyRedraw();
+}
+/** @param {string} n */
+function tidyDrink(n) {
+  n = String(n || "").trim();
+  if (!n) return;
+  _tidyWrite(function (c) {
+    /** @type {Drink} */
+    const d = { n: n, orders: [{ id: uid() }] };
+    syncDrinkSummary(d);
+    c.drinks = (c.drinks || []).concat([d]);
+    return true;
+  });
+}
+/** @param {string} k loved | fine | meh */
+function tidyRate(k) {
+  _tidyWrite(function (c) {
+    c.rating = bucketRating(k);
+    return true;
+  });
+}
+function tidyPrices() {
+  _tidyWrite(function (c) {
+    const code = ccyFor(c);
+    let any = false;
+    [].slice.call(document.querySelectorAll("#dns-panel input[data-n]")).forEach(function (/** @type {HTMLInputElement} */ inp) {
+      const v = inp.value.trim();
+      if (!v) return;
+      const d = (c.drinks || []).find(x => x.n === inp.dataset.n);
+      if (!d) return;
+      const orders = drinkOrders(d).sort(function (a, b) {
+        return (a.date || "").localeCompare(b.date || "");
+      });
+      orders.forEach(function (x) {
+        if (!x.id) x.id = uid();
+      });
+      const o = orders[orders.length - 1];
+      Object.assign(o, priceFields(v, code, 0, o.date || localToday()));
+      d.orders = orders;
+      syncDrinkSummary(d);
+      any = true;
+    });
+    return any;
+  });
+}
+function tidyDate() {
+  const inp = /** @type {HTMLInputElement|null} */ ($("tidy-date"));
+  const v = inp ? inp.value : "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+  _tidyWrite(function (c) {
+    (c.drinks || []).forEach(function (d) {
+      const orders = drinkOrders(d);
+      orders.forEach(function (o) {
+        if (!o.id) o.id = uid();
+        if (!o.date) o.date = v;
+      });
+      d.orders = orders;
+      syncDrinkSummary(d);
+    });
+    return true;
+  });
+}
+/** @param {boolean} forever */
+function tidySkip(forever) {
+  const c = _tidyNext();
+  if (!c || !_tidy) return;
+  if (forever) {
+    const s = _tidySkips();
+    (s[_tidy.k] = s[_tidy.k] || []).push(c.id);
+    try {
+      localStorage.setItem(TIDY_SKIP_KEY, JSON.stringify(s));
+    } catch (e) {
+      warn("form.js tidy", e);
+    }
+  } else _tidy.skipped.push(c.id);
+  _tidyRedraw();
+}
