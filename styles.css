@@ -557,8 +557,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* Sticky commit rail. .sidebar is already inset by the tab-bar height, so bottom:0
    lands exactly on top of it and needs no safe-area padding of its own. */
 /* Same sticky-commit pattern as the form's save rail. */
-.dstickybar{ position:sticky; bottom:0; margin-top:8px; padding:10px 16px; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); z-index:5; }
-.dstickybar .btn{ width:100%; height:50px; border-radius:var(--r-3); background:var(--acc-strong); color:var(--on-acc); font-size:var(--fs-3); font-weight:700; border:none; }
 .savebar{ position:sticky; bottom:0; margin:20px -16px 0; padding:10px 16px; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); z-index:5; }
 .savebar .btn{ width:100%; height:52px; border-radius:var(--r-3); background:var(--acc-strong); color:var(--on-acc); font-size:var(--fs-4); font-weight:700; border:none; }
 /* The native picker stays: the real input is stretched over the pill at opacity 0.

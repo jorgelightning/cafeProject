@@ -40,6 +40,7 @@ function show(view, fav) {
   document.querySelectorAll(".side-nav button").forEach(b => b.classList.remove("on"));
   _mark(_TABS[view]);
   _mark(_NAVS[view]);
+  syncLogTab();
   if (view === "compare") renderBoard();
   if (view === "stats") renderStats();
   if (view === "settings") renderSettings();
@@ -49,6 +50,21 @@ function show(view, fav) {
       mapResize();
       if (view === "map") focusNearest();
     }, 60);
+}
+/* ---------- one Log button (design audit D2) ----------
+   A cafe page showed "＋ Log a drink here" pinned right above the "＋ Log" tab: two buttons that looked like one
+   action, 124px of the bottom of every cafe. The tab is the one now. On a cafe page it is "Log here" and opens the
+   quick cup for that cafe; anywhere else it is "Log", a new visit. */
+function logTab() {
+  if (app.dataset.view === "detail" && curId && isAdmin && typeof openQuickCup === "function") openQuickCup();
+  else openForm();
+}
+function syncLogTab() {
+  const t = $("t-log"),
+    l = t && t.querySelector(".tl");
+  if (!l) return;
+  const here = app.dataset.view === "detail";
+  l.textContent = here ? "Log here" : "Log";
 }
 /* openDetail(id,"stats") sets lastMain="stats", so honour it — otherwise tapping a cafe
    from Stats and pressing back silently drops you on List. */

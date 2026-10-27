@@ -41,14 +41,14 @@ const { eq, done } = checker();
   });
 
   /* ---- the sheet ---- */
-  await pg.getByRole("button", { name: "＋ Log a drink here" }).click();
+  await pg.getByRole("button", { name: "Log here", exact: true }).click();   /* the middle tab, on a cafe page (design audit D2) */
   let s = await pg.evaluate(() => ({
     open: !$("dnsheet").hidden,
     title: $("dns-title").textContent,
     chips: [...document.querySelectorAll("#dns-panel .dntag")].map(x => x.textContent),
     save: [...document.querySelectorAll("#dns-panel .btn")].find(x => x.textContent === "Save cup").disabled,
   }));
-  eq([s.open, s.title], [true, "A cup at Kissaten HiFi"], "Log a drink here opens a sheet for a cup here, not the whole visit");
+  eq([s.open, s.title], [true, "A cup at Kissaten HiFi"], "the Log here tab opens a sheet for a cup here, not the whole visit");
   eq(s.chips, ["Flat White 3", "Hojicha latte 1", "Something else"], "…this cafe's drinks, most ordered first");
   eq(s.save, true, "…and nothing to save until a drink is picked");
   await pg.locator('#dns-panel .dntag[data-n="Flat White"]').click();

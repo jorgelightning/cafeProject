@@ -914,7 +914,7 @@ function openDetail(id, from) {
         })
         .join("")
     : '<div class="row" style="color:var(--faint);font-style:italic">' +
-      (isAdmin ? "Tap \uFF0B Log a drink here below." : "No drinks logged yet.") +
+      (isAdmin ? "Tap \uFF0B Log here below." : "No drinks logged yet.") +
       "</div>";
 
   /* the first three drinks, then "Show N more": a cafe with five drinks pushed the note off the screen */
