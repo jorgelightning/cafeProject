@@ -46,11 +46,13 @@ const { eq, done } = checker();
     open: !$("dnsheet").hidden,
     title: $("dns-title").textContent,
     chips: [...document.querySelectorAll("#dns-panel .dntag")].map(x => x.textContent),
-    save: [...document.querySelectorAll("#dns-panel .btn")].find(x => x.textContent === "Save cup").disabled,
+    save: (b => [b.disabled, b.textContent])([...document.querySelectorAll("#dns-panel .dnact .btn")].find(x => !x.classList.contains("ghost"))),
+    focus: document.activeElement && document.activeElement.id,
   }));
   eq([s.open, s.title], [true, "A cup at Kissaten HiFi"], "the Log here tab opens a sheet for a cup here, not the whole visit");
   eq(s.chips, ["Flat White 3", "Hojicha latte 1", "Something else"], "…this cafe's drinks, most ordered first");
-  eq(s.save, true, "…and nothing to save until a drink is picked");
+  eq(s.save, [true, "Pick a drink"], "…and nothing to save until a drink is picked: the button is grey and says so (design audit D8)");
+  eq(s.focus, "dns-title", "…and the sheet opens with the keyboard on its title, so no drink looks chosen");
   await pg.locator('#dns-panel .dntag[data-n="Flat White"]').click();
   s = await pg.evaluate(() => ({ same: document.querySelector(".qcsame").innerText.replace(/\s+/g, " "), price: $("qc-price").value }));
   eq(s, { same: "✓ Same as last time 8 oz · oat · no sugar · warm", price: "5" }, "the drink brings its last options and its last price");

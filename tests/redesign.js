@@ -65,7 +65,7 @@ const { eq, done } = checker();
   /* ---- 3: content first ---- */
   const first = await pg.evaluate(() => {
     isAdmin = true; applyMode(); show("compare"); renderBoard();
-    const row = document.querySelector("#cmp-body .lbrow.guide"), chips = [...document.querySelectorAll("#cmp-body .gochips .gochip")];
+    const row = document.querySelector("#cmp-body .lbrow.guide"), chips = [...document.querySelectorAll("#cmp-body .gobar .gochip, #cmp-body .gochips .gochip")];
     show("list"); renderList();
     return { goTop: Math.round(row.getBoundingClientRect().top), chips: chips.map(c => c.textContent.replace(/\s+/g, " ").trim()), primary: chips.filter(c => c.classList.contains("p")).length,
              searchButtons: document.querySelectorAll(".search button").length, headerSettings: !!document.querySelector(".searchrow > .setdoor") };

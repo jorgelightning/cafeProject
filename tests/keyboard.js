@@ -36,7 +36,7 @@ const { eq, done } = checker();
    return {focused:document.activeElement===card, outline:s.outlineWidth+' '+s.outlineStyle};
  });
  eq(r.focused,true,'a card takes focus');
- eq(r.outline,'3px solid','…with a visible focus ring');
+ eq(r.outline,'2px solid','…with a visible focus ring (a thin ink outline, so it never reads as a choice)');
 
  r=await pg.evaluate(async()=>{
    document.querySelector('.card').focus();

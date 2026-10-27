@@ -2057,9 +2057,19 @@ function openQuickCup(n) {
   _qcRedraw();
   _qcFocus();
 }
+/* With a drink picked, the keyboard goes to its price; with none yet, to the sheet's title, never to a drink: a ring
+   on Flat White as the sheet opened read as Flat White already chosen (design audit D8). */
 function _qcFocus() {
-  const p = $("qc-price") || $("qc-other") || /** @type {HTMLElement|null} */ ($("dns-panel").querySelector(".dntag"));
-  if (p) /** @type {HTMLElement} */ (p).focus({ preventScroll: true });
+  const p = $("qc-price") || $("qc-other");
+  if (p) {
+    /** @type {HTMLElement} */ (p).focus({ preventScroll: true });
+    return;
+  }
+  const t = $("dns-title");
+  if (t) {
+    t.setAttribute("tabindex", "-1");
+    t.focus({ preventScroll: true });
+  }
 }
 /** @param {Cafe} c */
 function _qcHTML(c) {
@@ -2120,7 +2130,7 @@ function _qcHTML(c) {
     '<div class="dnq" role="group" aria-label="Which drink"><span class="dntags">' + chips + "</span></div>" +
     body +
     '<div class="dnact"><button type="button" class="btn ghost"' + act("qcMore") + '>More options</button>' +
-    '<button type="button" class="btn"' + act("qcSave") + '' + (st.n.trim() ? "" : " disabled") + ">Save cup</button></div>"
+    '<button type="button" class="btn"' + act("qcSave") + (st.n.trim() ? ">Save cup" : " disabled>Pick a drink") + "</button></div>"
   );
 }
 function _qcRedraw() {

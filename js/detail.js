@@ -235,7 +235,14 @@ function openSheet(html, opener, onClose) {
   $("dns-panel").innerHTML = html;
   $("dnsheet").hidden = false;
   const first = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector("button, input, select, textarea"));
-  if (first) first.focus({ preventScroll: true });
+  /* A sheet that opens on a choice (the quick cup's drinks, the welcome's regions) puts the keyboard on its title: a
+     ring on the first chip read as a choice already made while Save was still off (design audit D8). A menu (a
+     drink's ⋯) still starts on its first item, which is what a menu is for. */
+  const title = /** @type {HTMLElement|null} */ ($("dns-title"));
+  if (first && title && first.closest(".dntags, [role=group]")) {
+    title.setAttribute("tabindex", "-1");
+    title.focus({ preventScroll: true });
+  } else if (first) first.focus({ preventScroll: true });
 }
 function closeSheet() {
   closeDrinkMenu();
