@@ -1841,3 +1841,36 @@ service worker's versions together.
 has never run: Pages still publishes the branch directly. It needs two settings (Pages source "GitHub Actions", and
 the variable `PAGES_VIA_ACTIONS=true`). Moving the backup bot to its own branch and minifying at deploy both build on
 that, so they come after it.
+
+## The site as published (v110)
+
+**The gate is on (E1).** Since 27 Oct Pages publishes what `deploy.yml` builds, only after the tests pass. The first
+gated deploy also stopped publishing the repo: `README.md`, `DESIGN_NOTES.md`, `tests/` and `server.js` went from 200
+to 404 on the live site. Two manual Run workflow requests were accepted by GitHub and never started a run; a push
+started one at once, so a push to main is how to redeploy.
+
+**The nightly backup has its own branch (E10).** `backup.yml` commits `cafes.json` to `data`, a branch with none of
+main's history (created by the first run), so main carries only people's commits and a push is never turned away
+because the night's backup landed first. The deploy runs when a backup succeeds, takes `cafes.json` from `data`, and
+makes the share pages from it at that moment. Main no longer commits `c/`: a copy there would only be as fresh as
+the last time someone regenerated it, and a cafe made private since would keep its page. Main keeps a `cafes.json`,
+no longer refreshed, as the data for local runs and the tests, which want it to stay put. The deploy checks the
+file it publishes for a private spot's precise location once more (`checkData`), naming the spot by its position,
+never by anything about it. Settings reads "the last one was" from the published `cafes.json`'s Last-Modified, which
+Pages takes from the file's time in the upload; the build sets that to the backup commit's time, since a deploy now
+also follows every code push.
+
+**Minified at deploy (E11).** `scripts/build-site.js` minifies the scripts and the stylesheet with esbuild:
+624 KB to 344 KB, 191 KB to 106 KB compressed. The classic scripts are minified with no module format, which is what
+keeps esbuild from renaming a top-level name: the page calls functions by name (`data-on`), and the scripts read each
+other's variables. Output is held to ES2017, the newest syntax the source uses, so minifying cannot give a phone
+syntax it lacks. CSS is not lowered. Each file gets a source map beside it, so a stack from the problems log can be
+read back to a line. The proof is three ways: `tests/site-build.js` (every one of 703 top-level names still there,
+the copy runs clean), `npm run test:site` (the whole suite against the minified build, which the deploy now runs in
+place of the plain suite; App checks still runs it against the source), and `scripts/css-diff.js` against the
+minified stylesheet: no computed difference in 348 states, once the dark `--border` was written `.1` rather than
+`.10`, the one spelling esbuild changed (a custom property's value is compared as written).
+
+Two tests read what the server handed out where they meant the source or the served copy: `discovery` regex-matched
+the served stylesheet for how a rule is written (now read from the repo), and `cache-version` edited the repo's
+`config.js` to prove a changed served file arrives (now the served folder's).

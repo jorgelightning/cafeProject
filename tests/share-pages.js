@@ -7,9 +7,11 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const vm = require("vm");
+const { execSync } = require("child_process");
 const { ROOT, serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 const { build, page } = require("../scripts/share-pages.js");
+const { buildSite } = require("../scripts/build-site.js");
 
 (async () => {
   /* ---- the pages ---- */
@@ -30,21 +32,26 @@ const { build, page } = require("../scripts/share-pages.js");
   const n = build([kh, { id: "pv", name: "P", custom: true }, { id: "w", name: "W", wish: true }], dir);
   eq([n, fs.readdirSync(dir).sort()], [2, ["kh.html", "w.html"]], "a build writes the public cafes and removes pages for cafes that are gone");
 
-  /* ---- the committed pages match the data ---- */
-  const data = JSON.parse(fs.readFileSync(path.join(ROOT, "cafes.json"), "utf8"));
+  /* ---- the published pages match the data ----
+     They are made at deploy from the cafes.json that goes out (scripts/build-site.js), not committed */
+  const site = fs.mkdtempSync(path.join(os.tmpdir(), "site-"));
+  buildSite({ out: site, minify: false, log: () => {} });
+  const data = JSON.parse(fs.readFileSync(path.join(site, "cafes.json"), "utf8"));
   const want = data.filter(c => page(c)).map(c => c.id + ".html").sort();
-  const have = fs.existsSync(path.join(ROOT, "c")) ? fs.readdirSync(path.join(ROOT, "c")).filter(f => f.endsWith(".html")).sort() : [];
-  eq(have.length === want.length && have.every((f, i) => f === want[i]), true, "c/ has a page for every public cafe in cafes.json and nothing else (" + have.length + ")");
+  const have = fs.readdirSync(path.join(site, "c")).filter(f => f.endsWith(".html")).sort();
+  eq(have.length === want.length && have.every((f, i) => f === want[i]), true, "the site's c/ has a page for every public cafe in its cafes.json and nothing else (" + have.length + ")");
   const priv = data.filter(c => c.custom).map(c => c.id + ".html");
   eq(priv.filter(f => have.indexOf(f) >= 0), [], "…and none for a private spot");
+  eq(execSync("git ls-files c", { cwd: ROOT, encoding: "utf8" }).trim(), "",
+     "main does not carry share pages of its own: a stale copy there could outlive a cafe made private");
 
   /* ---- 404.html sends a link with no page yet on to the app ---- */
   const src = /<script>([\s\S]*?)<\/script>/.exec(fs.readFileSync(path.join(ROOT, "404.html"), "utf8"))[1];
   const go = p => { let to = null; vm.runInNewContext(src, { location: { pathname: p, replace: u => (to = u) } }); return to; };
   eq([go("/cafeProject/c/abc"), go("/cafeProject/c/abc.html"), go("/cafeProject/nope")], ["/cafeProject/?cafe=abc", "/cafeProject/?cafe=abc", "/cafeProject/"], "404.html forwards /c/<id> to ?cafe=<id>, and anything else to the app");
 
-  /* ---- in the browser ---- */
-  const srv = await serve();
+  /* ---- in the browser, on the built site ---- */
+  const srv = await serve(site);
   const b = await launch();
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
   const pg = await ctx.newPage();
@@ -63,6 +70,7 @@ const { build, page } = require("../scripts/share-pages.js");
   await ctx.close();
   await b.close();
   srv.close();
+  fs.rmSync(site, { recursive: true, force: true });
   process.exit(done() ? 0 : 1);
 })().catch(e => {
   console.error(e);

@@ -14,16 +14,21 @@ const MIME = {
   ".json": "application/json", ".png": "image/png", ".webmanifest": "application/manifest+json"
 };
 
-/* Serves the repo. Returns { origin, close } — origin is the http://127.0.0.1:PORT the
+/* What the browser is served: the repo, or with SERVE_ROOT a built site (scripts/build-site.js), so the same tests
+   run against the minified copy that gets published (npm run test:site). Tests still read source files from ROOT. */
+const SITE = process.env.SERVE_ROOT ? path.resolve(ROOT, process.env.SERVE_ROOT) : ROOT;
+
+/* Serves the repo, or `root`. Returns { origin, close } — origin is the http://127.0.0.1:PORT the
    browser should load, with the port the OS handed us. */
-function serve() {
+function serve(root) {
+  const base = root || SITE;
   const srv = http.createServer((rq, rs) => {
     const rel = decodeURIComponent(rq.url.split("?")[0]);
-    let file = path.join(ROOT, rel);
+    let file = path.join(base, rel);
     /* the request, not the joined path: on Windows path.join turns the trailing "/" into "\" */
     if (rel.endsWith("/")) file = path.join(file, "index.html");
-    /* never serve outside the repo, however creative the request is */
-    if (!file.startsWith(ROOT)) { rs.writeHead(403); rs.end(); return; }
+    /* never serve outside the folder, however creative the request is */
+    if (!file.startsWith(base)) { rs.writeHead(403); rs.end(); return; }
     fs.readFile(file, (err, data) => {
       if (err) { rs.writeHead(404); rs.end(); return; }
       rs.writeHead(200, {
@@ -97,4 +102,4 @@ function checker() {
   return { eq, done, counts: () => ({ pass, fail }) };
 }
 
-module.exports = { ROOT, serve, launch, checker, chromium, ready };
+module.exports = { ROOT, SITE, serve, launch, checker, chromium, ready };

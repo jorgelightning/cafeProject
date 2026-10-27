@@ -1,7 +1,7 @@
 /* The deploy trap that actually bit: five commits changed js/ while the ?v= on the script
    tags and sw.js's CACHE_V both sat still, so the service worker served that build forever
    and the fixes never reached the browser. A README warning did not prevent it. This does. */
-const { ROOT, serve, launch, checker } = require("./harness");
+const { ROOT, SITE, serve, launch, checker } = require("./harness");
 const fs = require("fs");
 const path = require("path");
 const { eq, done } = checker();
@@ -53,7 +53,8 @@ const read = f => fs.readFileSync(path.join(ROOT, f), "utf8");
   const probe = "js/config.js?v=" + assetV;
   const first = await pg.evaluate(u => fetch(u).then(r => r.text()).then(t => t.length), probe);
 
-  const cfg = path.join(ROOT, "js/config.js");
+  /* the file being served: the repo's, or the built site's under npm run test:site */
+  const cfg = path.join(SITE, "js/config.js");
   const original = fs.readFileSync(cfg, "utf8");
   try {
     fs.writeFileSync(cfg, original + "\n/* touched by cache-version test */\n");

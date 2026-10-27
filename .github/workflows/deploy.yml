@@ -1,16 +1,18 @@
 name: Deploy site
 
-# Publishes the site only after the tests pass. A red build used to go live anyway: on 13 Oct
-# "App checks" failed while GitHub's own branch deploy succeeded.
+# Publishes the site only after the tests pass, and only the app. scripts/build-site.js builds it: the app's own
+# files, the nightly cafes.json from the `data` branch, a share page per public cafe, and the JavaScript and CSS
+# minified. The whole suite runs against a minified build before anything goes out (npm run test:site). A red build
+# used to go live anyway: on 13 Oct "App checks" failed while GitHub's own branch deploy succeeded.
 #
-# THIS DOES NOTHING UNTIL YOU TURN IT ON, so adding the file cannot break the live site:
+# On since 27 Oct, by two settings; undo either and nothing publishes:
 #   1. Repo Settings > Pages > Build and deployment > Source: "GitHub Actions"
 #   2. Repo Settings > Secrets and variables > Actions > Variables: PAGES_VIA_ACTIONS = true
-# Do both. With step 1 alone nothing deploys; with step 2 alone this fails against the old setting.
 #
-# The daily backup bot pushes with GITHUB_TOKEN, and pushes made that way do not start other
-# workflows, so this also runs when "Backup cafes data" finishes. Without that, the refreshed
-# cafes.json would never publish.
+# The nightly backup (backup.yml) pushes to `data` with GITHUB_TOKEN, and a push made that way starts no other
+# workflow, so this also runs when "Backup cafes data" succeeds: that is how a night's data goes live.
+# Run workflow is offered too, but on 27 Oct GitHub accepted two manual runs and started neither; a push to main is
+# the dependable way to redeploy.
 
 on:
   push:
@@ -28,10 +30,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  test:
-    if: ${{ vars.PAGES_VIA_ACTIONS == 'true' }}
+  build:
+    name: test and build
+    if: ${{ vars.PAGES_VIA_ACTIONS == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
         with:
@@ -42,10 +45,23 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm test
+      # every test, its browser served the minified build instead of the source
+      - run: npm run test:site
+      - name: The nightly data
+        uses: actions/checkout@v5
+        # before the first nightly backup there is no data branch; build-site.js then publishes main's cafes.json
+        continue-on-error: true
+        with:
+          ref: data
+          path: _data
+      - name: Build the site
+        run: node scripts/build-site.js --data _data --out _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
 
   deploy:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -55,18 +71,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: main
-      - name: "Assemble the site (only the app's files, no tests, notes or tooling)"
-        run: |
-          mkdir _site
-          cp -r index.html 404.html sw.js manifest.json cafes.json icon-180.png icon-192.png icon-512.png js styles.css _site/
-          [ -d c ] && cp -r c _site/ || true
-          [ -d vendor ] && cp -r vendor _site/ || true
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

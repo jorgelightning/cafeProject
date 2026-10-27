@@ -57,7 +57,8 @@ for (const f of fs.readdirSync(path.join(__dirname, "js", "lib"))) {
 }
 
 module.exports = [
-  { ignores: ["node_modules/**", "vendor/**", "tests/**", "overnight-cafe-audit.html"] },
+  // _site* are builds (scripts/build-site.js), minified on purpose
+  { ignores: ["node_modules/**", "vendor/**", "tests/**", "overnight-cafe-audit.html", "_site/**", "_site_test/**", "_data/**", "c/**"] },
   {
     files: ["js/**/*.js"],
     // not the modules: a classic script sees every global, a module only what it imports

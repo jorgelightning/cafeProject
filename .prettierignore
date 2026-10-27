@@ -6,3 +6,7 @@ package-lock.json
 *.md
 styles.css
 tests/
+_site/
+_site_test/
+_data/
+c/

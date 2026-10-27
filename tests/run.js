@@ -21,6 +21,7 @@ const SUITE = [
   ["rank-pairs",       "Rank a pair asks never-compared, then placing, then ties; same kind and region preferred"],
   ["ui-system",        "one header and back button, one chip, drawn drink marks, one-line options, one word for visitors, a readable List, a pill that follows the map, Near me"],
   ["share-pages",      "a shared link is /c/<id>, a page per public cafe that previews as it and forwards; 404.html for new ones"],
+  ["site-build",       "the published site: only the app's files and all they load, the data checked for private details, and minified JS and CSS that keep every name and still run"],
   ["audit-upgrades",   "stable order editing, compact layout and Stats origin"],
   ["currency-source",  "where a cafe's currency comes from, and that nothing is metered"],
   ["rates-dated",      "the rate for the day a drink was ordered"],

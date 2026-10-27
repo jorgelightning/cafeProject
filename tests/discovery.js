@@ -7,7 +7,9 @@
    U3  A first paint shaped like the list, empty states that say why and offer the next step, and
        "Order again" under a cafe's name.
    U2  The tab bar is drawn, not typed. */
-const { serve, launch, checker } = require("./harness");
+const fs = require("fs");
+const path = require("path");
+const { ROOT, serve, launch, checker } = require("./harness");
 const { eq, done } = checker();
 
 (async () => {
@@ -54,9 +56,10 @@ const { eq, done } = checker();
   let r = await pg.evaluate(() => ({ busy: document.getElementById("grid").getAttribute("aria-busy"), skels: document.querySelectorAll("#grid .skel-card").length,
                                       cards: document.querySelectorAll("#grid .card").length }));
   eq(r, { busy: null, skels: 0, cards: 5 }, "…and they are replaced by the real cards, not left behind");
-  r = await pg.evaluate(async () => { const css = await (await fetch("styles.css?x=" + Date.now())).text();
-    return { reduced: /prefers-reduced-motion:reduce\)\{ \.skel\{ animation:none; \}/.test(css),
-             sameHeight: /\.skel-card \.sk-ph\{ height:104px/.test(css) && /\.card \.ph\{ height:104px/.test(css) }; });
+  /* the rules as written: under npm run test:site the page gets them minified, which scripts/css-diff.js compares */
+  const css = fs.readFileSync(path.join(ROOT, "styles.css"), "utf8");
+  r = { reduced: /prefers-reduced-motion:reduce\)\{ \.skel\{ animation:none; \}/.test(css),
+        sameHeight: /\.skel-card \.sk-ph\{ height:104px/.test(css) && /\.card \.ph\{ height:104px/.test(css) };
   eq(r, { reduced: true, sameHeight: true }, "the shimmer stops for reduced motion, and the placeholder photo is the card's height, so nothing jumps");
 
   // ---- U1: the filter groups -------------------------------------------------

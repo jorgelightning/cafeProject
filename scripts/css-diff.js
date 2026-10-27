@@ -157,7 +157,15 @@ async function useCss(pg, which) {
   const real = all.filter(x => !/could not reach/.test(x));
   reached.forEach(x => console.log(x));
   if (!real.length) console.log("no computed-style difference against " + ref + " in " + states + " states");
-  else { console.log(real.length + " differences:"); real.slice(0, 200).forEach(x => console.log("  " + x)); }
+  else {
+    /* one change seen on many elements in many states is one line: what changed, and how often */
+    const kinds = new Map();
+    real.forEach(x => { const k = x.slice(x.indexOf(" :: ") + 4); kinds.set(k, (kinds.get(k) || 0) + 1); });
+    console.log(real.length + " differences, " + kinds.size + " distinct:");
+    [...kinds].sort((p, q) => q[1] - p[1]).slice(0, 80).forEach(([k, n]) => console.log("  " + String(n).padStart(6) + " x  " + k));
+    console.log("the first in full:");
+    real.slice(0, 40).forEach(x => console.log("  " + x));
+  }
   await b.close(); srv.close();
   process.exit(real.length ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

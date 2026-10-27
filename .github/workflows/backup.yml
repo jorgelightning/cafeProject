@@ -1,8 +1,10 @@
 name: Backup cafes data
 
-# Snapshots the Firebase Realtime Database into cafes.json daily.
-# This gives versioned backups in git history AND keeps the app's
-# offline-fallback file (DATA_URL in js/config.js) fresh.
+# Snapshots the Firebase Realtime Database into cafes.json daily, on the `data` branch: a commit there on each day
+# something changed is the backup, and its cafes.json is the one the site publishes (deploy.yml runs when this
+# succeeds, takes the file from there and makes a share page per public cafe from it). Until 27 Oct this committed
+# to main, where 45 bot commits sat among the real ones and twice turned a push away because the night's backup had
+# landed first. main keeps a cafes.json of its own, no longer refreshed: the data for local runs and the tests.
 
 on:
   schedule:
@@ -12,11 +14,24 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
 jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
+      - name: Switch to the data branch
+        run: |
+          if git fetch --depth=1 origin data; then
+            git switch -C data FETCH_HEAD
+          else
+            # the first run: a branch of its own, with none of main's history, holding only the backup
+            git switch --orphan data
+          fi
 
       - name: Fetch data from Firebase
         run: |
@@ -25,6 +40,7 @@ jobs:
           # value that reached Firebase before that existed — or by any other route — still
           # never lands in the published file. Coordinates round to ~1km; an area field with
           # digits in it is a street address, not a locality, and is dropped.
+          # scripts/build-site.js checks the same again before the deploy publishes it.
           curl -fsS "https://cafeproject-b604f-default-rtdb.firebaseio.com/cafes.json" \
             | jq 'if type=="object" then [.[]] else . end
                   | map(if .custom == true then
@@ -38,22 +54,18 @@ jobs:
           # ...and never commit one that still carries a private address
           jq -e 'all(.[] | select(.custom == true);
                       ((.lat == null) or (.lat == ((.lat * 100 | round) / 100)))
+                      and ((.lng == null) or (.lng == ((.lng * 100 | round) / 100)))
                       and ((.area // "") | test("[0-9]") | not)
                       and (has("pid") | not))' cafes.json > /dev/null
 
-      - name: Refresh the share pages
-        # one page per public cafe under c/, so a shared link previews as the cafe (private spots never get one)
-        run: node scripts/share-pages.js
-
       - name: Commit if changed
         run: |
-          git add -A c
-          if git diff --quiet -- cafes.json && git diff --cached --quiet -- c; then
+          git add cafes.json
+          if git rev-parse -q --verify HEAD > /dev/null && git diff --cached --quiet; then
             echo "No changes since last backup."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898270+github-actions[bot]@users.noreply.github.com"
-          git add cafes.json c
           git commit -m "Backup cafes.json ($(date -u +%Y-%m-%d))"
-          git push
+          git push origin data

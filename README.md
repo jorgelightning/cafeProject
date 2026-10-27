@@ -4,7 +4,8 @@ A cafe-tracking web app: Google Maps view, searchable cafe list, drink logs with
 ratings, head-to-head Elo ranking, stats, and cloud sync via Firebase.
 Live at **https://jorgelightning.github.io/cafeProject/**
 
-No build step, no framework — plain HTML/CSS/JS served straight from GitHub Pages.
+No framework and nothing to build while you work: plain HTML/CSS/JS, which is what the browser runs locally.
+The deploy publishes a minified copy to GitHub Pages, only after every test passes against it.
 
 See [DESIGN_NOTES.md](DESIGN_NOTES.md) for why things are built the way they are, what the
 data actually supports, the traps that have already caused bugs, and what was deliberately
@@ -30,6 +31,7 @@ not built.
 | `js/form.js` | Complete drink and cafe editor |
 | `js/boot.js` | Startup, updates and back navigation |
 | `sw.js` | Offline shell and data cache |
+| `scripts/` | Tooling: `build-site.js` (the published copy), `share-pages.js`, `bump.js`, `sri.js`, `css-diff.js` |
 | `tests/` | Browser and unit checks |
 
 ### Private spots
@@ -41,7 +43,7 @@ A cafe ticked "Private spot 🏠" is stored **twice**:
 | `cafes/<id>` | blurred pin (~1km), no street address | anyone |
 | `private/<id>` | the exact address and coordinates | only the owner account |
 
-`cafes.json` is served from this repo and mirrors the public node only, so **everything the
+`cafes.json` is published with the site and mirrors the public node only, so **everything the
 app publishes is blurred.** The app reads `private/` when you are signed in and shows you the
 real address; signed out, the accessors (`areaOf` / `latOf` / `lngOf` in `core.js`) fall back
 to the public value. The precise copy is never merged into the `cafes` array, because `save()`
@@ -80,12 +82,13 @@ two duplicates rather than loses it. You will see a toast naming each spot it mo
 #### How the blurring works
 
 
-`cafes.json` is served from this repo and the Firebase node is read without auth, so
+`cafes.json` is published with the site and the Firebase node is read without auth, so
 **everything the app stores is public.** A cafe ticked "Private spot 🏠" therefore has its
 coordinates rounded to about a kilometre and a numbered area field dropped *before it is
 saved* — hiding it in the interface would hide nothing, since anyone can open the JSON. The
 daily backup applies the same redaction in jq, so a precise value already sitting in Firebase
-still never reaches the published file.
+still never reaches the published file, and the deploy checks the file once more and refuses to publish one
+that carries a precise location (`scripts/build-site.js`).
 
 
 Scripts are classic files loaded in order with `defer` — `config.js` first, `boot.js` last — and
@@ -101,7 +104,8 @@ inline code, which is what lets the Content Security Policy in `index.html` forb
 `tests/README.md`. Also: `npm run test:unit` (the `js/lib/` modules, Node only), `npm run test:rules`
 (the database rules, in the Firebase emulator) and `npm run test:live` (the Content Security Policy
 against the real Maps, database and sign-in script; needs the network).
-None of it is needed to deploy; Pages ignores `package.json` and `node_modules/`.
+`npm run test:site` runs the whole suite against the minified build that gets published; the deploy runs
+that and publishes nothing if it fails.
 
 ## Deploying an update
 
@@ -114,8 +118,11 @@ None of it is needed to deploy; Pages ignores `package.json` and `node_modules/`
    its cache. Bumping one without the other looks exactly like a change
    that failed to deploy.
 2. Run `npm test`. All checks must pass before pushing.
-3. Commit and push to `main`. GitHub runs App checks and deploys Pages.
-4. Verify the deployed version. Browsers may briefly serve the old page from the Pages cache.
+3. Commit and push to `main`. *App checks* runs the tests against the source; *Deploy site* builds the
+   minified site (`npm run build`), runs every test against it, and publishes only if they pass. A failed
+   run leaves the previous version live.
+4. Verify the deployed version a few minutes later. Browsers may briefly serve the old page from the Pages
+   cache.
 
 ## Data
 
@@ -125,7 +132,9 @@ None of it is needed to deploy; Pages ignores `package.json` and `node_modules/`
   write one cafe at a time (`cafes/<id>`) so two devices editing different
   cafes cannot overwrite each other; bulk operations enqueue each changed cafe. Transactions detect same-cafe conflicts before replacing a cloud record. `asArray()` reads either shape, so older array-shaped
   exports still load.
-- **`cafes.json`** (optional, next to `index.html`): offline fallback if the
+- **`cafes.json`**: the live site's is the nightly backup, kept on the `data` branch
+  (`.github/workflows/backup.yml`), a commit on each day it changes; the copy on `main` is a fixed snapshot
+  for local runs and the tests. It is the offline fallback if the
   cloud is unreachable. Must be a **plain JSON array** starting with `[` —
   the wrapped `{ "cafes": [...] }` form is only for pasting into Firebase.
   If missing, the app falls back to the visitor's cached copy or demo data.
@@ -178,10 +187,10 @@ off once, then again after any key or hosting change.
 - [ ] Branches: a protection rule on `main` that requires the *App checks* workflow to pass.
 - [ ] Code security: secret scanning and push protection on; Dependabot alerts on (the version updates are
       configured in `.github/dependabot.yml`).
-- [ ] **Gate the live site on the tests** (optional, two steps, both required):
-      Settings > Pages > Source: *GitHub Actions*, then Settings > Secrets and variables > Actions >
-      Variables: `PAGES_VIA_ACTIONS` = `true`. Until both are done `.github/workflows/deploy.yml` does
-      nothing and Pages keeps deploying straight from `main`, as it does today.
+- [x] **The live site is gated on the tests** (on since 27 Oct): Settings > Pages > Source: *GitHub
+      Actions*, and Settings > Secrets and variables > Actions > Variables: `PAGES_VIA_ACTIONS` = `true`.
+      Undo either and nothing publishes.
+- [ ] Leave the `data` branch to the backup bot: it holds the live site's data, and the deploy reads it.
 - [ ] If your editing tool (for example Google AI Studio) syncs to this repo, check it did not delete
       `package-lock.json`. The *App checks* workflow now fails with that exact message if it did.
 
@@ -189,6 +198,8 @@ off once, then again after any key or hosting change.
 
 - `npm start` serves the app on port 3000 (`server.js`; it refuses to serve dotfiles such as `.git`).
 - `npm test` runs every test in `tests/` in a headless browser.
+- `npm run build` writes the site as it would be published into `_site/` (minified, with share pages and
+  source maps); `npm run test:site` builds it into `_site_test/` and runs every test against it.
 - `npm run lint` runs ESLint (`eslint.config.js`). The scripts share one global scope, so the config reads
   every top-level name from `js/*.js` and treats them as globals; `no-undef` still catches a typo.
 - `npm run typecheck` type-checks the JavaScript with TypeScript (`tsconfig.json`, data shapes in

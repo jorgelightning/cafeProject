@@ -6,8 +6,9 @@
    the cafe's name and place, its verdict and what to order, then sends the browser straight on to ?cafe=<id>.
 
    Private spots never get a page: they are somebody's home. Nothing here is not already in the public cafes.json.
-   Run by the nightly backup (.github/workflows/backup.yml) after it refreshes cafes.json, and by hand with
-   `node scripts/share-pages.js`. A link to a cafe newer than the last run has no page yet; 404.html sends it on
+   Made at deploy by scripts/build-site.js, from the cafes.json being published (the nightly one on the `data`
+   branch), so the pages are never older than the data. `node scripts/share-pages.js` writes them into c/ here for a
+   look; git ignores that folder. A link to a cafe newer than the last deploy has no page yet; 404.html sends it on
    to the app all the same. */
 const fs = require("fs");
 const path = require("path");

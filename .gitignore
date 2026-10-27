@@ -17,3 +17,10 @@ npm-debug.log*
 *.pem
 *.key
 serviceAccount*.json
+
+# built at deploy (scripts/build-site.js), never committed: the site, its test copy, the nightly data checkout and
+# the share pages (made from the data branch's cafes.json)
+_site/
+_site_test/
+_data/
+c/
