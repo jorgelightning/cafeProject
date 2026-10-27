@@ -775,10 +775,8 @@ function renderMarkers() {
   else if (mapOwned) return;
   else if (_worldOn()) fitWorld();
   else if (_focusVal) fitList(locationList(_focusVal));
-  else if (_homeVal()) {
-    fitList(locationList(_homeVal()));
-    setPillLabel(_homeVal());
-  } else if (n === 1) {
+  else if (_homeVal()) fitDense(_homeVal());
+  else if (n === 1) {
     gmap.setCenter(gmarkers.filter(_pinShown)[0].getPosition());
     gmap.setZoom(14);
   } else if (n > 1) {
@@ -939,6 +937,10 @@ function renderLocationSelect() {
 /* The pins a dropdown value stands for. "other:" is the places no country box claims. */
 function locationList(val) {
   if (!val) return cafes.filter(c => c.lat != null);
+  if (val.slice(0, 5) === "near:") {
+    const p = val.slice(5).split(",");
+    return cafes.filter(c => c.lat != null && distKm(+p[0], +p[1], c.lat, c.lng) <= DENSE_KM);
+  }
   if (val === "other:") return cafes.filter(c => c.lat != null && cafeCountryName(c) === "Other");
   if (val.slice(0, 8) === "country:") {
     const name = decodeURIComponent(val.slice(8));
@@ -964,6 +966,61 @@ function locationList(val) {
     );
   }
   return cafes.filter(c => c.lat != null);
+}
+/* ---------- open where the cafes are (design audit D3) ----------
+   The first view fitted the whole home region, and California is four states wide on a phone: its 70 cafes showed as
+   three clusters with nothing to tap. The first view, and a region picked on the welcome sheet, now fit the busiest
+   part of the region: the cafes within DENSE_KM of the one with the most neighbours, when that is at least a third
+   of the region and five cafes (San Francisco, 35 of California's 70, as dots). The pill names it after the town
+   most of them are in, with the count; leave it and the pill says "All places", as for any place. The region menu
+   still fits a whole region, so the wide view is one tap away. */
+const DENSE_KM = 12;
+/** The busiest part of a region, or null when the region is small or spread evenly.
+    @param {string} val a region value @returns {{val:string, list:Cafe[], label:string}|null} */
+function denseView(val) {
+  const list = locationList(val);
+  if (list.length < 8) return null;
+  let best = null,
+    bestN = 0;
+  list.forEach(function (a) {
+    let n = 0;
+    list.forEach(function (b) {
+      if (distKm(a.lat, a.lng, b.lat, b.lng) <= DENSE_KM) n++;
+    });
+    if (n > bestN) {
+      bestN = n;
+      best = a;
+    }
+  });
+  if (!best || bestN < Math.max(5, list.length / 3) || bestN === list.length) return null;
+  const near = "near:" + (+best.lat).toFixed(4) + "," + (+best.lng).toFixed(4);
+  const dl = locationList(near);
+  const towns = {};
+  dl.forEach(function (c) {
+    const t = cityOf(c);
+    if (t) towns[t] = (towns[t] || 0) + 1;
+  });
+  const town = Object.keys(towns).sort(function (x, y) {
+    return towns[y] - towns[x];
+  })[0];
+  /* a town names it only when it holds a good share: San Francisco has 13 of its 36, but Honolulu's cafes are filed
+     under their neighbourhoods, and "Downtown" (2 of 6) would say nothing, so that one is named by its region */
+  const reg = worldRegions().filter(function (g) {
+    return g.val === val;
+  })[0];
+  const name = town && towns[town] >= 3 && towns[town] >= dl.length / 4 ? town : reg ? reg.label : "Nearby";
+  return { val: near, list: dl, label: name + " · " + dl.length };
+}
+/** Fits a region, or its busiest part when it has one, and names it on the pill. @param {string} val */
+function fitDense(val) {
+  const d = denseView(val);
+  if (d) {
+    fitList(d.list);
+    setPillLabel(d.val, d.label);
+  } else {
+    fitList(locationList(val));
+    setPillLabel(val);
+  }
 }
 function fitList(list) {
   if (!gmap || !list || !list.length) return;
@@ -1004,7 +1061,8 @@ function setPillLabel(val, fallback) {
     const r = worldRegions().filter(g => g.val === val)[0];
     name = r ? r.label : "";
   }
-  l.innerHTML = (name ? ico("pin") : ico("globe")) + " " + esc(name || fallback || "World");
+  /* a place with no menu entry (the busiest part of a region, D3) is named by the fallback, still a place */
+  l.innerHTML = (name || (val && fallback) ? ico("pin") : ico("globe")) + " " + esc(name || fallback || "World");
 }
 /* The pill must name what the map shows. On the live site it said "California" over the whole Pacific after the
    welcome closed and the map refitted. When the middle of the map leaves the place it names, it says "All places"
@@ -1144,6 +1202,8 @@ function welcomeRegion(v) {
   closeSheet();
   pickedRegion = v || "";
   jumpToLocation(v);
+  /* after jumpToLocation's own fit of the whole region: a first look goes to where its cafes are (D3) */
+  if (v) setTimeout(() => fitDense(v), 0);
 }
 let userLoc = null;
 /* A region picked by hand (a regionOf() value): where Go filters to, and what Near me falls back to when the phone
