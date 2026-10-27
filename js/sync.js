@@ -362,10 +362,53 @@ function syncWithin(p, ms) {
   });
   return Promise.race([p, timeout]).finally(() => clearTimeout(t));
 }
+/* ---------- trying again by itself ----------
+   A sync that could not finish (no signal at the counter, the phone just woken and its connection still coming back)
+   used to wait for the next save, a sign-in, the phone reporting offline-then-online, or a tap on Retry sync. Now it
+   tries again by itself: after 3, 10 and 30 seconds, then every one or two minutes while anything waits; as soon as
+   Firebase says it is connected again (syncWatch); and whenever the app comes back to the screen. Retry sync stays,
+   for when you would rather not wait. */
+let SYNC_RETRY_MS = [3000, 10000, 30000, 60000, 120000];
+let SYNC_WRITE_MS = 30000; /* how long a write may take before the queue is released for the next try */
+let _syncRetryTimer = 0,
+  _syncRetryN = 0,
+  _syncLastErr = "";
+function syncRetryLater() {
+  clearTimeout(_syncRetryTimer);
+  _syncRetryTimer = 0;
+  const waiting = Object.keys(syncPending).some(function (k) {
+    return !syncPending[k].conflict;
+  });
+  if (!waiting || !isAdmin) {
+    _syncRetryN = 0;
+    return;
+  }
+  const ms = SYNC_RETRY_MS[Math.min(_syncRetryN, SYNC_RETRY_MS.length - 1)];
+  _syncRetryN++;
+  _syncRetryTimer = setTimeout(flushSync, ms);
+}
+/** Sends the queue the moment Firebase's own connection is back (a phone waking up, the end of a tunnel).
+    Called once from initFirebase. @param {any} db */
+function syncWatch(db) {
+  try {
+    db.ref(".info/connected").on("value", function (/** @type {any} */ s) {
+      if (s && s.val() && Object.keys(syncPending).length) flushSync();
+    });
+  } catch (e) {
+    warn("sync", e);
+  }
+}
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible" && Object.keys(syncPending).length) flushSync();
+});
 async function flushSync() {
   if (syncBusy) return;
   if (!isAdmin || !fbReady || !ownerSignedIn() || !navigator.onLine) {
+    /* the owner on this device, but the sign-in script is not here yet: fetch it, and initAuth sends the queue once
+       the session is restored */
+    if (isAdmin && fbReady && !fbAuth && typeof ensureAuth === "function") ensureAuth();
     renderSyncStatus();
+    syncRetryLater();
     return;
   }
   syncBusy = true;
@@ -373,9 +416,17 @@ async function flushSync() {
   renderSyncStatus();
   let again = false;
   try {
-    for (const id of Object.keys(syncPending)) {
+    /* Each pass sends every cafe waiting, including one saved while it runs. It used to take the list once, at the
+       start, and a save that arrived meanwhile found the queue busy and was left with nothing to send it: a ranking
+       answer saves two cafes back to back, so the second one sat at "1 waiting to sync" until Retry sync. */
+    const tried = {};
+    for (;;) {
+      const id = Object.keys(syncPending).find(function (k) {
+        return !tried[k] && !syncPending[k].conflict;
+      });
+      if (id === undefined) break;
+      tried[id] = true;
       const op = syncPending[id];
-      if (op.conflict) continue;
       const keyed = _cloudKeyed,
         ref = fbDb.ref(keyed ? "cafes/" + id : "cafes");
       await syncWithin(ref.once("value"), SYNC_ONCE_MS);
@@ -383,7 +434,11 @@ async function flushSync() {
          so these record its outcome rather than accumulating. */
       let lastConflicts = null,
         lastWritten;
-      const result = await ref.transaction(
+      /* A write that never comes back would hold the queue for good, and nothing could try again. Released after
+         SYNC_WRITE_MS; if Firebase lands it later, the next pass finds the cloud already equal to this edit and writes
+         the same value, so letting go is safe. */
+      const result = await syncWithin(
+        ref.transaction(
         function (raw) {
           let current = raw,
             collection;
@@ -416,6 +471,8 @@ async function flushSync() {
         },
         undefined,
         false
+        ),
+        SYNC_WRITE_MS
       );
       if (syncPending[id] !== op) {
         if (result.committed && syncPending[id]) syncPending[id].base = syncCopy(op.value);
@@ -446,12 +503,17 @@ async function flushSync() {
       syncPersist();
     }
   } catch (e) {
-    syncFailure = "Waiting to sync — retry when connected";
-    warn("sync", e);
+    syncFailure = "Waiting to sync · trying again by itself";
+    /* the same failure on every retry is one problem, not twenty: the log keeps the first of a run */
+    const what = String((e && e.message) || e);
+    if (what !== _syncLastErr) warn("sync", e);
+    _syncLastErr = what;
   } finally {
     syncBusy = false;
+    if (!syncFailure) _syncLastErr = "";
     renderSyncStatus();
     if (again) flushSync();
+    else syncRetryLater();
   }
 }
 function syncAdoptWritten(id, written) {

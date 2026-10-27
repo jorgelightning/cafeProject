@@ -1925,3 +1925,22 @@ nothing, counted as coffee. The conflict review lists Kind with the other fields
 Not done: C4 (ways out that record nothing; "Too long ago to say" still records a tie) and C5 (placing progress
 and "Place it now") were not picked. The drink guesser reads "oolong" as boba, which the new test ran into; a
 cafe whose drinks say oolong tea and is a tea house can now be set to Tea.
+
+## Syncing without a Retry button (v113)
+
+After updating a cafe the bar often stayed at "Saved on this phone · 1 waiting to sync" until Retry sync was
+tapped. Two causes. The first was a bug: `flushSync` took the list of waiting cafes once, when it started, and a
+save that arrived while it ran found it busy and returned. A ranking answer saves two cafes back to back, so the
+second was left behind every time, with nothing that would send it before the next save. A pass now takes every
+cafe waiting, including one saved while it runs (reproduced with a stand-in Firebase that takes 50 ms per call:
+before, the second cafe stayed waiting; after, both land).
+
+The second: a sync that failed waited for the next save, a sign-in, the phone reporting offline-then-online, or
+the button. Phones rarely report offline at a counter with weak Wi-Fi, and a phone just woken has a connection that
+takes a while to come back. Now a sync that could not finish tries again by itself, after 3, 10 and 30 seconds and
+then every one or two minutes while anything waits (`syncRetryLater`), as soon as Firebase says it is connected
+(`.info/connected`, `syncWatch`), and when the app comes back to the screen. The write itself is now held to 30
+seconds like the read before it, so a write that never answers cannot hold the queue: if Firebase lands it later,
+the next pass finds the cloud already equal to the edit and writes the same value. A save made while the sign-in
+script is not loaded fetches it. The same failure on every try is logged once in Problems, not once a try. The
+bar says "Waiting to sync · trying again by itself", and Retry sync stays for when you would rather not wait.

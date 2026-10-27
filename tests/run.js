@@ -42,6 +42,7 @@ const SUITE = [
   ["sync-conflict",    "telling two versions of a cafe apart when they collide"],
   ["board-guide",      "the board reads as a guide, and its bookkeeping stays with the owner"],
   ["sync-merge",       "two devices merge automatically, and what it refuses to merge"],
+  ["sync-auto",        "edits sync with no Retry: a cafe saved mid-sync goes in the same pass, and a failed sync tries again by itself (timer, reconnect, back on screen)"],
   ["scale",            "one type/radius/space scale, and a layout that fits all three devices"],
   ["css-shape",        "styles.css states each selector once per context (no rule appended to override another), and !important stays rare"],
   ["list-clean",       "the list tint carries the rating, and four control rows fold into one"],

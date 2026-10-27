@@ -197,6 +197,8 @@ function initFirebase() {
       return false;
     firebase.initializeApp(FIREBASE_CONFIG);
     fbDb = firebase.database();
+    /* sends anything still waiting the moment the connection is back (sync.js) */
+    if (typeof syncWatch === "function") syncWatch(fbDb);
     /* auth is not in the page until someone signs in (ensureAuth, storage.js loads it), so on a normal boot there is
        nothing to start. Asked unconditionally, it threw on every visit — harmless while warn() only wrote to the
        console, but warn() now also keeps Settings' Problems log, and every device would have logged it. */
