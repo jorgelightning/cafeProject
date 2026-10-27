@@ -1944,3 +1944,51 @@ seconds like the read before it, so a write that never answers cannot hold the q
 the next pass finds the cloud already equal to the edit and writes the same value. A save made while the sign-in
 script is not loaded fetches it. The same failure on every try is logged once in Problems, not once a try. The
 bar says "Waiting to sync · trying again by itself", and Retry sync stays for when you would rather not wait.
+
+## Make room for the cafes (v114)
+
+A design audit on 27 Oct measured every screen of the live app at 390 × 844. The parts were consistent and every
+piece of text passed contrast; what held the app back was space and priority. Nine of its ten picks are in (D7,
+ranked rows for the Stats habits, was not picked). Measured before and after on the live list:
+
+**The List (D1, D4).** Search, the tabs, Filters, the map button and the guides stayed pinned while the list
+scrolled: with the tab bar, 253 of 844px. The tabs, Filters, Map and the guides are now one row that scrolls
+sideways and steps aside while the list scrolls down (`listScrolled`), coming back on the way up, near the top, or
+while Filters is open. Search never moves. The list starts at 72px while scrolling (it was 189), so the chrome is
+136px, 16%. The list scrolls in its own box below the header, so hiding the row cannot move it under a thumb. The
+sliders opened Settings while filters sat behind a separate button; Settings has a gear now, on the phone's search
+row, the map bar and the laptop's tabs, and the sliders are Filters' alone (the drink menu's Edit took the pencil).
+
+**One Log button (D2).** A cafe page showed "＋ Log a drink here" pinned right over the "＋ Log" tab, 124px of the
+bottom. The bar is gone; on a cafe page the middle tab reads Log here and opens the quick cup (`logTab`), and
+everywhere else it is Log, a new visit.
+
+**The map (D3).** It opened at zoom 5 over four states, with California's cafes as three clusters. The first view,
+and a region picked on the welcome, now fit the busiest part of the region (`denseView`): the cafes within 12 km of
+the one with the most neighbours, when that is at least a third of the region and five cafes. California opens on
+San Francisco, 36 places in reach. The pill names it after the town that holds a fair share of them (13 of San
+Francisco's 36 say San Francisco; Honolulu's are filed by neighbourhood, so that one reads Hawaii · 6). Its value
+is `near:lat,lng`, which `locationList` reads as the cafes within 12 km, so the pill's own tracking still says All
+places when the map leaves it. The region menu still fits a whole region.
+
+**Go (D5).** Rank a pair, the region, Top 5 and Near me share one sideways row (`.gobar`; `.gorow` was taken by
+the Go queue), the kinds under it. The first cafe starts at 173px for a visitor and 196px for the owner (221 and
+242); the audit's mock promised about 75px and the real gain is 46 to 48. Ranks 1 to 3 are numbers on gold,
+silver and bronze in place of 16px emoji medals, and every row carries the drawn mark the List uses.
+
+**The cafe page (D6).** Drinks sort by cups ordered: Kissaten HiFi opened on a chai had once and not liked, above
+the Flat White had twelve times. The ones had at least twice show (two or three), the rest fold behind a line
+that names them. Summary dates drop the year when it is this year ("12 cups · last Oct 17"); the cup history and
+the delete confirmation keep the full date. A visitor reads Drinks Jorge had and Jorge's thoughts, as Stats speaks.
+
+**Sheets and buttons (D8, D9).** The quick cup and the welcome opened with a thick ring on their first chip, which
+read as chosen while Save was off. A sheet that opens on a choice focuses its title (for a screen reader, with no
+ring), a menu still starts on its first item, and the quick cup focuses the price once a drink is picked. The
+focus ring is a thin ink outline everywhere. An off button is grey, and Save cup says Pick a drink until there is
+one. Sign out is outlined: the filled accent is for the one main action on a screen.
+
+**Type (D10).** Nine text sizes and six weights became five and three: 12 (labels), 14 (secondary, 13 before), 16
+(body, 15 before; subheads were 18 and are now 16 at 800), 22 (headings), 40 (figures); 400 to read, 600 for labels,
+800 for names and titles. Mapping 700 to 600 across the board flattened names into the line under them, so names
+and titles went to 800. At 14px "12 ordered · latest Oct 17" broke the date across lines, so a drink card reads
+"12 cups · last Oct 17". `tests/design-batch.js`.
