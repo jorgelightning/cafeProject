@@ -1,0 +1,4833 @@
+[
+  {
+    "area": "Diamond Head / Kapahulu / St. Louis Heights",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-11"
+        ],
+        "ice": "Less ice",
+        "n": "Matcha latte - Samidori",
+        "p": "9",
+        "sweet": "0%"
+      },
+      {
+        "ice": "Less ice",
+        "n": "Matcha latte - Saemidori",
+        "p": "9",
+        "sweet": "0%"
+      },
+      {
+        "ice": "Less ice",
+        "n": "Matcha latte - Okuyutaka",
+        "p": "9",
+        "sweet": "0%"
+      },
+      {
+        "ice": "Less ice",
+        "n": "Matcha latte - Yamatomidori",
+        "p": "9",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1649,
+    "emoji": "☕",
+    "fav": true,
+    "id": "mqeytadswkv9",
+    "lat": 21.2808,
+    "lng": -157.81429,
+    "matches": 11,
+    "name": "Zen Gelato & Bar",
+    "rating": 5,
+    "review": "There were four different type of matcha to choose from, I have tried all four. They were all very good, as normal no sugar. There were nice harmony between the matcha and milk, whereas the matcha still stands out.",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-06-15T21:42:33.969Z"
+  },
+  {
+    "area": "Kailua",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-11"
+        ],
+        "elo": 1454,
+        "matches": 3,
+        "n": "Matcha latte",
+        "p": "9"
+      },
+      {
+        "dates": [
+          "2026-06-11"
+        ],
+        "elo": 1559,
+        "matches": 4,
+        "n": "Hojicha latte",
+        "p": "9"
+      }
+    ],
+    "elo": 1643,
+    "emoji": "☕",
+    "fav": true,
+    "id": "mqeywfe5ramt",
+    "lat": 21.39181,
+    "lng": -157.7419,
+    "matches": 12,
+    "name": "ANDO",
+    "rating": 5,
+    "review": "As the owners are interior design, the cafe atmosphere was amazing as their drinks! What stood out to me the most is the sweetness from monk fruit with a big takeaway from sugar.",
+    "tags": [
+      "cozy"
+    ]
+  },
+  {
+    "area": "Downtown",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-13"
+        ],
+        "elo": 1569,
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": "10",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1474,
+    "emoji": "☕",
+    "fav": true,
+    "id": "mqf1k9fidxty",
+    "lat": 21.29675,
+    "lng": -157.8566,
+    "matches": 6,
+    "name": "Mashio Project",
+    "rating": 5,
+    "review": "It's a popup within Fishcakes (interior design place looks like). Solid Hojicha latte without sugar. So much great popup here as well, would recommend.",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-06-15T12:49:10.909Z"
+  },
+  {
+    "area": "Downtown",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-04"
+        ],
+        "n": "Hong Hong Milk Tea",
+        "p": "8"
+      }
+    ],
+    "elo": 1474,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqf55zw2fscx",
+    "lat": 21.30006,
+    "lng": -157.8585,
+    "matches": 6,
+    "name": "Hana Tea",
+    "rating": 4,
+    "review": "Just a solid HK milk yea, possibly the best in the island!",
+    "tags": [
+      "cozy"
+    ]
+  },
+  {
+    "area": "Waikiki",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-06"
+        ],
+        "n": "Hojicha latte (Snoopy version)",
+        "p": "11"
+      }
+    ],
+    "elo": 1407,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqf5dttmojz1",
+    "lat": 21.27831,
+    "lng": -157.82874,
+    "matches": 7,
+    "name": "Junbi Waikiki",
+    "rating": 2,
+    "review": "It was a okay hojicha latte with topping that cost $3 upcharge."
+  },
+  {
+    "area": "Kapolei",
+    "drinks": [
+      {
+        "elo": 1444,
+        "ice": "Hot",
+        "matches": 4,
+        "n": "Flat white",
+        "p": "8",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1416,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqf9w1vzajpl",
+    "lat": 21.32908,
+    "lng": -158.0914,
+    "matches": 14,
+    "name": "Island Vintage Coffee and Wine Bar Kapolei",
+    "rating": 3,
+    "review": "Flat white are known for their micro foam and there was none here!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-06-15T13:52:35.471Z"
+  },
+  {
+    "area": "Kapolei",
+    "brand": "Yifang",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-13"
+        ],
+        "ice": "Warm",
+        "n": "Kumquat green tea",
+        "p": "8",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1441,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfah0h1gq6v",
+    "lat": 21.32909,
+    "lng": -158.07801,
+    "matches": 6,
+    "name": "YiFang Taiwan Fruit Tea Hawaii - Kapolei Village Center",
+    "rating": 4,
+    "review": "Fruit tea are usually very good here!",
+    "tags": [
+      "quiet",
+      "cozy"
+    ],
+    "updated": "2026-06-15T21:26:49.449Z"
+  },
+  {
+    "area": "Cupertino",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-01"
+        ],
+        "ice": "Warm",
+        "n": "Ceylon black tea",
+        "p": "7.99",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-08-06"
+        ],
+        "ice": "Less ice",
+        "milk": "Lactose-free",
+        "n": "Phoenix Oolong Milk Tea",
+        "p": "7.04",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1539,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfoz8zpx275",
+    "lat": 37.33551,
+    "lng": -122.01533,
+    "matches": 5,
+    "name": "Charlie's Tea 茶理宜世",
+    "rating": 5,
+    "review": "If you are a fan of quality tea, good choices here!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-08-07T00:07:27.801Z",
+    "wish": false
+  },
+  {
+    "area": "Carmel Valley",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-31"
+        ],
+        "ice": "Less ice",
+        "n": "Orange green tea",
+        "p": "6",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1585,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfp7mrq0ktj",
+    "lat": 32.95354,
+    "lng": -117.23277,
+    "matches": 6,
+    "name": "OMOMO TEA SHOPPE",
+    "rating": 5,
+    "review": "Great price and fruit tea here SoCal just crushes it, don't miss out!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-06-15T21:01:29.990Z"
+  },
+  {
+    "area": "Union Street",
+    "brand": "Tadaima",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-22"
+        ],
+        "elo": 1509,
+        "ice": "Warm",
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": "6",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1446,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfpjanccwbt",
+    "lat": 37.79766,
+    "lng": -122.42972,
+    "matches": 6,
+    "name": "Tadaima Marina",
+    "rating": 4,
+    "review": "Honestly hard to go wrong with Hojicha, nothing special but dependable cafe with above average food. Well rounded cafe.",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-06-15T21:23:49.965Z"
+  },
+  {
+    "area": "Inner Sunset",
+    "brand": "Tadaima",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-15"
+        ],
+        "elo": 1460,
+        "ice": "Warm",
+        "matches": 5,
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-05-15",
+            "ice": "Warm",
+            "id": "mvphife7b7rz",
+            "p": "6",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1423,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfplrs5h6hd",
+    "lat": 37.76503,
+    "lng": -122.46616,
+    "matches": 6,
+    "name": "Tadaima Inner Sunset",
+    "rating": 4,
+    "review": "Newest location, nothing different from the Marina location. Well rounded cafe in terms of drinks and food.",
+    "updated": "2026-10-26T16:42:10.159Z"
+  },
+  {
+    "area": "Ewa",
+    "brand": "Teapresso",
+    "drinks": [
+      {
+        "dates": [
+          "2025-08-16"
+        ],
+        "ice": "Less ice",
+        "n": "Plantation",
+        "orders": [
+          {
+            "date": "2025-08-16",
+            "ice": "Less ice",
+            "id": "mvphj4br2nm8",
+            "p": "7.49",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.49",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1421,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfqggdjw0hv",
+    "lat": 21.33325,
+    "lng": -158.05391,
+    "matches": 6,
+    "name": "Teapresso Bar",
+    "rating": 5,
+    "review": "Can't beat a local flavor!",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-10-26T16:42:42.471Z"
+  },
+  {
+    "area": "Dogpatch",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "count": 2,
+        "dates": [
+          "2026-08-04"
+        ],
+        "ice": "Warm",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "id": "mu5s1vct2pyi",
+            "reorder": "yes",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-04",
+            "ice": "Warm",
+            "id": "mu5s1vcrfusf",
+            "p": "5.98",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5.98",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "count": 2,
+        "dates": [
+          "2026-06-18"
+        ],
+        "ice": "Warm",
+        "n": "Matcha latte",
+        "orders": [
+          {
+            "date": "2026-06-18",
+            "ice": "Warm",
+            "id": "mu5s1vcvgd45",
+            "p": "6.00",
+            "qty": 2,
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.00",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1558,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfs78v66tnu",
+    "lat": 37.75732,
+    "lng": -122.38794,
+    "matches": 8,
+    "name": "SOHN",
+    "rating": 5,
+    "review": "They are really bringing the NYC vibes into SF! Best deal for Hojicha and Match per quality and price!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-09-17T17:02:34.237Z",
+    "wish": false
+  },
+  {
+    "area": "Baylands",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-02"
+        ],
+        "ice": "Warm",
+        "n": "Iron goddess black tea",
+        "p": "5",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1524,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqftae0z4hjd",
+    "lat": 37.50094,
+    "lng": -121.96907,
+    "matches": 6,
+    "name": "Brian Black Tea",
+    "rating": 5,
+    "review": "Serving the best black tea in the bay area!",
+    "tags": [
+      "specialty"
+    ],
+    "updated": "2026-06-15T22:55:37.091Z"
+  },
+  {
+    "area": "Rosebery",
+    "brand": "",
+    "drinks": [
+      {
+        "elo": 1565,
+        "ice": "Warm",
+        "matches": 5,
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "ice": "Warm",
+            "id": "mvphkvcbdzmc",
+            "p": "5",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1574,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqftiiclt8ut",
+    "lat": -33.91433,
+    "lng": 151.20589,
+    "matches": 5,
+    "name": "Moon & Back Cafe • Lifestyle",
+    "rating": 5,
+    "review": "Everything about it a high quality, they grow their own teas in a farm in Japan, interior design is top notch. As this is my first impression! I would def check them out!",
+    "updated": "2026-10-26T16:44:04.139Z"
+  },
+  {
+    "area": "Legazpi Village",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2026-01-14"
+        ],
+        "ice": "Warm",
+        "n": "Genmaicha",
+        "orders": [
+          {
+            "date": "2026-01-14",
+            "ice": "Warm",
+            "id": "mvphly5q06lq",
+            "p": "4.25",
+            "sweet": "0%"
+          }
+        ],
+        "p": "4.25",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1543,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfuhwzrrjpt",
+    "lat": 14.55684,
+    "lng": 121.01548,
+    "matches": 3,
+    "name": "Matcha Bar - Legaspi Village",
+    "rating": 5,
+    "review": "Great interior design and atmosphere! They prepared it in a way to serve the tea itself and you may add your sweetness with complementary snacks!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-10-26T16:44:54.446Z"
+  },
+  {
+    "area": "",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2022-09-14"
+        ],
+        "n": "Latte",
+        "orders": [
+          {
+            "date": "2022-09-14",
+            "id": "mvphmk22fhzb",
+            "p": "2.60"
+          }
+        ],
+        "p": "2.60"
+      }
+    ],
+    "elo": 1422,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqful45ohgow",
+    "lat": 21.03073,
+    "lng": 105.8446,
+    "matches": 6,
+    "name": "Quán 1974",
+    "rating": 3,
+    "review": "Compared to what we had in Vietnam, it was okay but the passing trains was really awesome tho!",
+    "updated": "2026-10-26T16:45:22.827Z"
+  },
+  {
+    "area": "Gongguan",
+    "brand": "",
+    "elo": 1539,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfun0x0wf73",
+    "lat": 25.01239,
+    "lng": 121.53545,
+    "matches": 3,
+    "name": "Spade Tea Gongguan",
+    "rating": 5,
+    "review": "",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-06-15T23:33:26.244Z"
+  },
+  {
+    "area": "",
+    "brand": "",
+    "elo": 1484,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfuno8twlsc",
+    "lat": 25.02357,
+    "lng": 121.46135,
+    "matches": 3,
+    "name": "COMEBUY 板橋文德店",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-15T23:33:56.477Z"
+  },
+  {
+    "area": "Ximen",
+    "brand": "",
+    "cc": "TW",
+    "drinks": [
+      {
+        "dates": [
+          "2025-01-10"
+        ],
+        "ice": "Less ice",
+        "n": "Cheese Foam Ruby Oolong Tea (Large)",
+        "p": "2.06",
+        "sweet": "25%"
+      }
+    ],
+    "elo": 1588,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfuo8prl5pn",
+    "lat": 25.045,
+    "lng": 121.5067,
+    "matches": 6,
+    "name": "Oolong Tea Project",
+    "rating": 5,
+    "review": "Best oolong I ever had!",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-06-17T08:44:55.881Z"
+  },
+  {
+    "area": "",
+    "brand": "Odd One Out",
+    "elo": 1487,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfuoq2rbdfq",
+    "lat": 25.04249,
+    "lng": 121.55165,
+    "matches": 3,
+    "name": "ODD ONE OUT Dunnan Shop",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-15T23:34:45.507Z"
+  },
+  {
+    "area": "Ximen",
+    "brand": "",
+    "elo": 1542,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfupc5qjagi",
+    "lat": 25.04448,
+    "lng": 121.50561,
+    "matches": 3,
+    "name": "Guiji Tea - Ximen",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-15T23:35:14.126Z"
+  },
+  {
+    "area": "",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2025-01-10"
+        ],
+        "n": "Honey Lemon",
+        "p": "1.27",
+        "reorder": "yes"
+      },
+      {
+        "dates": [
+          "2025-01-10"
+        ],
+        "n": "Honey Green Tea",
+        "p": "1.43",
+        "reorder": "yes"
+      }
+    ],
+    "elo": 1485,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfupl6fx051",
+    "lat": 25.04513,
+    "lng": 121.51093,
+    "matches": 1,
+    "name": "茶鬍Beard Cup 中正漢口店",
+    "rating": 4,
+    "review": "",
+    "updated": "2026-06-17T08:48:43.098Z"
+  },
+  {
+    "area": "",
+    "brand": "Milksha",
+    "elo": 1513,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfupuk8ltst",
+    "lat": 25.02437,
+    "lng": 121.52865,
+    "matches": 1,
+    "name": "Milksha National Taiwan Normal University",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-15T23:35:37.976Z"
+  },
+  {
+    "area": "",
+    "brand": "",
+    "elo": 1487,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfuqgzxzc8i",
+    "lat": 25.04438,
+    "lng": 121.51607,
+    "matches": 3,
+    "name": "Nap Tea Taipei Nanyang",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-15T23:36:07.053Z"
+  },
+  {
+    "area": "",
+    "brand": "",
+    "elo": 1436,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfuu6q6ho8i",
+    "lat": -8.66478,
+    "lng": 115.24006,
+    "matches": 5,
+    "name": "Xi Bo Ba Renon Bali",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-15T23:39:00.366Z"
+  },
+  {
+    "area": "Achasan-ro 9-gil",
+    "brand": "",
+    "elo": 1528,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfuz6nxd95v",
+    "lat": 37.54473,
+    "lng": 127.05821,
+    "matches": 2,
+    "name": "Cafe Onion Seongsu",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-15T23:42:53.565Z"
+  },
+  {
+    "area": "24",
+    "brand": "",
+    "elo": 1570,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfv0wp458gz",
+    "lat": 35.66693,
+    "lng": 139.70636,
+    "matches": 5,
+    "name": "The Matcha Tokyo Omotesandō",
+    "rating": 5,
+    "review": "",
+    "updated": "2026-10-26T10:37:24.258Z"
+  },
+  {
+    "area": "Flushing",
+    "brand": "",
+    "elo": 1526,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfv32geijmc",
+    "lat": 40.76047,
+    "lng": -73.83206,
+    "matches": 4,
+    "name": "Teazzi Tea Shop",
+    "rating": 5,
+    "review": "",
+    "updated": "2026-10-26T10:37:28.817Z"
+  },
+  {
+    "area": "Kaimuki",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-15"
+        ],
+        "ice": "Less ice",
+        "n": "Hojicha latte",
+        "p": "6.5",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1545,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqfziw8qws2b",
+    "lat": 21.28224,
+    "lng": -157.80082,
+    "matches": 5,
+    "name": "Daily Whisk Matcha",
+    "rating": 5,
+    "review": "Takes place outdoors with shading, a strong sense of Hojicha with soft touch of milk! They offer monkfruit a sweetener but with little to no sugar!",
+    "tags": [
+      "outdoor"
+    ],
+    "updated": "2026-06-16T01:56:39.936Z"
+  },
+  {
+    "area": "Aiea",
+    "brand": "Coffee or Tea?",
+    "elo": 1484,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqgh2pekgw46",
+    "lat": 21.38067,
+    "lng": -157.94279,
+    "matches": 3,
+    "name": "Coffee or Tea?",
+    "rating": 4,
+    "review": "The drinks are consistent, although the setup for studying is kind of hard at this location and quiet.",
+    "tags": [
+      "quiet"
+    ],
+    "updated": "2026-06-17T05:20:37.042Z"
+  },
+  {
+    "area": "Mililani",
+    "brand": "Teapresso",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-16"
+        ],
+        "elo": 1431,
+        "ice": "Hot",
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": "6.50",
+        "reorder": "no",
+        "size": "20 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1455,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqhg4ymnhxj4",
+    "lat": 21.41214,
+    "lng": -157.99862,
+    "matches": 3,
+    "name": "Teapresso Bar",
+    "rating": 3,
+    "review": "The staff is friendly! Wish it wasn't super hot to drink. After the drink cooled down, the taste was a bit like hojicha but water down, if they went from 20oz to 8oz, it might be good.",
+    "updated": "2026-06-17T08:05:11.198Z"
+  },
+  {
+    "area": "Waipahu",
+    "brand": "Coffee or Tea?",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-16"
+        ],
+        "ice": "Extra ice",
+        "n": "Fresh water melon smoothie",
+        "p": "6.50",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1455,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqhkod21hlj1",
+    "lat": 21.42414,
+    "lng": -158.0032,
+    "matches": 3,
+    "name": "Coffee Or Tea",
+    "rating": 4,
+    "review": "Fresh as the name say!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-06-17T08:04:37.143Z"
+  },
+  {
+    "area": "",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2022-09-13"
+        ],
+        "elo": 1566,
+        "matches": 5,
+        "n": "Egg Coffee",
+        "orders": [
+          {
+            "date": "2022-09-13",
+            "id": "mvphnkypl7bk",
+            "p": "1.75",
+            "reorder": "yes"
+          }
+        ],
+        "p": "1.75",
+        "reorder": "yes"
+      }
+    ],
+    "elo": 1545,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqhszg5ifgk1",
+    "lat": 16.07398,
+    "lng": 108.22188,
+    "matches": 3,
+    "name": "Marley Cafe",
+    "rating": 5,
+    "review": "This is possibly the best egg coffee I ever had, in terms of hidden and atmosphere vibe is immaculate! Both indoors and outdoors feeling you are in a modern jungle! I feel like we travelled back in time. If you are looking for a coffee prince, you'll probably find it here.",
+    "tags": [
+      "cozy",
+      "outdoor"
+    ],
+    "updated": "2026-10-26T16:46:10.658Z"
+  },
+  {
+    "area": "Phường",
+    "brand": "",
+    "elo": 1470,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqhtd5d1jvkz",
+    "lat": 10.33538,
+    "lng": 107.07894,
+    "matches": 2,
+    "name": "Sơn Đăng Quán",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-17T08:33:18.181Z"
+  },
+  {
+    "area": "Ximen",
+    "brand": "Milksha",
+    "cc": "TW",
+    "drinks": [
+      {
+        "dates": [
+          "2025-01-12"
+        ],
+        "ice": "Less ice",
+        "n": "Pearl Earl Grey Black Tea Latte",
+        "p": "1.90",
+        "reorder": "yes",
+        "sweet": "25%"
+      }
+    ],
+    "elo": 1531,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqhtnobvm3ku",
+    "lat": 25.04196,
+    "lng": 121.50723,
+    "matches": 2,
+    "name": "Milksha Taipei Ximending",
+    "rating": 0,
+    "review": "Amazing tea quality!!",
+    "updated": "2026-06-17T08:41:29.323Z"
+  },
+  {
+    "area": "36",
+    "brand": "",
+    "elo": 1530,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqhvyn6xsokt",
+    "lat": 35.72902,
+    "lng": 139.71544,
+    "matches": 2,
+    "name": "Mermaid Coffee Roasters Ikebukuro",
+    "rating": 5,
+    "review": "",
+    "updated": "2026-10-26T10:37:36.905Z"
+  },
+  {
+    "area": "12",
+    "brand": "",
+    "elo": 1545,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqhvzz9eutwb",
+    "lat": 35.66804,
+    "lng": 139.772,
+    "matches": 3,
+    "name": "Turret Coffee",
+    "rating": 5,
+    "review": "",
+    "updated": "2026-06-20T09:15:10.630Z",
+    "wish": false
+  },
+  {
+    "area": "Northwest El Paso",
+    "brand": "",
+    "elo": 1457,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqi0gip0n6ad",
+    "lat": 31.80842,
+    "lng": -106.51431,
+    "matches": 3,
+    "name": "Teapioca Lounge",
+    "rating": 3,
+    "review": "",
+    "updated": "2026-10-26T10:37:42.368Z"
+  },
+  {
+    "area": "Capitol Hill",
+    "brand": "",
+    "elo": 1471,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqi0jn09jwiz",
+    "lat": 40.78097,
+    "lng": -111.90004,
+    "matches": 2,
+    "name": "Sunny Honey",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-17T11:54:18.297Z"
+  },
+  {
+    "area": "Outer Richmond",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "count": 2,
+        "dates": [
+          "2026-07-05",
+          "2026-08-12"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Matcha Einspanner",
+        "p": "8",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "50%"
+      },
+      {
+        "dates": [
+          "2026-07-16"
+        ],
+        "ice": "No ice",
+        "n": "Black matcha Einspanner",
+        "p": "9",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-07-02"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Cassia black tea latte",
+        "p": "7.50",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-06-29"
+        ],
+        "ice": "Less ice",
+        "n": "Freshly Milled Reserved Matcha Latte",
+        "p": "13",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-06-25"
+        ],
+        "ice": "Extra ice",
+        "milk": "Oat",
+        "n": "Hojicha Latte",
+        "p": "7",
+        "reorder": "yes",
+        "size": "32 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-06-20"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Black Matcha latte + oak milk",
+        "p": "7.75",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "count": 2,
+        "dates": [
+          "2026-06-19"
+        ],
+        "ice": "Less ice",
+        "n": "Freshly milled matcha latte",
+        "p": "7.95",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "85%"
+      },
+      {
+        "dates": [
+          "2026-08-12"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Black matcha latte w/ oak milk",
+        "p": "7.75",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1515,
+    "emoji": "☕",
+    "fav": true,
+    "id": "mqlipq5e1fwo",
+    "lat": 37.77591,
+    "lng": -122.49649,
+    "matches": 7,
+    "name": "Constance Tea & Matcha",
+    "rating": 5,
+    "review": "Freshly milled! Great information from the staff!",
+    "tags": [
+      "matcha",
+      "cozy"
+    ],
+    "updated": "2026-08-15T06:51:57.648Z",
+    "wish": false
+  },
+  {
+    "area": "Parkside",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-21"
+        ],
+        "ice": "Regular ice",
+        "milk": "Oat",
+        "n": "Jandii brew on tap",
+        "orders": [
+          {
+            "date": "2026-10-21",
+            "ice": "Regular ice",
+            "id": "mvif3bujvevu",
+            "milk": "Oat",
+            "note": "The workers seems really not on it today",
+            "p": "8.47",
+            "reorder": "neutral",
+            "size": "14 oz",
+            "sweet": "25%"
+          }
+        ],
+        "p": "8.47",
+        "reorder": "neutral",
+        "size": "14 oz",
+        "sweet": "25%"
+      },
+      {
+        "dates": [
+          "2026-10-05"
+        ],
+        "ice": "Regular ice",
+        "milk": "Oat",
+        "n": "Matcha Einspanner Latte",
+        "orders": [
+          {
+            "date": "2026-10-05",
+            "ice": "Regular ice",
+            "id": "muvjqt22b901",
+            "milk": "Oat",
+            "p": "9.60",
+            "reorder": "yes",
+            "size": "14 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "9.60",
+        "reorder": "yes",
+        "size": "14 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-09-28"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Hojicha Einspanner",
+        "orders": [
+          {
+            "date": "2026-09-28",
+            "ice": "Less ice",
+            "id": "mulmitldmoj4",
+            "milk": "Oat",
+            "p": "9.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "9.25",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "count": 2,
+        "dates": [
+          "2026-09-02",
+          "2026-09-21"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Triple hojicha latte",
+        "orders": [
+          {
+            "date": "2026-09-02",
+            "ice": "Warm",
+            "id": "mublzqz96i97",
+            "milk": "Oat",
+            "p": "7.50",
+            "reorder": "yes",
+            "size": "10 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-21",
+            "ice": "Warm",
+            "id": "mubm05uqjjll",
+            "milk": "Oat",
+            "p": "7.50",
+            "reorder": "yes",
+            "size": "10 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.50",
+        "reorder": "yes",
+        "size": "10 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-07-03"
+        ],
+        "milk": "Oat",
+        "n": "Matcha Einspanner",
+        "orders": [
+          {
+            "date": "2026-07-03",
+            "id": "mublzqzbwtz7",
+            "milk": "Oat",
+            "reorder": "yes"
+          }
+        ],
+        "reorder": "yes"
+      }
+    ],
+    "elo": 1469,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqm06fjnsrlj",
+    "lat": 37.74313,
+    "lng": -122.47803,
+    "matches": 9,
+    "name": "Jandii Cafe",
+    "rating": 4,
+    "review": "I like the taste of hojicha and I like it! Great for study!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-10-21T18:02:02.912Z",
+    "wish": false
+  },
+  {
+    "area": "Financial District",
+    "brand": "",
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqm079p3swwm",
+    "lat": 37.79189,
+    "lng": -122.39772,
+    "name": "Kamari Coffee",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-06-20T06:55:45.879Z",
+    "wish": true
+  },
+  {
+    "area": "Outer Sunset",
+    "brand": "Kiss of matcha",
+    "custom": false,
+    "drinks": [
+      {
+        "count": 2,
+        "dates": [
+          "2026-10-16"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "ice": "Warm",
+            "id": "mvc0vw88ikua",
+            "milk": "Oat",
+            "p": "7.84",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "100%"
+          },
+          {
+            "date": "2026-10-16",
+            "ice": "Warm",
+            "id": "mvc0vwcb944b",
+            "milk": "Oat",
+            "p": "8.14",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "8.14",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1541,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqreywab3gfz",
+    "lat": 37.76319,
+    "lng": -122.48086,
+    "matches": 2,
+    "name": "Kiss of Matcha",
+    "rating": 4,
+    "review": "That nice hojicha taste is prominent",
+    "updated": "2026-10-17T06:36:05.932Z",
+    "wish": false
+  },
+  {
+    "area": "Mission Dolores",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2026-06-26"
+        ],
+        "ice": "Less ice",
+        "n": "Egg coffee",
+        "p": "6.50",
+        "size": "16 oz",
+        "sweet": "25%"
+      }
+    ],
+    "elo": 1469,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mqvibm9dlg55",
+    "lat": 37.76446,
+    "lng": -122.42229,
+    "matches": 2,
+    "name": "Binge Coffee House",
+    "rating": 4,
+    "review": "",
+    "updated": "2026-06-26T22:32:57.456Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown Berkeley",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2026-07-01"
+        ],
+        "ice": "Warm",
+        "n": "Osmanthus oolong Milk tea",
+        "p": "6",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1531,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mr2l65dhmczg",
+    "lat": 37.87214,
+    "lng": -122.26962,
+    "matches": 2,
+    "name": "ChaHalo 茶话弄 - Berkeley",
+    "rating": 4,
+    "review": "",
+    "updated": "2026-07-04T06:57:12.946Z",
+    "wish": false
+  },
+  {
+    "area": "Southside",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "ice": "Warm",
+        "n": "Mattcha Latte (Kuro blend)",
+        "p": "7.75",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1497,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mr7ejpw1qafq",
+    "lat": 37.86832,
+    "lng": -122.26044,
+    "matches": 3,
+    "name": "8 Grams Matcha",
+    "rating": 5,
+    "review": "I like they have different blends!",
+    "updated": "2026-07-23T05:28:00.261Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown Berkeley",
+    "brand": "",
+    "emoji": "☕",
+    "fav": false,
+    "id": "mr7ekhubwa00",
+    "lat": 37.86729,
+    "lng": -122.26747,
+    "name": "Yume Mori Matcha",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-07-05T06:21:07.283Z",
+    "wish": true
+  },
+  {
+    "area": "Southside",
+    "brand": "",
+    "emoji": "☕",
+    "fav": false,
+    "id": "mr7el1yzerzs",
+    "lat": 37.86833,
+    "lng": -122.25895,
+    "name": "De Matcha",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-07-05T06:21:33.371Z",
+    "wish": true
+  },
+  {
+    "area": "South Shattuck",
+    "brand": "",
+    "emoji": "☕",
+    "fav": false,
+    "id": "mr7elub11k7z",
+    "lat": 37.86107,
+    "lng": -122.26731,
+    "name": "Forest Tea Bar",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-07-05T06:22:10.093Z",
+    "wish": true
+  },
+  {
+    "area": "San Mateo",
+    "brand": "",
+    "custom": true,
+    "drinks": [
+      {
+        "count": 2,
+        "dates": [
+          "2026-07-18"
+        ],
+        "ice": "Less ice",
+        "n": "Jasmine Matcha Latte",
+        "orders": [
+          {
+            "date": "2026-07-18",
+            "ice": "Less ice",
+            "id": "mvpho4g44x5n",
+            "p": "0",
+            "qty": 2,
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "50%"
+          }
+        ],
+        "p": "0",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "50%"
+      },
+      {
+        "dates": [
+          "2026-07-18"
+        ],
+        "ice": "Less ice",
+        "n": "Matcha Latte",
+        "orders": [
+          {
+            "date": "2026-07-18",
+            "ice": "Less ice",
+            "id": "mvpho4g4dtxa",
+            "p": "0",
+            "reorder": "yes",
+            "size": "12 oz"
+          }
+        ],
+        "p": "0",
+        "reorder": "yes",
+        "size": "12 oz"
+      },
+      {
+        "dates": [
+          "2026-07-18"
+        ],
+        "ice": "Warm",
+        "n": "Yuzu tea",
+        "orders": [
+          {
+            "date": "2026-07-18",
+            "ice": "Warm",
+            "id": "mvpho4g4na6e",
+            "p": "0",
+            "reorder": "yes",
+            "size": "12 oz"
+          }
+        ],
+        "p": "0",
+        "reorder": "yes",
+        "size": "12 oz"
+      }
+    ],
+    "elo": 1503,
+    "emoji": "🏠",
+    "fav": true,
+    "id": "mrr7zovlvqbp",
+    "lat": 37.56,
+    "lng": -122.33,
+    "matches": 3,
+    "name": "Cafe Plaza",
+    "rating": 5,
+    "review": "Amazing vibes, the host were extremely the best, drinks tailored to your taste!",
+    "tags": [
+      "cozy",
+      "good wifi",
+      "matcha"
+    ],
+    "updated": "2026-10-26T16:46:35.908Z",
+    "wish": false
+  },
+  {
+    "area": "Cupertino",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-07-19"
+        ],
+        "ice": "Less ice",
+        "n": "Coconut Avocado Fusion",
+        "p": "8.49",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1483,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mrsr4gr9snf3",
+    "lat": 37.31521,
+    "lng": -122.03291,
+    "matches": 2,
+    "name": "Shu Shia 树夏",
+    "rating": 5,
+    "review": "Avocado was tasty and a little bit of lightness!",
+    "updated": "2026-07-20T04:57:44.995Z",
+    "wish": false
+  },
+  {
+    "area": "Sunnyvale",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-07-19"
+        ],
+        "ice": "Hot",
+        "n": "Signature Phoenix Oolong Lemon Tea",
+        "p": "7.99",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mrsr6rvphhm7",
+    "lat": 37.36752,
+    "lng": -122.03358,
+    "matches": 3,
+    "name": "TANING - Sunnyvale",
+    "rating": 4,
+    "review": "Great lemon taste but the drink are very hot and it'll take a while before drinking it and the cups leaks a lot.",
+    "updated": "2026-07-20T04:57:31.813Z",
+    "wish": false
+  },
+  {
+    "area": "Union Square",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-07-20"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-07-20",
+            "ice": "Warm",
+            "id": "mvphoqa3eqti",
+            "milk": "Oat",
+            "p": "7.50",
+            "reorder": "no",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.50",
+        "reorder": "no",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1469,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mrv3oazshy7o",
+    "lat": 37.78969,
+    "lng": -122.40414,
+    "matches": 2,
+    "name": "Origin Lab Coffee & Matcha",
+    "rating": 3,
+    "review": "Nice place with limited sitting, drink wasn't good, felt water down.",
+    "updated": "2026-10-26T16:47:04.203Z",
+    "wish": false
+  },
+  {
+    "area": "Fillmore District",
+    "brand": "Boba Guys",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-07-23"
+        ],
+        "ice": "Warm",
+        "n": "Hojicha Latte (Ang version)",
+        "p": "3.54",
+        "reorder": "neutral",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1466,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mryqopi0d1nh",
+    "lat": 37.78367,
+    "lng": -122.43266,
+    "matches": 3,
+    "name": "Boba Guys Fillmore",
+    "rating": 3,
+    "review": "The hojicha latte was only decent because of our friend Ang!",
+    "updated": "2026-07-24T09:30:05.976Z",
+    "wish": false
+  },
+  {
+    "area": "Ukiah",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-07-26"
+        ],
+        "ice": "Less ice",
+        "n": "Thai tea",
+        "p": "6",
+        "reorder": "neutral",
+        "size": "16 oz"
+      }
+    ],
+    "elo": 1477,
+    "emoji": "☕",
+    "fav": false,
+    "id": "ms29gjndhrtd",
+    "lat": 39.1675,
+    "lng": -123.21174,
+    "matches": 2,
+    "name": "Royal Tea Boba & Sandwiches",
+    "rating": 2,
+    "review": "Many of their drinks are powder but she was so nice to offer samples and taste their boba!",
+    "updated": "2026-07-26T20:38:56.377Z",
+    "wish": false
+  },
+  {
+    "area": "",
+    "brand": "",
+    "custom": true,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-02"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Coconut Matcha Latte",
+        "p": "0",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1503,
+    "emoji": "🏠",
+    "fav": true,
+    "id": "mscep73jjytf",
+    "lat": 37.79,
+    "lng": -122.42,
+    "matches": 3,
+    "name": "Viv & Iv's Cafe",
+    "rating": 5,
+    "review": "The matcha made well and thoughtful, amazing work from the host! The wifi tho \n\nHouse warming cafe, great interior decor, amazing food especially the kasama in chicago inspired one!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-08-02T23:06:21.517Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown",
+    "brand": "Molly tea",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-05"
+        ],
+        "ice": "Less ice",
+        "n": "Camellia Oolong Milk Tea",
+        "p": "6.79",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1530,
+    "emoji": "☕",
+    "fav": false,
+    "id": "msgmmvs974rs",
+    "lat": 37.56659,
+    "lng": -122.32329,
+    "matches": 3,
+    "name": "Molly Tea (San Mateo)",
+    "rating": 5,
+    "review": "Solid Jasmine tea taste",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-08-05T21:56:33.511Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown",
+    "brand": "Sunright Tea Studio",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-13"
+        ],
+        "ice": "Less ice",
+        "n": "Green Tea Yakult",
+        "p": "6.95",
+        "reorder": "yes",
+        "size": "24 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1474,
+    "emoji": "☕",
+    "fav": false,
+    "id": "msu00kujuuz2",
+    "lat": 37.58007,
+    "lng": -122.34666,
+    "matches": 2,
+    "name": "Sunright Tea Studio - Burlingame",
+    "rating": 4,
+    "review": "Classic, if you can't decide this is the place to go to!",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-08-15T06:32:07.819Z",
+    "wish": false
+  },
+  {
+    "area": "West of Twin Peaks",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-11"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "p": "8.50",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1474,
+    "emoji": "☕",
+    "fav": false,
+    "id": "msu1j50kxltv",
+    "lat": 37.74058,
+    "lng": -122.46647,
+    "matches": 4,
+    "name": "Hardware Coffee Co.",
+    "rating": 4,
+    "review": "Great study spot! Hojicha is ok!",
+    "updated": "2026-08-15T07:14:33.379Z",
+    "wish": false
+  },
+  {
+    "area": "Serramonte",
+    "brand": "Chicha San Chen",
+    "custom": false,
+    "drinks": [
+      {
+        "count": 2,
+        "dates": [
+          "2026-08-12"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Dong Ding Oolong Latte",
+        "p": "7.70",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "25%"
+      }
+    ],
+    "elo": 1531,
+    "emoji": "☕",
+    "fav": false,
+    "id": "msu1q6bvm46n",
+    "lat": 37.66805,
+    "lng": -122.46815,
+    "matches": 2,
+    "name": "Chicha San Chen 吃茶三千",
+    "rating": 4,
+    "review": "Nice cafe but like it may take a while to get your order!",
+    "updated": "2026-08-15T07:21:05.832Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown San Jose",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-20"
+        ],
+        "ice": "Regular ice",
+        "n": "Kalamansi Summer Spritz",
+        "orders": [
+          {
+            "date": "2026-09-20",
+            "ice": "Regular ice",
+            "id": "muaeutr9mcex",
+            "note": "Amazing! The southeast Asia notes are great!",
+            "p": "8.25",
+            "reorder": "yes",
+            "size": "16 oz"
+          }
+        ],
+        "p": "8.25",
+        "reorder": "yes",
+        "size": "16 oz"
+      },
+      {
+        "dates": [
+          "2026-08-10"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Pandan Muối Latte",
+        "orders": [
+          {
+            "date": "2026-08-10",
+            "ice": "Less ice",
+            "id": "muaeummelust",
+            "milk": "Oat",
+            "p": "7.50",
+            "reorder": "yes"
+          }
+        ],
+        "p": "7.50",
+        "reorder": "yes"
+      },
+      {
+        "dates": [
+          "2026-08-10"
+        ],
+        "n": "Davao Mocha",
+        "orders": [
+          {
+            "date": "2026-08-10",
+            "id": "muaeummffvl6",
+            "p": "7",
+            "reorder": "yes"
+          }
+        ],
+        "p": "7",
+        "reorder": "yes"
+      }
+    ],
+    "elo": 1573,
+    "emoji": "☕",
+    "fav": true,
+    "id": "msu1xc32ec38",
+    "lat": 37.33282,
+    "lng": -121.90455,
+    "matches": 6,
+    "name": "Kasama Cà Phê",
+    "rating": 5,
+    "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-10-26T20:13:45.399Z",
+    "wish": false
+  },
+  {
+    "area": "Cole Valley",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-08"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Cloud 9",
+        "p": "7.60",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1475,
+    "emoji": "☕",
+    "fav": false,
+    "id": "msu21vly3a9b",
+    "lat": 37.76538,
+    "lng": -122.45015,
+    "matches": 2,
+    "name": "Yardsale San Francisco",
+    "rating": 4,
+    "review": "Matcha was above average but the atmosphere is great and clothing too!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-08-15T07:29:07.654Z",
+    "wish": false
+  },
+  {
+    "area": "Cupertino",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-15"
+        ],
+        "ice": "Less ice",
+        "n": "Signature Black Milk Tea",
+        "p": "4",
+        "reorder": "neutral",
+        "size": "20 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1457,
+    "emoji": "☕",
+    "fav": false,
+    "id": "msvag8ahm8ih",
+    "lat": 37.33693,
+    "lng": -122.04031,
+    "matches": 3,
+    "name": "Shang Yu Lin-Cupertino上宇林",
+    "rating": 3,
+    "review": "First impression it was okay, the way the milk and the black tea combination, the milk over powers but the tea caffeine hits hard.",
+    "updated": "2026-08-16T19:39:11.840Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown",
+    "brand": "Odd One Out",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-16"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Corn Matcha",
+        "p": "8",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mswe32c5jlz9",
+    "lat": 37.56413,
+    "lng": -122.32295,
+    "matches": 3,
+    "name": "Odd One Out Tea San Mateo",
+    "rating": 5,
+    "review": "",
+    "tags": [
+      "cozy",
+      "specialty",
+      "matcha"
+    ],
+    "updated": "2026-08-17T03:25:22.073Z",
+    "wish": false
+  },
+  {
+    "area": "West San Jose",
+    "brand": "",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mswprxdxyg94",
+    "lat": 37.2928,
+    "lng": -121.99195,
+    "name": "Formosa Aroma 島嶼茶鄉 - San Jose, CA",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-08-17T04:08:46.532Z",
+    "wish": true
+  },
+  {
+    "area": "Winchester",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-17"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Guava Matcha with CREAM",
+        "p": "9.50",
+        "size": "16 oz",
+        "sweet": "10%"
+      }
+    ],
+    "elo": 1484,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mswvf0lujqg3",
+    "lat": 37.32913,
+    "lng": -121.8841,
+    "matches": 3,
+    "name": "Academic Coffee",
+    "rating": 3,
+    "review": "",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-10-26T10:37:47.607Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown Seattle",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-20"
+        ],
+        "ice": "Less ice",
+        "n": "PLUS84 Machiatto",
+        "p": "7",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "100%"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt1xfsx8x7a1",
+    "lat": 47.61544,
+    "lng": -122.34656,
+    "matches": 2,
+    "name": "PLUS84",
+    "rating": 5,
+    "review": "Plus84 signature sweetness is as is because of condense milk! Great study vibes and they let me bring my bike in!",
+    "updated": "2026-08-20T19:42:41.356Z",
+    "wish": false
+  },
+  {
+    "area": "South Main",
+    "brand": "",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt6wmnvpdgvg",
+    "lat": 49.25985,
+    "lng": -123.10136,
+    "name": "emeri matcha bar",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-08-24T07:18:20.004Z",
+    "wish": true
+  },
+  {
+    "area": "Central Vancouver",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-24"
+        ],
+        "ice": "Warm",
+        "n": "Flat White",
+        "p": "4.17",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1560,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt6wojizh8ca",
+    "lat": 49.28251,
+    "lng": -123.11126,
+    "matches": 7,
+    "name": "Saunter Coffee",
+    "rating": 5,
+    "review": "Great atmosphere to work in the front and there is something on the back for more of a quiet experience. The flat white is so good, strong espresso and the matcha has a good strong matcha taste too!",
+    "updated": "2026-08-24T20:37:54.465Z",
+    "wish": false
+  },
+  {
+    "area": "Crossroads",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-24"
+        ],
+        "ice": "Less ice",
+        "n": "Jasmine Green Milk Tea",
+        "p": "5.25",
+        "reorder": "neutral",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1471,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt8cgxumld22",
+    "lat": 47.62301,
+    "lng": -122.13215,
+    "matches": 2,
+    "name": "Chayan 茶宴 Bellevue",
+    "rating": 3,
+    "review": "I thought it was okay, there just wasn’t enough tea flavor and a hint of water and tea mixture.",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-08-25T07:29:33.022Z",
+    "wish": false
+  },
+  {
+    "area": "Richmond",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-24"
+        ],
+        "ice": "Less ice",
+        "n": "Grapefruit and Peach Green Tea",
+        "p": "5.76",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt8cljabnbff",
+    "lat": 49.18438,
+    "lng": -123.13574,
+    "matches": 2,
+    "name": "Choo Tea",
+    "rating": 4,
+    "review": "The combination of tea and fruit were great! Felt fresh for the taste!",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-08-25T07:33:07.426Z",
+    "wish": false
+  },
+  {
+    "area": "Central Vancouver",
+    "brand": "",
+    "cc": "CA",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-25"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Matcha Latte",
+        "p": "5.11",
+        "pc": "CAD",
+        "pd": "2026-08-25",
+        "pl": "7",
+        "pr": 1.37,
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1518,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt8cmelqa902",
+    "lat": 49.28522,
+    "lng": -123.11632,
+    "matches": 3,
+    "name": "Nīzu Cafe",
+    "rating": 4,
+    "review": "Pretty good matcha! Great atmosphere! The egg sando was good too!",
+    "tags": [
+      "matcha"
+    ],
+    "updated": "2026-08-26T01:55:52.439Z",
+    "wish": false
+  },
+  {
+    "area": "Kitsilano",
+    "brand": "",
+    "cc": "CA",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt9gzpkx777r",
+    "lat": 49.26823,
+    "lng": -123.14862,
+    "name": "cowdog",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-08-26T02:23:53.409Z",
+    "wish": true
+  },
+  {
+    "area": "Central Vancouver",
+    "brand": "",
+    "cc": "CA",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-25"
+        ],
+        "ice": "Regular ice",
+        "n": "Mango Pamelo Smoothie",
+        "p": "6.32",
+        "pc": "CAD",
+        "pd": "2026-08-25",
+        "pl": "8.66",
+        "pr": 1.37,
+        "reorder": "yes",
+        "size": "16 oz"
+      }
+    ],
+    "elo": 1532,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mt9me8ytssjp",
+    "lat": 49.28744,
+    "lng": -123.12887,
+    "matches": 2,
+    "name": "Alfa Tea Concept",
+    "rating": 5,
+    "review": "Amazing mango taste!",
+    "updated": "2026-08-26T04:55:09.796Z",
+    "wish": false
+  },
+  {
+    "area": "Riley Park–Little Mountain",
+    "brand": "",
+    "cc": "CA",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-26"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha Latte",
+        "p": "5.18",
+        "pc": "CAD",
+        "pd": "2026-08-25",
+        "pl": "7.10",
+        "pr": 1.37,
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1549,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtahs8di77kg",
+    "lat": 49.28382,
+    "lng": -123.11698,
+    "matches": 6,
+    "name": "Paragon Tea Room",
+    "pid": "ChIJ77z93GVxhlQR1a2IlKwlhqU",
+    "rating": 5,
+    "review": "They had two variation of Hojicha which were Amber (traditional) and Obsidian! Amber was classic and strong!",
+    "tags": [
+      "to-go"
+    ],
+    "updated": "2026-08-27T07:32:28.997Z",
+    "wish": false
+  },
+  {
+    "area": "Central District",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-28"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha Einspanner",
+        "p": "9.21",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1557,
+    "emoji": "☕",
+    "fav": true,
+    "id": "mtdcqterwyid",
+    "lat": 47.61176,
+    "lng": -122.28955,
+    "matches": 4,
+    "name": "Yoka Tea",
+    "pid": "ChIJqTPr5FxrkFQRIgTFZDo3zfQ",
+    "rating": 5,
+    "review": "They are Korean Filipino cafe, wow the Hojicha is super good and the turon Matcha as well!",
+    "updated": "2026-08-28T19:36:04.706Z",
+    "wish": false
+  },
+  {
+    "area": "Inner Richmond",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-08-31"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Cortado Coffee",
+        "p": "6",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1513,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mthlqaxscg4f",
+    "lat": 37.78287,
+    "lng": -122.47021,
+    "matches": 3,
+    "name": "Diamond Coffee n' Pastry",
+    "pid": "ChIJb6xMEteHhYARs1pgqASF0Uk",
+    "rating": 4,
+    "review": "Strong coffee taste on the Cortado, even if it's half oak and half espresso! Nice atmosphere and dog friendly!",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-08-31T18:58:42.016Z",
+    "wish": false
+  },
+  {
+    "area": "Stonestown",
+    "brand": "Heytea",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-02"
+        ],
+        "ice": "Warm",
+        "n": "Longjung Milk Tea",
+        "p": "6.50",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "25%"
+      }
+    ],
+    "elo": 1473,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtjapri20t98",
+    "lat": 37.72773,
+    "lng": -122.47697,
+    "matches": 2,
+    "name": "heytea (Stonestown Galleria)",
+    "pid": "ChIJ0YtwyBR9j4ARvkOcmtK324I",
+    "rating": 4,
+    "review": "The service was pretty weak but the drink was good but a little sweet for me even with minimal sweetness.",
+    "updated": "2026-09-02T16:34:04.240Z",
+    "wish": false
+  },
+  {
+    "area": "Lower Pacific Heights",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "elo": 1515,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtjuzy3u4cd5",
+    "lat": 37.786,
+    "lng": -122.43549,
+    "matches": 1,
+    "name": "Song Tea & Ceramics",
+    "pid": "ChIJhdFZ_7eAhYARPwcETfqzaxM",
+    "rating": 0,
+    "review": "It was not a cafe here but they have sample to drink from.",
+    "updated": "2026-09-10T17:46:11.300Z",
+    "wish": false
+  },
+  {
+    "area": "New Tacoma",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-02"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-09-02",
+            "ice": "Warm",
+            "id": "lg-mtl3m4gs7el5-hojichalatte-2026-09-02-1",
+            "milk": "Oat",
+            "p": "7",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1486,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtl3m4gs7el5",
+    "lat": 47.25377,
+    "lng": -122.43843,
+    "matches": 2,
+    "name": "Jin Jin Matcha",
+    "pid": "ChIJ83tHO_pVkFQRp5biyGbC0bo",
+    "rating": 4,
+    "review": "Atmosphere is great, good stop on the way south from Seattle! Host is nice as well!",
+    "updated": "2026-09-03T05:42:38.620Z",
+    "wish": false
+  },
+  {
+    "area": "Cupertino",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-06"
+        ],
+        "ice": "Less ice",
+        "milk": "Lactose-free",
+        "n": "Da Hong Pao Milk Tea",
+        "orders": [
+          {
+            "date": "2026-09-06",
+            "ice": "Less ice",
+            "id": "lg-mtqn96pbnv35-dahongpaomilktea-2026-09-06-1",
+            "milk": "Lactose-free",
+            "p": "6.50",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.50",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1526,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtqn96pbnv35",
+    "lat": 37.32234,
+    "lng": -122.01675,
+    "matches": 3,
+    "name": "MoonTea",
+    "pid": "ChIJ77mZztW1j4ARA7L4u49X9AU",
+    "rating": 4,
+    "review": "Solid tea taste! So good! Many seats to chill at!!",
+    "updated": "2026-09-07T02:51:18.190Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown Los Angeles",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-12"
+        ],
+        "ice": "Regular ice",
+        "milk": "Oat",
+        "n": "Matcha Einspanner",
+        "orders": [
+          {
+            "date": "2026-09-12",
+            "ice": "Regular ice",
+            "id": "mtysl6w034ni",
+            "milk": "Oat",
+            "p": "8.50",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "8.50",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1519,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mtysqdqaqnhq",
+    "lat": 34.05757,
+    "lng": -118.24085,
+    "matches": 3,
+    "name": "Archives Of Us",
+    "pid": "ChIJ7SJdEwbHwoARbK8FgtY2QxM",
+    "rating": 5,
+    "review": "Take the elevator to the second floor and opens up to the cafe with a cool study and conversation space inside and they have an outdoor area as well! The drink itself is well described with a stats card. I enjoy the matcha taste!",
+    "tags": [
+      "good wifi",
+      "outdoor",
+      "cozy"
+    ],
+    "updated": "2026-09-12T19:46:47.937Z",
+    "wish": false
+  },
+  {
+    "area": "Rincon Hill",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-16"
+        ],
+        "ice": "Warm",
+        "n": "Hojicha Latte",
+        "orders": [
+          {
+            "date": "2026-09-16",
+            "ice": "Warm",
+            "id": "mu4ohc2t82jl",
+            "p": "4.88",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "4.88",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1492,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mu4k0lxjyzze",
+    "lat": 37.78562,
+    "lng": -122.39638,
+    "matches": 3,
+    "name": "Paper Son Coffee",
+    "pid": "ChIJXVRIc9aBhYARDuJoNx2IVAg",
+    "rating": 4,
+    "review": "Hojicha is great and my friends is her, good vibes and great taste!",
+    "tags": [
+      "oat milk",
+      "cozy"
+    ],
+    "updated": "2026-09-16T22:35:53.307Z",
+    "wish": false
+  },
+  {
+    "area": "",
+    "brand": "",
+    "custom": true,
+    "drinks": [
+      {
+        "dates": [
+          "2026-09-16"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Matcha Latte (Kagoshima)",
+        "orders": [
+          {
+            "date": "2026-09-16",
+            "ice": "Less ice",
+            "id": "mu4wgknc39oa",
+            "milk": "Oat",
+            "p": "8",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "8",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1493,
+    "emoji": "🏠",
+    "fav": false,
+    "id": "mu4wjqrm33wa",
+    "matches": 2,
+    "name": "Kimi Matcha",
+    "rating": 4,
+    "review": "You get to select the region of matcha you want from Japan, strong matcha taste, so that's really great!",
+    "updated": "2026-09-17T02:21:34.467Z",
+    "wish": false,
+    "lat": null,
+    "lng": null
+  },
+  {
+    "area": "Little Russia",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "count": 2,
+        "dates": [
+          "2026-09-26",
+          "2026-09-30"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Oya",
+        "orders": [
+          {
+            "date": "2026-09-26",
+            "ice": "Warm",
+            "id": "muj9ggc3rs9y",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-30",
+            "ice": "Less ice",
+            "id": "muorlubu6agg",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-09-24"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Cafe latte",
+        "orders": [
+          {
+            "date": "2026-09-24",
+            "ice": "Warm",
+            "id": "mugj0ronwwh9",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1543,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mugj206txj1r",
+    "lat": 37.78001,
+    "lng": -122.48168,
+    "matches": 3,
+    "name": "HI NRG",
+    "pid": "ChIJYXSOVACHhYAREXl6l-Jr_-w",
+    "rating": 5,
+    "review": "Vibes are super good, the coffee is strong here, and by default they don't add sugar!",
+    "updated": "2026-09-30T23:57:34.873Z",
+    "wish": false
+  },
+  {
+    "area": "Southside",
+    "brand": "Chicha San Chen",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-04"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "HeartSteel: Honey Cassia Black Tea Latte",
+        "orders": [
+          {
+            "date": "2026-10-04",
+            "ice": "Less ice",
+            "id": "muvh7lrolgri",
+            "milk": "Oat",
+            "p": "10.17",
+            "size": "18 oz"
+          }
+        ],
+        "p": "10.17",
+        "size": "18 oz"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "muvhd025f4na",
+    "lat": 37.86831,
+    "lng": -122.26123,
+    "matches": 1,
+    "name": "Chicha San Chen 吃茶三千",
+    "pid": "ChIJCyrJNwB9hYAR8R-0FdNBW9Q",
+    "rating": 5,
+    "review": "It's so busy and the wait is long as usual at at Chicha, but I love the drinks tho! The cafe vibes is good here, but need to wait to seat down.",
+    "tags": [
+      "cozy"
+    ],
+    "updated": "2026-10-05T16:44:51.725Z",
+    "wish": false
+  },
+  {
+    "area": "Lower Nob Hill",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-09"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Sofi",
+        "orders": [
+          {
+            "date": "2026-10-09",
+            "ice": "Warm",
+            "id": "mv1e7mkasufi",
+            "milk": "Oat",
+            "p": "6.75",
+            "reorder": "neutral",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.75",
+        "reorder": "neutral",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1476,
+    "emoji": "☕",
+    "fav": false,
+    "id": "muwyp04dhkja",
+    "lat": 37.78928,
+    "lng": -122.42024,
+    "matches": 2,
+    "name": "Le Mil's Coffee",
+    "pid": "ChIJtzoq9mF9j4ARTv5k3P0nZfw",
+    "rating": 3,
+    "review": "The vibes seems okay for me, the interior is clean but design could be better in my opinion, the style of coffee is different but good, but there is a lot of materials at the end of the drink tho.",
+    "updated": "2026-10-09T20:05:12.214Z",
+    "wish": false
+  },
+  {
+    "area": "Downtown",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-11"
+        ],
+        "milk": "Oat",
+        "n": "Snowy Ube Matcha",
+        "orders": [
+          {
+            "date": "2026-10-11",
+            "id": "mv4esjo5f6ce",
+            "milk": "Oat",
+            "p": "9.35",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "25%"
+          }
+        ],
+        "p": "9.35",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "25%"
+      }
+    ],
+    "elo": 1516,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mv4ev4a0383t",
+    "lat": 37.57926,
+    "lng": -122.34571,
+    "matches": 2,
+    "name": "Ceré Tea",
+    "pid": "ChIJM-AUAwCdj4AROCJkrp2UFJ0",
+    "rating": 5,
+    "review": "The vibes are cool and clean setup! They have ube as an seasonal option!",
+    "updated": "2026-10-11T22:51:28.351Z",
+    "wish": false
+  },
+  {
+    "area": "Fountain Valley",
+    "brand": "Airoma Cafe",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-24"
+        ],
+        "ice": "Regular ice",
+        "milk": "Oat",
+        "n": "Matcha oak latte",
+        "orders": [
+          {
+            "date": "2026-10-24",
+            "ice": "Regular ice",
+            "id": "mvn17mlqyuc2",
+            "milk": "Oat",
+            "note": "Nothing special lol",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "20 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.25",
+        "reorder": "yes",
+        "size": "20 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1495,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mv63pi7wj1sg",
+    "lat": 33.72789,
+    "lng": -117.95629,
+    "matches": 1,
+    "name": "Airoma Cafe",
+    "pid": "ChIJY-pH4GAn3YAR4bj6YBXHXN4",
+    "rating": 3,
+    "review": "Super busy but seems like a good space to chill and study",
+    "updated": "2026-10-24T23:32:16.092Z",
+    "wish": false
+  },
+  {
+    "area": "Garden Grove",
+    "brand": "Airoma Cafe",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mv63pshk1ccg",
+    "lat": 33.7748,
+    "lng": -117.98699,
+    "name": "Airoma Cafe",
+    "pid": "ChIJeT_Nvd8p3YARQkLlJwmonqk",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-13T03:08:21.752Z",
+    "wish": true
+  },
+  {
+    "area": "Xu Hui Qu",
+    "brand": "",
+    "cc": "CN",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mv6571ansua4",
+    "lat": 31.2111,
+    "lng": 121.45851,
+    "name": "Huzixiong Coffee",
+    "pid": "ChIJw2vIcqZ6sjURaTyNVB3_MxI",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-13T03:49:45.935Z",
+    "wish": true
+  },
+  {
+    "area": "Xing Ning Qu",
+    "brand": "",
+    "cc": "CN",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mv65d3memqvy",
+    "lat": 22.815,
+    "lng": 108.32276,
+    "name": "A Mo Shou Zuo",
+    "pid": "ChIJldBDzNDuszYRUiV-xY801Io",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-13T03:54:39.619Z",
+    "wish": true
+  },
+  {
+    "area": "Cupertino",
+    "brand": "Heytea",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-14"
+        ],
+        "n": "Golden Oolong Yuzu",
+        "orders": [
+          {
+            "date": "2026-10-14",
+            "id": "mv8h30215if3",
+            "p": "7.49"
+          }
+        ],
+        "p": "7.49"
+      }
+    ],
+    "elo": 1500,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mv8h777ieum6",
+    "lat": 37.32382,
+    "lng": -122.01051,
+    "matches": 1,
+    "name": "HEYTEA (Cupertino)",
+    "pid": "ChIJM47ZUwC1j4ARLFulJyoDIUE",
+    "rating": 5,
+    "review": "Great location, good vibes, seems super busy tho. The indoor and outdoor spaces are nice!",
+    "updated": "2026-10-14T19:01:21.342Z",
+    "wish": false
+  },
+  {
+    "area": "Fountain Valley",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvajqucb8soy",
+    "lat": 33.71501,
+    "lng": -117.96387,
+    "name": "Rề Cà Phê",
+    "pid": "ChIJg73RFV4n3YAR2AGWUQoArL4",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-16T05:48:09.371Z",
+    "wish": true
+  },
+  {
+    "area": "Westminster",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvajr8btu0wu",
+    "lat": 33.73465,
+    "lng": -117.95515,
+    "name": "Kei Coffee House",
+    "pid": "ChIJ49bKrE8n3YARKDyb0QPEOfQ",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-16T05:48:27.497Z",
+    "wish": true
+  },
+  {
+    "area": "Garden Grove",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvajril1d9cu",
+    "lat": 33.77497,
+    "lng": -117.94122,
+    "name": "Phin Smith",
+    "pid": "ChIJK5hXsDop3YAR4G29n_kNilg",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-16T05:48:40.788Z",
+    "wish": true
+  },
+  {
+    "area": "Phường",
+    "brand": "",
+    "cc": "VN",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mveg6wqq15rk",
+    "lat": 21.03136,
+    "lng": 105.85412,
+    "name": "giao mùa",
+    "pid": "ChIJXRkpawCrNTERXuocoSwNd_A",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-18T23:19:45.217Z",
+    "wish": true
+  },
+  {
+    "area": "Central LA",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-23"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Houjicha CORTADO",
+        "orders": [
+          {
+            "date": "2026-10-23",
+            "ice": "Warm",
+            "id": "mvl4b4fqjgtc",
+            "milk": "Oat",
+            "note": "No sweet, cup size is 6-7oz",
+            "p": "5.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5.25",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1566,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvl4fc0pr7m8",
+    "lat": 34.101,
+    "lng": -118.29114,
+    "matches": 1,
+    "name": "Kettl Los Feliz",
+    "pid": "ChIJ38srNQDBwoARIKkqo5hENTQ",
+    "rating": 5,
+    "review": "Awesome, good vibes and parking too! Welcoming staff, they have a latte and cortado option",
+    "updated": "2026-10-23T15:24:46.105Z",
+    "wish": false
+  },
+  {
+    "area": "Diamond Bar",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvlk9wmgam6z",
+    "lat": 33.99773,
+    "lng": -117.85362,
+    "name": "Outpost Coffee",
+    "pid": "ChIJ39-jrWQrw4ARshcWh9ianY4",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-23T22:48:26.727Z",
+    "wish": true
+  },
+  {
+    "area": "Diamond Bar",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvlkch3a038h",
+    "lat": 33.99694,
+    "lng": -117.81402,
+    "name": "torotea",
+    "pid": "ChIJwfVYPAAtw4ARnxXw5DtVOSE",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-23T22:50:26.565Z",
+    "wish": true
+  },
+  {
+    "area": "City of Industry",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvlkd4clywf6",
+    "lat": 33.99573,
+    "lng": -117.89989,
+    "name": "Dumbstruck Coffee - Industry",
+    "pid": "ChIJ5f5chRErw4ARDzVoYlLxoO8",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-23T22:50:56.709Z",
+    "wish": true
+  },
+  {
+    "area": "Downtown Los Angeles",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-25"
+        ],
+        "ice": "Hot",
+        "milk": "Oat",
+        "n": "Hojicha Latte",
+        "orders": [
+          {
+            "date": "2026-10-25",
+            "ice": "Hot",
+            "id": "mvnzr6upf3d6",
+            "milk": "Oat",
+            "note": "Amazing taste!",
+            "p": "7.75",
+            "size": "10 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.75",
+        "size": "10 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1560,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvnzv1yoafwb",
+    "lat": 34.04049,
+    "lng": -118.23153,
+    "matches": 2,
+    "name": "DAMO",
+    "pid": "ChIJLYrDcwDHwoAR3zrYLEtPXP0",
+    "rating": 5,
+    "review": "Outstanding interior, great to hang and work/study.",
+    "updated": "2026-10-26T10:37:54.738Z",
+    "wish": false
+  },
+  {
+    "area": "Silver Lake",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvo02k1ssq3t",
+    "lat": 34.09529,
+    "lng": -118.28381,
+    "name": "Dinosaur Coffee",
+    "pid": "ChIJfaYfR0zHwoARAqzXr3o2bEA",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-25T15:46:10.048Z",
+    "wish": true
+  },
+  {
+    "area": "Downtown Los Angeles",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-25"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Breve white",
+        "orders": [
+          {
+            "date": "2026-10-25",
+            "ice": "Warm",
+            "id": "mvosl19netd6",
+            "milk": "Oat",
+            "note": "Strong coffee taste but the sweet because of the top, def will keep you awake!",
+            "p": "7.50",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.50",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1566,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvo03c1otixs",
+    "lat": 34.03095,
+    "lng": -118.23017,
+    "matches": 1,
+    "name": "Maru Coffee",
+    "pid": "ChIJ_zD6ESDGwoAR-wg2QUIAySo",
+    "rating": 5,
+    "review": "Great vibe and good coffee!",
+    "updated": "2026-10-26T05:09:31.371Z",
+    "wish": false
+  },
+  {
+    "area": "Outer Richmond",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-26"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Flat White",
+        "orders": [
+          {
+            "date": "2026-10-26",
+            "ice": "Warm",
+            "id": "mvpnghhu7ym1",
+            "milk": "Oat",
+            "p": "6.50",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.50",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvpnj21f2cco",
+    "lat": 37.77552,
+    "lng": -122.4977,
+    "name": "Devil's Teeth Baking Company",
+    "pid": "ChIJIQxgbuKHhYARMxc7ZR5MUIg",
+    "rating": 5,
+    "review": "It's not bad and strong espresso which I enjoy, there is space in the back to hangout which is pretty cool!",
+    "updated": "2026-10-26T19:30:37.202Z",
+    "wish": false
+  },
+  {
+    "area": "Central Richmond",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-26"
+        ],
+        "ice": "Warm",
+        "n": "Pour over",
+        "orders": [
+          {
+            "date": "2026-10-26",
+            "ice": "Warm",
+            "id": "mvpnjwb3tola",
+            "note": "Strong taste with amazing notes!",
+            "p": "6",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1562,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvpnp67k8g0d",
+    "lat": 37.77647,
+    "lng": -122.47782,
+    "matches": 2,
+    "name": "The Coffee Movement",
+    "pid": "ChIJTfb1d_uHhYARRpn5d_Fk1SU",
+    "rating": 5,
+    "review": "Chill workspace and staff looks committed to making good coffee!!",
+    "updated": "2026-10-27T09:17:19.957Z",
+    "wish": false
+  },
+  {
+    "area": "Yerba Buena",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-26"
+        ],
+        "ice": "Less ice",
+        "n": "Guava Refresher",
+        "orders": [
+          {
+            "date": "2026-10-26",
+            "ice": "Less ice",
+            "id": "mvq1zrb66t1b",
+            "note": "It's good but not amazing, also too sweet, no options for zero sweet.",
+            "p": "6.50",
+            "reorder": "neutral",
+            "size": "20 oz",
+            "sweet": "25%"
+          }
+        ],
+        "p": "6.50",
+        "reorder": "neutral",
+        "size": "20 oz",
+        "sweet": "25%"
+      }
+    ],
+    "elo": 1431,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvq23rjj50sk",
+    "kind": "matcha",
+    "lat": 37.78784,
+    "lng": -122.40294,
+    "matches": 2,
+    "name": "Junbi Matcha & Tea - San Francisco",
+    "pid": "ChIJ-1EfVACBhYARWm3CpZAzRkg",
+    "rating": 3,
+    "review": "Nothing extraordinary",
+    "updated": "2026-10-27T08:57:31.508Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-10-17"
+        ],
+        "n": "Sunrise passion",
+        "orders": [
+          {
+            "date": "2024-10-17",
+            "id": "mvphpf6mn256",
+            "p": "6.90"
+          }
+        ],
+        "p": "6.90"
+      },
+      {
+        "dates": [
+          "2024-10-17"
+        ],
+        "n": "Green thai tea",
+        "orders": [
+          {
+            "date": "2024-10-17",
+            "id": "mvphpf6mbw03",
+            "p": "6.60"
+          }
+        ],
+        "p": "6.60"
+      }
+    ],
+    "elo": 1471,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-7leaves",
+    "lat": 37.71089,
+    "lng": -122.46684,
+    "matches": 6,
+    "name": "7Leaves Cafe",
+    "rating": 4,
+    "review": "Solid Vietnamese-style chain. Sunrise passion and green Thai tea were both decent.",
+    "updated": "2026-10-26T16:47:36.478Z"
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-10-18"
+        ],
+        "n": "HK milk tea",
+        "orders": [
+          {
+            "date": "2024-10-18",
+            "id": "mvphq6bxzdjp",
+            "p": "6"
+          }
+        ],
+        "p": "6"
+      }
+    ],
+    "elo": 1512,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-asha",
+    "lat": 37.78813,
+    "lng": -122.40374,
+    "matches": 5,
+    "name": "Asha Tea House",
+    "rating": 4,
+    "review": "Classic HK milk tea, nicely balanced.",
+    "updated": "2026-10-26T16:48:11.661Z"
+  },
+  {
+    "area": "Las Vegas, NV",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-07"
+        ],
+        "n": "Phoenix oolong tea",
+        "p": ""
+      }
+    ],
+    "elo": 1579,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-brew-tea-bar",
+    "lat": 36.1148,
+    "lng": -115.20128,
+    "matches": 6,
+    "name": "Brew Tea Bar",
+    "rating": 4,
+    "review": "Vegas stop — phoenix oolong tea was good."
+  },
+  {
+    "area": "Cupertino, CA",
+    "brand": "Chicha San Chen",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-16"
+        ],
+        "elo": 1516,
+        "matches": 3,
+        "n": "Osmanthus milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2026-02-16"
+        ],
+        "n": "Cassia milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1550,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-chicha",
+    "lat": 37.32211,
+    "lng": -122.03576,
+    "matches": 6,
+    "name": "CHICHA San Chen",
+    "rating": 3,
+    "review": "Osmanthus milk tea was great; the cassia milk tea less so."
+  },
+  {
+    "area": "Honolulu, HI",
+    "brand": "Coffee or Tea?",
+    "drinks": [
+      {
+        "dates": [
+          "2024-08-12"
+        ],
+        "n": "Black milk tea",
+        "p": "",
+        "sweet": "25%"
+      },
+      {
+        "dates": [
+          "2026-06-09"
+        ],
+        "elo": 1574,
+        "matches": 6,
+        "n": "Pudding milk tea",
+        "p": "8",
+        "sweet": "5%"
+      }
+    ],
+    "elo": 1381,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-coffee-or-tea",
+    "lat": 21.29006,
+    "lng": -157.83269,
+    "matches": 15,
+    "name": "Coffee or Tea?",
+    "rating": 4,
+    "review": "Honolulu spot — reliable black milk tea.\n\nThe local classic is: pudding milk tea - it's def on the sweet side so count on reducing the sweetest level",
+    "updated": "2026-06-17T05:16:59.212Z"
+  },
+  {
+    "area": "San Jose, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-29"
+        ],
+        "n": "Corn latte",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2026-05-29"
+        ],
+        "n": "Matcha guava cream top",
+        "p": ""
+      }
+    ],
+    "elo": 1565,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-haiku",
+    "lat": 37.37026,
+    "lng": -121.87977,
+    "matches": 7,
+    "name": "Haiku Teahouse",
+    "rating": 4,
+    "review": "Corn latte is a fun, creamy surprise. The matcha guava cream top is worth recreating at home.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "Daly City, CA",
+    "brand": "Heytea",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-04-14"
+        ],
+        "n": "Yingde cheese milk tea",
+        "orders": [
+          {
+            "date": "2026-04-14",
+            "id": "mv8h7x5y16ou"
+          }
+        ]
+      }
+    ],
+    "elo": 1436,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-heytea",
+    "lat": 37.69957,
+    "lng": -122.48261,
+    "matches": 7,
+    "name": "HEYTEA",
+    "rating": 1,
+    "review": "Yingde cheese milk tea was way too sweet — not for me.",
+    "updated": "2026-10-14T19:02:03.765Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "brand": "Kiss of matcha",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-17"
+        ],
+        "elo": 1435,
+        "matches": 5,
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-02-17",
+            "id": "mvc0td9cpse7"
+          }
+        ]
+      },
+      {
+        "dates": [
+          "2026-03-24"
+        ],
+        "n": "Hojicha tea",
+        "orders": [
+          {
+            "date": "2026-03-24",
+            "id": "mvc0td99x0rq"
+          }
+        ]
+      }
+    ],
+    "elo": 1495,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-kiss-of-matcha",
+    "lat": 37.78296,
+    "lng": -122.46745,
+    "matches": 11,
+    "name": "Kiss of Matcha",
+    "rating": 4,
+    "review": "Good hojicha — low sugar and earthy.",
+    "tags": [
+      "matcha"
+    ],
+    "updated": "2026-10-17T06:35:13.736Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-22"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "SAMPAGUITA CHAI LATTE",
+        "orders": [
+          {
+            "date": "2026-10-22",
+            "ice": "Warm",
+            "id": "mvk2mnwsec2z",
+            "milk": "Oat",
+            "note": "Maybe it's just not my taste",
+            "p": "8.14",
+            "reorder": "neutral",
+            "size": "14 oz",
+            "sweet": "50%"
+          }
+        ],
+        "p": "8.14",
+        "reorder": "neutral",
+        "size": "14 oz",
+        "sweet": "50%"
+      },
+      {
+        "count": 12,
+        "dates": [
+          "2026-03-24",
+          "2026-07-09",
+          "2026-07-27",
+          "2026-09-08",
+          "2026-09-09",
+          "2026-09-15",
+          "2026-09-18",
+          "2026-09-24",
+          "2026-10-07",
+          "2026-10-14",
+          "2026-10-15",
+          "2026-10-17"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Flat White",
+        "orders": [
+          {
+            "date": "2026-03-24",
+            "ice": "Warm",
+            "id": "mtvs2elobsr6",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-09",
+            "ice": "Warm",
+            "id": "mtvs2elnvxe0",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-27",
+            "ice": "Warm",
+            "id": "mtvs2elmn0g5",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-08",
+            "ice": "Warm",
+            "id": "mtvs2ell0gxx",
+            "milk": "Oat",
+            "p": "4.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-09",
+            "ice": "Warm",
+            "id": "mtvs2eqp5azy",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-15",
+            "ice": "Warm",
+            "id": "mu34ylftx36w",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-18",
+            "ice": "Warm",
+            "id": "mu7boi2nzdul",
+            "milk": "Oat",
+            "p": "4.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-24",
+            "ice": "Warm",
+            "id": "mufx9yuhrhf8",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-07",
+            "ice": "Warm",
+            "id": "muyz7cdju6n6",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-14",
+            "ice": "Warm",
+            "id": "mv8ts4lr2rvo",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-15",
+            "ice": "Warm",
+            "id": "mv9wwgzcjgu5",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-17",
+            "ice": "Warm",
+            "id": "mved46znxltj",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "5",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      },
+      {
+        "count": 11,
+        "dates": [
+          "2026-03-22",
+          "2026-03-25",
+          "2026-04-09",
+          "2026-07-31",
+          "2026-08-05",
+          "2026-08-07",
+          "2026-08-11",
+          "2026-09-04",
+          "2026-09-11",
+          "2026-09-14",
+          "2026-09-23"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-03-22",
+            "ice": "Warm",
+            "id": "mtvs2elwc6i8",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-03-25",
+            "ice": "Warm",
+            "id": "mtvs2elvrya3",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-04-09",
+            "ice": "Warm",
+            "id": "mtvs2elu1cxx",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-31",
+            "ice": "Warm",
+            "id": "mtvs2eluc131",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-05",
+            "ice": "Warm",
+            "id": "mtvs2els7c5a",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-07",
+            "ice": "Warm",
+            "id": "mtvs2elra3n6",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-11",
+            "ice": "Warm",
+            "id": "mtvs2elq5lmi",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-04",
+            "ice": "Warm",
+            "id": "mtvs2elqmwjn",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-11",
+            "ice": "Warm",
+            "id": "mtysu9gimksk",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-14",
+            "ice": "Warm",
+            "id": "mu550y0i80v0",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-23",
+            "ice": "Less ice",
+            "id": "muepi55514xa",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.25",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-09-17"
+        ],
+        "ice": "Less ice",
+        "n": "Ichigo Matcha",
+        "orders": [
+          {
+            "date": "2026-09-17",
+            "ice": "Less ice",
+            "id": "mu5y4ylky6sg",
+            "p": "7.75",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.75",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-07-28"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Matcha Matcha",
+        "orders": [
+          {
+            "date": "2026-07-28",
+            "ice": "Less ice",
+            "id": "mtvs2elysglo",
+            "milk": "Oat",
+            "p": "7.75",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.75",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-03-23"
+        ],
+        "n": "Matcha latte",
+        "orders": [
+          {
+            "date": "2026-03-23",
+            "id": "mtvs2elzzzgm"
+          }
+        ]
+      }
+    ],
+    "elo": 1591,
+    "emoji": "☕",
+    "fav": true,
+    "id": "tea-kissaten",
+    "lat": 37.7852,
+    "lng": -122.46477,
+    "matches": 25,
+    "name": "Kissaten HiFi",
+    "rating": 4,
+    "review": "Go-to for hojicha lattes and flat white — consistent and cozy.\n\nAshley Cafe is next around the corner for a good bagel and sandwiches!",
+    "tags": [
+      "specialty"
+    ],
+    "updated": "2026-10-22T21:48:36.329Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "count": 2,
+        "dates": [
+          "2026-02-13",
+          "2026-09-29"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-02-13",
+            "ice": "Warm",
+            "id": "mu57bei65453",
+            "p": "6.75",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-29",
+            "ice": "Warm",
+            "id": "mungfbdeyru9",
+            "milk": "Oat",
+            "p": "6.75",
+            "reorder": "yes",
+            "size": "14 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.75",
+        "reorder": "yes",
+        "size": "14 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-07-29"
+        ],
+        "ice": "Less ice",
+        "n": "Jasmine Yuzu Tea Aiyu Jelly",
+        "orders": [
+          {
+            "date": "2026-07-29",
+            "ice": "Less ice",
+            "id": "mu57bei3f28c",
+            "p": "7",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "25%"
+          }
+        ],
+        "p": "7",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "25%"
+      },
+      {
+        "dates": [
+          "2026-07-29"
+        ],
+        "ice": "Less ice",
+        "n": "Iced Hojicha Latte w/ Salted Cheese Foam",
+        "orders": [
+          {
+            "date": "2026-07-29",
+            "ice": "Less ice",
+            "id": "mu57bei5k3xl",
+            "p": "8.50",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "8.50",
+        "reorder": "yes",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1600,
+    "emoji": "☕",
+    "fav": true,
+    "id": "tea-komeya",
+    "lat": 37.80007,
+    "lng": -122.43134,
+    "matches": 9,
+    "name": "Komeya No Bento",
+    "rating": 4,
+    "review": "Surprisingly good hojicha latte alongside the bento.",
+    "tags": [
+      "matcha",
+      "to-go"
+    ],
+    "updated": "2026-10-16T05:46:08.000Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-19"
+        ],
+        "elo": 1427,
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": ""
+      }
+    ],
+    "elo": 1431,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-maruwu-seicha",
+    "lat": 37.78517,
+    "lng": -122.43055,
+    "matches": 8,
+    "name": "Maruwu Seicha",
+    "rating": 3,
+    "review": "Decent hojicha latte, a touch sweet.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "Santa Clara, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-15"
+        ],
+        "n": "Hojicha",
+        "p": ""
+      }
+    ],
+    "elo": 1444,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-matsu-matcha",
+    "lat": 37.35155,
+    "lng": -121.98143,
+    "matches": 6,
+    "name": "Matsu Matcha",
+    "rating": 4,
+    "review": "Smooth hojicha, drinkable and not too sweet.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "Sunnyvale, CA",
+    "brand": "Molly tea",
+    "drinks": [
+      {
+        "dates": [
+          "2024-11-03"
+        ],
+        "elo": 1557,
+        "matches": 4,
+        "n": "Osmanthus milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-10-20"
+        ],
+        "elo": 1516,
+        "matches": 1,
+        "n": "Premium jasmine milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-03"
+        ],
+        "n": "Snowy jasmine",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-10-20"
+        ],
+        "n": "White champaca oolong milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2026-02-17"
+        ],
+        "elo": 1516,
+        "matches": 1,
+        "n": "Camellia oolong milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1541,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-molly",
+    "lat": 37.36179,
+    "lng": -122.02442,
+    "matches": 5,
+    "name": "Molly Tea",
+    "rating": 4,
+    "review": "A favorite — the osmanthus and jasmine milk teas are consistently excellent."
+  },
+  {
+    "area": "Cupertino, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-25"
+        ],
+        "n": "Ceylon milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1578,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-moon",
+    "lat": 37.32257,
+    "lng": -122.01654,
+    "matches": 6,
+    "name": "Moon Tea",
+    "rating": 4,
+    "review": "Ceylon milk tea was tasty."
+  },
+  {
+    "area": "Berkeley, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-14"
+        ],
+        "n": "House milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1414,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-purple-kow",
+    "lat": 37.87026,
+    "lng": -122.26618,
+    "matches": 6,
+    "name": "Purple Kow",
+    "rating": 1,
+    "review": "Low-quality tea and an awkwardly huge cup. Skip."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "count": 5,
+        "dates": [
+          "2026-02-11",
+          "2026-02-12",
+          "2026-02-20",
+          "2026-02-23"
+        ],
+        "elo": 1512,
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": ""
+      }
+    ],
+    "elo": 1508,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-q-specialty",
+    "lat": 37.78683,
+    "lng": -122.45162,
+    "matches": 16,
+    "name": "Q Specialty Coffee",
+    "rating": 4,
+    "review": "My regular for a reliable hojicha latte.",
+    "tags": [
+      "specialty"
+    ]
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-30"
+        ],
+        "elo": 1543,
+        "matches": 5,
+        "n": "Hojicha latte",
+        "p": ""
+      }
+    ],
+    "elo": 1571,
+    "emoji": "🍵",
+    "fav": true,
+    "id": "tea-shoji",
+    "lat": 37.78661,
+    "lng": -122.4,
+    "matches": 7,
+    "name": "Shoji",
+    "rating": 4,
+    "review": "Nice hojicha latte, well made.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "Burlingame, CA",
+    "brand": "Sunright Tea Studio",
+    "drinks": [
+      {
+        "dates": [
+          "2026-02-26"
+        ],
+        "elo": 1476,
+        "matches": 4,
+        "n": "Oolong milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1542,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-sunright",
+    "lat": 37.58002,
+    "lng": -122.34689,
+    "matches": 5,
+    "name": "Sunright Tea Studio",
+    "rating": 4,
+    "review": "Sugar-free oolong milk tea hit the spot."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-05"
+        ],
+        "elo": 1423,
+        "matches": 6,
+        "n": "Hojicha latte",
+        "p": ""
+      }
+    ],
+    "elo": 1417,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-tokyo-cream",
+    "lat": 37.76378,
+    "lng": -122.47778,
+    "matches": 7,
+    "name": "Tokyo Cream",
+    "rating": 3,
+    "review": "Nice hojicha aftertaste, but the tea was too diluted.",
+    "tags": [
+      "matcha"
+    ]
+  },
+  {
+    "area": "San Diego, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-05-30"
+        ],
+        "n": "Matcha latte w/ banana cream",
+        "p": ""
+      }
+    ],
+    "elo": 1557,
+    "emoji": "🍵",
+    "fav": false,
+    "id": "tea-tori-coffee",
+    "lat": 32.71377,
+    "lng": -117.15453,
+    "matches": 6,
+    "name": "Tori Coffee",
+    "rating": 4,
+    "review": "San Diego stop — matcha latte with banana cream, a little light on matcha.",
+    "tags": [
+      "specialty",
+      "matcha"
+    ]
+  },
+  {
+    "area": "Millbrae, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-11-02"
+        ],
+        "n": "Golden osmanthus fresh milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-02"
+        ],
+        "n": "Four season osmanthus ice tea",
+        "p": ""
+      }
+    ],
+    "elo": 1446,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-tp",
+    "lat": 37.60186,
+    "lng": -122.39258,
+    "matches": 6,
+    "name": "TP Tea",
+    "rating": 4,
+    "review": "The osmanthus drinks are the move here."
+  },
+  {
+    "area": "San Jose, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-02"
+        ],
+        "elo": 1434,
+        "matches": 5,
+        "n": "Egg coffee",
+        "p": ""
+      }
+    ],
+    "elo": 1569,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-trung-nguyen",
+    "lat": 37.3308,
+    "lng": -121.8576,
+    "matches": 5,
+    "name": "Trung Nguyen Legend",
+    "rating": 4,
+    "review": "Vietnamese egg coffee done right.",
+    "tags": [
+      "specialty"
+    ]
+  },
+  {
+    "area": "Millbrae, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-01"
+        ],
+        "n": "Plum green tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-16"
+        ],
+        "n": "Tieguanyin tea latte",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-16"
+        ],
+        "elo": 1484,
+        "matches": 1,
+        "n": "Ginger milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1398,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-wanpo",
+    "lat": 37.60619,
+    "lng": -122.398,
+    "matches": 7,
+    "name": "Wanpo Tea",
+    "rating": 4,
+    "review": "Plum green tea was a 5/5 standout. Ginger milk tea was less exciting."
+  },
+  {
+    "area": "San Francisco, CA",
+    "brand": "",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-26"
+        ],
+        "elo": 1449,
+        "matches": 4,
+        "n": "Pudding milk tea",
+        "p": "",
+        "reorder": "no"
+      }
+    ],
+    "elo": 1419,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-wonderful",
+    "lat": 37.76318,
+    "lng": -122.47999,
+    "matches": 6,
+    "name": "Wonderful Desserts & Cafe",
+    "rating": 1,
+    "review": "Pudding milk tea was too sugary — not great.",
+    "updated": "2026-06-20T08:42:56.814Z",
+    "wish": false
+  },
+  {
+    "area": "San Francisco, CA",
+    "brand": "Yifang",
+    "drinks": [
+      {
+        "dates": [
+          "2024-11-01"
+        ],
+        "n": "Grape fruit tea",
+        "p": ""
+      }
+    ],
+    "elo": 1448,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-yifang",
+    "lat": 37.78517,
+    "lng": -122.43055,
+    "matches": 6,
+    "name": "Yifang Taiwan Fruit Tea",
+    "rating": 4,
+    "review": "Grape fruit tea was fine, a bit on the sweet side.",
+    "updated": "2026-06-15T21:26:57.683Z"
+  },
+  {
+    "area": "Fremont, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2026-03-29"
+        ],
+        "n": "Roasted oolong tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-12"
+        ],
+        "elo": 1524,
+        "matches": 4,
+        "n": "Oolong milk tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-11-04"
+        ],
+        "elo": 1540,
+        "matches": 5,
+        "n": "Osmanthus oolong tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-10-24"
+        ],
+        "n": "Kumquat lemon green tea",
+        "p": ""
+      }
+    ],
+    "elo": 1476,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-yokee",
+    "lat": 37.49373,
+    "lng": -121.9302,
+    "matches": 6,
+    "name": "Yokee Milk Tea",
+    "rating": 4,
+    "review": "Reliable — the oolong-based teas are the best picks."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-11-18"
+        ],
+        "n": "Mulberry lemon tea",
+        "p": ""
+      }
+    ],
+    "elo": 1404,
+    "emoji": "🧋",
+    "fav": false,
+    "id": "tea-yy",
+    "lat": 37.73206,
+    "lng": -122.47348,
+    "matches": 7,
+    "name": "YY Coffee & Tea",
+    "rating": 4,
+    "review": "Mulberry lemon tea was refreshing."
+  },
+  {
+    "area": "San Francisco, CA",
+    "drinks": [
+      {
+        "dates": [
+          "2024-10-29"
+        ],
+        "elo": 1428,
+        "matches": 5,
+        "n": "Osmanthus oolong tea",
+        "p": ""
+      },
+      {
+        "dates": [
+          "2024-10-23"
+        ],
+        "elo": 1443,
+        "matches": 4,
+        "n": "Osmanthus milk tea",
+        "p": ""
+      }
+    ],
+    "elo": 1418,
+    "emoji": "☕",
+    "fav": false,
+    "id": "tea-zero",
+    "lat": 37.77663,
+    "lng": -122.42363,
+    "matches": 6,
+    "name": "ZERO& SF Hayes Store",
+    "rating": 4,
+    "review": "Osmanthus teas were good and not too sweet."
+  }
+]
