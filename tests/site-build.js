@@ -27,9 +27,7 @@ const walk = (dir, pre) =>
   eq(top, ["404.html", "c", "cafes.json", "icon-180.png", "icon-192.png", "icon-512.png", "index.html", "js", "manifest.json", "styles.css", "styles.css.map", "sw.js", "sw.js.map", "vendor"],
      "the site is the app's own files, the data and the share pages: no tests, notes, tooling, rules or server.js");
 
-  const committed = +execSync("git log -1 --format=%ct -- cafes.json", { cwd: ROOT, encoding: "utf8" }).trim();
-  eq(Math.round(fs.statSync(path.join(out, "cafes.json")).mtimeMs / 1000), committed,
-     "cafes.json goes out dated by the commit that holds it, not by the build: Settings reads that date as the last backup");
+  eq(s.backupAt, null, "built from main's cafes.json there is no backup date to give, so no backup.json");
 
   /* ---- everything the app loads is in it ---- */
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
@@ -61,17 +59,24 @@ const walk = (dir, pre) =>
      "a private spot with precise coordinates, a street address or a place id stops the build");
   eq(refused.filter(m => /Secret|37\.77|Mission|ChIJ/.test(m)), [], "…and the message says where it is in the list, never what it is");
 
+  /* the data branch, as the deploy checks it out: a git repo whose last commit is the night's backup */
   const data = fs.mkdtempSync(path.join(os.tmpdir(), "data-"));
   const nightly = [{ id: "n1", name: "Newer Cafe", area: "Oakland, CA", rating: 4 }, { id: "n2", name: "Hidden", custom: true, lat: 37.8, lng: -122.27 }];
   fs.writeFileSync(path.join(data, "cafes.json"), JSON.stringify(nightly));
+  const night = "2026-10-20T09:17:41Z";
+  execSync("git init -q && git add cafes.json && git -c user.name=bot -c user.email=bot@example.invalid commit -q -m backup", {
+    cwd: data, env: { ...process.env, GIT_AUTHOR_DATE: night, GIT_COMMITTER_DATE: night } });
   const out2 = fs.mkdtempSync(path.join(os.tmpdir(), "site-"));
   const s2 = buildSite({ data, out: out2, minify: false, log: () => {} });
   eq([fs.readFileSync(path.join(out2, "cafes.json"), "utf8") === JSON.stringify(nightly), fs.readdirSync(path.join(out2, "c")), s2.cafes],
      [true, ["n1.html"], 2], "with --data the site publishes the nightly cafes.json, and makes share pages from it (none for the private spot)");
+  const backupFile = fs.readFileSync(path.join(out2, "backup.json"), "utf8");
+  eq(JSON.parse(backupFile), { at: "2026-10-20T09:17:41.000Z" },
+     "…and backup.json carries when that backup was committed: Settings reads it, since Pages dates every file by the last deploy");
   const said = [];
-  buildSite({ data: path.join(data, "nothing-here"), out: out2, minify: false, log: m => said.push(m) });
-  eq([fs.readFileSync(path.join(out2, "cafes.json"), "utf8") === fs.readFileSync(path.join(ROOT, "cafes.json"), "utf8"), said.some(m => /no cafes\.json in .*publishing the one on main/.test(m))],
-     [true, true], "before the first nightly backup there is no data branch: it publishes main's cafes.json and says so");
+  const s3 = buildSite({ data: path.join(data, "nothing-here"), out: out2, minify: false, log: m => said.push(m) });
+  eq([fs.readFileSync(path.join(out2, "cafes.json"), "utf8") === fs.readFileSync(path.join(ROOT, "cafes.json"), "utf8"), said.some(m => /no cafes\.json in .*publishing the one on main/.test(m)), s3.backupAt, fs.existsSync(path.join(out2, "backup.json"))],
+     [true, true, null, false], "before the first nightly backup there is no data branch: it publishes main's cafes.json, says so, and gives no date");
   let threw = "";
   try { buildSite({ out: ROOT, minify: false, log: () => {} }); } catch (e) { threw = e.message; }
   eq(/refusing to build into/.test(threw) && fs.existsSync(path.join(ROOT, "index.html")), true, "it will not empty the repo to build into it");
@@ -105,6 +110,20 @@ const walk = (dir, pre) =>
   const shown = await pg.evaluate(() => ({ cur: curId, cards: document.querySelectorAll("#grid .card").length, lib: esc("<b>") + eloStep(1500, 1500, 16, 16, false).a }));
   eq([shown.cur, shown.cards > 0, shown.lib], [id, true, "&lt;b&gt;1508"], "the list renders, a cafe opens, and the module helpers answer");
   await pg.locator("#pane-detail [data-on]").first().click();
+
+  /* Settings' backup line, from a real backup.json through the service worker */
+  const lines = [];
+  for (const file of [null, backupFile]) {
+    if (file) fs.writeFileSync(path.join(out, "backup.json"), file);
+    lines.push(await pg.evaluate(async () => {
+      renderDataCard();
+      const el = document.getElementById("ab-backup");
+      for (let i = 0; i < 40 && !/latest copy/.test(el.textContent); i++) await new Promise(r => setTimeout(r, 50));
+      return el.textContent;
+    }));
+  }
+  eq([/latest copy/.test(lines[0]), /The latest copy is from Oct 2[01],/.test(lines[1])], [false, true],
+     "Settings gives no date when the site has no backup.json, and the backup's date when it has one (" + lines[1].slice(0, 70) + ")");
   eq([errs, await pg.evaluate(() => window.__csp), await pg.evaluate(() => readProblems().length)], [[], [], 0],
      "no page errors, nothing the security policy blocked, and nothing in the problems log");
 

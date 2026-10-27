@@ -2,8 +2,8 @@
 
    The automatic daily backup lives on GitHub; this is the other half, a button that saves a copy to wherever
    you want it. It is the owner's, it reads the list and writes nothing (the old export also cleared the
-   "edits not synced yet" flag, which a download must never do), and it says what is in it and when the last
-   automatic backup ran. */
+   "edits not synced yet" flag, which a download must never do), and it says what is in it and the date of the
+   newest automatic backup copy, from backup.json (scripts/build-site.js writes it at deploy). */
 const { serve, launch, checker, ready } = require("./harness");
 const { eq, done } = checker();
 
@@ -46,22 +46,32 @@ const { eq, done } = checker();
   eq(body.map(c => c.id), ["a", "pv", "w"], "…holding every cafe, the wishlist too");
   eq(await pg.evaluate(() => localStorage.getItem(DIRTY_FLAG)), "1", "…and saving a copy does not mark unsynced edits as done");
 
-  /* the dated line, when the backup file says when it was written */
-  const dated = await pg.evaluate(async () => {
+  /* the dated line, read from backup.json; a header would not do: Pages dates every file by the last deploy */
+  /* fetch is stood in for in the page: the service worker answers this request, and its own fetch is out of a
+     page route's reach. tests/site-build.js serves a real backup.json. */
+  const backupLine = body => pg.evaluate(async body => {
     const real = window.fetch;
-    window.fetch = () => Promise.resolve({ ok: true, headers: { get: k => (k.toLowerCase() === "last-modified" ? "Fri, 16 Oct 2026 09:17:41 GMT" : null) } });
+    let asked = "";
+    window.fetch = u => { asked = String(u);
+      return Promise.resolve(body === null ? { ok: false, json: () => Promise.reject(new Error("404")) } : { ok: true, json: () => Promise.resolve().then(() => JSON.parse(body)) }); };
     renderDataCard();
     await new Promise(r => setTimeout(r, 50));
     window.fetch = real;
-    return document.getElementById("ab-backup").textContent;
-  });
-  eq(/The last one was Oct 1[56]/.test(dated), true, "when the backup file carries a date, the card says when (" + dated.slice(0, 70) + ")");
+    return { text: document.getElementById("ab-backup").textContent, asked };
+  }, body);
+  const got = await backupLine(JSON.stringify({ at: "2026-10-16T09:17:41.000Z" }));
+  const dated = got.text;
+  eq(/^backup\.json\?t=\d+$/.test(got.asked), true, "the card asks backup.json, past any cache (" + got.asked + ")");
+  eq(/The latest copy is from Oct 1[56]/.test(dated), true, "when backup.json carries a date, the card says when the newest copy was made (" + dated.slice(0, 70) + ")");
+  const none = [(await backupLine(null)).text, (await backupLine("not json")).text, (await backupLine(JSON.stringify({ at: "someday" }))).text];
+  eq(none.map(t => /^Backed up automatically every day/.test(t) && !/latest copy/.test(t)), [true, true, true],
+     "…and with no backup.json (a local run), a broken one or no usable date, it says what the backup is, not when");
   const offline = await pg.evaluate(async () => {
     const real = window.fetch; window.fetch = () => Promise.reject(new Error("offline"));
     renderDataCard(); await new Promise(r => setTimeout(r, 50)); window.fetch = real;
     return document.getElementById("ab-backup").textContent;
   });
-  eq(/^Backed up automatically every day/.test(offline) && !/last one/.test(offline), true, "…and offline it says what the backup is, not when");
+  eq(/^Backed up automatically every day/.test(offline) && !/latest copy/.test(offline), true, "…and offline the same");
 
   eq(errs, [], "no page errors");
   await ctx.close(); await b.close(); srv.close(); process.exit(done() ? 0 : 1);

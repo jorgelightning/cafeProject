@@ -4,7 +4,8 @@
 
      the app's own files       index.html, the scripts, the styles, icons — never tests/, notes, tooling or server.js
      cafes.json                the nightly backup from the `data` branch (--data), checked again before it goes out
-     c/<id>.html               a share page per public cafe, made here from that cafes.json (scripts/share-pages.js)
+     backup.json               when that backup was made, for Settings
+     c/<id>.html              a share page per public cafe, made here from that cafes.json (scripts/share-pages.js)
      minified JS and CSS       comments and whitespace out, local names shortened, with a source map beside each file
 
    The source stays as written, every "why" in place; only the published copy is small. The classic scripts share one
@@ -113,16 +114,20 @@ function buildSite(o) {
     files++;
   });
   fs.writeFileSync(path.join(out, "cafes.json"), fs.readFileSync(dataFile));
-  /* Settings says when the last backup ran from the published cafes.json's Last-Modified, and Pages takes that from
-     the file's time in the upload: give it the time of the commit that holds the data, not of this build */
-  const when = commitTime(path.dirname(dataFile), "cafes.json");
-  if (when) fs.utimesSync(path.join(out, "cafes.json"), when, when);
+  /* Settings says when the newest backup copy was made. It read that from cafes.json's Last-Modified until v110,
+     but Pages stamps every file of a deployment with the deployment's time, and a deploy now follows every code push
+     as well as every backup. So the date travels in a file of its own: when the commit on the data branch that holds
+     this cafes.json was made. Built from main's copy (no data branch yet, or a local build) there is no such date to
+     give, so there is no file, and Settings says what the backup is rather than when. */
+  const fromData = dataFile !== path.join(ROOT, "cafes.json");
+  const when = fromData ? commitTime(path.dirname(dataFile), "cafes.json") : null;
+  if (when) fs.writeFileSync(path.join(out, "backup.json"), JSON.stringify({ at: when.toISOString() }) + "\n");
   const pages = sharePages(cafes, path.join(out, "c"));
 
   const kb = n => (n / 1024).toFixed(0) + " KB";
-  log("site: " + files + " app files, " + cafes.length + " cafes" + (dataFile.startsWith(path.join(ROOT, "cafes.json")) ? " (main's cafes.json)" : " (" + path.relative(ROOT, dataFile) + ")") + ", " + pages + " share pages -> " + path.relative(ROOT, out));
+  log("site: " + files + " app files, " + cafes.length + " cafes" + (fromData ? " (" + path.relative(ROOT, dataFile) + (when ? ", backed up " + when.toISOString() : "") + ")" : " (main's cafes.json)") + ", " + pages + " share pages -> " + path.relative(ROOT, out));
   if (esbuild) log("minified JS and CSS: " + kb(sizes.raw) + " -> " + kb(sizes.min) + ", compressed " + kb(sizes.gzRaw) + " -> " + kb(sizes.gzMin));
-  return { out, files, cafes: cafes.length, pages, sizes };
+  return { out, files, cafes: cafes.length, pages, sizes, backupAt: when ? when.toISOString() : null };
 }
 
 module.exports = { buildSite, checkData, APP };

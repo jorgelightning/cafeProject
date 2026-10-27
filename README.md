@@ -134,7 +134,8 @@ that and publishes nothing if it fails.
   exports still load.
 - **`cafes.json`**: the live site's is the nightly backup, kept on the `data` branch
   (`.github/workflows/backup.yml`), a commit on each day it changes; the copy on `main` is a fixed snapshot
-  for local runs and the tests. It is the offline fallback if the
+  for local runs and the tests. Beside it the deploy writes `backup.json` (`{ "at": <ISO date> }`, when
+  that backup was committed), which Settings shows. `cafes.json` is the offline fallback if the
   cloud is unreachable. Must be a **plain JSON array** starting with `[` —
   the wrapped `{ "cafes": [...] }` form is only for pasting into Firebase.
   If missing, the app falls back to the visitor's cached copy or demo data.

@@ -1856,9 +1856,9 @@ makes the share pages from it at that moment. Main no longer commits `c/`: a cop
 the last time someone regenerated it, and a cafe made private since would keep its page. Main keeps a `cafes.json`,
 no longer refreshed, as the data for local runs and the tests, which want it to stay put. The deploy checks the
 file it publishes for a private spot's precise location once more (`checkData`), naming the spot by its position,
-never by anything about it. Settings reads "the last one was" from the published `cafes.json`'s Last-Modified, which
-Pages takes from the file's time in the upload; the build sets that to the backup commit's time, since a deploy now
-also follows every code push.
+never by anything about it. v110 also set the published `cafes.json`'s file time to the backup commit's, for
+Settings' "the last one was", on the belief that Pages serves a file's own time as Last-Modified. It does not: the
+live site gave every file, the icon included, the same Last-Modified, the deploy's. v111 below replaces it.
 
 **Minified at deploy (E11).** `scripts/build-site.js` minifies the scripts and the stylesheet with esbuild:
 624 KB to 344 KB, 191 KB to 106 KB compressed. The classic scripts are minified with no module format, which is what
@@ -1874,3 +1874,16 @@ minified stylesheet: no computed difference in 348 states, once the dark `--bord
 Two tests read what the server handed out where they meant the source or the served copy: `discovery` regex-matched
 the served stylesheet for how a rule is written (now read from the repo), and `cache-version` edited the repo's
 `config.js` to prove a changed served file arrives (now the served folder's).
+
+## The backup's date, in a file (v111)
+
+Settings' Your data card said "The last one was <date>" from `cafes.json`'s Last-Modified. On Pages that is the time
+of the last deploy, for every file alike (an ETag there is that time in hex, then the size), and since E1 a deploy
+follows every code push as well as every backup: backups could stop for a week and, with any push in it, the card
+would still show a recent date. The build now writes `backup.json`, `{ "at": <ISO> }`, the time of the commit on
+the `data` branch that holds the published `cafes.json`, and the card reads that. It says "The latest copy is from
+<date>": the backup commits only when something changed, so on a quiet day the date stays put, and that is the
+honest reading. Built from main's `cafes.json` (no data branch yet, or a local run) there is no backup date, so there
+is no file, and the card says what the backup is rather than when. The service worker treats `backup.json` like
+`cafes.json`: network-first, stored under its bare path, so the `?t=` on each request does not leave a cache entry
+behind. `tests/site-build.js` serves a real one through the service worker to the card.

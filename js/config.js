@@ -57,6 +57,7 @@ const FIREBASE_CONFIG = {
 };
 const KEY = "cafemap.v1";
 const DATA_URL = "cafes.json"; // published data committed to your GitHub repo
+const BACKUP_URL = "backup.json"; // when the published cafes.json was backed up: { "at": ISO date } (scripts/build-site.js)
 const PRIVATE_PATH = "private"; // Firebase node holding private spots' exact addresses — owner-read only (see README)
 const ADMIN_FLAG = "cafemap.admin"; // remembers admin mode in this browser
 const DIRTY_FLAG = "cafemap.dirty"; // set on local edits, cleared on Export

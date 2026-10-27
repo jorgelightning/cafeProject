@@ -7,8 +7,8 @@
    most apps, because the thing this is for is logging drinks in another country.
 
    Two rules:
-   - index.html and cafes.json are network-first, so the update bar in boot.js keeps spotting
-     new versions and published data stays fresh. They fall back to cache only when the
+   - index.html, cafes.json and backup.json are network-first, so the update bar in boot.js keeps
+     spotting new versions and published data stays fresh. They fall back to cache only when the
      network fails.
    - everything else in the shell is cache-first, keyed by the same ?v= string the script tags
      already carry.
@@ -17,8 +17,8 @@
    CACHE_V would keep serving the old scripts. Anything cross-origin (Maps, Firebase, the FX
    endpoint) is deliberately not intercepted; those must fail normally so their own fallbacks
    run. */
-const CACHE_V = "cafemap-v110";
-const ASSET_V = "?v=110";
+const CACHE_V = "cafemap-v111";
+const ASSET_V = "?v=111";
 
 const SHELL = [
   "./", "./index.html", "./manifest.json", "./cafes.json",
@@ -71,11 +71,12 @@ self.addEventListener("fetch", function(e){
   if(/\/c\/[^/]*$/.test(url.pathname)) return;
 
   const isDoc  = req.mode === "navigate" || /(^|\/)(index\.html)?$/.test(url.pathname);
-  const isData = url.pathname.endsWith("cafes.json");
+  /* backup.json (when cafes.json was backed up) too: it has to be as fresh as the data it dates */
+  const isData = /(^|\/)(cafes|backup)\.json$/.test(url.pathname);
 
   if(isDoc || isData){
-    /* cafes.json arrives with a ?t= buster; store it under its bare path so the offline
-       lookup can actually find it again. */
+    /* the data arrives with a ?t= buster; store it under its bare path so the offline
+       lookup can actually find it again, and so each visit does not leave another entry. */
     const key = isData ? new Request(url.origin + url.pathname) : req;
     e.respondWith(
       fetch(req).then(function(r){ return keep(key, r); })

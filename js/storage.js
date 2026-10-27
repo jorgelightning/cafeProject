@@ -718,8 +718,11 @@ function downloadCopy() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1500);
   toast("Copy downloaded \u2713");
 }
-/* The card in Settings: what a copy would hold, and when the automatic daily backup last ran, read from the
-   backup file's own date. Offline or unreadable, it says what the backup is rather than when. */
+/* The card in Settings: what a copy would hold, and when the newest automatic backup copy was made, read from
+   backup.json, which the deploy writes beside cafes.json. The backup commits only when something changed, so on a
+   quiet day the date stays put: it is the date of the newest copy, not of the last run. Until v110 this read
+   cafes.json's Last-Modified, which on Pages is the time of the last deploy. With no backup.json (a local run, or
+   offline) it says what the backup is rather than when. */
 function renderDataCard() {
   const n = $("ab-copynote"),
     bk = $("ab-backup");
@@ -732,13 +735,15 @@ function renderDataCard() {
   if (!bk) return;
   bk.textContent = "Backed up automatically every day, and every version is kept on GitHub.";
   if (typeof fetch !== "function") return;
-  fetch(DATA_URL + "?t=" + Date.now(), { method: "HEAD" })
+  fetch(BACKUP_URL + "?t=" + Date.now())
     .then(function (r) {
-      const lm = r.ok && r.headers.get("last-modified"),
-        d = lm && new Date(lm);
+      return r.ok ? r.json() : null;
+    })
+    .then(function (j) {
+      const d = j && typeof j.at === "string" && new Date(j.at);
       if (d && !isNaN(d.getTime()))
         bk.textContent =
-          "\u2713 Backed up automatically every day. The last one was " +
+          "\u2713 Backed up automatically every day. The latest copy is from " +
           d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
           ", and every version is kept on GitHub.";
     })
