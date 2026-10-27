@@ -66,7 +66,7 @@ const { eq, done } = checker();
     if (!b) return { there: false };
     const cs = getComputedStyle(b);
     return { there: true, tag: b.tagName, label: b.getAttribute("aria-label"),
-             onclick: (b.getAttribute("onclick") || ""), svg: !!b.querySelector("svg"),
+             onclick: (b.getAttribute("data-on") || ""), svg: !!b.querySelector("svg"),
              w: Math.round(b.getBoundingClientRect().width),
              h: Math.round(b.getBoundingClientRect().height),
              pos: cs.position, z: cs.zIndex };
@@ -74,7 +74,7 @@ const { eq, done } = checker();
   eq(r.there, true, "the map has a locate button");
   eq(r.tag, "BUTTON", "…a real <button>, so it is keyboard-reachable for free");
   eq(r.label, "Show my location", "…with an accessible name");
-  eq(r.onclick.includes("locate()"), true, "…wired to the locate() that already existed");
+  eq(r.onclick === "locate", true, "…wired to the locate() that already existed");
   eq(r.svg, true, "…drawing the crosshair rather than an emoji");
   eq({ w: r.w, h: r.h }, { w: 44, h: 44 }, "…at a 44px touch target");
 

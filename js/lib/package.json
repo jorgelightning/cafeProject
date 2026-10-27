@@ -1,0 +1,4 @@
+{
+  "//": "js/lib/ holds ES modules: this tells Node so (tests/unit/), and means nothing to a browser",
+  "type": "module"
+}

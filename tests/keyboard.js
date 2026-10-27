@@ -20,7 +20,7 @@ const { eq, done } = checker();
      cardsFocusable:cards.filter(c=>c.getAttribute('tabindex')==='0'&&c.getAttribute('role')==='button').length,
      chips:chips.length,
      chipsFocusable:chips.filter(c=>c.getAttribute('tabindex')==='0').length,
-     leftover:[...document.querySelectorAll('[onclick]')].filter(e=>
+     leftover:[...document.querySelectorAll('[data-on]')].filter(e=>
         (e.tagName==='SPAN'||e.tagName==='DIV') && e.getAttribute('tabindex')!=='0'
         && !e.classList.contains('ch-scrim')).length
    };

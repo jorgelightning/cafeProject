@@ -48,9 +48,11 @@ to the public value. The precise copy is never merged into the `cafes` array, be
 writes that array wholesale to the public node.
 
 > **The database rule below is not optional.** Without it, `private/` is exactly as readable as
-> `cafes/`, and this whole arrangement is decoration. Paste it into
-> **Firebase console → Realtime Database → Rules → Publish**, replacing the address with the
-> one in `OWNER_EMAIL` (`js/config.js`):
+> `cafes/`, and this whole arrangement is decoration. It lives in **`database.rules.json`**, tested
+> against the Firebase emulator (`npm run test:rules`, needs Java) on every push. Publish it with
+> `npx -y firebase-tools@15.33.0 deploy --only database` (run `firebase login` once first), or paste
+> it into **Firebase console → Realtime Database → Rules → Publish**. For a fork, replace the
+> address with the one in `OWNER_EMAIL` (`js/config.js`):
 
 ```json
 {
@@ -86,19 +88,26 @@ daily backup applies the same redaction in jq, so a precise value already sittin
 still never reaches the published file.
 
 
-Scripts are classic (non-module) files loaded in order — `config.js` first,
-`boot.js` last. Functions are globals so inline `onclick` handlers keep working.
+Scripts are classic files loaded in order with `defer` — `config.js` first, `boot.js` last — and
+share one global scope. The pure helpers (escaping, dates, the Elo arithmetic) are ES modules in
+`js/lib/`, loaded first and unit-tested by Node. A control names what it does
+(`data-on="openDetail" data-args="[...]"`, written by `act()` in `core.js`) instead of carrying
+inline code, which is what lets the Content Security Policy in `index.html` forbid inline script.
 
 ## Tests
 
 `npm install && npx playwright install chromium`, then `npm test`. They drive the real
-`index.html` in a real browser against the real `cafes.json` — see `tests/README.md`.
+`index.html` in a real browser against the real `cafes.json`, four files at a time — see
+`tests/README.md`. Also: `npm run test:unit` (the `js/lib/` modules, Node only), `npm run test:rules`
+(the database rules, in the Firebase emulator) and `npm run test:live` (the Content Security Policy
+against the real Maps, database and sign-in script; needs the network).
 None of it is needed to deploy; Pages ignores `package.json` and `node_modules/`.
 
 ## Deploying an update
 
-1. **If you changed any `js/` or `css` file, bump the `?v=` number on every
-   script/link tag in `index.html` — and `CACHE_V` in `sw.js` to match.**
+1. **If you changed any `js/` or `css` file, run `npm run bump`.** It moves the `?v=` number on every
+   script/link tag in `index.html` and `CACHE_V`/`ASSET_V` in `sw.js` together, and refuses if they
+   disagree.
    The `?v=` busts browser caches and triggers the in-app "🔄 New version
    available" banner for open tabs. `CACHE_V` is what makes the service
    worker fetch the new files instead of serving the previous build from

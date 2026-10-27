@@ -63,7 +63,7 @@ const fs = require("fs"), path = require("path");
   eq(widget.d, { on: [], rating: 0 }, "…and tapping the lit one clears it, which is the only way back to no opinion");
   eq(widget.e, { on: ["Not for me"], rating: 1 }, "…then any of them can be chosen again");
 
-  const js = fs.readdirSync(path.join(ROOT, "js"))
+  const js = fs.readdirSync(path.join(ROOT, "js"), { recursive: true }).filter(f => f.endsWith(".js")) /* js/lib/ too */
     .map(f => fs.readFileSync(path.join(ROOT, "js", f), "utf8")).join("\n");
   eq(/starsHTML/.test(js), false, "the star renderer is gone, not left behind unused");
 

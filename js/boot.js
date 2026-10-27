@@ -85,6 +85,41 @@ function segOn(id, v) {
     b.setAttribute("aria-pressed", String(on));
   });
 }
+/* Settings > Recent problems (core.js keeps them): newest first, with when and where, Copy and Clear. */
+function renderProblemsCard() {
+  const host = $("problems-list"),
+    acts = $("problems-acts");
+  if (!host) return;
+  const list = readProblems();
+  if (acts) acts.hidden = !list.length;
+  host.innerHTML = list.length
+    ? list
+        .map(function (p) {
+          const when = p.t ? fmtDate(p.t.slice(0, 10)).replace(/, \d{4}$/, "") + " " + p.t.slice(11, 16) : "";
+          return '<div class="probrow"><b>' + esc(p.msg) + "</b><span>" + esc([when, p.where].filter(Boolean).join(" · ")) + "</span></div>";
+        })
+        .join("")
+    : '<p class="setnote">Nothing has gone wrong on this device.</p>';
+}
+function problemsText() {
+  return readProblems()
+    .map(p => [p.t, p.where, p.msg].filter(Boolean).join(" | "))
+    .join("\n");
+}
+function copyProblems() {
+  const t = "JL Cafe Project v" + ((/\?v=(\d+)/.exec((document.querySelector('script[src*="js/boot.js"]') || { getAttribute: () => "" }).getAttribute("src") || "") || [])[1] || "?") + ", recent problems:\n" + problemsText();
+  const done = () => toast("Copied " + readProblems().length + " problems");
+  try {
+    navigator.clipboard.writeText(t).then(done, () => toast("Couldn't copy"));
+  } catch (e) {
+    toast("Couldn't copy");
+  }
+}
+function clearProblemsCard() {
+  clearProblems();
+  renderProblemsCard();
+  toast("Cleared");
+}
 function renderSettings() {
   if (typeof updateMilkBtn === "function") updateMilkBtn();
   if (typeof updateSpellBtn === "function") updateSpellBtn();
@@ -102,6 +137,7 @@ function renderSettings() {
       : "Signing in lets you add cafes, log visits and rank them.";
   if (isAdmin && typeof renderDataCard === "function") renderDataCard();
   if (isAdmin && typeof renderTidyCard === "function") renderTidyCard();
+  if (isAdmin) renderProblemsCard();
   /* Read back from the script tag the browser actually loaded, so it cannot drift from
      the deploy version the way a hard-coded string would. */
   const v = $("set-ver");

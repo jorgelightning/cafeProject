@@ -456,12 +456,12 @@ function wrappedHTML(list) {
   html.push(
     '<div class="wc share admin-only"><span class="wk">Keep it</span><div class="wcap strong">Send your ' +
       w.year +
-      ' in caf\u00e9s to someone.</div><button type="button" class="admin-only" onclick="openYearStory()">Share \u203a</button></div>'
+      ' in caf\u00e9s to someone.</div><button type="button" class="admin-only"' + act("openYearStory") + '>Share \u203a</button></div>'
   );
   return (
     '<section class="wrapped" aria-label="' + youOr("Your ", OWNER_NAME + "’s ") + w.year + '">' +
-    '<div class="sech"><b>' + youOr("Your ", OWNER_NAME + "’s ") + w.year + "</b>" + (pick.review ? '<span class="wrev">in review</span>' : "") + '<button type="button" class="admin-only" onclick="openYearStory()">Share \u203a</button></div>' +
-    '<div class="wstrip" role="region" aria-label="' + youOr("Your ", OWNER_NAME + "’s ") + w.year + ', swipe for more" tabindex="0" onscroll="wrappedDots(this)">' +
+    '<div class="sech"><b>' + youOr("Your ", OWNER_NAME + "’s ") + w.year + "</b>" + (pick.review ? '<span class="wrev">in review</span>' : "") + '<button type="button" class="admin-only"' + act("openYearStory") + '>Share \u203a</button></div>' +
+    '<div class="wstrip" role="region" aria-label="' + youOr("Your ", OWNER_NAME + "’s ") + w.year + ', swipe for more" tabindex="0"' + act("wrappedDots", ["$el"], "scroll") + '>' +
     html.join("") +
     "</div>" +
     '<div class="wdots" aria-hidden="true">' +
@@ -585,7 +585,7 @@ function renderStats() {
       '<div class="lbrow one' +
       (onclick ? " tap" : "") +
       '"' +
-      (onclick ? ' role="button" tabindex="0" onclick="' + onclick + '"' : "") +
+      (onclick ? ' role="button" tabindex="0"' + act(onclick[0], onclick[1]) : "") +
       ">" +
       (rank !== null ? '<span class="lbrank">' + rank + "</span>" : "") +
       '<div class="lbmain"><div class="lbname">' +
@@ -769,11 +769,11 @@ function renderStats() {
         (metric === "visits" ? "on" : "") +
         '" aria-pressed="' +
         (metric === "visits") +
-        '" onclick="setRhythmMetric(\'visits\')">Visits</button><button type="button" class="' +
+        '"' + act("setRhythmMetric", ["visits"]) + '>Visits</button><button type="button" class="' +
         (metric === "spend" ? "on" : "") +
         '" aria-pressed="' +
         (metric === "spend") +
-        '" onclick="setRhythmMetric(\'spend\')">Spending</button></div>'
+        '"' + act("setRhythmMetric", ["spend"]) + '>Spending</button></div>'
       : "") +
     '<div class="rhead"><b>' +
     rhythmHeadline +
@@ -806,9 +806,9 @@ function renderStats() {
           (k === selectedK ? " on" : "") +
           '" aria-pressed="' +
           (k === selectedK) +
-          '" onclick="setRhythmMonth(\'' +
-          k +
-          '\')" aria-label="' +
+          '"' +
+          act("setRhythmMonth", [k]) +
+          ' aria-label="' +
           aria +
           '"><span class="rbar' +
           (amount ? " has" : "") +
@@ -1092,7 +1092,7 @@ function renderStats() {
   if (reg.length) {
     h += '<div class="statsec">Regulars</div>';
     reg.slice(0, 4).forEach(function (x, i) {
-      h += magRow(i + 1, x.c.name, x.c.area, x.n + " days", "openDetail('" + x.c.id + "','stats')");
+      h += magRow(i + 1, x.c.name, x.c.area, x.n + " days", ["openDetail", [x.c.id, "stats"]]);
     });
     h +=
       '<div class="statnote">Counted in separate days out, not drinks ordered. Only ' +
@@ -1135,7 +1135,7 @@ function renderStats() {
       })[0];
     h += '<div class="statsec">' + youOr("Where you go", "Where " + OWNER_NAME + " goes") + "</div>";
     shown.forEach(function (x) {
-      h += magRow(null, x[0], "", x[1] + " cafe" + (x[1] === 1 ? "" : "s"), "");
+      h += magRow(null, x[0], "", x[1] + " cafe" + (x[1] === 1 ? "" : "s"), null);
     });
     h +=
       '<div class="statnote">' +
@@ -1248,14 +1248,14 @@ function renderStats() {
     return matchCount(c) > 0;
   }).length;
   h += isAdmin
-    ? '<div class="handoff" role="button" tabindex="0" onclick="openRank()">' + ico("scale") + " " +
+    ? '<div class="handoff" role="button" tabindex="0"' + act("openRank") + '>' + ico("scale") + " " +
       rankedN +
       " of " +
       nonWish.length +
       " cafes ranked" +
       (nonWish.length - rankedN ? " <span>· " + (nonWish.length - rankedN) + " to go</span>" : "") +
       "</div>"
-    : '<div class="handoff" role="button" tabindex="0" onclick="openRank()">' + ico("trophy") + " Where to go <span>›</span></div>";
+    : '<div class="handoff" role="button" tabindex="0"' + act("openRank") + '>' + ico("trophy") + " Where to go <span>›</span></div>";
 
   _marks.push([h.length, "end"]);
   /** @type {Record<string, string>} */
@@ -1272,7 +1272,7 @@ function renderStats() {
     '<div class="stabs" role="group" aria-label="Stats sections">' +
     labels
       .map(function (t) {
-        return '<button type="button" aria-pressed="' + (_statsTab === t[0]) + '" onclick="setStatsTab(\'' + t[0] + "')\">" + t[1] + "</button>";
+        return '<button type="button" aria-pressed="' + (_statsTab === t[0]) + '"' + act("setStatsTab", [t[0]]) + ">" + t[1] + "</button>";
       })
       .join("") +
     "</div>" +

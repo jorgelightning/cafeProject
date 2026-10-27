@@ -44,6 +44,8 @@ NOTE: public read is expected for a shared map; writes are locked to your Google
 /* Loaded on demand by ensureAuth(), not from index.html. Must stay the same version as the app and
    database scripts in index.html: the compat builds share internals and mixing versions breaks. */
 const FIREBASE_AUTH_SRC = "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js";
+/* its hash, checked by the browser before it runs (Subresource Integrity); node scripts/sri.js prints a new one */
+const FIREBASE_AUTH_SRI = "sha384-TnlRYaR4JYz/lpaGuaiU61PjNberSA4vjLjtF+oRC/IkohkJqnWxw5EmDSOt1vA1";
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDoTgqNZjj7oyoeulJAiqNvPMCGltUbrio",
   authDomain: "cafeproject-b604f.firebaseapp.com",
@@ -252,4 +254,6 @@ const FX_HISTORY = {};
    does not exist. This runs in the browser, not here, so it is the one part of the currency
    work that could not be exercised before shipping — if it is ever unreachable the tables
    above still answer and nothing blocks. Set to "" to switch it off entirely. */
-const FX_API = "https://api.frankfurter.app/";
+/* The service moved to frankfurter.dev (the old host answers 301 to /v1/ there, checked 27 Oct); asked directly, so
+   there is one host to allow in the Content Security Policy (index.html) and no extra round trip. */
+const FX_API = "https://api.frankfurter.dev/v1/";

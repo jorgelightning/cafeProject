@@ -30,7 +30,7 @@ const { eq, done } = checker();
     ];
     const mark = id => cafeMark(cafes.find(c => c.id === id));
     show("list"); listCompact = true; sortMode = "ranked"; document.getElementById("q").value = ""; renderList();
-    const tile = id => { const card = [...document.querySelectorAll("#grid .card")].find(x => (x.getAttribute("onclick") || "").indexOf("'" + id + "'") > -1); const em = card && card.querySelector(".em"); if (!em) return null; const v = em.querySelector("svg.mkv"); return v ? "drawn:" + v.dataset.k : em.textContent; };
+    const tile = id => { const card = [...document.querySelectorAll("#grid .card")].find(x => (x.getAttribute("data-args") || "").indexOf('"' + id + '"') > -1); const em = card && card.querySelector(".em"); if (!em) return null; const v = em.querySelector("svg.mkv"); return v ? "drawn:" + v.dataset.k : em.textContent; };
     const names = q => { document.getElementById("q").value = q; renderList(); return [...document.querySelectorAll("#grid .card")].map(c => c.textContent.replace(/\s+/g, " ")).join("|"); };
     const out = {
       marks: { kiss: mark("kiss"), ool: mark("ool"), cof: mark("cof"), tea: mark("tea"), pick: mark("pick"), home: mark("home"), none: cafeMark(null) },

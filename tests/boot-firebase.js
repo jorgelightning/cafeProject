@@ -13,6 +13,8 @@ const { serve, launch, checker, ROOT } = require("./harness");
 const { eq, done } = checker();
 const fs = require("fs"), path = require("path");
 const read = f => fs.readFileSync(path.join(ROOT, f), "utf8");
+const FAKE_AUTH = "firebase.auth=function(){return window.__fakeAuth;}; firebase.auth.GoogleAuthProvider=function(){};";
+const FAKE_SRI = "sha384-" + require("crypto").createHash("sha384").update(FAKE_AUTH).digest("base64");
 
 const list = JSON.parse(fs.readFileSync(path.join(ROOT, "cafes.json"), "utf8"));
 const arr = Array.isArray(list) ? list : Object.values(list);
@@ -35,8 +37,13 @@ exact.lat = 30.12345; exact.lng = -140.67891; exact.area = "742 Evergreen Terrac
     await pg.route("**://**", r => r.request().url().startsWith(srv.origin) ? r.continue() : r.abort());
     /* lazy: the fake Firebase has no auth(), exactly as in production now — it arrives with the
        firebase-auth-compat script, which this route serves and counts */
+    /* The page checks that script by hash (FIREBASE_AUTH_SRI, Subresource Integrity), and a stand-in is not the real
+       file, so config.js is served expecting the stand-in's hash. The check itself still runs: a body that did not
+       match would be refused, and sign-in would never start. */
     await pg.route(/firebase-auth-compat\.js/, r => { authRequests++;
-      r.fulfill({ contentType: "application/javascript", body: "firebase.auth=function(){return window.__fakeAuth;}; firebase.auth.GoogleAuthProvider=function(){};" }); });
+      r.fulfill({ contentType: "application/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: FAKE_AUTH }); });
+    await pg.route(/\/js\/config\.js/, r => r.fulfill({ contentType: "text/javascript",
+      body: read("js/config.js").replace(/const FIREBASE_AUTH_SRI = "[^"]*";/, 'const FIREBASE_AUTH_SRI = "' + FAKE_SRI + '";') }));
     await pg.addInitScript(([data, owner, lateAuth, privateThrows, lazy]) => {
       window.__rej = []; window.addEventListener("unhandledrejection", e => window.__rej.push(String(e.reason)));
       if (owner) try { localStorage.setItem("cafemap.admin", "1"); } catch (e) {}
@@ -77,7 +84,8 @@ exact.lat = 30.12345; exact.lng = -140.67891; exact.area = "742 Evergreen Terrac
       maps: !!document.querySelector('script[src*="maps.googleapis"]'),
       rej: window.__rej, writes: window.__writes,
       pub: window.__store.cafes[exactId], priv: (window.__store.private || {})[exactId],
-      pinWritten: window.__writes.some(w => w.includes(pinId))
+      pinWritten: window.__writes.some(w => w.includes(pinId)),
+      problems: readProblems().map(x => x.where + ": " + x.msg)
     }), [pinless.id, exact.id]);
     st.authRequests = authRequests;
     if (lazy === "tap") { await pg.evaluate(() => toggleAdmin()); await pg.waitForTimeout(500);
@@ -110,6 +118,9 @@ exact.lat = 30.12345; exact.lng = -140.67891; exact.area = "742 Evergreen Terrac
   eq(/firebase-auth-compat/.test(read("index.html").replace(/<!--[\s\S]*?-->/g, "")), false, "index.html no longer loads firebase-auth for every visitor");
   r = await boot({ owner: false, lazy: true });
   eq([r.authRequests, r.maps, r.mode, r.errs, r.rej], [0, true, "viewer", [], []], "a visitor never downloads the sign-in library, and still gets the map");
+  /* boot used to call firebase.auth() regardless and catch the throw; once warn() kept the Problems log (Settings),
+     that would have logged a problem on every visit */
+  eq(r.problems.filter(x => /auth/i.test(x)), [], "…and starting without it is not logged as a problem");
   r = await boot({ owner: true, lazy: true });
   eq([r.authRequests, r.maps, r.mode, r.errs, r.rej], [1, true, "admin", [], []], "a device that remembers the owner fetches it once at startup, and editing mode comes on");
   eq({ lat: r.pub.lat, area: r.pub.area }, { lat: 30.12, area: "" }, "…and the startup work that needs the owner (blurring old private spots) still runs once it arrives");

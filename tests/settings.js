@@ -54,7 +54,7 @@ const fs = require("fs"), path = require("path");
   eq(doors.cyclerGone, true, "the blind cycle is gone, not left behind unused");
   eq(doors.lockButtons, 0, "…and so is every lock pill it replaced");
 
-  const js = fs.readdirSync(path.join(ROOT, "js"))
+  const js = fs.readdirSync(path.join(ROOT, "js"), { recursive: true }).filter(f => f.endsWith(".js")) /* js/lib/ too */
     .map(f => fs.readFileSync(path.join(ROOT, "js", f), "utf8")).join("\n");
   eq(/cycleTheme/.test(js), false, "no script still calls it");
 
@@ -193,7 +193,9 @@ const fs = require("fs"), path = require("path");
     const btns = [...document.querySelectorAll("#pane-settings button")].filter(b => b.offsetParent);
     /* Tidy up's four counts (form.js) are buttons too, when there is anything to tidy */
     const tidy = document.querySelectorAll("#tidy-grid .tidyb").length;
-    return { count: btns.length - tidy, tidy,
+    /* …and so are Problems' Copy and Clear (boot.js), shown only when this device has logged something */
+    const probs = [...document.querySelectorAll("#problems-acts button")].filter(b => b.offsetParent).length;
+    return { count: btns.length - tidy - probs, tidy, probs, logged: readProblems().length,
              small: btns.filter(b => b.getBoundingClientRect().height < 44)
                         .map(b => (b.getAttribute("aria-label") || b.textContent).trim()),
              labelled: btns.every(b => (b.textContent || "").trim() || b.getAttribute("aria-label")),
@@ -202,6 +204,7 @@ const fs = require("fs"), path = require("path");
                                    document.getElementById(g.getAttribute("aria-labelledby"))) };
   });
   eq(reach.count, 9, "back, three appearance states, two layouts, sign-out, the data copy and the photo fetch");
+  eq(reach.probs, reach.logged ? 2 : 0, "Problems shows Copy and Clear only when something was logged");
   eq(reach.small, [], "nothing is under the 44px touch floor");
   eq(reach.labelled, true, "every control says what it does");
   eq(reach.groups, true, "…and each group of segments points at its own heading");
@@ -211,6 +214,10 @@ const fs = require("fs"), path = require("path");
 
   // ================= the map message stops covering the app =================
   const lap = await open(1440, 900);
+  /* The message arrives with the aborted Maps script's onerror (map.js), which is a network event, not part of
+     boot: with four test files at a time it can land after ready(). Wait for it rather than read too early; if it
+     never comes, the check below says so. */
+  await lap.pg.waitForFunction(() => document.getElementById("map-msg").classList.contains("show"), null, { timeout: 15000 }).catch(() => {});
 
   const cover = await lap.pg.evaluate(() => {
     isAdmin = false; applyMode && applyMode(); show("list"); renderList();
@@ -234,11 +241,17 @@ const fs = require("fs"), path = require("path");
 
   eq(lap.errs, [], "no page errors on the laptop");
 
-  /* The same inset bug, in the one other overlay that had it. */
-  const css = fs.readFileSync(path.join(ROOT, "styles.css"), "utf8");
-  const desktop = (css.match(/@media \(min-width:900px\)\{[^}]*\.map-msg[^@]*?\}\s*\}/) || [""])[0];
-  eq(/\.rulewarn\{\s*left:calc\(var\(--sidebar\)/.test(desktop), true,
-     "the private-address warning is offset past the sidebar too");
+  /* The same inset bug, in the one other overlay that had it. Measured, not read from the stylesheet: it used to be
+     a pattern over styles.css, which stopped matching when the duplicate rules were folded (27 Oct) though nothing
+     on screen moved. */
+  const warn = await lap.pg.evaluate(() => {
+    /* its computed left, against the sidebar's width: the map pane may not be on screen to give it a box */
+    const w = document.getElementById("rule-warn"); w.hidden = false;
+    const r = parseFloat(getComputedStyle(w).left) - document.querySelector(".sidebar").getBoundingClientRect().width;
+    w.hidden = true;
+    return Math.round(r);
+  });
+  eq(warn, 12, "the private-address warning is offset past the sidebar too");
 
   await lap.ctx.close();
 

@@ -10,5 +10,5 @@
     "skipLibCheck": true,
     "types": []
   },
-  "include": ["js/*.js", "types/*.d.ts"]
+  "include": ["js/*.js", "js/lib/*.js", "types/*.d.ts"]
 }

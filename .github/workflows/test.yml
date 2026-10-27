@@ -27,3 +27,21 @@ jobs:
         run: npm run typecheck
       - run: npx playwright install --with-deps chromium
       - run: npm test
+
+  # The database rules (database.rules.json) against the Firebase emulator: who can read and write the map and the
+  # private spots. The emulator runs as a demo- project, so it cannot reach the real database.
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm run test:rules

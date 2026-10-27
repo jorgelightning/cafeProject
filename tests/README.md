@@ -14,7 +14,7 @@ The `App checks` GitHub workflow runs the suite on pushes to main and pull reque
 ```bash
 npm install                      # once — pulls Playwright
 npx playwright install chromium  # once — the browser it drives
-npm test                         # the whole suite
+npm test                         # the whole suite, four files at a time (TEST_JOBS=1 for one)
 node tests/keyboard.js           # or one file
 ```
 
@@ -100,12 +100,26 @@ Nothing here is needed to *deploy*. GitHub Pages serves the static files and ign
 | `boot-firebase.js` | The app starts against a connected Firebase that behaves like the real one — no nulls stored, `set()` throws on `undefined` — as owner (early and late sign-in) and visitor; nothing the private side does can stop the map or editing mode. |
 | `offline.js` | The app boots with the network pulled. |
 | `regression.js` | Legacy drink prices render identically; a form round-trip adds order history without changing existing summary fields. |
+| `unit.js` | Runs `tests/unit/*.test.mjs` with Node's own test runner: the ES modules in `js/lib/` (escaping, `safeUrl`, spelling distance, dates, Elo, placement) with no browser. Its first run found `safeUrl` letting `' ( )` through. |
+| `csp.js` | The Content Security Policy: no inline script or `on*=` anywhere, every host the code talks to is named, gstatic scripts are pinned by hash, and every screen runs under the policy with nothing refused. |
+| `rules.js` | `database.rules.json` is the rule the app needs and the README/config.js copies agree. Under `npm run test:rules` it also puts the rules to the Firebase emulator: visitor, stranger, unverified owner address, owner. |
+| `css-shape.js` | `styles.css` states each selector once per context (67 used to be restated), and `!important` stays rare. No browser. |
+| `csp-live.js` | **Not in `npm test`** (`npm run test:live`): the policy against the real Maps, database (WebSocket and long-polling) and sign-in script, served at the live address. Needs the network. |
 
 `regression.js` is the one that encodes a promise rather than a behaviour: the currency work
 shipped without migrating the ~60 dollar prices already on record, and that is only safe for
 as long as those drinks render exactly as they used to. A drink that *does* carry a local
 currency is expected to differ — it gains its second line. If that test goes red, either the
 promise broke or the promise changed; be sure which before editing it.
+
+A file that fails is run once more, alone. If it passes then, the suite stays green and names it
+on a `flaky (failed, then passed alone):` line, so a timing-sensitive test is seen every time it
+wobbles; one that fails twice fails the suite.
+
+`scripts/css-diff.js` is the stylesheet's equivalent of `snapshot.js` below: the computed style of
+every element, old stylesheet against new, over 29 screens in both themes, both roles and three
+widths (`node scripts/css-diff.js main`). It is how the 67 duplicate rules were folded with no
+difference anywhere.
 
 `snapshot.js` is a tool rather than a test. It dumps the exact HTML that `renderList()`,
 `openDetail()` and `addDrinkRow()` produce — every sort mode, every filter, both roles, all

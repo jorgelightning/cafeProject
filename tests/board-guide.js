@@ -110,7 +110,7 @@ const { eq, done } = checker();
     const r = document.querySelector("#cmp-body .lbrow.guide");
     const hit = r.querySelector(".lbhit");
     return { tappable: hit.getAttribute("role") === "button" && hit.tabIndex === 0,
-             opens: /openDetail/.test(hit.getAttribute("onclick") || "") };
+             opens: hit.getAttribute("data-on") === "openDetail" };
   });
   eq(v.tappable, true, "a row is still reachable without a pointer");
   eq(v.opens, true, "…and still opens the cafe");

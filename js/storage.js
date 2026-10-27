@@ -577,6 +577,8 @@ function ensureAuth() {
   _authLoading = new Promise(function (resolve) {
     const s = document.createElement("script");
     s.src = FIREBASE_AUTH_SRC;
+    s.integrity = FIREBASE_AUTH_SRI;
+    s.crossOrigin = "anonymous";
     s.async = true;
     s.onload = function () {
       resolve(_authReady());

@@ -1,23 +1,9 @@
 "use strict";
 /* rank.js — Elo scoring, the board, and the post-save ranking sheet.
    Loaded by index.html; script order matters (config first, boot last). */
-/* ---------- Elo ---------- */
-const ELO_BASE = 1500;
-function eloFor(c) {
-  return c && typeof c.elo === "number" ? c.elo : ELO_BASE;
-}
-/* A cafe is PROVISIONAL until it has been compared this many times. While it is, it is placed by a
-   search (below), not nudged by Elo, and it is not yet used as a yardstick for anyone else. */
-const PLACING = 5;
-function isProvisional(c) {
-  return matchCount(c) < PLACING;
-}
-/* Every cafe moves by its OWN K, so a newcomer moves a lot and a veteran barely moves, whoever won.
-   It used to be the winner's count alone, so a veteran beating a newcomer cost the newcomer 5 points
-   and a newcomer beating a veteran moved both by 22. */
-function kFor(c) {
-  return Math.max(16, 40 - 6 * matchCount(c));
-}
+/* ---------- Elo ----------
+   The arithmetic (ELO_BASE, PLACING, eloFor, matchCount, kFor, isProvisional, eloStep, the placement search) is in
+   js/lib/elo.js, an ES module with its own unit tests; what is here decides who meets whom and keeps the board. */
 /* Where cafes of one verdict tend to sit: the mean Elo of the established ones. A cafe you called
    Loved is shrunk towards the Loved average, not towards the middle of the whole board — the tier is
    a prior, not a wall, so enough comparisons can still carry a cafe across it. Memoised on a cheap
@@ -90,29 +76,6 @@ function placementRefs(c) {
   });
 }
 /** Where an Elo falls among the references: 0 is at the top, n-1 at the bottom, fractions between. */
-function placementPos(e, refs) {
-  const n = refs.length;
-  if (e >= eloFor(refs[0])) return -Math.min(4, (e - eloFor(refs[0])) / 25);
-  for (let i = 1; i < n; i++) {
-    const hi = eloFor(refs[i - 1]),
-      lo = eloFor(refs[i]);
-    if (e >= lo) return hi > lo ? i - 1 + (hi - e) / (hi - lo) : i;
-  }
-  return n - 1 + Math.min(4, (eloFor(refs[n - 1]) - e) / 25);
-}
-/** The inverse: the Elo at a position among the references. Past either end it extends a little. */
-function placementElo(refs, r) {
-  const n = refs.length;
-  if (r <= 0) return Math.round(eloFor(refs[0]) + Math.min(40, -r * 10 + 8));
-  if (r >= n - 1) return Math.round(eloFor(refs[n - 1]) - Math.min(40, (r - (n - 1)) * 10 + 8));
-  const i = Math.floor(r),
-    f = r - i;
-  return Math.round(eloFor(refs[i]) + (eloFor(refs[i + 1]) - eloFor(refs[i])) * f);
-}
-/** How far one answer moves a cafe that has had m comparisons: a quarter of the list, then a sixth... */
-function placementStep(m, n) {
-  return Math.max(Math.min(3, n / 6), n / (2 * (m + 2)));
-}
 /** The reference a provisional cafe should meet next, or null when there are too few to search. */
 function placementOpponent(c) {
   const refs = placementRefs(c);
@@ -128,12 +91,6 @@ function placementOpponent(c) {
 }
 function eloScore(c) {
   return eloScoreNum(c).toFixed(1);
-}
-function matchCount(c) {
-  return (c && c.matches) || 0;
-}
-function pairKey(a, b) {
-  return [a, b].sort().join("###");
 }
 function normDrink(n) {
   return (n || "")
@@ -274,9 +231,9 @@ function boardRow(c, pos, unique) {
   const extra = note + book;
   return (
     '<div class="lbrow guide">' +
-    '<div class="lbhit tap" role="button" tabindex="0" onclick="openDetail(\'' +
-    c.id +
-    "','compare')\">" +
+    '<div class="lbhit tap" role="button" tabindex="0"' +
+    act("openDetail", [c.id, "compare"]) +
+    ">" +
     '<span class="lbrank">' +
     rank +
     "</span>" +
@@ -292,7 +249,7 @@ function boardRow(c, pos, unique) {
         (say ? "Show note" : "Show details") +
         " for " +
         esc(c.name) +
-        '" onclick="lbToggle(this)">\u25be</button>' +
+        '"' + act("lbToggle", ["$el"]) + '>\u25be</button>' +
         '<div class="lbextra" hidden>' +
         extra +
         "</div>"
@@ -313,7 +270,7 @@ function boardChunk(rows) {
       "</div>" +
       '<button class="morebtn" data-lab="Show all ' +
       html.length +
-      '" onclick="statFold(this)">Show all ' +
+      '"' + act("statFold", ["$el"]) + '>Show all ' +
       html.length +
       " ▾</button>";
   return h;
@@ -323,11 +280,11 @@ function boardQueueRow(c) {
     lv = chaserLast(c);
   const sub = [ar ? esc(ar) : "", chaserWhen(lv)].filter(Boolean).join(" · ");
   const right = isAdmin ? '<span class="rank-lnk">Rank ›</span>' : bucketPill(c, "gostar");
-  const act = isAdmin ? "boardRank('" + c.id + "')" : "openDetail('" + c.id + "','compare')";
+  const does = isAdmin ? act("boardRank", [c.id]) : act("openDetail", [c.id, "compare"]);
   return (
-    '<div class="gorow" role="button" tabindex="0" onclick="' +
-    act +
-    '"><span class="gotile" style="' +
+    '<div class="gorow" role="button" tabindex="0"' +
+    does +
+    '><span class="gotile" style="' +
     nophotoStyle(c) +
     '">' +
     markArt(c) +
@@ -413,14 +370,14 @@ function goControls(board) {
       regs
         .slice(0, 6)
         .map(function (g) {
-          return '<button type="button" class="gochip" data-v="' + esc(g.val) + '" onclick="setGoRegion(this.dataset.v)">' + esc(g.label) + "</button>";
+          return '<button type="button" class="gochip" data-v="' + esc(g.val) + '"' + act("setGoRegion", ["$data.v"]) + '>' + esc(g.label) + "</button>";
         })
         .join("") +
       "</div>";
   h += '<div class="gofilter">';
   if (regs.length > 1)
     h +=
-      '<select class="goreg" aria-label="Region" onchange="setGoRegion(this.value)"><option value="">Everywhere · ' +
+      '<select class="goreg" aria-label="Region"' + act("setGoRegion", ["$value"], "change") + '><option value="">Everywhere · ' +
       board.length +
       "</option>" +
       regs
@@ -438,7 +395,7 @@ function goControls(board) {
         .concat(kinds)
         .map(function (k) {
           return (
-            '<button type="button" aria-pressed="' + (goKind === k[0]) + '" onclick="setGoKind(\'' + k[0] + "')\">" + k[1] + "</button>"
+            '<button type="button" aria-pressed="' + (goKind === k[0]) + '"' + act("setGoKind", [k[0]]) + ">" + k[1] + "</button>"
           );
         })
         .join("") +
@@ -471,11 +428,11 @@ function openRegionSheet() {
       '<div class="dntags">' +
       regs
         .map(function (g) {
-          return '<button type="button" class="dntag" data-v="' + esc(g.val) + '" onclick="pickRegion(this.dataset.v)">' + esc(g.label) + " <small>" + g.n + "</small></button>";
+          return '<button type="button" class="dntag" data-v="' + esc(g.val) + '"' + act("pickRegion", ["$data.v"]) + '>' + esc(g.label) + " <small>" + g.n + "</small></button>";
         })
         .join("") +
       "</div>" +
-      '<button type="button" class="btn ghost dnclose" onclick="closeSheet()">Not now</button>'
+      '<button type="button" class="btn ghost dnclose"' + act("closeSheet") + '>Not now</button>'
   );
 }
 /** @param {string} v */
@@ -529,7 +486,7 @@ function renderBoard() {
     _chips = [];
   if (isAdmin && vis.length > 1)
     _chips.push(
-      '<button type="button" class="gochip p" onclick="boardRank()" title="' +
+      '<button type="button" class="gochip p"' + act("boardRank") + ' title="' +
         [
           never.length ? never.length + " never compared" : "",
           placing.length ? placing.length + " still placing" : "",
@@ -543,8 +500,8 @@ function renderBoard() {
         (_todo ? " <em>" + _todo + "</em>" : "") +
         "</button>"
     );
-  if (_t5 >= 3) _chips.push('<button type="button" class="gochip" onclick="openTop5Story()" aria-label="Share my top ' + _t5 + '">' + ico("podium") + "Top " + _t5 + "</button>");
-  if (!userLoc && board.length) _chips.push('<button type="button" class="gochip" onclick="locate()">' + ico("pin") + "Near me</button>");
+  if (_t5 >= 3) _chips.push('<button type="button" class="gochip"' + act("openTop5Story") + ' aria-label="Share my top ' + _t5 + '">' + ico("podium") + "Top " + _t5 + "</button>");
+  if (!userLoc && board.length) _chips.push('<button type="button" class="gochip"' + act("locate") + '>' + ico("pin") + "Near me</button>");
   if (_chips.length) h += '<div class="gochips" role="group" aria-label="On this tab">' + _chips.join("") + "</div>";
   if (board.length) h += goControls(board);
   const shown = board.filter(goPass);
@@ -553,7 +510,7 @@ function renderBoard() {
       '<div class="empty">Nothing ' +
       (goKind ? "like that " : "") +
       "ranked here yet.<br>" +
-      '<button type="button" class="btn ghost" onclick="goReset()">Show everything</button></div>';
+      '<button type="button" class="btn ghost"' + act("goReset") + '>Show everything</button></div>';
   } else if (!board.length) {
     h +=
       '<div class="empty"><div class="big">' + ico("trophy") + "</div>Nothing ranked yet." +
@@ -641,7 +598,7 @@ function renderBoard() {
         "</div>" +
         '<button class="morebtn" data-lab="Show all ' +
         q.length +
-        '" onclick="statFold(this)">Show all ' +
+        '"' + act("statFold", ["$el"]) + '>Show all ' +
         q.length +
         " ▾</button>";
   }
@@ -656,7 +613,7 @@ function renderBoard() {
     h += '<div class="statsec">Still placing — ' + placing.length + "</div>" + pq.map(boardQueueRow).join("");
   }
   h +=
-    '<div class="handoff" role="button" tabindex="0" onclick="show(\'stats\')">' + ico("bars") + " See the numbers behind this <span>›</span></div>";
+    '<div class="handoff" role="button" tabindex="0"' + act("show", ["stats"]) + '>' + ico("bars") + " See the numbers behind this <span>›</span></div>";
   host.innerHTML = '<div class="boardwrap">' + h + "</div>";
 }
 /* On-demand ranking. Anchors on a never-compared cafe when there is one, so the button
@@ -1012,7 +969,6 @@ function chaserApply(winId, loseId, draw) {
     preB = matchCount(b) ? chaserRank(b, pre) : null;
   const Ra = eloFor(a),
     Rb = eloFor(b);
-  const Ea = 1 / (1 + Math.pow(10, (Rb - Ra) / 400));
   const placing = isProvisional(a) !== isProvisional(b) ? (isProvisional(a) ? a : b) : null;
   const refs = placing ? placementRefs(placing) : [];
   if (placing && refs.length >= 3) {
@@ -1026,17 +982,17 @@ function chaserApply(winId, loseId, draw) {
     const base = qi >= 0 ? qi : placementPos(eloFor(placing), refs);
     const step = placementStep(matchCount(placing), refs.length);
     const pos = draw ? base : won ? base - step : base + step;
-    const Sp = draw ? 0.5 : won ? 1 : 0,
+    const Ea = expectedScore(Ra, Rb),
+      Sp = draw ? 0.5 : won ? 1 : 0,
       Ep = placing === a ? Ea : 1 - Ea;
     const qOld = eloFor(q);
     placing.elo = placementElo(refs, pos);
     q.elo = qOld + Math.round(kFor(q) * (Ep - Sp));
   } else {
-    /* both established, or both new: ordinary Elo, each side at its own K */
-    const Ka = kFor(a),
-      Kb = kFor(b);
-    a.elo = Ra + (draw ? Math.round(Ka * (0.5 - Ea)) : Math.max(1, Math.round(Ka * (1 - Ea))));
-    b.elo = Rb - (draw ? Math.round(Kb * (0.5 - Ea)) : Math.max(1, Math.round(Kb * (1 - Ea))));
+    /* both established, or both new: ordinary Elo, each side at its own K (js/lib/elo.js) */
+    const next = eloStep(Ra, Rb, kFor(a), kFor(b), draw);
+    a.elo = next.a;
+    b.elo = next.b;
   }
   a.matches = matchCount(a) + 1;
   b.matches = matchCount(b) + 1;
@@ -1057,6 +1013,11 @@ function chaserApply(winId, loseId, draw) {
 function chaserSeen(l, r) {
   _chaserSeen.push(pairKey(l, r));
   while (_chaserSeen.length > 40) _chaserSeen.shift();
+}
+/* "See where to go" after a ranking answer */
+function chaserToBoard() {
+  chaserDismiss();
+  openRank();
 }
 function chaserPick(side) {
   if (!_chaser || _chaser.res) return;
@@ -1133,9 +1094,9 @@ function chaserOpt(c, drink, side) {
       : '<span class="ch-th" style="' + nophotoStyle(c) + '">' + markArt(c) + "</span>";
   const sub = [drink ? esc(drink) : "", chaserWhen(chaserLast(c))].filter(Boolean).join(" · ");
   return (
-    '<button class="ch-opt" onclick="chaserPick(' +
-    side +
-    ')">' +
+    '<button class="ch-opt"' +
+    act("chaserPick", [side]) +
+    ">" +
     th +
     '<span class="ch-m"><span class="ch-n">' +
     esc(c.name) +
@@ -1147,7 +1108,7 @@ function chaserOpt(c, drink, side) {
 /* Bottom sheet. The scrim dismisses, matching every other sheet the app has had. */
 function chaserShell(inner) {
   return (
-    '<div class="ch-scrim" onclick="chaserDismiss()"></div><div class="ch-sheet" role="dialog" aria-modal="true" aria-label="Quick ranking"><div class="ch-grab"></div>' +
+    '<div class="ch-scrim"' + act("chaserDismiss") + '></div><div class="ch-sheet" role="dialog" aria-modal="true" aria-label="Quick ranking"><div class="ch-grab"></div>' +
     inner +
     "</div>"
   );
@@ -1240,9 +1201,9 @@ function chaserPaint() {
         "</span></div>" +
         '<div class="ch-done">' +
         (_chaser.board
-          ? '<button class="ch-lnk" onclick="chaserAgain()">' + ico("refresh") + " Rank another</button>"
-          : '<button class="ch-lnk" onclick="chaserDismiss();openRank()">See where to go ›</button>') +
-        '<button class="ch-close" onclick="chaserDismiss()">Done</button></div>'
+          ? '<button class="ch-lnk"' + act("chaserAgain") + '>' + ico("refresh") + " Rank another</button>"
+          : '<button class="ch-lnk"' + act("chaserToBoard") + ">See where to go ›</button>") +
+        '<button class="ch-close"' + act("chaserDismiss") + '>Done</button></div>'
     );
     return;
   }
@@ -1264,12 +1225,12 @@ function chaserPaint() {
     '<div class="ch-hd"><span class="ch-qwrap">' +
       (eyebrow ? '<span class="ch-why">' + eyebrow + "</span>" : "") +
       '<span class="ch-q">Which would you go back to?</span></span>' +
-      '<button class="ch-x" onclick="chaserDismiss()" aria-label="Not now">' + ico("x") + "</button></div>" +
+      '<button class="ch-x"' + act("chaserDismiss") + ' aria-label="Not now">' + ico("x") + "</button></div>" +
       '<div class="ch-pair">' +
       chaserOpt(L, LD, 0) +
       chaserOpt(R, RD, 1) +
       "</div>" +
-      '<button class="ch-even" onclick="chaserEven()">' +
+      '<button class="ch-even"' + act("chaserEven") + '>' +
       (stale ? "Too long ago to say" : "Too close to call") +
       "</button>"
   );

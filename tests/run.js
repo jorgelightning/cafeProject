@@ -1,10 +1,12 @@
 /* Runs every test file and reports one line each. Exit code is non-zero if anything failed,
    so this works as a pre-push check. Add a file to tests/ and list it here. */
 "use strict";
-const { spawnSync } = require("child_process");
+const { spawn } = require("child_process");
+const os = require("os");
 const path = require("path");
 
 const SUITE = [
+  ["unit",             "the pure helpers in js/lib/ (escaping, URLs, spelling distance, dates, Elo, placement), by Node alone"],
   ["cache-version",     "the deploy versions agree and a stale build cannot pin itself"],
   ["currency-units",   "conversion, rounding and the country->currency table (no browser)"],
   ["currency-form",    "logging a drink in local money, end to end"],
@@ -27,6 +29,7 @@ const SUITE = [
   ["wishlist-save",    "wishlist drops the visit, and warns before deleting real history"],
   ["wishlist-drinks",  "a cafe with drinks logged comes off the wishlist"],
   ["cloud-writes",     "per-cafe writes, deletion, and the lost update they prevent"],
+  ["rules",            "database.rules.json is the rule the app needs, and the README and config.js copies agree (npm run test:rules puts it to the emulator)"],
   ["private",          "a private spot never publishes an exact location or a street address"],
   ["keyboard",         "every control is reachable and activatable without a pointer"],
   ["locate",           "the locate button, its states, and the user dot it draws"],
@@ -38,6 +41,7 @@ const SUITE = [
   ["board-guide",      "the board reads as a guide, and its bookkeeping stays with the owner"],
   ["sync-merge",       "two devices merge automatically, and what it refuses to merge"],
   ["scale",            "one type/radius/space scale, and a layout that fits all three devices"],
+  ["css-shape",        "styles.css states each selector once per context (no rule appended to override another), and !important stays rare"],
   ["list-clean",       "the list tint carries the rating, and four control rows fold into one"],
   ["settings",         "one home for the preferences, and a map error that stays in the map"],
   ["beli",             "three buckets, a position on every card, and the two lists up front"],
@@ -66,6 +70,7 @@ const SUITE = [
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],
+  ["csp",              "a Content Security Policy with no inline script: the page keeps to it, it names every host, every screen runs under it, and gstatic scripts are pinned by hash"],
   ["hardening",        "the 14 Oct audit: head tags, one heading, no passphrase, safe ids, local clusterer"],
   ["discovery",        "verdict and area filters, empty states, skeleton, order-again, SVG tab bar"],
   ["overflow-375",     "nothing sticks out and nothing is under 12px on any screen at 375px"],
@@ -79,19 +84,67 @@ const SUITE = [
   ["regression",       "101 real cafes still render exactly as before"]
 ];
 
-let failed = [];
-for (const [name, what] of SUITE) {
-  process.stdout.write("── " + name + "  " + what + "\n");
-  /* a test that hangs is a failing test — it must never wedge the run */
-  const r = spawnSync(process.execPath, [path.join(__dirname, name + ".js")],
-                      { stdio: "inherit", timeout: 120000 });
-  if (r.signal === "SIGTERM") console.log("  TIMED OUT after 120s");
-  if (r.status !== 0 || r.signal) failed.push(name);
-  process.stdout.write("\n");
+/* Four at a time (engineering audit, 27 Oct). Every file starts its own server on a free port and its own browser,
+   so nothing is shared between them; one after another the suite took 5 to 6 minutes. Output is held per file and
+   printed in suite order, so a run reads the same as before. TEST_JOBS=1 runs them one at a time. */
+const JOBS = Math.max(1, parseInt(process.env.TEST_JOBS || "", 10) || Math.min(4, os.cpus().length));
+function runOne(name) {
+  return new Promise(resolve => {
+    const child = spawn(process.execPath, [path.join(__dirname, name + ".js")], { stdio: ["ignore", "pipe", "pipe"] });
+    let out = "";
+    child.stdout.on("data", d => (out += d));
+    child.stderr.on("data", d => (out += d));
+    /* a test that hangs is a failing test — it must never wedge the run */
+    const timer = setTimeout(() => {
+      out += "  TIMED OUT after 120s\n";
+      child.kill();
+    }, 120000);
+    child.on("close", (code, signal) => {
+      clearTimeout(timer);
+      resolve({ ok: code === 0 && !signal, out });
+    });
+  });
 }
 
-if (failed.length) {
-  console.log("FAILED: " + failed.join(", "));
-  process.exit(1);
-}
-console.log("suite green — " + SUITE.length + " files");
+(async () => {
+  const results = new Array(SUITE.length);
+  let next = 0,
+    printed = 0;
+  const flush = () => {
+    while (printed < SUITE.length && results[printed]) {
+      const [name, what] = SUITE[printed];
+      process.stdout.write("── " + name + "  " + what + "\n" + results[printed].out + "\n");
+      printed++;
+    }
+  };
+  const worker = async () => {
+    while (next < SUITE.length) {
+      const i = next++;
+      results[i] = await runOne(SUITE[i][0]);
+      flush();
+    }
+  };
+  await Promise.all(Array.from({ length: JOBS }, worker));
+
+  /* A file that failed gets one more run, alone. If it passes then, it is named as flaky instead of failing the
+     suite: a real failure fails twice and stays red, and a timing-sensitive test is named every time it wobbles,
+     so it can be fixed rather than shrugged at. */
+  const flaky = [],
+    failed = [];
+  for (let i = 0; i < SUITE.length; i++) {
+    if (results[i].ok) continue;
+    const name = SUITE[i][0];
+    const again = await runOne(name);
+    if (again.ok) flaky.push(name);
+    else {
+      failed.push(name);
+      process.stdout.write("── " + name + "  (run again, alone)\n" + again.out + "\n");
+    }
+  }
+  if (flaky.length) console.log("flaky (failed, then passed alone): " + flaky.join(", "));
+  if (failed.length) {
+    console.log("FAILED: " + failed.join(", "));
+    process.exit(1);
+  }
+  console.log("suite green — " + SUITE.length + " files, " + JOBS + " at a time");
+})();

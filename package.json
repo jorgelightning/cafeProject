@@ -9,8 +9,13 @@
     "typecheck": "node scripts/typecheck.js",
     "format": "prettier --write \"js/*.js\" server.js eslint.config.js scripts/*.js",
     "test": "node tests/run.js",
+    "test:unit": "node tests/unit.js",
+    "test:live": "node tests/csp-live.js",
+    "test:rules": "npx -y firebase-tools@15.33.0 emulators:exec --only database --project demo-cafemap \"node tests/rules.js --emulator\"",
     "check": "npm run lint && npm run typecheck && npm test",
-    "snapshot": "node tests/snapshot.js"
+    "snapshot": "node tests/snapshot.js",
+    "bump": "node scripts/bump.js",
+    "sri": "node scripts/sri.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

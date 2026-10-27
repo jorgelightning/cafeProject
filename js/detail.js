@@ -83,22 +83,9 @@ function setReorder(btn, v) {
   wrap.querySelectorAll(".rbtn").forEach(b => b.classList.remove("on"));
   if (hid.value) wrap.querySelector(".rbtn." + hid.value).classList.add("on");
 }
-/* The options of an order as pills — size, sweetness, ice, milk — in place of one grey line. */
-/* \u2026and since the UI audit (26 Oct) as words: "8 oz \u00b7 oat \u00b7 no sugar \u00b7 warm". Four pills in four colours (size grey,
-   sweetness amber, ice grey, milk purple with an emoji) meant nothing a reader could learn, and three drinks filled
-   the screen. One quiet line, the same phrasing the quick cup uses. */
+/* The options of an order as one quiet line (orderOptsText, js/lib/text.js). Since the UI audit (26 Oct) words, not
+   four pills in four colours, which meant nothing a reader could learn and let three drinks fill the screen. */
 /** @param {any} o an order */
-function orderOptsText(o) {
-  if (!o) return "";
-  return [
-    o.size || "",
-    o.milk ? String(o.milk).toLowerCase() : "",
-    o.sweet ? (o.sweet === "0%" ? "no sugar" : o.sweet + " sweet") : "",
-    o.ice ? String(o.ice).toLowerCase() : "",
-  ]
-    .filter(Boolean)
-    .join(" \u00b7 ");
-}
 function modPills(o) {
   const t = orderOptsText(o);
   return t ? '<span class="dopts">' + esc(t) + "</span>" : "";
@@ -269,7 +256,8 @@ function closeDrinkMenu() {
   const to = again || (back && back.isConnected ? back : null);
   if (to) to.focus();
 }
-function _verdictButtons(cur, big) {
+/** @param {string} cur @param {boolean} big @param {string} [fn] the action, setDrinkVerdict unless given */
+function _verdictButtons(cur, big, fn) {
   return [
     ["yes", "👍", "Yes"],
     ["neutral", "😐", "Maybe"],
@@ -283,9 +271,9 @@ function _verdictButtons(cur, big) {
         (cur === v[0]) +
         '" aria-label="Would order again: ' +
         v[2].toLowerCase() +
-        '" onclick="setDrinkVerdict(\'' +
-        v[0] +
-        "')\">" +
+        '"' +
+        act(fn || "setDrinkVerdict", [v[0]]) +
+        ">" +
         '<span class="e" aria-hidden="true">' +
         v[1] +
         "</span>" +
@@ -315,7 +303,9 @@ function renderDrinkMenu() {
       esc(facts.join(" · ")) +
       "</p></div>" +
       '<div class="dnmenu">' +
-      '<button type="button" class="dnmi" onclick="startDrinkNote()">' +
+      '<button type="button" class="dnmi"' +
+      act("startDrinkNote") +
+      ">" +
       ico("edit") +
       "<span>" +
       (hasCupNote(o) ? "Edit the note" : "Add a note") +
@@ -325,12 +315,18 @@ function renderDrinkMenu() {
       '<div class="dnmi dnrow" role="group" aria-label="Would order again?"><span>Would order again?</span><span class="dnvs">' +
       _verdictButtons(reorderVal(o), false) +
       "</span></div>" +
-      '<button type="button" class="dnmi" onclick="logDrinkAgain()"><span class="g" aria-hidden="true">＋</span><span>Log another today</span></button>' +
-      '<button type="button" class="dnmi" onclick="editDrinkInVisit()">' +
+      '<button type="button" class="dnmi"' +
+      act("logDrinkAgain") +
+      '><span class="g" aria-hidden="true">＋</span><span>Log another today</span></button>' +
+      '<button type="button" class="dnmi"' +
+      act("editDrinkInVisit") +
+      ">" +
       ico("sliders") +
       "<span>Edit in the visit…</span></button>" +
       "</div>" +
-      '<button type="button" class="btn ghost dnclose" onclick="closeDrinkMenu()">Close</button>';
+      '<button type="button" class="btn ghost dnclose"' +
+      act("closeDrinkMenu") +
+      ">Close</button>";
     return;
   }
   const good = _dm.reorder === "yes",
@@ -363,7 +359,9 @@ function renderDrinkMenu() {
           (_dm.tags.indexOf(t) >= 0) +
           '" data-tag="' +
           esc(t) +
-          '" onclick="toggleNoteTag(this)">' +
+          '"' +
+          act("toggleNoteTag", ["$el"]) +
+          ">" +
           esc(t) +
           "</button>"
         );
@@ -375,9 +373,13 @@ function renderDrinkMenu() {
     esc(o.note || "") +
     "</textarea>" +
     '<div class="dnact">' +
-    (hasCupNote(o) ? '<button type="button" class="btn ghost dnrm" onclick="removeDrinkNote()">Remove note</button>' : "") +
-    '<button type="button" class="btn ghost" onclick="closeDrinkMenu()">Cancel</button>' +
-    '<button type="button" class="btn" onclick="saveDrinkNote()">Save note</button></div>';
+    (hasCupNote(o) ? '<button type="button" class="btn ghost dnrm"' + act("removeDrinkNote") + ">Remove note</button>" : "") +
+    '<button type="button" class="btn ghost"' +
+    act("closeDrinkMenu") +
+    ">Cancel</button>" +
+    '<button type="button" class="btn"' +
+    act("saveDrinkNote") +
+    ">Save note</button></div>";
 }
 function startDrinkNote() {
   const f = _dmFind();
@@ -523,6 +525,12 @@ const SVG_CHECK =
   '<svg class="ck" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const SVG_PLUS =
   '<svg class="pl" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
+/* Done in the branch list: close it and give the keyboard back to the control that opened it */
+function closeBranches() {
+  setBranchesOpen(false);
+  const w = $("d-where");
+  if (w) w.focus();
+}
 function setBranchesOpen(open) {
   _branchOpen = open;
   const l = $("d-locs"),
@@ -743,7 +751,9 @@ function openDetail(id, from) {
       esc(_brandTitle || c.name) +
       "</b><span>" +
       (_sibs.length ? _sibs.length + " branches \u00B7 pick one to switch" : "Add another branch") +
-      '</span></div><button type="button" class="brdone" onclick="setBranchesOpen(false);$(\'d-where\').focus()">Done</button></div></div>';
+      '</span></div><button type="button" class="brdone"' +
+      act("closeBranches") +
+      ">Done</button></div></div>";
     _le.innerHTML =
       _head +
       _rows
@@ -757,11 +767,9 @@ function openDetail(id, from) {
             (x.current ? ' aria-current="true"' : "") +
             ' title="' +
             esc(x.full) +
-            '" onclick="openDetail(\'' +
-            esc(x.id) +
-            "','" +
-            esc(lastMain || "list") +
-            "')\">" +
+            '"' +
+            act("openDetail", [x.id, lastMain || "list"]) +
+            ">" +
             (x.wish
               ? '<span class="brtag" aria-hidden="true">\u{1F516}</span>'
               : '<i class="brdot" aria-hidden="true" style="background:' + BUCKET_HEX[k || ""] + '"></i>') +
@@ -776,9 +784,9 @@ function openDetail(id, from) {
         })
         .join("") +
       (_addBr
-        ? '<button type="button" class="br add admin-only" onclick="addBranch(\'' +
-          esc(c.id) +
-          "')\">" +
+        ? '<button type="button" class="br add admin-only"' +
+          act("addBranch", [c.id]) +
+          ">" +
           SVG_PLUS +
           '<span class="t">Add a branch</span></button>'
         : "");
@@ -856,7 +864,9 @@ function openDetail(id, from) {
             (open ? "true" : "false") +
             '" aria-controls="' +
             hid +
-            '" onclick="toggleDrinkHistory(this)">' +
+            '"' +
+            act("toggleDrinkHistory", ["$el"]) +
+            ">" +
             '<span class="drinkicon" aria-hidden="true" style="background:' +
             drinkMarkBg(d.n) +
             '">' +
@@ -886,7 +896,9 @@ function openDetail(id, from) {
                 esc("More for " + d.n) +
                 '" data-drink="' +
                 esc(d.n) +
-                '" onclick="openDrinkMenu(this)">' +
+                '"' +
+                act("openDrinkMenu", ["$el"]) +
+                ">" +
                 ico("more") +
                 "</button>"
               : "") +

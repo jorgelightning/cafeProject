@@ -300,9 +300,9 @@ function syncWorldUI() {
         const t = g.loved + g.fine + g.meh || 1;
         const sub = g.been ? g.been + " been" + (g.wish ? " \u00b7 " + g.wish + " to try" : "") : g.wish + " to try";
         return (
-          '<button type="button" class="wrow" onclick="showRegionAt(' +
-          i +
-          ')">' +
+          '<button type="button" class="wrow"' +
+          act("showRegionAt", [i]) +
+          ">" +
           '<span class="wmain"><b>' +
           esc(g.label) +
           "</b><small>" +
@@ -1125,13 +1125,19 @@ function openWelcome() {
       '<div class="dnq"><span class="dnlab">Where are you?</span><span class="dntags">' +
       regs
         .map(function (g) {
-          return '<button type="button" class="dntag" data-v="' + esc(g.val) + '" onclick="welcomeRegion(this.dataset.v)">' + esc(g.label) + " <small>" + g.n + "</small></button>";
+          return '<button type="button" class="dntag" data-v="' + esc(g.val) + '"' + act("welcomeRegion", ["$data.v"]) + '>' + esc(g.label) + " <small>" + g.n + "</small></button>";
         })
         .join("") +
       "</span></div>" +
-      '<button type="button" class="btn" onclick="closeSheet();show(\'compare\')">Show the top 10</button>' +
-      '<button type="button" class="btn ghost dnclose" onclick="closeSheet()">Just let me look around</button>'
+      '<button type="button" class="btn"' +
+      act("welcomeTop10") +
+      ">Show the top 10</button>" +
+      '<button type="button" class="btn ghost dnclose"' + act("closeSheet") + '>Just let me look around</button>'
   );
+}
+function welcomeTop10() {
+  closeSheet();
+  show("compare");
 }
 /** @param {string} v a regionOf() value */
 function welcomeRegion(v) {
@@ -1200,8 +1206,8 @@ function openPeek(id) {
       : "") +
     "</div>" +
     "</div>" +
-    '<div class="peekbtns"><button type="button" class="btn" onclick="peekDirections()">Directions</button>' +
-    '<button type="button" class="btn ghost" onclick="peekOpenCafe()">Open cafe</button></div>';
+    '<div class="peekbtns"><button type="button" class="btn"' + act("peekDirections") + '>Directions</button>' +
+    '<button type="button" class="btn ghost"' + act("peekOpenCafe") + '>Open cafe</button></div>';
   el.hidden = false;
   const box = el.closest(".mapbox");
   if (box) {

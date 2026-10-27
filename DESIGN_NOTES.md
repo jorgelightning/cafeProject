@@ -1788,3 +1788,56 @@ v107's pill check counted the pins in view that belong to the place it names. A 
 whose area text says so, so San Francisco's Parkside and Dogpatch cafes counted as "elsewhere" and the pill said
 "All places" over a map of San Francisco. It now asks whether the middle of the map is inside the box around the
 place's cafes, with a margin of a quarter of its size and at least about 10 km (`syncPillToView`).
+
+## The engineering audit (v109)
+
+Eleven picks from a look at the app as an engineer would; nine are in this release and two wait on a setting.
+
+**No inline code (E4).** 156 controls carried their code inline (`onclick="openDetail('<id>','list')"`), so an id or
+a name had to survive being a JavaScript string inside an HTML attribute, and no Content Security Policy could forbid
+injected script. A control now names an action: `act("openDetail", [c.id, "list"])` writes `data-on` and JSON
+`data-args`, and one listener per kind of event calls it, and only names `act()` wrote or the page's markup names.
+Input, change, blur and scroll listen in the capture phase, because an event made by script (`new Event("input")`)
+does not bubble unless asked to; click stays in the bubble phase so a child's `stopPropagation()` keeps its meaning.
+With the theme snippet moved to `js/theme.js`, the page has no inline script at all, and `index.html` now carries a
+policy that allows script only from this site, gstatic, Maps, the database and Google sign-in. It was run against
+the real services (`tests/csp-live.js`, at the live address): that is how the database's long-polling fallback was
+found to need a frame from `*.firebaseio.com` — reads worked without it, writes from a network that blocks
+WebSockets would not have. The exchange-rate service had moved (frankfurter.app answers 301 to frankfurter.dev); it
+is asked directly now, so the policy names one host.
+
+**Pinned scripts (E3).** The Firebase scripts from gstatic carry `integrity` hashes, the sign-in one too
+(`FIREBASE_AUTH_SRI`), so a changed file is refused rather than run. `node scripts/sri.js` writes new hashes after a
+version change; `--check` says whether the pinned ones still match.
+
+**Rules as a file (E2).** `database.rules.json`, deployable with `firebase-tools deploy --only database`, and put to
+the emulator on every push: a visitor and a signed-in stranger read the map and nothing else, the owner's address
+without a verified email is refused, the owner writes both nodes and nothing outside them. Weakening the rule (no
+`email_verified`) fails exactly the one check it should.
+
+**First modules (E5).** The pure helpers (`esc`, `safeUrl`, `editDistance`, `fmtDate`, `orderOptsText`) and the
+Elo arithmetic, now including `eloStep` out of `chaserApply`, are ES modules in `js/lib/` with Node unit tests. The
+app still has no build step: the modules load first and hand their functions to the classic scripts, which are
+now `defer` to keep the order. The first unit test run found `safeUrl` letting `' ( )` through:
+`encodeURIComponent` leaves them alone, and rank.js puts the result inside `url('...')`.
+
+**Problems log (E6).** `warn()` keeps the last 20 problems on the device, shown to the owner in Settings with
+"Copy for Claude". Building it found a boot that called `firebase.auth()` before the sign-in script was loaded and
+caught the throw — harmless in the console, but it would have logged a problem on every visit.
+
+**One rule per selector (E7).** 67 selectors were stated two to four times in the same context. Each was folded
+into one rule, in whichever place keeps every declaration's standing; `scripts/css-diff.js` compared the computed
+style of every element before and after over 348 states and found none changed. The two it caught on the way were
+`.statcard` and `.pfig`, whose last `box-shadow:none` only won because it came after the shared card shadow.
+`tests/css-shape.js` keeps one rule per selector. `@layer` was not used: layer order outranks specificity, so it would
+re-decide every contest the file settles by specificity today, and the `!important` it could retire are mode
+switches that must win anyway.
+
+**Faster tests (E8), one-step bump (E9).** The suite runs four files at a time (5–6 minutes to about one) and a
+file that fails is run again alone, named as flaky if it then passes. `npm run bump` moves every `?v=` and the
+service worker's versions together.
+
+**Waiting (E1, E10, E11).** The deploy that runs only after the tests pass has been in `deploy.yml` since 13 Oct and
+has never run: Pages still publishes the branch directly. It needs two settings (Pages source "GitHub Actions", and
+the variable `PAGES_VIA_ACTIONS=true`). Moving the backup bot to its own branch and minifying at deploy both build on
+that, so they come after it.

@@ -3,25 +3,15 @@
    and [data-theme="dark"] = manually chosen dark. Keep any new colour in all three.
    --acc stays the identity orange for fills/pins/underlines; --acc-strong is the only
    one that may sit under white text (--acc is 3.01:1 there, --acc-strong is 4.94:1). */
-:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a5521a; --on-acc:#fff; --acc2:#c0374b; --bg:#f4f4f5; --surface:#fff; --surface2:#ececee; --text:#18181b; --soft:#5a5a63; --faint:#666670; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d6d6db; --border:rgba(20,20,40,.11); --shadow:0 2px 4px rgba(30,24,16,.06),0 14px 32px rgba(30,24,16,.14); --shadow-sm:0 1px 2px rgba(30,24,16,.07),0 2px 6px rgba(30,24,16,.06); --glass:rgba(255,255,255,.9); --glass-strong:rgba(244,244,245,.88); --gold-a:#f6d77f; --gold-b:#dca13a; --gold-ink:#3b2606; --amber-bg:rgba(213,128,59,.14); --amber-ink:#7a3f0a; --wash:rgba(120,120,150,.08); }
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.10); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); } }
-:root[data-theme="dark"]{ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.10); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); }
-/* ---------- the scale ----------
+:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a5521a; --on-acc:#fff; --acc2:#c0374b; --bg:#f4f4f5; --surface:#fff; --surface2:#ececee; --text:#18181b; --soft:#5a5a63; --faint:#666670; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d6d6db; --border:rgba(20,20,40,.11); --shadow:0 2px 4px rgba(30,24,16,.06),0 14px 32px rgba(30,24,16,.14); --shadow-sm:0 1px 2px rgba(30,24,16,.07),0 2px 6px rgba(30,24,16,.06); --glass:rgba(255,255,255,.9); --glass-strong:rgba(244,244,245,.88); --gold-a:#f6d77f; --gold-b:#dca13a; --gold-ink:#3b2606; --amber-bg:rgba(213,128,59,.14); --amber-ink:#7a3f0a; --wash:rgba(120,120,150,.08); /* ---------- the scale ----------
    Colour was tokenised; nothing dimensional was, so the stylesheet grew 23 font sizes, 18
    corner radii and 13 gap values — seven of the font sizes inside three pixels, which nobody
    can see and the cascade can. These are the whole set.
 
    Text only. Emoji and icon glyphs (the raised ＋, the star widget, the empty-state marks) are
-   artwork being sized, not type being set, so they keep their own dimensions. */
-:root{
-  --fs-1:12px;  /* labels, captions, tab text — 12px is the floor; it was 11 until v65 */
-  --fs-2:13px;  /* secondary text, list subtitles */
-  --fs-3:15px;  /* body */
-  --fs-4:18px;  /* subheads */
-  --fs-5:22px;  /* headings and stat figures */
-  --r-1:6px; --r-2:10px; --r-3:14px; --r-4:20px; --r-pill:999px;
-  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px;
-}
+   artwork being sized, not type being set, so they keep their own dimensions. */ --fs-1:12px; /* labels, captions, tab text — 12px is the floor; it was 11 until v65 */ --fs-2:13px; /* secondary text, list subtitles */ --fs-3:15px; /* body */ --fs-4:18px; /* subheads */ --fs-5:22px; /* headings and stat figures */ --r-1:6px; --r-2:10px; --r-3:14px; --r-4:20px; --r-pill:999px; --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.10); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); } }
+:root[data-theme="dark"]{ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.10); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); }
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 /* Everything reachable by keyboard has to show where the keyboard is. :focus-visible keeps
    this off mouse clicks, so it costs the pointer experience nothing. */
@@ -43,7 +33,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .side-head .apptitle{ font-size:var(--fs-5); font-weight:800; margin:0; letter-spacing:-.02em; }
 .side-head .sub{ font-size:var(--fs-2); color:var(--soft); margin-top:2px; }
 .side-nav{ display:none; gap:var(--sp-1); margin:0 16px 12px; padding:4px; background:var(--surface2); border-radius:var(--r-3); }
-.side-nav button{ flex:1; padding:8px 6px; border-radius:var(--r-2); border:none; background:transparent; color:var(--soft); font-size:var(--fs-2); font-weight:600; cursor:pointer; transition:background .15s,color .15s; }
+.side-nav button{ flex:1; padding:8px 6px; border-radius:var(--r-2); border:none; background:transparent; color:var(--soft); font-size:var(--fs-2); font-weight:600; cursor:pointer; transition:background .15s,color .15s; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-1); }
 .side-nav button:hover{ color:var(--text); }
 .side-nav button.on{ background:var(--surface); color:var(--acc); box-shadow:0 1px 4px rgba(0,0,0,.1); }
 .panes{ flex:1; display:flex; min-height:0; }
@@ -106,7 +96,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .wantchip .wantn{ min-width:20px; height:20px; padding:0 5px; box-sizing:border-box; border-radius:var(--r-pill); background:var(--surface2); color:var(--text); font-size:var(--fs-1); display:inline-flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
 .wantchip[aria-pressed="true"]{ background:var(--want-bg); border-color:var(--want); color:var(--want-ink); }
 .wantchip[aria-pressed="true"] .wantn{ background:var(--want); color:#fff; }
-@media (max-width:899px){ .mapsearch{ right:12px; } .mapsearch select{ flex:1 1 auto; min-width:0; max-width:none; } }
+@media (max-width:899px){ .mapsearch select{ flex:1 1 auto; min-width:0; max-width:none; } }
 .wantbar{ position:absolute; z-index:6; top:calc(64px + env(safe-area-inset-top)); left:12px; display:flex; align-items:center; gap:var(--sp-1); padding-left:12px; border-radius:var(--r-pill); background:rgba(29,26,23,.86); color:#f6f5f3; font-size:var(--fs-2); font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,.15); }
 .wantbar[hidden]{ display:none; }
 .wantbar button{ min-height:44px; padding:0 14px; border:none; border-radius:var(--r-pill); background:transparent; color:#f3c79f; font:inherit; font-weight:700; cursor:pointer; }
@@ -144,7 +134,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 @media (min-width:900px){ .mapsearch{ left:calc(var(--sidebar) + 12px); } .mapsearch select{ max-width:300px; } }
 
 .tabbar{ position:absolute; left:0; right:0; bottom:0; height:calc(64px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); display:flex; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); box-shadow:0 -3px 14px rgba(0,0,0,.07); z-index:50; }
-.tab{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-1); font-size:var(--fs-1); font-weight:600; color:var(--faint); background:none; border:none; cursor:pointer; }
+.tab{ position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-1); font-size:var(--fs-1); font-weight:600; color:var(--faint); background:none; border:none; cursor:pointer; transition:transform .08s ease; }
 .tab.on::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%); width:26px; height:3px; border-radius:0 0 3px 3px; background:var(--acc); }
 .tab .ti{ font-size:22px; transition:transform .12s ease; display:flex; }
 /* Drawn, not typed: emoji render differently on every OS and read inconsistently aloud. They
@@ -162,15 +152,14 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* auto-fill rather than a fixed count: the column tally follows the available width at every
    size, so 744px gets four and a wide sidebar gets more, and no card is ever narrower than a
    phone's 168px. */
-.grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:var(--sp-3); padding:4px 16px 24px; }
+.grid{ display:grid; gap:var(--sp-3); padding:4px 16px 24px; /* ---------- guides, price on the order line, log again (v80) ---------- */ grid-template-columns:repeat(auto-fill,minmax(156px,1fr)); }
 /* Clears the raised ＋ tab, which overhangs the bar by 16px. Must sit after the shorthand
    above or it loses to it regardless of the media query. */
 @media (max-width:899px){ .grid{ padding-bottom:44px; } }
-.card{ border:1px solid var(--border); border-radius:var(--r-3); overflow:hidden; background:var(--surface); cursor:pointer; }
-.card .ph{ height:104px; background-size:cover; background-position:center; display:flex; align-items:flex-start; justify-content:flex-end; padding:7px; font-size:var(--fs-4); }
+.card{ border:1px solid var(--border); border-radius:var(--r-3); overflow:hidden; background:var(--surface); cursor:pointer; transition:transform .16s ease, box-shadow .16s ease; position:relative; }
+.card .ph{ height:104px; background-size:cover; background-position:center; display:flex; align-items:flex-start; justify-content:flex-end; padding:7px; font-size:var(--fs-4); position:relative; overflow:hidden; }
 .card .nophoto{ background:var(--surface2); color:var(--text); flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-1); line-height:1.15; }
 .card .nophoto .em{ font-size:34px; text-shadow:none; }
-.card .ph{ position:relative; overflow:hidden; }
 .card .ph.loaded{ animation:phIn .4s ease; }
 .card .ph.loading::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent); transform:translateX(-100%); animation:shimmer 1.4s 3; }
 @keyframes phIn{ from{ opacity:.25 } to{ opacity:1 } }
@@ -178,7 +167,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }
 .statwrap{ padding:14px 16px 34px; width:100%; }
 .statgrid{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3); }
-.statcard{ background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-3); padding:13px 14px; }
 .statcard .v{ font-size:var(--fs-5); font-weight:800; color:var(--text); }
 .statcard .k{ font-size:var(--fs-2); color:var(--soft); margin-top:2px; font-weight:600; }
 .statsec{ font-size:var(--fs-2); font-weight:700; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; margin:20px 0 8px; }
@@ -237,14 +225,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    eating half the width. --mag is set inline per row. */
 .lbrow.one .lbname i{ font-style:normal; font-weight:500; color:var(--soft); }
 .lbrow.tap{ cursor:pointer; }
-/* A board row carries its reason: stars, the drink to order, and the owner's own sentence.
-   Scoped to .guide because .lbrow is shared with the stats leaderboards, which stay one-line.
-   Aligned to the top rather than centred — these rows are now three or four lines tall and a
-   centred rank marker would float away from the name it labels. */
-.lbrow.guide{ align-items:flex-start; padding:12px 2px; gap:var(--sp-3); }
-.lbrow.guide .lbrank{ padding-top:2px; }
 .lbrow.guide .gotile{ margin-top:1px; }
-.lbrow.guide .lbmain{ display:flex; flex-direction:column; gap:var(--sp-1); min-width:0; }
+.lbrow.guide .lbmain{ display:flex; flex-direction:column; min-width:0; gap:0; }
 .lbrow.guide .lbname{ display:flex; align-items:baseline; gap:var(--sp-2); flex-wrap:wrap; }
 /* One value deserves a word, not a run of glyphs. The dot carries the colour so the pill
    reads the same as the tile and the map pin it belongs to. */
@@ -256,7 +238,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lborder{ font-size:var(--fs-2); font-weight:600; color:var(--acc-strong); overflow-wrap:anywhere; }
 .lbsay{ font-size:var(--fs-2); line-height:1.45; color:var(--soft); overflow-wrap:anywhere; }
 
-.statcard{ min-height:92px; display:flex; flex-direction:column; }
 .statcard .v .of{ font-size:var(--fs-3); color:var(--soft); font-weight:700; }
 .statcard .s{ font-size:var(--fs-1); font-weight:600; color:var(--faint); margin-top:auto; padding-top:5px; line-height:1.25; }
 .sc-meter{ display:block; height:4px; border-radius:var(--r-1); background:var(--star-off); overflow:hidden; margin-bottom:4px; }
@@ -269,7 +250,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .gostar{ flex:none; }
 .foldbox{ display:none; }
 .foldbox[data-open]{ display:block; }
-.morebtn{ display:block; width:100%; text-align:left; min-height:44px; background:none; border:none; border-top:1px solid var(--border); color:var(--acc-strong); font-size:var(--fs-2); font-weight:700; font-family:inherit; cursor:pointer; padding:0 2px; }
+.morebtn{ display:block; width:100%; min-height:44px; background:none; border:none; border-top:1px solid var(--border); color:var(--acc-strong); font-size:var(--fs-2); font-weight:700; font-family:inherit; cursor:pointer; padding:0 2px; text-align:center; margin-top:var(--sp-2); }
 .rseg{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-1); padding:4px; margin-bottom:13px; border-radius:var(--r-3); background:var(--surface2); }
 .rseg button{ height:40px; border:0; border-radius:var(--r-2); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; }
 .rseg button.on{ background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.1); }
@@ -291,7 +272,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .sc-head{ font-size:var(--fs-4); font-weight:700; line-height:1.35; }
 .sc-head b{ color:var(--acc-strong); }
 .sc-cap{ font-size:var(--fs-2); font-weight:700; color:var(--soft); }
-.sc-svg{ display:block; width:100%; height:auto; }
+.sc-svg{ display:block; width:100%; height:auto; max-width:520px; }
 .sc-svg text{ fill:var(--faint); font-size:var(--fs-1); }
 .sc-svg .big{ fill:var(--text); font-size:var(--fs-5); font-weight:800; }
 .sc-svg .acct{ fill:var(--acc-strong); font-weight:700; }
@@ -299,7 +280,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .heat .hc.on{ fill:var(--acc); }
 .sc-svg .hb{ fill:var(--acc); }
 .sc-svg .medln{ stroke:var(--acc-strong); stroke-width:2; stroke-dasharray:4 3; }
-.sc-svg.donut{ width:132px; flex:none; }
+.sc-svg.donut{ width:132px; flex:none; max-width:132px; }
 .sc-duo{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-2); }
 .sc-duo > div{ min-width:0; padding:var(--sp-3); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-2); }
 .sc-duo span{ display:block; font-size:var(--fs-1); font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.04em; }
@@ -323,20 +304,19 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .hb-tr{ height:12px; border-radius:var(--r-pill); background:var(--star-off); overflow:hidden; }
 .hb-tr > i{ display:block; height:100%; background:var(--acc); border-radius:var(--r-pill); }
 .hb-v{ color:var(--soft); font-weight:700; font-variant-numeric:tabular-nums; }
-.usualcard .usual{ font-size:var(--fs-4); font-weight:700; line-height:1.4; }
 .usualcard .chips{ margin:10px 0 0; }
-.handoff{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; min-height:52px; margin-top:22px; padding:0 14px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-3); font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); cursor:pointer; }
+.handoff{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; min-height:52px; margin-top:22px; padding:0 14px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-3); font-size:var(--fs-2); font-weight:700; cursor:pointer; color:var(--text); }
 .handoff span{ font-weight:600; color:var(--soft); }
 .card .b{ padding:8px 11px 11px; }
 /* min-height pins every card to the same height so the star pills line up down the column */
-.card .n{ font-weight:700; font-size:var(--fs-3); line-height:1.25; min-height:38px; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.card .n{ font-weight:700; font-size:var(--fs-3); line-height:1.25; min-height:38px; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; letter-spacing:-.015em; }
 .card .m{ font-size:var(--fs-2); font-weight:500; color:var(--soft); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .card .m .near{ color:var(--text); font-weight:700; }
 /* Two-colour track using the SAME glyph for both halves — ☆ is optically lighter and a
    different advance width, so a filled/hollow mix does not read as a proportion. */
 /* Position, in the corner the star run used to hold. It survives on a photo tile because it
    is the mark a photo cannot carry. */
-.rankbadge{ position:absolute; left:6px; top:6px; height:22px; display:inline-flex; align-items:center; padding:0 8px; border-radius:var(--r-pill); background:rgba(20,16,13,.62); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); color:#fff; font-size:var(--fs-1); font-weight:800; font-variant-numeric:tabular-nums; text-shadow:none; }
+.rankbadge{ position:absolute; left:6px; top:6px; height:22px; display:inline-flex; align-items:center; padding:0 8px; border-radius:var(--r-pill); background:rgba(20,16,13,.62); -webkit-backdrop-filter:blur(4px); color:#fff; font-size:var(--fs-1); font-weight:800; font-variant-numeric:tabular-nums; text-shadow:none; backdrop-filter:blur(8px) saturate(1.4); -webkit-backdrop-filter:blur(8px) saturate(1.4); box-shadow:0 0 0 1px rgba(255,235,205,.16) inset; }
 
 /* On the tile the pill sits on its own dark scrim, so it uses literal colours: identical
    contrast in both themes and over any photo that later resolves. */
@@ -348,13 +328,16 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .hero{ position:relative; height:176px; background-size:cover; background-position:center; display:flex; align-items:flex-end; }
 .hero.nophoto{ background:var(--surface2); align-items:center; justify-content:center; font-size:84px; }
 .hero .hero-emoji{ display:none; filter:drop-shadow(0 4px 12px rgba(0,0,0,.3)); }
-.hero.nophoto .hero-emoji{ display:block; }
-.hero .nav{ position:absolute; top:14px; left:14px; right:14px; display:flex; justify-content:space-between; }
+.hero.nophoto .hero-emoji{ display:block; position:relative; filter:none; color:#f6efe2; }
+.hero .nav{ position:absolute; top:14px; left:14px; right:14px; display:flex; justify-content:space-between; z-index:1; }
 /* Tinted dark rather than white glass: the hero sits over arbitrary photos, and a white
    scrim drops to near-zero contrast over a bright one. */
-.round{ width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.34); box-shadow:inset 0 0 0 1px rgba(255,255,255,.3); color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:var(--fs-4); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); text-shadow:0 1px 3px rgba(0,0,0,.5); }
+.round{ width:40px; height:40px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(255,255,255,.3); color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:var(--fs-4); cursor:pointer; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); text-shadow:0 1px 3px rgba(0,0,0,.5); /* ---------- contrast and focus, checked in both themes (v92) ----------
+   Over a bright photo the round buttons were white on 2.4:1 and the amber rank badge 3.8:1; the dark scrim is
+   deeper now so the worst photo still clears 3:1 for a glyph and 4.5:1 for the badge text. The accent under white
+   text is a shade darker, so it also reads on the grey tile (4.7:1). The row-summary focus ring is the full accent. */ background:rgba(0,0,0,.5); }
 .tagphoto{ position:absolute; bottom:12px; left:14px; background:rgba(0,0,0,.55); color:#fff; font-size:var(--fs-1); padding:3px 9px; border-radius:var(--r-4); }
-.dbody{ padding:16px 16px 30px; }
+.dbody{ padding:16px 16px 30px; padding-top:44px; }
 .dbody h2{ margin:0 0 4px; font-size:var(--fs-5); }
 /* ---- the cafe page header ----
    The position leads, as a block that cannot wrap. Judgement and place share one line — the
@@ -385,14 +368,14 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .maplegend i{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; }
 .maplegend svg.wl{ width:11px; height:11px; margin-right:4px; vertical-align:-1px; }
 .maplegend svg.wl circle{ fill:#6b3fbf; } .maplegend svg.wl path{ fill:#fff; }
-@media (min-width:900px){ .maplegend{ bottom:26px; } }
+@media (min-width:900px){ }
 /* Every other piece of map chrome is offset past the browse column on a laptop — .mapsearch
    (left), .maplegend and .locbtn (right-anchored). The full-pane map message and the rule
    warning were not: both are inset from the window, and both outrank the sidebar (z-index 5
    and 8 against its 2). So a Maps failure — a dropped connection, an expired key — painted
    its error over the header, the nav, the search box and all 111 cafes, and the only way back
    was a reload. They now start where the map does. */
-@media (min-width:900px){ .map-msg{ left:var(--sidebar); } .rulewarn{ left:calc(var(--sidebar) + 12px); } }
+@media (min-width:900px){ .map-msg{ left:var(--sidebar); } }
 /* Locate button — bottom-right, stacked above the legend. That corner is the one a thumb
    reaches without regripping, which is the posture you are in when you are standing on a
    street asking the app what is near you. Same glass treatment as the lock button in
@@ -422,7 +405,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .locbtn[data-state="busy"] svg{ animation:locspin 1s linear infinite; }
 @keyframes locspin{ to{ transform:rotate(360deg); } }
 @media (prefers-reduced-motion:reduce){ .locbtn[data-state="busy"] svg{ animation:none; opacity:.55; } }
-@media (min-width:900px){ .locbtn{ bottom:62px; } }
+@media (min-width:900px){ }
 /* The branches of a brand: a full-width bar under the header says which branch this is and opens
    the list. The rating is the filled badge above it, so the two no longer share a row. */
 .where{ display:flex; align-items:center; gap:var(--sp-2); width:100%; min-height:48px; margin-top:var(--sp-3); padding:0 var(--sp-3); font-family:inherit; font-size:var(--fs-2); font-weight:600; color:var(--soft); text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-3); cursor:pointer; }
@@ -476,14 +459,13 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkcard.v-neutral{ border-left-color:var(--mid); }
 .drinkcard.v-no{ border-left-color:var(--bad); }
 .drinksum{ width:100%; min-height:68px; display:grid; grid-template-columns:38px minmax(0,1fr) auto auto; align-items:center; gap:var(--sp-3); padding:10px 11px; border:0; background:transparent; color:var(--text); font-family:inherit; text-align:left; cursor:pointer; }
-.drinksum:focus-visible{ outline:3px solid color-mix(in srgb,var(--acc) 35%,transparent); outline-offset:-3px; }
+.drinksum:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:-3px; }
 .drinkicon{ width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:var(--r-2); background:var(--surface2); font-size:20px; }
 .drinkcopy{ display:flex; flex-direction:column; min-width:0; }
-.drinkcopy .dtop{ display:block; font-size:var(--fs-3); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.drinkcopy .dsub{ display:block; margin-top:3px; font-size:var(--fs-2); color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.drinkcopy .dtop{ display:block; font-size:var(--fs-3); font-weight:700; overflow:hidden; text-overflow:ellipsis; /* the ⋯ takes 40px from the row, so a long name wraps to a second line rather than losing its end */ white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.drinkcopy .dsub{ display:block; margin-top:3px; font-size:var(--fs-2); color:var(--soft); overflow:hidden; text-overflow:ellipsis; white-space:normal; }
 .drinkprice{ min-width:0; text-align:right; white-space:nowrap; }
 .drinkprice .pr{ color:var(--text); font-size:var(--fs-3); font-weight:700; font-variant-numeric:tabular-nums; }
-.drinkprice .pr.range{ color:var(--acc-strong); }
 .drinkprice .prwrap{ display:block; text-align:right; }
 .drinkprice .prwrap .pr{ display:block; }
 .drinkprice .prsub{ display:block; margin-top:2px; color:var(--soft); font-size:var(--fs-1); font-variant-numeric:tabular-nums; }
@@ -499,7 +481,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .dorder.v-no:before{ background:var(--bad); }
 .dorderdate{ min-width:0; color:var(--text); font-size:var(--fs-2); font-weight:700; }
 .dorderdate span{ color:var(--soft); font-size:var(--fs-1); font-weight:600; }
-.dorderdate b{ display:inline-block; margin-left:4px; padding:1px 5px; border-radius:var(--r-1); background:var(--surface2); color:var(--acc-strong); font-size:var(--fs-1); font-weight:800; }
+.dorderdate b{ display:inline-block; margin-left:4px; padding:1px 5px; border-radius:var(--r-1); background:var(--surface2); font-size:var(--fs-1); font-weight:800; color:var(--soft); }
 .dorderprice{ text-align:right; white-space:nowrap; }
 .dorderprice .pr{ color:var(--text); font-size:var(--fs-2); font-weight:700; font-variant-numeric:tabular-nums; }
 .dorderprice .prwrap{ display:block; }
@@ -515,7 +497,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* The two lists the app is about, at the top of the list rather than behind Filters. */
 /* Stats leads with the collection, not with a chart. */
 .profile{ display:flex; gap:var(--sp-2); margin:0 0 var(--sp-2); }
-.pfig{ flex:1 1 0; min-width:0; padding:var(--sp-3) var(--sp-2); border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); text-align:center; }
 .pfig b{ display:block; font-size:var(--fs-5); font-weight:800; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
 .pfig span{ display:block; margin-top:2px; font-size:var(--fs-1); color:var(--soft); }
 .pline{ margin:0 0 var(--sp-4); font-size:var(--fs-2); color:var(--soft); line-height:1.5; }
@@ -555,7 +536,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
   .drinkchev{ grid-column:3; grid-row:1/span 2; }
   .drinkhistory{ padding-left:54px; }
 }
-.review{ background:var(--surface2); border-radius:var(--r-3); padding:14px; font-size:var(--fs-3); line-height:1.55; white-space:pre-wrap; }
 .form-top{ display:flex; align-items:center; gap:var(--sp-3); padding:12px 16px; border-bottom:1px solid var(--border); }
 .form{ padding:14px 16px 0; }
 /* Sticky commit rail. .sidebar is already inset by the tab-bar height, so bottom:0
@@ -575,9 +555,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .orderdone{flex:1 1 100%;color:var(--acc-strong);}
 .orderhistory{margin:12px 0;}
 .orderhistory summary{padding:12px 0;min-height:44px;box-sizing:border-box;color:var(--soft);font-size:var(--fs-2);cursor:pointer;}
-.priceline{ display:flex; gap:var(--sp-2); flex:1 1 100%; }
-.priceline input.dp{ flex:1 1 auto; height:44px; }
-.priceline select.dpc{ flex:0 0 auto; align-self:stretch; height:44px; max-width:106px; border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface2); color:var(--text); font-family:inherit; font-size:var(--fs-3); font-weight:700; padding:0 4px 0 10px; outline:none; cursor:pointer; }
+.priceline{ display:flex; flex:1 1 100%; gap:0; }
+.priceline select.dpc{ flex:0 0 auto; align-self:stretch; height:44px; border:1px solid var(--border); font-family:inherit; font-size:var(--fs-3); padding:0 4px 0 10px; outline:none; cursor:pointer; border-right:0; border-radius:var(--r-2) 0 0 var(--r-2); max-width:88px; background:var(--surface); color:var(--soft); font-weight:600; }
 .priceline select.dpc:focus-visible{ border-color:var(--acc); box-shadow:0 0 0 3px rgba(213,128,59,.15); }
 .priceline select.dpc[hidden]{ display:none; }
 /* Sits on its own line under the price. Empty at a dollar cafe, and collapsed rather than
@@ -587,8 +566,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    widest short things on the screen. */
 .usualrow{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin-bottom:10px; }
 .usualrow[hidden]{ display:none; }
-.usuallbl{ font-size:var(--fs-1); font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--soft); width:100%; }
-.uchip{ display:inline-flex; align-items:center; gap:var(--sp-2); min-height:38px; padding:0 13px; border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; max-width:100%; }
+.uchip{ display:inline-flex; align-items:center; gap:var(--sp-2); padding:0 13px; border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; max-width:100%; /* The Log form is the screen you tap most, so nothing on it is under 44px: the Log again chips, the text buttons,
+   the tag chips under More, the checkboxes. A Stats leaderboard row too. */ min-height:44px; }
 .uchip > :first-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .uchip:hover{ border-color:var(--acc); }
 .uchip:active{ transform:scale(.97); }
@@ -605,7 +584,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .field label{ display:block; font-size:var(--fs-2); font-weight:600; margin-bottom:6px; }
 .field input[type=text],.field input[type=number],.field input[type=date],.field textarea{ width:100%; border:1px solid var(--border); border-radius:var(--r-2); padding:11px 12px; font-size:var(--fs-4); background:var(--surface); color:var(--text); outline:none; font-family:inherit; }
 .field textarea{ min-height:84px; resize:vertical; }
-.hintbtn{ font-size:var(--fs-2); color:var(--acc-strong); background:none; border:none; cursor:pointer; padding:6px 0 0; font-weight:600; }
+.hintbtn{ font-size:var(--fs-2); color:var(--acc-strong); background:none; border:none; cursor:pointer; padding:6px 0 0; font-weight:600; min-height:44px; display:inline-flex; align-items:center; padding-block:0; }
 /* Three buttons, not five glyphs. They wrap rather than shrink below the touch floor on a
    narrow phone. */
 .rate{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
@@ -640,7 +619,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkrows .dr.quick .priceline .dpc{ flex:0 0 auto; max-width:84px; }
 .drinkrows .dr.quick .priceline .dp{ width:86px; flex:0 0 auto; }
 .drinkrows .dr:not(.quick) > .drmore{ display:none; }
-.drmore{ flex:1 1 100%; min-height:44px; padding:0 2px; border:none; background:none; color:var(--soft); font:inherit; font-size:var(--fs-2); text-align:left; cursor:pointer; }
 .drmore:hover{ color:var(--acc-strong); }
 .drinkrows .dr.dr-old{ opacity:.72; border-left:3px solid var(--border); padding-left:8px; }
 .drinkrows .dr input.dn{ flex:1 1 100%; } .drinkrows .dr input.dp{ flex:1 1 70px; }
@@ -652,25 +630,19 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkoption .optionchoices button{ flex:1; font-size:var(--fs-2); }
 .drinkoption button[aria-pressed="true"]{ background:var(--acc-strong); color:var(--on-acc); border-color:transparent; }
 .drinkoption .icechoices{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
-.drinkoption .sizesteps{ display:grid; grid-template-columns:48px 1fr 48px; align-items:center; gap:var(--sp-2); text-align:center; }
+.drinkoption .sizesteps{ display:grid; align-items:center; text-align:center; grid-template-columns:44px minmax(0,1fr) 44px; gap:var(--sp-1); }
 .drinkoption .sizesteps button{ font-size:var(--fs-5); }
 .drinkoption output{ font-size:var(--fs-3); font-weight:600; }
 .drinkoption .customsweet{ display:flex; align-items:center; gap:var(--sp-2); margin-top:8px; font-size:var(--fs-2); color:var(--soft); }
 .drinkrows .dr .drinkoption:has(.dsz){flex:1 1 45%;}
 .drinkrows .dr .compactmilk{display:flex;flex:1 1 42%;min-width:0;align-self:stretch;flex-direction:column;justify-content:space-between;gap:var(--sp-2);font-size:var(--fs-2);color:var(--soft);padding:0;border:0;background:transparent;}
 .compactmilk select{width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid var(--border);border-radius:var(--r-2);background:var(--surface);color:var(--text);font:16px system-ui;}
-.drinkoption .sizesteps{grid-template-columns:44px minmax(0,1fr) 44px;gap:var(--sp-1);}
 .drinkoption .sizesteps output{font-size:var(--fs-2);}
 .listpanel button,.sync-status button{min-height:44px;border:1px solid var(--border);border-radius:var(--r-2);background:var(--surface);color:var(--acc-strong);padding:8px;font:13px system-ui;cursor:pointer;}
 .grid.compact-list{display:flex;flex-direction:column;gap:0;}
-.grid.compact-list .card{display:flex;align-items:center;gap:var(--sp-3);border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;padding:12px 0;}
-.grid.compact-list .card .ph{flex:0 0 46px;width:46px;height:46px;border-radius:var(--r-2);overflow:visible;}
+.grid.compact-list .card{ display:flex; align-items:center; border:0; border-bottom:1px solid var(--border); border-radius:0; background:transparent; box-shadow:none; min-height:68px; padding:10px 0; gap:var(--sp-3); }
 .grid.compact-list .card .ph > span:not(.em):not(.favbadge){display:none;}
-.grid.compact-list .card .ph .em{font-size:22px;}
-.grid.compact-list .card .ph{font-size:var(--fs-4);}
-.grid.compact-list .card .b{min-width:0;flex:1;padding:0;}
-.grid.compact-list .card .n{white-space:normal;-webkit-line-clamp:unset;display:block;}
-.grid.compact-list .card .m{margin-top:5px;}
+.grid.compact-list .card .ph .em{ font-size:24px; }
 .compact-stars{display:none;}
 .compact-list .compact-stars{display:block;flex:none;font-size:var(--fs-2);color:var(--soft);white-space:nowrap;}
 /* 180px suited a one-line status. A conflict now shows a comparison plus its two buttons,
@@ -700,7 +672,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkrows .dr .swlabel{ font-size:var(--fs-2); color:var(--soft); flex:0 0 auto; }
 .delrow{ width:38px; flex:0 0 auto; border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface2); cursor:pointer; color:var(--soft); }
 .tagpick{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
-.tagpick .chip{ cursor:pointer; }
 .tagpick .chip.on{ background:var(--acc-strong); color:var(--on-acc); border-color:transparent; }
 /* White on --acc is 3.01:1 — a real failure at label size, the same one the update bar
    had. --acc-strong/--on-acc carries text in both themes. */
@@ -753,9 +724,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .gm-style-iw-c{ padding:9px 13px !important; }
 .gm-style-iw-d{ overflow:hidden !important; padding:0 !important; }
 .gm-style-iw-c button.gm-ui-hover-effect{ display:none !important; }
-.card{ transition:transform .08s ease; }
 .card:active{ transform:scale(.97); }
-.tab{ transition:transform .08s ease; }
 .iconbtn:active,.round:active,.btn:active,.tab:active,.chip:active,.hintbtn:active,.setactions button:active,.side-nav button:active{ transform:scale(.95); opacity:.9; }
 /* ---- desktop split view ---- */
 /* The browse column used to be pinned at 400px, then 440px past 1400 — while the grid went
@@ -797,6 +766,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .setmode{ flex:1; min-width:0; font-size:var(--fs-3); font-weight:700; }
 .setrow .btn{ width:auto; flex:0 0 auto; min-height:44px; padding:12px 16px; }
 .setactions{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.setactions[hidden]{ display:none; }
 .setactions button{ min-height:44px; padding:0 12px; border-radius:var(--r-2); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 /* The bulk actions used to sit on a collapsed bar on the List, with a count on the closed
    toggle — an action that only appears when there is work to do is invisible otherwise. The
@@ -823,12 +793,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .reorder.no{ background:rgba(224,85,107,.14); color:var(--bad); }
 .reorder.neutral{ background:rgba(138,90,9,.14); color:var(--mid); }
 .drinkrows .dr .rowrap{ flex:1 1 100%; display:flex; align-items:center; gap:var(--sp-3); background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-2); padding:8px 12px; }
-.drinkrows .dr .qtywrap{ flex:1 1 100%; display:flex; align-items:center; gap:var(--sp-3); background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-2); padding:8px 12px; }
-.qbtn{ width:32px; height:32px; flex:0 0 auto; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:var(--r-2); font-size:var(--fs-4); font-weight:700; line-height:1; cursor:pointer; font-family:inherit; }
-.qval{ font-size:var(--fs-3); font-weight:800; min-width:34px; text-align:center; }
+.qbtn{ flex:0 0 auto; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:var(--r-2); font-size:var(--fs-4); font-weight:700; line-height:1; cursor:pointer; font-family:inherit; width:44px; height:44px; /* ---------- the legend folds into a ? on the laptop (v83) ----------
+   The four-dot legend sat in the corner at every size. A phone already folds it into the pill's panel;
+   a laptop now folds it into a ? above the locate button, so the corner holds one control and a hint. */ display:none; }
+.qval{ font-size:var(--fs-3); font-weight:800; text-align:center; min-width:0; }
 .drinkrows .dr .mkwrap{ flex:1 1 100%; display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-2); padding:8px 12px; }
 .drinkrows .dr .mkwrap .swlabel{ flex:0 0 100%; margin-bottom:1px; }
-.rbtn{ border:1px solid var(--border); background:var(--surface); border-radius:var(--r-2); padding:4px 13px; font-size:var(--fs-4); cursor:pointer; opacity:.4; filter:grayscale(.6); transition:opacity .12s, filter .12s; }
 .rbtn.on{ opacity:1; filter:none; }
 .rbtn.yes.on{ border-color:var(--good); background:rgba(46,158,91,.14); }
 .rbtn.no.on{ border-color:var(--bad); background:rgba(224,85,107,.14); }
@@ -837,11 +807,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkrows .dr .priceline{flex:1 1 52%;flex-wrap:wrap;min-width:0;align-content:start;}
 .drinkrows .dr .priceline .dpc{flex:1 1 100%;max-width:none;}
 .drinkrows .dr .priceline .dp{min-width:0;width:100%;}
-.drinkrows .dr .qtywrap{flex:1 1 36%;display:grid;grid-template-columns:44px minmax(22px,1fr) 44px;gap:var(--sp-1);padding:0;border:0;background:transparent;align-content:end;}
+.drinkrows .dr .qtywrap{ align-items:center; border-radius:var(--r-2); flex:1 1 36%; display:grid; grid-template-columns:44px minmax(22px,1fr) 44px; gap:var(--sp-1); padding:0; border:0; background:transparent; align-content:end; }
 .drinkrows .dr .qtywrap .swlabel{grid-column:1/-1;}
-.qbtn{width:44px;height:44px;}
-.qval{min-width:0;}
-.rbtn{min-height:44px;min-width:44px;}
+.rbtn{ border:1px solid var(--border); background:var(--surface); border-radius:var(--r-2); padding:4px 13px; font-size:var(--fs-4); cursor:pointer; opacity:.4; filter:grayscale(.6); transition:opacity .12s, filter .12s; min-height:44px; min-width:44px; }
 
 /* ---------- v65: list filters, result line, card drink line, skeleton, empty states, detail ---------- */
 .lp-group{ display:flex; flex-direction:column; gap:var(--sp-1); }
@@ -853,10 +821,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .resultline{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin:0 16px var(--sp-2); font-size:var(--fs-2); color:var(--soft); }
 .resultline[hidden]{ display:none; }
 .resultline button{ min-height:44px; padding:0 var(--sp-3); border:0; background:none; color:var(--acc-strong); font:inherit; font-weight:700; cursor:pointer; }
-.card .cdrink{ margin-top:3px; font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.grid.compact-list .card .cdrink{ display:none; }
-.orderagain{ margin:var(--sp-3) 0; padding:var(--sp-3); border-radius:var(--r-2); background:var(--surface2); font-size:var(--fs-3); }
-.orderagain[hidden]{ display:none; }
 .orderagain b{ color:var(--acc-strong); }
 /* a first paint that is the shape of the list, at the card's own dimensions so nothing jumps */
 .skel-card{ border:1px solid var(--border); border-radius:var(--r-3); overflow:hidden; background:var(--surface); }
@@ -891,7 +855,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mapbox.worlding .maplegend{ display:none; }
 @media (min-width:900px){
   .worldsheet{ left:calc(var(--sidebar) + 12px); right:auto; bottom:26px; width:min(380px, calc(100% - var(--sidebar) - 24px)); max-height:50%; border-radius:var(--r-4); }
-  .mapbox.worlding .locbtn{ bottom:calc(114px + env(safe-area-inset-bottom)); }
 }
 
 /* ---------- polish: depth, rank tiers, scrims, numerals (v79) ----------
@@ -900,41 +863,31 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    class, so phInner() is still the only thing that writes a tile. Gold carries dark ink, which
    keeps --acc-strong the only accent under white text. */
 .card, .pfig, .drinkcard, .statcard{ box-shadow:var(--shadow-sm); }
-.grid.compact-list .card{ box-shadow:none; }
-.card{ transition:transform .16s ease, box-shadow .16s ease; }
 @media (hover:hover){ .card:hover{ transform:translateY(-2px); box-shadow:var(--shadow); } .grid.compact-list .card:hover{ transform:none; box-shadow:none; } }
 @media (prefers-reduced-motion:reduce){ .card{ transition:none; } .card:hover{ transform:none; } }
-.card .n{ letter-spacing:-.015em; }
 .dhead h2, .hero .hd{ letter-spacing:-.03em; }
 .card .ph, .hero{ isolation:isolate; }
 .card .ph::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(180deg, rgba(18,10,4,.34) 0%, rgba(18,10,4,0) 38%, rgba(18,10,4,0) 58%, rgba(18,10,4,.45) 100%); }
 .card .ph.nophoto::before{ background:none; }
 .hero::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(180deg, rgba(18,10,4,.42) 0%, rgba(18,10,4,0) 34%, rgba(18,10,4,0) 62%, rgba(18,10,4,.22) 100%); }
-.hero .nav{ z-index:1; }
-.rankbadge{ backdrop-filter:blur(8px) saturate(1.4); -webkit-backdrop-filter:blur(8px) saturate(1.4); box-shadow:0 0 0 1px rgba(255,235,205,.16) inset; }
 /* On the tile the pills sit on their own dark scrim, so the amber ring is a literal colour,
    identical in both themes and over any photo, like the badge itself. */
-.rankbadge.r-amber{ background:rgba(32,18,6,.62); color:#ffd9a1; box-shadow:0 0 0 1.5px rgba(246,197,140,.75) inset; }
+.rankbadge.r-amber{ color:#ffd9a1; box-shadow:0 0 0 1.5px rgba(246,197,140,.75) inset; background:rgba(32,18,6,.76); }
 .rankbadge.r-gold{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 2px 8px rgba(0,0,0,.35); backdrop-filter:none; -webkit-backdrop-filter:none; }
 .dranktile b, .drinkprice, .dscore, .lbscore, .prsub, .dorderprice .pr, .wantn{ font-variant-numeric:tabular-nums lining-nums; }
 
-/* ---------- guides, price on the order line, log again (v80) ---------- */
-.grid{ grid-template-columns:repeat(auto-fill,minmax(156px,1fr)); }
-.guiderow{ flex-basis:100%; display:grid; grid-template-columns:repeat(4,1fr); gap:var(--sp-2); }
 .guiderow[hidden]{ display:none; }
-.guiderow button{ min-height:44px; padding:0 var(--sp-1); border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm); font-family:inherit; font-size:var(--fs-1); font-weight:700; white-space:nowrap; cursor:pointer; }
+.guiderow button{ min-height:44px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm); font-family:inherit; font-size:var(--fs-1); font-weight:700; white-space:nowrap; cursor:pointer; flex:none; padding:0 var(--sp-3); }
 .guiderow button[aria-pressed="true"]{ background:var(--acc-strong); color:var(--on-acc); border-color:transparent; box-shadow:none; }
-.card .cdrink{ display:flex; align-items:baseline; gap:var(--sp-2); }
 .card .cdrink:has(.cdp) .cdo{ display:none; }
 .card .cdrink .cdn{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.card .cdrink .cdp{ flex:none; margin-left:auto; color:var(--soft); font-weight:700; font-variant-numeric:tabular-nums lining-nums; }
-.card{ position:relative; }
+.card .cdrink .cdp{ flex:none; margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums lining-nums; color:var(--soft); }
 
 .grid.compact-list 
 /* ---------- cafe page: banner, pills, quote, postcard (v81) ---------- */
 .dranktile.top{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, var(--shadow-sm); }
 .dranktile.top span{ color:var(--gold-ink); opacity:.8; }
-.orderagain{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-3); padding:var(--sp-3) var(--sp-4); border:1px solid var(--border); border-radius:var(--r-3); background:linear-gradient(135deg, var(--amber-bg), transparent 70%), var(--surface); box-shadow:var(--shadow-sm); }
+.orderagain{ margin:var(--sp-3) 0; font-size:var(--fs-3); display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-3); padding:var(--sp-3) var(--sp-4); border:1px solid var(--border); border-radius:var(--r-3); background:linear-gradient(135deg, var(--amber-bg), transparent 70%), var(--surface); box-shadow:var(--shadow-sm); }
 .orderagain[hidden]{ display:none; }
 .orderagain .oa-gl{ width:48px; height:48px; flex:none; display:grid; place-items:center; border-radius:var(--r-2); background:var(--surface2); font-size:26px; }
 .orderagain .oa-tx{ min-width:0; flex:1 1 140px; display:flex; flex-direction:column; }
@@ -947,13 +900,14 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mpill.k-sw{ background:var(--amber-bg); color:var(--amber-ink); border-color:transparent; }
 .mpill.k-mk{ background:var(--want-bg); color:var(--want-ink); border-color:transparent; }
 .dordermeta .mpill{ margin-right:var(--sp-1); }
-.review{ position:relative; padding:22px 18px 16px 22px; border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow-sm); }
+.review{ border-radius:var(--r-3); font-size:var(--fs-3); line-height:1.55; white-space:pre-wrap; position:relative; padding:22px 18px 16px 22px; border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow-sm); }
 .review::before{ content:"\201C"; position:absolute; left:14px; top:-2px; font-size:calc(var(--fs-5) * 2.4); line-height:1; font-weight:800; color:var(--acc); }
 .review::after{ content:""; position:absolute; left:0; top:18px; bottom:18px; width:3px; border-radius:var(--r-1); background:var(--acc); }
 .pcmodal{ position:fixed; inset:0; z-index:90; display:flex; justify-content:center; align-items:flex-start; padding:var(--sp-4); overflow-y:auto; background:rgba(10,6,3,.66); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
 .pcmodal[hidden]{ display:none; }
 .pccol{ width:min(360px, 100%); display:flex; flex-direction:column; gap:var(--sp-3); padding-bottom:var(--sp-5); }
-.pccol canvas{ width:100%; height:auto; border-radius:var(--r-4); box-shadow:var(--shadow); }
+.pccol canvas{ height:auto; border-radius:var(--r-4); box-shadow:var(--shadow); /* ---------- the postcard is a Story (v98) ----------
+   1080 x 1920, so the preview is tall: it shrinks to leave the share buttons on screen instead of pushing them below the fold. */ width:auto; max-width:100%; max-height:calc(100vh - 190px); max-height:calc(100dvh - 190px); align-self:center; }
 .pcact{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
 .pcact .btn{ flex:1 1 30%; width:auto; }
 .pcnote{ margin:0; text-align:center; font-size:var(--fs-1); color:#fff; opacity:.8; }
@@ -967,10 +921,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .sc-dots i{ width:12px; height:12px; border-radius:50%; background:var(--good); }
 .sc-dots i.w{ background:none; border:2px solid var(--want); box-sizing:border-box; }
 
-/* ---------- the legend folds into a ? on the laptop (v83) ----------
-   The four-dot legend sat in the corner at every size. A phone already folds it into the pill's panel;
-   a laptop now folds it into a ? above the locate button, so the corner holds one control and a hint. */
-.qbtn{ display:none; }
 @media (min-width:900px){
   .maplegend{ display:none; right:62px; bottom:26px; }
   .mapbox[data-legend="open"] .maplegend{ display:flex; bottom:78px; }
@@ -985,10 +935,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    the primary button and the badges, so nothing was quieter than anything else. It now means two things:
    the primary action and the current state. Information goes to the text colours, and a link says it is
    one with an underline. Chart marks are data, so they keep it. */
-.card .cdrink{ color:var(--text); font-weight:600; }
-.card .cdrink .cdp{ color:var(--soft); }
+.card .cdrink{ margin-top:3px; font-size:var(--fs-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:baseline; gap:var(--sp-2); color:var(--text); font-weight:600; }
 .drinkprice .pr.range{ color:var(--text); }
-.dorderdate b{ color:var(--soft); }
 .orderagain .oa-name, .orderagain b{ color:var(--text); }
 .sc-head b, .usualcard .usual em{ color:var(--text); }
 .morebtn, .resultline button{ color:var(--text); text-decoration:underline; text-underline-offset:3px; }
@@ -997,32 +945,29 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* ---------- rows with landmarks (v87) ---------- */
 #save-state:empty{ display:none; }
 .rkcol, .band{ display:none; }
-.grid.compact-list .band{ display:block; position:sticky; top:0; z-index:5; padding:var(--sp-4) 0 var(--sp-2); font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); background:linear-gradient(var(--bg) 78%, transparent); }
-.grid.compact-list .card{ min-height:68px; padding:10px 0; gap:var(--sp-3); }
-.grid.compact-list .card .ph{ flex:0 0 46px; width:46px; height:46px; padding:0; justify-content:center; align-items:center; }
-.grid.compact-list .card .ph .em{ font-size:24px; }
+.grid.compact-list .band{ display:block; position:sticky; top:0; z-index:5; padding:var(--sp-4) 0 var(--sp-2); font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); background:linear-gradient(var(--bg) 78%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); background:var(--glass); }
+.grid.compact-list .card .ph{ border-radius:var(--r-2); overflow:visible; font-size:var(--fs-4); flex:0 0 46px; width:46px; height:46px; padding:0; justify-content:center; align-items:center; }
 .grid.compact-list .card .ph .rankbadge{ display:none; }
 .grid.compact-list .card .ph .favbadge{ display:none; }
-.grid.compact-list .card .n{ min-height:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; -webkit-line-clamp:unset; font-size:var(--fs-3); letter-spacing:-.01em; }
+.grid.compact-list .card .n{ -webkit-line-clamp:unset; min-height:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; -webkit-line-clamp:unset; font-size:var(--fs-3); letter-spacing:-.01em; }
 .grid.compact-list .card .cdrink{ display:flex; margin-top:1px; font-size:var(--fs-2); }
 .grid.compact-list .card .m{ margin-top:1px; font-size:var(--fs-1); color:var(--faint); }
 .grid.compact-list .card .compact-stars{ display:none; }
 .grid.compact-list .card .rkcol{ display:block; flex:none; min-width:34px; text-align:right; font-size:var(--fs-2); font-weight:700; color:var(--faint); font-variant-numeric:tabular-nums; }
 .grid.compact-list .card .rkcol.g{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); border-radius:var(--r-pill); padding:2px 9px; text-align:center; }
-.grid.compact-list .card .b{ display:flex; flex-direction:column; }
+.grid.compact-list .card .b{ min-width:0; flex:1; padding:0; display:flex; flex-direction:column; }
 .grid.compact-list .card .b .cdrink{ order:2; }
 .grid.compact-list .card .b .m{ order:3; }
 .grid.compact-list .card .cdo{ display:none; }
-.grid.compact-list .band{ background:color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
 
 /* ---------- the cafe page: one block, one action (v88) ---------- */
 .hero .dranktile{ position:absolute; left:16px; bottom:-24px; z-index:3; display:inline-flex; align-items:baseline; gap:var(--sp-2); min-width:0; padding:10px 18px; border-radius:var(--r-pill); background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow-sm); text-align:left; }
 .hero .dranktile[hidden]{ display:none; }
 .hero .dranktile b{ display:inline; margin:0; font-size:var(--fs-4); }
 .hero .dranktile span{ display:inline; margin:0; }
-.hero .dranktile.top{ border:0; }
-.dbody{ padding-top:44px; }
-.dactions{ margin-top:var(--sp-4); display:flex; gap:var(--sp-2); flex-wrap:wrap; align-items:center; }
+.hero .dranktile.top{ border:0; background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, var(--shadow-sm); }
+.dactions{ margin-top:var(--sp-4); display:flex; gap:var(--sp-2); flex-wrap:wrap; align-items:center; /* With Directions and Share gone from the bottom, the owner's ⋯ is alone there: it sits at the right, where its menu
+   (which opens leftwards from its right edge) has room. */ justify-content:flex-end; }
 .dactions > .btn{ width:auto; flex:1 1 auto; }
 .dmore{ position:relative; flex:none; }
 .dmore > summary{ list-style:none; min-width:48px; min-height:48px; display:grid; place-items:center; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface2); cursor:pointer; font-size:var(--fs-4); font-weight:700; }
@@ -1032,7 +977,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .det{ border-top:1px solid var(--border); margin-top:var(--sp-4); font-size:var(--fs-2); color:var(--faint); }
 .det > summary{ cursor:pointer; min-height:44px; display:flex; align-items:center; font-weight:600; }
 .det .dscoreline{ margin:0 0 var(--sp-3); }
-.hero .dranktile.top{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, var(--shadow-sm); }
 
 /* ---------- Stats in three tabs (v89) ---------- */
 .stabs{ display:flex; gap:var(--sp-1); padding:4px; margin:0 0 var(--sp-3); background:var(--surface2); border-radius:var(--r-2); position:sticky; top:0; z-index:4; }
@@ -1051,10 +995,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
   #app[data-view="form"] .tabbar{ display:none; }
   #app[data-view="form"] .sidebar, #app[data-view="form"] .mapwrap{ bottom:0; }
 }
-.priceline{ gap:0; }
-.priceline select.dpc{ border-right:0; border-radius:var(--r-2) 0 0 var(--r-2); }
 .priceline select.dpc[hidden] + input.dp{ border-radius:var(--r-2); }
-.priceline input.dp{ border-radius:0 var(--r-2) var(--r-2) 0; }
+.priceline input.dp{ flex:1 1 auto; height:44px; border-radius:0 var(--r-2) var(--r-2) 0; }
 
 /* ---------- wide screens (v91) ----------
    Checked at iPad Mini and laptop widths: rows were one 700px-wide strip with the price a thumb-reach from
@@ -1064,26 +1006,18 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
   .grid.compact-list .band{ grid-column:1 / -1; }
   .grid.compact-list .emptyx{ grid-column:1 / -1; }
 }
-.grid.compact-list .band{ background:var(--glass); }
-.sc-svg{ max-width:520px; }
-.sc-svg.donut{ max-width:132px; }
 .statgrid:has(> :only-child){ grid-template-columns:1fr; }
 
-/* ---------- contrast and focus, checked in both themes (v92) ----------
-   Over a bright photo the round buttons were white on 2.4:1 and the amber rank badge 3.8:1; the dark scrim is
-   deeper now so the worst photo still clears 3:1 for a glyph and 4.5:1 for the badge text. The accent under white
-   text is a shade darker, so it also reads on the grey tile (4.7:1). The row-summary focus ring is the full accent. */
-.round{ background:rgba(0,0,0,.5); }
-.rankbadge.r-amber{ background:rgba(32,18,6,.76); }
-.drinksum:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:-3px; }
 
 /* ---------- Go board rows (v93) ----------
    Rank, name, place and the drink to order on two lines. The owner's sentence and the bookkeeping sit behind a
    chevron; the row itself still opens the cafe. */
-.lbrow.guide{ flex-wrap:wrap; align-items:center; padding:0 2px; gap:0 var(--sp-3); }
+.lbrow.guide{ /* A board row carries its reason: stars, the drink to order, and the owner's own sentence.
+   Scoped to .guide because .lbrow is shared with the stats leaderboards, which stay one-line.
+   Aligned to the top rather than centred — these rows are now three or four lines tall and a
+   centred rank marker would float away from the name it labels. */ flex-wrap:wrap; align-items:center; padding:0 2px; gap:0 var(--sp-3); }
 .lbrow.guide .lbhit{ flex:1; min-width:0; display:flex; align-items:center; gap:var(--sp-3); padding:11px 0; cursor:pointer; }
 .lbrow.guide .lbrank{ padding-top:0; }
-.lbrow.guide .lbmain{ gap:0; }
 .lbrow.guide .lbsub{ display:flex; min-width:0; }
 .lbplace{ flex:0 0 auto; min-width:0; max-width:58%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .lbdot{ flex:none; white-space:pre; }
@@ -1122,9 +1056,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .wdots i.on{ background:var(--acc-strong); border-color:var(--acc-strong); opacity:1; }
 @media (min-width:700px){ .wc{ flex-basis:232px; } }
 
-/* ---------- the postcard is a Story (v98) ----------
-   1080 x 1920, so the preview is tall: it shrinks to leave the share buttons on screen instead of pushing them below the fold. */
-.pccol canvas{ width:auto; max-width:100%; max-height:calc(100vh - 190px); max-height:calc(100dvh - 190px); align-self:center; }
 
 /* ---------- the year in review label, and Share on the strip is the owner's ---------- */
 .wrapped .sech .wrev{ flex:1; margin-left:var(--sp-2); font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); }
@@ -1137,15 +1068,10 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mke{ line-height:1; }
 .card .ph.nophoto .em .mkv{ width:1.7em; height:1.7em; }
 .ch-th .mkv{ width:28px; height:28px; }
-.hero.nophoto .hero-emoji{ position:relative; filter:none; color:#f6efe2; }
 .hero.nophoto .hero-emoji .mkv{ width:132px; height:132px; stroke-width:4.5; }
 .hero.nophoto::before{ content:""; position:absolute; inset:0; background:repeating-radial-gradient(circle at 50% 55%, transparent 0 26px, rgba(255,255,255,.16) 26px 27px); pointer-events:none; }
 
-/* The Log form is the screen you tap most, so nothing on it is under 44px: the Log again chips, the text buttons,
-   the tag chips under More, the checkboxes. A Stats leaderboard row too. */
-.uchip{ min-height:44px; }
-.hintbtn{ min-height:44px; display:inline-flex; align-items:center; padding-block:0; }
-.tagpick .chip{ min-height:44px; display:inline-flex; align-items:center; padding:0 var(--sp-4); }
+.tagpick .chip{ cursor:pointer; min-height:44px; display:inline-flex; align-items:center; padding:0 var(--sp-4); }
 #app input[type="checkbox"]{ width:22px; height:22px; accent-color:var(--acc-strong); }
 .lbrow.one.tap{ min-height:44px; }
 
@@ -1161,7 +1087,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .favbadge .ico{ width:18px; height:18px; color:#ff4d6d; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .search > .ico{ width:18px; height:18px; color:var(--soft); }
 .apptitle .ico{ width:1em; height:1em; color:var(--acc-strong); vertical-align:-.12em; }
-.side-nav button{ display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-1); }
 .side-nav button .ico{ width:16px; height:16px; }
 .statsec .ico{ width:14px; height:14px; vertical-align:-.15em; }
 .empty .big .ico, .mapfail .big .ico, #map .big .ico{ width:48px; height:48px; stroke-width:1.4; color:var(--soft); }
@@ -1172,9 +1097,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 
 /* Go's actions are one row of chips, not three full-width grey bars: the first cafe is up the screen, and nothing
    reads as disabled. Rank a pair is the filled one. */
-.gochips{ display:flex; gap:var(--sp-2); flex-wrap:wrap; margin:var(--sp-3) 0 var(--sp-1); }
-.gochip{ display:inline-flex; align-items:center; gap:var(--sp-2); min-height:44px; padding:0 var(--sp-4); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; }
-.gochip.p{ background:var(--acc-strong); border-color:transparent; color:var(--on-acc); }
+.gochips{ display:flex; gap:var(--sp-2); margin:var(--sp-3) 0 var(--sp-1); flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
+.gochip{ display:inline-flex; align-items:center; gap:var(--sp-2); min-height:44px; border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; padding:0 var(--sp-3); flex:none; }
 .gochip em{ font-style:normal; font-weight:500; font-variant-numeric:tabular-nums; } /* full strength: at 80% it fell to 4.1:1 on the accent */
 .gochip .ico{ width:16px; height:16px; }
 
@@ -1182,16 +1106,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    hairline, for everything else you press (.btn.ghost, Settings' tools, the links between tabs, Show more). Quiet:
    accent text alone, for small inline actions. Selection controls (chips, the segmented tabs) are their own family. */
 .btn.ghost, .setactions button, .handoff, .morebtn{ background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:var(--r-3); font-weight:600; }
-.handoff{ color:var(--text); }
-.morebtn{ text-align:center; margin-top:var(--sp-2); }
 .hintbtn, .rank-lnk, .ch-lnk, .wrapped .sech button{ background:none; border:0; color:var(--acc-strong); font-weight:600; }
 /* the List's search field is only a search field; Settings sits beside it, not inside it */
 .searchrow{ display:flex; align-items:center; gap:var(--sp-2); margin:0 16px 12px; }
 .searchrow .search{ flex:1; min-width:0; margin:0; }
 .searchrow > .iconbtn{ flex:none; }
-.gochips{ flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
 .gochips::-webkit-scrollbar{ display:none; }
-.gochip{ padding:0 var(--sp-3); flex:none; }
 @media (max-width:899px){ .searchrow{ margin-top:var(--sp-3); } }
 
 /* ---------- a note on one cup (v104) ----------
@@ -1201,9 +1121,6 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinktop .drinksum{ flex:1; min-width:0; }
 .drinkmore{ flex:none; width:40px; display:flex; align-items:center; justify-content:center; border:0; background:transparent; color:var(--soft); cursor:pointer; }
 .drinktop:has(.drinkmore) .drinksum{ padding-right:2px; }
-/* the ⋯ takes 40px from the row, so a long name wraps to a second line rather than losing its end */
-.drinkcopy .dtop{ white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-.drinkcopy .dsub{ white-space:normal; }
 .drinkmore .ico{ width:20px; height:20px; }
 .drinkmore:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:-3px; }
 .drinknote{ display:flex; flex-direction:column; gap:var(--sp-1); margin:0 11px 11px 61px; padding:var(--sp-2) var(--sp-3); border-radius:var(--r-2); background:var(--wash); color:var(--text); font-size:var(--fs-2); }
@@ -1298,12 +1215,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .tidyb[disabled]{ opacity:.5; cursor:default; }
 .qcsame:focus-visible, .tidyb:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:2px; }
 /* Five guides do not fit four columns: one row that scrolls sideways, like Go's chips, so it still costs one row. */
-.guiderow{ display:flex; overflow-x:auto; scrollbar-width:none; }
+.guiderow{ flex-basis:100%; grid-template-columns:repeat(4,1fr); gap:var(--sp-2); display:flex; overflow-x:auto; scrollbar-width:none; }
 .guiderow::-webkit-scrollbar{ display:none; }
-.guiderow button{ flex:none; padding:0 var(--sp-3); }
-/* With Directions and Share gone from the bottom, the owner's ⋯ is alone there: it sits at the right, where its menu
-   (which opens leftwards from its right edge) has room. */
-.dactions{ justify-content:flex-end; }
 
 /* ---------- the UI audit batch (v107) ---------- */
 /* Every screen starts the same way: a title, a quiet line beside it, and on a screen you were sent to, one round back
@@ -1345,9 +1258,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* Two kinds of card. A feature card (tinted, no border) for the one or two things a screen is about: the Wrapped strip
    and Drink DNA on Stats. A surface card (the surface colour with a hairline, no shadow) for everything else. Stats
    used four: tinted, white with a border, grey filled, and white with a shadow. */
-.statcard{ background:var(--surface); box-shadow:none; }
+.statcard{ border:1px solid var(--border); border-radius:var(--r-3); padding:13px 14px; min-height:92px; display:flex; flex-direction:column; background:var(--surface); box-shadow:none; }
 .statcard.usualcard{ background:color-mix(in srgb, var(--acc) 12%, var(--surface)); border-color:transparent; }
-.pfig{ box-shadow:none; }
+.pfig{ flex:1 1 0; min-width:0; padding:var(--sp-3) var(--sp-2); border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); text-align:center; box-shadow:none; }
 
 /* One standing for visitors: the same word on a List row, a photo card, the map preview and the cafe page. */
 .tierchip{ display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:var(--r-pill); background:var(--surface2); color:var(--text); font-size:var(--fs-1); font-weight:800; white-space:nowrap; }
@@ -1363,11 +1276,16 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .peektile .mkv{ width:30px; height:30px; }
 
 /* The form, polished (UI audit): one label style, a quieter currency and a real row for the cup's options. */
-.usuallbl{ font-size:var(--fs-2); font-weight:600; letter-spacing:0; text-transform:none; color:var(--soft); }
-.priceline select.dpc{ max-width:88px; background:var(--surface); color:var(--soft); font-weight:600; }
-.drmore{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2); margin-top:var(--sp-2); padding:0 var(--sp-3); border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); }
+.usuallbl{ width:100%; font-size:var(--fs-2); font-weight:600; letter-spacing:0; text-transform:none; color:var(--soft); }
+.drmore{ flex:1 1 100%; min-height:44px; color:var(--soft); font:inherit; font-size:var(--fs-2); text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2); margin-top:var(--sp-2); padding:0 var(--sp-3); border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); }
 /* Go sat 32px in from the edge (the pane's padding and the board's own); every other screen is 16px. */
 .compare .boardwrap{ padding-left:0; padding-right:0; }
 /* With the wider laptop sidebar, three photo cards fit in a row and each came out narrower than a phone's; more
    screen must never mean smaller cards. */
 @media (min-width:900px){ .grid{ grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); } }
+
+/* Settings > Recent problems (v109) */
+.probrow{ display:flex; flex-direction:column; gap:var(--sp-1); padding:var(--sp-2) 0; border-bottom:1px solid var(--border); font-size:var(--fs-2); }
+.probrow:last-child{ border-bottom:0; }
+.probrow b{ font-weight:600; overflow-wrap:anywhere; }
+.probrow span{ color:var(--soft); font-size:var(--fs-1); }

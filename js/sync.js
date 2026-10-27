@@ -663,10 +663,10 @@ function renderSyncConflict(op) {
   }
   h +=
     '<div class="cfbtns">' +
-    '<button onclick="resolveSyncConflict(true)">Keep this phone\u2019s' +
+    '<button' + act("resolveSyncConflict", [true]) + '>Keep this phone\u2019s' +
     (mineWhen ? " \u00b7 " + esc(mineWhen) : "") +
     "</button>" +
-    '<button onclick="resolveSyncConflict(false)">Use the cloud\u2019s' +
+    '<button' + act("resolveSyncConflict", [false]) + '>Use the cloud\u2019s' +
     (theirsWhen ? " \u00b7 " + esc(theirsWhen) : "") +
     "</button>" +
     "</div>";

@@ -48,9 +48,9 @@ function syncBrandUI() {
     html =
       '<div class="linkchip">\u{1F517} ' +
       (n > 1 ? "Linked to " + esc(brand) + " (" + n + " spots)" : "Brand: " + esc(brand)) +
-      '<button type="button" onclick="editBrand()">Edit</button><button type="button" onclick="unlinkBrand()">Unlink</button></div>';
+      '<button type="button"' + act("editBrand") + '>Edit</button><button type="button"' + act("unlinkBrand") + '>Unlink</button></div>';
   } else if (!brand && brandUnlinked) {
-    html = '<button type="button" class="relink" onclick="relinkBrand()">Link to ' + esc(brandUnlinked) + "</button>";
+    html = '<button type="button" class="relink"' + act("relinkBrand") + '>Link to ' + esc(brandUnlinked) + "</button>";
   }
   host.innerHTML = html;
   host.hidden = !html;
@@ -233,6 +233,10 @@ function formDirty() {
 }
 /* Straight from a cafe page into a dated, expanded, focused drink row. The snapshot is
    retaken after the row is appended, so backing out of an untouched row does not prompt. */
+/* "+ Add another drink" on the form: a blank cup dated today (was addDrinkRow('','',localToday()) inline) */
+function addBlankDrinkRow() {
+  addDrinkRow("", "", localToday());
+}
 function logDrinkHere() {
   if (!curId) return;
   openForm(curId); /* logging a drink IS the visit, so it takes the cafe off the wishlist — and without
@@ -395,9 +399,9 @@ function renderRate() {
       (on ? " on" : "") +
       '" aria-pressed="' +
       (on ? "true" : "false") +
-      '" onclick="setBucket(\'' +
-      b[0] +
-      '\')"><i style="background:' +
+      '"' +
+      act("setBucket", [b[0]]) +
+      '><i style="background:' +
       BUCKET_HEX[b[0]] +
       '"></i>' +
       b[2] +
@@ -414,9 +418,9 @@ function renderTags() {
     t =>
       '<span class="chip ' +
       (formTags.includes(t) ? "on" : "") +
-      '" role="button" tabindex="0" onclick="toggleTag(\'' +
-      t +
-      "')\">" +
+      '" role="button" tabindex="0"' +
+      act("toggleTag", [t]) +
+      ">" +
       t +
       "</span>"
   ).join("");
@@ -639,7 +643,7 @@ function renderUsuals() {
           .filter(Boolean)
           .join(" · ");
         return (
-          '<button type="button" class="uchip" onclick="logUsual(this)" data-key="' +
+          '<button type="button" class="uchip"' + act("logUsual", ["$el"]) + ' data-key="' +
           esc(e.key) +
           '"' +
           ' title="' +
@@ -689,7 +693,7 @@ function renderDrinkRows(drinks) {
     r.classList.add("quick");
     r.insertAdjacentHTML(
       "beforeend",
-      '<button type="button" class="drmore" onclick="expandDrinkRow(this)">Today · size, sweetness, ice, milk<span aria-hidden="true"> ▸</span></button>'
+      '<button type="button" class="drmore"' + act("expandDrinkRow", ["$el"]) + '>Today · size, sweetness, ice, milk<span aria-hidden="true"> ▸</span></button>'
     );
     return;
   }
@@ -712,7 +716,7 @@ function renderDrinkRows(drinks) {
       g.className = "drgroup";
       g.dataset.name = d.n || "";
       g.innerHTML =
-        '<button type="button" class="drghead" aria-expanded="false" onclick="toggleDrinkGroup(this)">' +
+        '<button type="button" class="drghead" aria-expanded="false"' + act("toggleDrinkGroup", ["$el"]) + '>' +
         '<span class="drgchev">▸</span><span class="drgmain"><b>' +
         esc(d.n || "Drink") +
         "</b><small>" +
@@ -726,8 +730,8 @@ function renderDrinkRows(drinks) {
         esc(drinkGroupPriceText(d)) +
         '</span></button><div class="drgbody"><label class="drgname">Drink name<input type="text" value="' +
         esc(d.n || "") +
-        '" oninput="syncDrinkGroupName(this)"></label><div class="drgorders"></div></div>' +
-        '<button type="button" class="drgadd" onclick="addOrderToGroup(this)">＋ Add another ' +
+        '"' + act("syncDrinkGroupName", ["$el"], "input") + '></label><div class="drgorders"></div></div>' +
+        '<button type="button" class="drgadd"' + act("addOrderToGroup", ["$el"]) + '>＋ Add another ' +
         esc(d.n || "order") +
         "</button>";
       host.appendChild(g);
@@ -796,7 +800,7 @@ function ccySelectHTML(sel, hidden) {
   return (
     '<select class="dpc"' +
     (hidden ? " hidden" : "") +
-    ' onchange="syncCcy(this)" aria-label="Currency">' +
+    '' + act("syncCcy", ["$el"], "change") + ' aria-label="Currency">' +
     ccyOptionsHTML(sel) +
     "</select>"
   );
@@ -1321,6 +1325,11 @@ function cleanupMilkNames() {
   toast("Updated " + plan.length + " drinks ✓");
   updateMilkBtn();
 }
+/* "Done editing this order": fold the row it sits in */
+function doneEditingRow(btn) {
+  const head = btn.closest(".dr") && btn.closest(".dr").querySelector(".drhead");
+  if (head) toggleDrinkRow(head);
+}
 function toggleDrinkRow(btn) {
   const dr = btn.closest(".dr");
   if (dr.classList.contains("collapsed")) {
@@ -1411,7 +1420,7 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
 
   /* Collapsed, the header is the whole row — drinkRowLabel() keeps its text in sync. */
   const head =
-    '<button type="button" class="drhead" onclick="toggleDrinkRow(this)">' +
+    '<button type="button" class="drhead"' + act("toggleDrinkRow", ["$el"]) + '>' +
     '<span class="drchev">' +
     (collapsed ? "▸" : "▾") +
     "</span>" +
@@ -1432,7 +1441,7 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
     ccySelectHTML(pcode, !showCcy) +
     '<input class="dp" aria-label="Price each" type="text" autocomplete="off" placeholder="Price" value="' +
     esc(amt) +
-    '" oninput="syncPrice(this)">' +
+    '"' + act("syncPrice", ["$el"], "input") + '>' +
     "</div>" +
     '<input type="hidden" class="dpr" data-frozen="' +
     (fx.pr ? "1" : "") +
@@ -1449,11 +1458,11 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
   const qtyRow =
     '<div class="qtywrap">' +
     '<span class="swlabel">How many</span>' +
-    '<button type="button" class="qbtn" onclick="bumpQty(this,-1)" aria-label="One fewer">−</button>' +
+    '<button type="button" class="qbtn"' + act("bumpQty", ["$el", -1]) + ' aria-label="One fewer">−</button>' +
     '<span class="qval">×' +
     qv +
     "</span>" +
-    '<button type="button" class="qbtn" onclick="bumpQty(this,1)" aria-label="One more">+</button>' +
+    '<button type="button" class="qbtn"' + act("bumpQty", ["$el", 1]) + ' aria-label="One more">+</button>' +
     '<input type="hidden" class="dqt" value="' +
     qv +
     '">' +
@@ -1462,20 +1471,20 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
   /* Hidden values keep the existing ledger and unsaved-change detection intact. */
   const sizeRow =
     '<div class="drinkoption">' +
-    '<div class="optionhead">Cup size<button type="button" onclick="setDrinkOption(this,null)">Clear</button></div>' +
+    '<div class="optionhead">Cup size<button type="button"' + act("setDrinkOption", ["$el", null]) + '>Clear</button></div>' +
     '<input class="dsz optionvalue" type="hidden" value="' +
     zval +
     '" data-set="' +
     (hasSize ? 1 : 0) +
     '">' +
-    '<div class="sizesteps"><button type="button" onclick="stepDrinkSize(this,-2)" aria-label="Decrease size by 2 ounces">−</button><output aria-live="polite">' +
+    '<div class="sizesteps"><button type="button"' + act("stepDrinkSize", ["$el", -2]) + ' aria-label="Decrease size by 2 ounces">−</button><output aria-live="polite">' +
     (hasSize ? zval + " oz" : "Not set") +
-    '</output><button type="button" onclick="stepDrinkSize(this,2)" aria-label="Increase size by 2 ounces">+</button></div>' +
+    '</output><button type="button"' + act("stepDrinkSize", ["$el", 2]) + ' aria-label="Increase size by 2 ounces">+</button></div>' +
     "</div>";
 
   const sweetRow =
     '<div class="drinkoption">' +
-    '<div class="optionhead">Sweetness<button type="button" onclick="setDrinkOption(this,null)">Clear</button></div>' +
+    '<div class="optionhead">Sweetness<button type="button"' + act("setDrinkOption", ["$el", null]) + '>Clear</button></div>' +
     '<input class="dsw optionvalue" type="hidden" value="' +
     sval +
     '" data-set="' +
@@ -1489,7 +1498,7 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
           v +
           '" aria-pressed="' +
           (hasSweet && sval === v) +
-          '" onclick="chooseDrinkOption(this)">' +
+          '"' + act("chooseDrinkOption", ["$el"]) + '>' +
           v +
           "%</button>"
         );
@@ -1498,12 +1507,12 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
     "</div>" +
     '<label class="customsweet">Custom <input class="sweetcustom" type="number" min="0" max="100" step="1" inputmode="numeric" aria-label="Custom sweetness percentage" value="' +
     (hasSweet && ![0, 25, 50, 75, 100].includes(sval) ? sval : "") +
-    '" oninput="customDrinkSweetness(this)"> %</label>' +
+    '"' + act("customDrinkSweetness", ["$el"], "input") + '> %</label>' +
     "</div>";
 
   const iceRow =
     '<div class="drinkoption">' +
-    '<div class="optionhead">Ice / temperature<button type="button" onclick="setDrinkOption(this,null)">Clear</button></div>' +
+    '<div class="optionhead">Ice / temperature<button type="button"' + act("setDrinkOption", ["$el", null]) + '>Clear</button></div>' +
     '<input class="dic optionvalue" type="hidden" value="' +
     ival +
     '" data-set="' +
@@ -1516,7 +1525,7 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
         i +
         '" aria-pressed="' +
         (hasIce && iv === i) +
-        '" onclick="chooseDrinkOption(this)">' +
+        '"' + act("chooseDrinkOption", ["$el"]) + '>' +
         v +
         "</button>"
       );
@@ -1536,13 +1545,13 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
     '<span class="swlabel">Would order again?</span>' +
     '<button type="button" aria-label="Would order again: yes" class="rbtn yes' +
     (re === "yes" ? " on" : "") +
-    '" onclick="setReorder(this,\'yes\')">👍</button>' +
+    '"' + act("setReorder", ["$el", "yes"]) + '>👍</button>' +
     '<button type="button" aria-label="Would order again: maybe" class="rbtn neutral' +
     (re === "neutral" ? " on" : "") +
-    '" onclick="setReorder(this,\'neutral\')">😐</button>' +
+    '"' + act("setReorder", ["$el", "neutral"]) + '>😐</button>' +
     '<button type="button" aria-label="Would order again: no" class="rbtn no' +
     (re === "no" ? " on" : "") +
-    '" onclick="setReorder(this,\'no\')">👎</button>' +
+    '"' + act("setReorder", ["$el", "no"]) + '>👎</button>' +
     '<input type="hidden" class="dre" value="' +
     re +
     '">' +
@@ -1561,7 +1570,7 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
   const dateRow =
     '<div class="orderdate"><label>Order date<input class="dd" type="date" value="' +
     esc(date || "") +
-    '" onchange="syncDatePill(this)"></label><div class="datequick"><button type="button" onclick="setOrderDay(this,0)">Today</button><button type="button" onclick="setOrderDay(this,-1)">Yesterday</button><button type="button" onclick="setOrderDay(this,null)">Clear date</button></div></div>';
+    '"' + act("syncDatePill", ["$el"], "change") + '></label><div class="datequick"><button type="button"' + act("setOrderDay", ["$el", 0]) + '>Today</button><button type="button"' + act("setOrderDay", ["$el", -1]) + '>Yesterday</button><button type="button"' + act("setOrderDay", ["$el", null]) + '>Clear date</button></div></div>';
   div.innerHTML =
     head +
     dateRow +
@@ -1573,8 +1582,10 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
     iceRow +
     rateRow +
     noteRow +
-    '<button type="button" class="orderdone" onclick="toggleDrinkRow(this.closest(\'.dr\').querySelector(\'.drhead\'))">Done editing this order</button>' +
-    '<button class="delrow" onclick="delDrinkRow(this)" aria-label="Remove this drink">' + ico("x") + "</button>";
+    '<button type="button" class="orderdone"' +
+    act("doneEditingRow", ["$el"]) +
+    ">Done editing this order</button>" +
+    '<button class="delrow"' + act("delDrinkRow", ["$el"]) + ' aria-label="Remove this drink">' + ico("x") + "</button>";
 
   if (old) {
     div.classList.add("dr-old");
@@ -2040,18 +2051,18 @@ function _qcHTML(c) {
       .map(function (x) {
         const on = !st.other && st.n.toLowerCase() === x.n.toLowerCase();
         return (
-          '<button type="button" class="dntag" aria-pressed="' + on + '" data-n="' + esc(x.n) + '" onclick="qcPick(this.dataset.n)">' +
+          '<button type="button" class="dntag" aria-pressed="' + on + '" data-n="' + esc(x.n) + '"' + act("qcPick", ["$data.n"]) + '>' +
           esc(x.n) + " <small>" + x.k + "</small></button>"
         );
       })
       .join("") +
-    '<button type="button" class="dntag" aria-pressed="' + st.other + '" onclick="qcOther()">Something else</button>';
+    '<button type="button" class="dntag" aria-pressed="' + st.other + '"' + act("qcOther") + '>Something else</button>';
   let body = "";
   if (st.other)
     body +=
       '<label class="dnlab" for="qc-other">Drink</label><input id="qc-other" class="dntext qcin" type="text" autocomplete="off" placeholder="What did you get?" value="' +
       esc(st.n) +
-      '" oninput="qcName(this.value)">';
+      '"' + act("qcName", ["$value"], "input") + '>';
   if (st.n.trim()) {
     const src = _qcSource(c, st.n),
       spec = _qcSpecText(src);
@@ -2059,14 +2070,14 @@ function _qcHTML(c) {
     const last = code !== "USD" && src.pl != null ? src.pl : src.p;
     if (spec)
       body +=
-        '<button type="button" class="qcsame" aria-pressed="' + st.same + '" onclick="qcSame()"><b>' +
+        '<button type="button" class="qcsame" aria-pressed="' + st.same + '"' + act("qcSame") + '><b>' +
         (st.same ? "✓ " : "") + "Same as last time</b><span>" + esc(spec) + "</span></button>";
     body +=
       '<label class="dnlab" for="qc-price">Price' + (code !== "USD" ? " (" + esc(code) + ")" : "") + "</label>" +
       '<input id="qc-price" class="dntext qcin" type="text" inputmode="decimal" autocomplete="off" placeholder="' +
       esc(ccyMeta(code).sym || "") + '0.00" value="' + esc(last == null ? "" : String(last)) + '">' +
       '<div class="dnq" role="group" aria-label="Would order again?"><span class="dnlab">Would order again?</span><span class="dnvs big">' +
-      _verdictButtons(st.rv, true).replace(/setDrinkVerdict/g, "qcVerdict") +
+      _verdictButtons(st.rv, true, "qcVerdict") +
       "</span></div>";
   }
   return (
@@ -2074,8 +2085,8 @@ function _qcHTML(c) {
     '<div class="dnhead"><h2 id="dns-title">A cup at ' + esc(c.name) + "</h2><p>Today, " + esc(_noteDay(localToday())) + "</p></div>" +
     '<div class="dnq" role="group" aria-label="Which drink"><span class="dntags">' + chips + "</span></div>" +
     body +
-    '<div class="dnact"><button type="button" class="btn ghost" onclick="qcMore()">More options</button>' +
-    '<button type="button" class="btn" onclick="qcSave()"' + (st.n.trim() ? "" : " disabled") + ">Save cup</button></div>"
+    '<div class="dnact"><button type="button" class="btn ghost"' + act("qcMore") + '>More options</button>' +
+    '<button type="button" class="btn"' + act("qcSave") + '' + (st.n.trim() ? "" : " disabled") + ">Save cup</button></div>"
   );
 }
 function _qcRedraw() {
@@ -2283,7 +2294,7 @@ function renderTidyCard() {
     ? counts
         .map(function (x) {
           return (
-            '<button type="button" class="tidyb"' + (x[2] ? "" : " disabled") + " onclick=\"openTidy('" + x[0] + "')\"><b>" + x[2] + "</b><span>" + x[1] + "</span></button>"
+            '<button type="button" class="tidyb"' + (x[2] ? "" : " disabled") + act("openTidy", [x[0]]) + "><b>" + x[2] + "</b><span>" + x[1] + "</span></button>"
           );
         })
         .join("")
@@ -2321,7 +2332,7 @@ function _tidyHTML() {
     return (
       '<span class="dngrab" aria-hidden="true"></span><div class="dnhead"><h2 id="dns-title">All done</h2><p>' +
       (t.done ? t.done + " filled in. " : "") + "Nothing left with " + label + ".</p></div>" +
-      '<button type="button" class="btn" onclick="closeSheet()">Close</button>'
+      '<button type="button" class="btn"' + act("closeSheet") + '>Close</button>'
     );
   const left = tidyQueue(k).filter(function (x) {
     return t.skipped.indexOf(x.id) < 0;
@@ -2336,18 +2347,18 @@ function _tidyHTML() {
       '<span class="dntags">' +
       topUsuals(drinkIndex(), 4)
         .map(function (e) {
-          return '<button type="button" class="dntag" data-n="' + esc(e.n) + '" onclick="tidyDrink(this.dataset.n)">' + esc(e.n) + "</button>";
+          return '<button type="button" class="dntag" data-n="' + esc(e.n) + '"' + act("tidyDrink", ["$data.n"]) + '>' + esc(e.n) + "</button>";
         })
         .join("") +
       "</span>" +
       '<label class="dnlab" for="tidy-other">Something else</label><input id="tidy-other" class="dntext qcin" type="text" autocomplete="off" placeholder="Drink name">' +
-      '<button type="button" class="btn" onclick="tidyDrink($(\'tidy-other\').value)">Add drink</button>';
+      '<button type="button" class="btn"' + act("tidyDrinkOther") + ">Add drink</button>";
   } else if (k === "rating") {
     q = "How was it?";
     body =
       '<span class="dnvs big">' +
       BUCKETS.map(function (b) {
-        return '<button type="button" class="dnv" onclick="tidyRate(\'' + b[0] + "')\"><span>" + esc(b[2]) + "</span></button>";
+        return '<button type="button" class="dnv"' + act("tidyRate", [b[0]]) + "><span>" + esc(b[2]) + "</span></button>";
       }).join("") +
       "</span>";
   } else if (k === "price") {
@@ -2362,19 +2373,19 @@ function _tidyHTML() {
             '" type="text" inputmode="decimal" autocomplete="off" placeholder="' + esc(ccyMeta(code).sym || "") + '0.00">'
           );
         })
-        .join("") + '<button type="button" class="btn" onclick="tidyPrices()">Save prices</button>';
+        .join("") + '<button type="button" class="btn"' + act("tidyPrices") + '>Save prices</button>';
   } else {
     q = "When did you go?";
     body =
       '<input id="tidy-date" class="dntext qcin" type="date" max="' + localToday() + '" aria-label="Visit date">' +
-      '<button type="button" class="btn" onclick="tidyDate()">Save date</button>';
+      '<button type="button" class="btn"' + act("tidyDate") + '>Save date</button>';
   }
   return (
     '<span class="dngrab" aria-hidden="true"></span>' +
     '<div class="dnhead"><p>Tidy up · ' + left + " with " + label + '</p><h2 id="dns-title">' + esc(c.name) + "</h2><p>" + esc(c.area || "") + "</p></div>" +
     '<span class="dnlab">' + q + "</span>" +
     body +
-    '<div class="dnact"><button type="button" class="btn ghost" onclick="tidySkip(false)">Skip</button><button type="button" class="btn ghost" onclick="tidySkip(true)">I don’t remember</button></div>'
+    '<div class="dnact"><button type="button" class="btn ghost"' + act("tidySkip", [false]) + '>Skip</button><button type="button" class="btn ghost"' + act("tidySkip", [true]) + '>I don’t remember</button></div>'
   );
 }
 function _tidyRedraw() {
@@ -2391,6 +2402,11 @@ function _tidyWrite(change) {
   saveCafe(c.id);
   _tidy.done++;
   _tidyRedraw();
+}
+/* "Add drink" with the name typed in Something else */
+function tidyDrinkOther() {
+  const el = /** @type {HTMLInputElement|null} */ ($("tidy-other"));
+  tidyDrink(el ? el.value : "");
 }
 /** @param {string} n */
 function tidyDrink(n) {

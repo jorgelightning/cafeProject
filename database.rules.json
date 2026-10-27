@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "cafes": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified == true && auth.token.email == 'jorgemarco.portillo@gmail.com'"
+    },
+    "private": {
+      ".read": "auth != null && auth.token.email_verified == true && auth.token.email == 'jorgemarco.portillo@gmail.com'",
+      ".write": "auth != null && auth.token.email_verified == true && auth.token.email == 'jorgemarco.portillo@gmail.com'"
+    }
+  }
+}

@@ -48,11 +48,20 @@ for (const f of fs.readdirSync(path.join(__dirname, "js"))) {
     for (const n of names) appGlobals[n] = "writable";
   }
 }
+// js/lib/ is ES modules (engineering audit, 27 Oct). Each hands its exports to the classic scripts as globals, so
+// what they export is known to the rest the same way: read from the files.
+for (const f of fs.readdirSync(path.join(__dirname, "js", "lib"))) {
+  if (!f.endsWith(".js")) continue;
+  const src = fs.readFileSync(path.join(__dirname, "js", "lib", f), "utf8");
+  for (const m of src.matchAll(/^export\s+(?:async\s+)?(?:function|const|let)\s+([A-Za-z_$][\w$]*)/gm)) appGlobals[m[1]] = "readonly";
+}
 
 module.exports = [
   { ignores: ["node_modules/**", "vendor/**", "tests/**", "overnight-cafe-audit.html"] },
   {
     files: ["js/**/*.js"],
+    // not the modules: a classic script sees every global, a module only what it imports
+    ignores: ["js/lib/**"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "script",
@@ -70,10 +79,16 @@ module.exports = [
       // Redeclaring a global the file defines itself is how these scripts share state: every file
       // "declares" the globals it owns, so no-redeclare would fire on the design, not on a mistake.
       "no-redeclare": "off",
-      // top-level functions are called from inline onclick="..." in the HTML, so they look unused
+      // top-level functions are called by name from data-on="..." (core.js act()), so they look unused
       "no-unused-vars": ["warn", { vars: "local", args: "none", caughtErrors: "none" }],
       "no-empty": ["warn", { allowEmptyCatch: true }],
     },
+  },
+  {
+    // the modules: their own scope, nothing global but the browser's
+    files: ["js/lib/**/*.js"],
+    languageOptions: { ecmaVersion: 2022, sourceType: "module", globals: { ...globals.browser } },
+    rules: { ...js.configs.recommended.rules },
   },
   {
     files: ["server.js", "eslint.config.js"],

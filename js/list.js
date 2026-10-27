@@ -232,6 +232,11 @@ function guideCompare(a, b) {
   }
   return null;
 }
+/* "Show all coffee" on an empty search: drop the search and show the Best coffee guide */
+function showAllCoffee() {
+  clearAll();
+  setGuide("coffee");
+}
 function setGuide(g) {
   activeGuide = activeGuide === g ? "" : g;
   /* a guide is about places you have been; the want-to-try tab has its own short list */
@@ -253,7 +258,7 @@ function renderGuideRow() {
     const reg = d[0] === "near" && !userLoc && pickedRegion ? goRegionLabel(pickedRegion) : "";
     return (
       '<button type="button" aria-pressed="' + (activeGuide === d[0] ? "true" : "false") +
-      '" onclick="setGuide(\'' + d[0] + "')\">" + ico(d[2]) + (reg ? esc(reg) : d[1]) + "</button>"
+      '"' + act("setGuide", [d[0]]) + ">" + ico(d[2]) + (reg ? esc(reg) : d[1]) + "</button>"
     );
   }).join("");
 }
@@ -263,8 +268,8 @@ function renderQuickChips() {
   host.innerHTML = QUICK_DEFS.map(function (d) {
     const n = cafes.filter(c => !c.wish && guideMatch(c, d[0])).length;
     return (
-      '<span class="chip' + (activeGuide === d[0] ? " on" : "") + '" role="button" tabindex="0" onclick="setGuide(\'' +
-      d[0] + "')\">" + d[1] + " <small>" + n + "</small></span>"
+      '<span class="chip' + (activeGuide === d[0] ? " on" : "") + '" role="button" tabindex="0"' + act("setGuide", [d[0]]) +
+      ">" + d[1] + " <small>" + n + "</small></span>"
     );
   }).join("");
 }
@@ -316,9 +321,9 @@ function renderListTabs() {
       return (
         '<button type="button" aria-pressed="' +
         (on ? "true" : "false") +
-        '" onclick="setListTab(\'' +
-        t[0] +
-        "')\">" +
+        '"' +
+        act("setListTab", [t[0]]) +
+        ">" +
         t[1] +
         ' <span class="tabn">' +
         t[2] +
@@ -381,7 +386,7 @@ function renderResultLine(n) {
     " of " +
     total +
     (listTab === "want" ? " to try" : " places") +
-    '</span><button type="button" onclick="clearAll()">Clear</button>';
+    '</span><button type="button"' + act("clearAll") + '>Clear</button>';
   el.hidden = false;
 }
 function renderFilterChips() {
@@ -392,23 +397,23 @@ function renderFilterChips() {
   let h =
     '<span class="chip' +
     (activeChip === "" && !favOnly ? " on" : "") +
-    '" role="button" tabindex="0" onclick="clearFilters()">All</span>';
+    '" role="button" tabindex="0"' + act("clearFilters") + '>All</span>';
   /* keep a lit chip on screen even if the set empties, or the list looks broken with
     nothing explaining why it is filtered */
   if (nFav || favOnly)
     h +=
       '<span class="chip' +
       (favOnly ? " on" : "") +
-      '" role="button" tabindex="0" onclick="toggleFavFilter()" aria-label="Favourites">' + ico("heart", "fill") + " " +
+      '" role="button" tabindex="0"' + act("toggleFavFilter") + ' aria-label="Favourites">' + ico("heart", "fill") + " " +
       nFav +
       "</span>";
   CHIP_DEFS.forEach(d => {
     h +=
       '<span class="chip' +
       (activeChip === d[0] ? " on" : "") +
-      '" role="button" tabindex="0" onclick="setChip(\'' +
-      d[0] +
-      "')\">" +
+      '" role="button" tabindex="0"' +
+      act("setChip", [d[0]]) +
+      ">" +
       d[1] +
       "</span>";
   });
@@ -416,7 +421,7 @@ function renderFilterChips() {
     h +=
       '<span class="chip' +
       (showTagRow ? " on" : "") +
-      '" role="button" tabindex="0" onclick="toggleTagRow()"># Tags</span>';
+      '" role="button" tabindex="0"' + act("toggleTagRow") + '># Tags</span>';
   host.innerHTML = h;
   renderGuideRow();
   renderQuickChips();
@@ -430,9 +435,9 @@ function renderFilterChips() {
           t =>
             '<span class="chip' +
             (activeChip === "tag:" + t ? " on" : "") +
-            '" role="button" tabindex="0" onclick="setChip(\'tag:' +
-            esc(t) +
-            "')\">" +
+            '" role="button" tabindex="0"' +
+            act("setChip", ["tag:" + t]) +
+            ">" +
             esc(t) +
             "</span>"
         )
@@ -457,9 +462,9 @@ function renderVerdictAreaChips() {
     return (
       '<span class="chip' +
       (activeVerdict === b[0] ? " on" : "") +
-      '" role="button" tabindex="0" onclick="setVerdict(\'' +
-      b[0] +
-      '\')"><i class="vdot" style="background:' +
+      '" role="button" tabindex="0"' +
+      act("setVerdict", [b[0]]) +
+      '><i class="vdot" style="background:' +
       BUCKET_HEX[b[0]] +
       '"></i>' +
       esc(b[2]) +
@@ -486,7 +491,7 @@ function renderVerdictAreaChips() {
         (activeArea === k ? " on" : "") +
         '" role="button" tabindex="0" data-area="' +
         esc(k) +
-        '" onclick="setArea(this.dataset.area)">' +
+        '"' + act("setArea", ["$data.area"]) + '>' +
         esc(k) +
         " <small>" +
         count[k] +
@@ -614,8 +619,9 @@ function renderList() {
         "</div>"
       );
     };
-    const act = function (label, fn) {
-      return '<button type="button" class="btn" onclick="' + fn + '">' + label + "</button>";
+    /** @param {string} label @param {string} fn @param {any[]} [args] */
+    const actBtn = function (label, fn, args) {
+      return '<button type="button" class="btn"' + act(fn, args) + ">" + label + "</button>";
     };
     const typed = ($("q") && $("q").value.trim()) || "";
     if (filtersActive()) {
@@ -624,7 +630,7 @@ function renderList() {
           "been",
           "No favorites yet",
           "Tap the heart on a cafe to keep it here.",
-          act("Show everything", "clearAll()")
+          actBtn("Show everything", "clearAll")
         );
       /* Only a search, nothing else on: there are no filters to clear, so offer the closest thing there is, the best
          ranked places of the kind the search is about ("pour over" is coffee). */
@@ -652,7 +658,7 @@ function renderList() {
                 .map(function (c) {
                   const td = topDrinkAt(c);
                   return (
-                    '<button type="button" class="nearrow" onclick="openDetail(\'' + c.id + "','list')\">" +
+                    '<button type="button" class="nearrow"' + act("openDetail", [c.id, "list"]) + ">" +
                     '<span class="rk">' + rankText(rankOf(c, rm), rm) + "</span>" +
                     '<span class="nrt"><b>' + esc(c.name) + "</b><small>" + esc([cityOf(c), td ? td.d.n : ""].filter(Boolean).join(" \u00b7 ")) + "</small></span></button>"
                   );
@@ -660,7 +666,7 @@ function renderList() {
                 .join("") +
               "</div>"
             : "") +
-          (k === "coffee" && !isAdmin ? act("Show all coffee", "clearAll();setGuide('coffee')") : "") +
+          (k === "coffee" && !isAdmin ? actBtn("Show all coffee", "showAllCoffee") : "") +
           "</div>"
         );
       }
@@ -670,7 +676,7 @@ function renderList() {
         typed
           ? "Nothing matches \u201c" + esc(typed) + "\u201d with these filters."
           : "No cafe fits these filters together.",
-        act("Clear filters", "clearAll()")
+        actBtn("Clear filters", "clearAll")
       );
     }
     if (listTab === "want")
@@ -678,13 +684,13 @@ function renderList() {
         "want",
         "Nothing to try yet",
         "Save places you hear about and they will show up here, and on the map.",
-        isAdmin ? act("Save a place", "openForm()") : ""
+        isAdmin ? actBtn("Save a place", "openForm") : ""
       );
     return box(
       "been",
       "No cafes yet",
       "Every cafe you log shows up here, ranked.",
-      isAdmin ? act("Log your first visit", "openForm()") : ""
+      isAdmin ? actBtn("Log your first visit", "openForm") : ""
     );
   }
   /* Card meta reads distance · area · time — shortest and most perishable token first, so
@@ -747,9 +753,9 @@ function renderList() {
         band +
         '<div class="card" data-id="' +
         c.id +
-        '" role="button" tabindex="0" onclick="openDetail(\'' +
-        c.id +
-        "','list')\">" +
+        '" role="button" tabindex="0"' +
+        act("openDetail", [c.id, "list"]) +
+        ">" +
         '<div class="' +
         cls +
         '"' +

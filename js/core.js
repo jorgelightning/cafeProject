@@ -39,9 +39,122 @@ function warn(where, e) {
   try {
     console.warn("[cafemap] " + where, e);
   } catch (_) {
-    warn("core.js", _);
+    /* nowhere left to report: this used to call warn() again, which threw again, until the stack ran out */
+  }
+  logProblem(e, where);
+}
+/* ---------- actions: what a control does, by name ----------
+   Controls used to carry their code inline (onclick="openDetail('<id>','list')"), 156 of them, which meant an id or a
+   name had to be escaped correctly inside a JavaScript string inside an HTML attribute, and that no Content Security
+   Policy could forbid injected script. A control now names an action and its arguments:
+
+     act("openDetail", [c.id, "list"])   ->   data-on="openDetail" data-args="[&quot;c1&quot;,&quot;list&quot;]"
+
+   and one listener per kind of event calls that function. Arguments are JSON, escaped in one place; a few
+   placeholders stand for what the code used to read from `this`: "$el" (the control), "$value" (its value),
+   "$event", and "$data.<key>" (one of its data- attributes). Only names that act() has written, or that the
+   page's own markup names, can be called. */
+const _ACT_OK = new Set();
+const ACT_EVENTS = { click: "on", input: "on-input", change: "on-change", focusout: "on-blur", scroll: "on-scroll" };
+/** @param {string} fn a global function @param {any[]} [args] @param {string} [ev] input | change | blur | scroll */
+function act(fn, args, ev) {
+  _ACT_OK.add(fn);
+  return (
+    " data-" +
+    (ev ? "on-" + ev : "on") +
+    '="' +
+    fn +
+    '"' +
+    (args && args.length ? (ev ? " data-" + ev + "-args" : " data-args") + '="' + esc(JSON.stringify(args)) + '"' : "")
+  );
+}
+/** @param {HTMLElement} el @param {Event} e @param {any} a */
+function _actArg(el, e, a) {
+  if (typeof a !== "string" || a.charAt(0) !== "$") return a;
+  if (a === "$el") return el;
+  if (a === "$value") return /** @type {any} */ (el).value;
+  if (a === "$event") return e;
+  if (a.indexOf("$data.") === 0) return el.dataset[a.slice(6)];
+  return a;
+}
+Object.keys(ACT_EVENTS).forEach(function (type) {
+  const attr = "data-" + ACT_EVENTS[type];
+  const argsAttr = type === "click" ? "data-args" : "data-" + ACT_EVENTS[type].slice(3) + "-args";
+  document.addEventListener(
+    type,
+    function (e) {
+      const t = /** @type {Element|null} */ (e.target);
+      if (!t || !t.closest) return;
+      /* scroll does not bubble: only the element itself counts */
+      const el = /** @type {HTMLElement|null} */ (type === "scroll" ? (t.hasAttribute && t.hasAttribute(attr) ? t : null) : t.closest("[" + attr + "]"));
+      if (!el) return;
+      const name = el.getAttribute(attr) || "";
+      const fn = /** @type {any} */ (window)[name];
+      if (!_ACT_OK.has(name) || typeof fn !== "function") return;
+      /** @type {any[]} */
+      let args;
+      try {
+        args = JSON.parse(el.getAttribute(argsAttr) || "[]");
+      } catch (err) {
+        warn("act " + name, err);
+        return;
+      }
+      fn.apply(null, args.map(a => _actArg(el, e, a)));
+    },
+    /* capture for all but click: scroll and focus do not bubble, and an input or change event made by script
+       (new Event("input")) does not either unless asked to */
+    type !== "click"
+  );
+});
+/* The page's own controls (index.html) name their actions in markup; those names are allowed as the page loads. */
+function allowPageActions() {
+  Object.keys(ACT_EVENTS).forEach(function (type) {
+    const attr = "data-" + ACT_EVENTS[type];
+    document.querySelectorAll("[" + attr + "]").forEach(el => _ACT_OK.add(el.getAttribute(attr) || ""));
+  });
+}
+/* ---------- recent problems, on this device ----------
+   An error on a phone went to a console nobody sees, so "Save didn't work at the counter" left no trace. The last 20
+   problems (warnings, uncaught errors, failed promises) are kept in this browser only and shown to the owner in
+   Settings, with Copy, so one can be pasted into a conversation later. Nothing is sent anywhere. */
+const PROBLEM_KEY = "cafemap.problems";
+const PROBLEM_MAX = 20;
+/** @returns {{t:string, where:string, msg:string}[]} */
+function readProblems() {
+  try {
+    const a = JSON.parse(localStorage.getItem(PROBLEM_KEY) || "[]");
+    return Array.isArray(a) ? a : [];
+  } catch (e) {
+    return [];
   }
 }
+/** @param {any} e @param {string} [where] */
+function logProblem(e, where) {
+  try {
+    const msg = String((e && (e.message || e.code)) || e || "").slice(0, 300);
+    /* "Script error." is a cross-origin script (Maps, Firebase) keeping its details to itself: nothing to act on */
+    if (!msg || msg === "Script error.") return;
+    const list = readProblems();
+    list.unshift({ t: new Date().toISOString(), where: String(where || "").slice(0, 80), msg: msg });
+    localStorage.setItem(PROBLEM_KEY, JSON.stringify(list.slice(0, PROBLEM_MAX)));
+  } catch (_) {
+    /* a full or blocked storage cannot record its own failure */
+  }
+}
+function clearProblems() {
+  try {
+    localStorage.removeItem(PROBLEM_KEY);
+  } catch (_) {
+    /* nothing to clear */
+  }
+}
+window.addEventListener("error", function (e) {
+  const at = e.filename ? String(e.filename).split("/").pop().split("?")[0] + ":" + e.lineno : "page";
+  logProblem(e.error || e.message, at);
+});
+window.addEventListener("unhandledrejection", function (e) {
+  logProblem(e.reason, "promise");
+});
 /* Every localStorage write can throw on a full quota — only one of them used to survive it. */
 function lsSet(k, v) {
   try {
@@ -83,10 +196,15 @@ function initFirebase() {
       return false;
     firebase.initializeApp(FIREBASE_CONFIG);
     fbDb = firebase.database();
-    try {
-      fbAuth = firebase.auth();
-    } catch (e) {
-      warn("core.js", e);
+    /* auth is not in the page until someone signs in (ensureAuth, storage.js loads it), so on a normal boot there is
+       nothing to start. Asked unconditionally, it threw on every visit — harmless while warn() only wrote to the
+       console, but warn() now also keeps Settings' Problems log, and every device would have logged it. */
+    if (typeof firebase.auth === "function") {
+      try {
+        fbAuth = firebase.auth();
+      } catch (e) {
+        warn("core.js", e);
+      }
     }
     fbReady = true;
     return true;
@@ -206,20 +324,6 @@ function toast(m) {
   t.classList.add("show");
   clearTimeout(t._t);
   t._t = setTimeout(() => t.classList.remove("show"), 1800);
-}
-/* The apostrophe matters: 17 inline handlers pass arguments inside single-quoted JS
-   strings, so a cafe called Joe's would otherwise break out of one. */
-function esc(s) {
-  return (s == null ? "" : String(s)).replace(
-    /[&<>"']/g,
-    m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[m]
-  );
-}
-function safeUrl(u) {
-  u = (u == null ? "" : String(u)).trim();
-  if (!u) return "";
-  if (!/^(https?:|data:image\/)/i.test(u)) return "";
-  return u.replace(/["'()<>\s\\]/g, encodeURIComponent);
 }
 const _imgFail = {};
 let _photoRetried = {};
@@ -408,10 +512,10 @@ function lngOf(c) {
 /* The one door stored data walks through to become `cafes`. Two jobs: nothing precise about a
    private spot may enter the array, and a precise record found in the public node is
    remembered so healPrivateSpots() can move it somewhere only the owner can read. */
-/* Ids end up inside inline handlers, onclick="openDetail('<id>')", where HTML-escaping does not
-   help (the browser decodes the entities before the JavaScript runs). So instead of escaping
-   them everywhere, nothing with an odd id gets in: ids the app makes are letters, digits, "_"
-   and "-". Only the owner can write cafes, so this is defence in depth, not a live hole. */
+/* Ids used to end up inside inline handlers, as openDetail('<id>'), where HTML-escaping did not help (the browser
+   decodes the entities before the JavaScript runs). Since 27 Oct an id travels as JSON in a data- attribute (act()),
+   which is safe whatever it holds; this stays as defence in depth: ids the app makes are letters, digits, "_" and
+   "-", and nothing else gets in. Only the owner can write cafes. */
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 /* Orders that predate ids get one that depends only on what the order is — cafe, drink, date, and
    which of that day's orders it is — so every device derives the same one and the merge can tell
@@ -757,28 +861,6 @@ function topUsuals(ix, limit, min) {
     .slice(0, limit || 3);
 }
 
-/* Levenshtein, bailing out as soon as the distance exceeds what the caller cares about —
-   this runs against every name you have ever logged, on every save. */
-function editDistance(a, b, max) {
-  a = String(a || "");
-  b = String(b || "");
-  if (a === b) return 0;
-  if (Math.abs(a.length - b.length) > max) return max + 1;
-  let prev = [],
-    cur = [];
-  for (let j = 0; j <= b.length; j++) prev[j] = j;
-  for (let i = 1; i <= a.length; i++) {
-    cur[0] = i;
-    let best = cur[0];
-    for (let j = 1; j <= b.length; j++) {
-      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      if (cur[j] < best) best = cur[j];
-    }
-    if (best > max) return max + 1;
-    prev = cur.slice();
-  }
-  return prev[b.length];
-}
 /* A name close enough to one you already use that it is probably the same drink typed in a
    hurry. Deliberately strict: a proportional cap as well as an absolute one, so short names
    need an exact-ish match and "Hojicha latte (Snoopy version)" never collides with
@@ -874,13 +956,6 @@ function verifyCardPhoto(id, url) {
     }
   };
   probe.src = safeUrl(url);
-}
-function fmtDate(s) {
-  if (!s) return "";
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
-  if (!m) return s;
-  const mo = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+m[2] - 1];
-  return mo + " " + +m[3] + ", " + m[1];
 }
 
 /* ---------- brand / chain detection ----------
@@ -1015,3 +1090,4 @@ function getBrandSiblings(c, list, maxLen) {
   });
   return out.sort((a, b) => +a.wish - +b.wish || a.label.localeCompare(b.label));
 }
+allowPageActions();
