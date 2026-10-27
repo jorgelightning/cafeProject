@@ -116,9 +116,19 @@ const { eq, done } = checker();
     const reg = regionOf(cafes[0]).val;
     const d = denseView(reg);
     const even = denseView(regionOf({ lat: 21.3, lng: -157.8, area: "Honolulu, HI" }).val);
-    return { n: d && d.list.length, label: d && d.label, ids: d && d.list.every(c => /^s/.test(c.id)), small: even };
+    /* a stand-in map that records where it is sent: fitting every cafe of the area landed one zoom short of the
+       dots on the live map, so it opens at the first zoom without bubbles, on the busiest cafe */
+    const real = gmap, calls = [];
+    gmap = { setCenter: p => calls.push(["center", +p.lat.toFixed(4), +p.lng.toFixed(4)]), setZoom: z => calls.push(["zoom", z]),
+             fitBounds: () => calls.push(["fit"]), getCenter: () => null };
+    fitDense(reg);
+    gmap = real;
+    const p = d.val.slice(5).split(",").map(Number);
+    return { n: d && d.list.length, label: d && d.label, ids: d && d.list.every(c => /^s/.test(c.id)), small: even, calls, at: p, pill: $("pill-lbl").textContent.trim() };
   });
   eq([dense.n, dense.ids, dense.label], [10, true, "San Francisco · 10"], "a region opens on its busiest part, named for its town with a count");
+  eq(dense.calls, [["center", dense.at[0], dense.at[1]], ["zoom", 12]], "…centred on its busiest cafe at zoom 12, the first without bubbles, not fitted to its edges");
+  eq(dense.pill, "San Francisco · 10", "…and the pill says so");
   eq(dense.small, null, "…and a region with too few cafes for that opens whole");
 
   /* ---- D9: weights match importance ---- */

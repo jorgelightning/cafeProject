@@ -398,7 +398,7 @@ function _showPins() {
         map: gmap,
         markers: been,
         renderer: _clusterRenderer,
-        algorithm: markerClusterer.SuperClusterAlgorithm ? new markerClusterer.SuperClusterAlgorithm({ maxZoom: 11, radius: 60 }) : undefined,
+        algorithm: markerClusterer.SuperClusterAlgorithm ? new markerClusterer.SuperClusterAlgorithm({ maxZoom: CLUSTER_MAX_ZOOM, radius: 60 }) : undefined,
       });
     } else
       been.forEach(function (m) {
@@ -969,12 +969,16 @@ function locationList(val) {
 }
 /* ---------- open where the cafes are (design audit D3) ----------
    The first view fitted the whole home region, and California is four states wide on a phone: its 70 cafes showed as
-   three clusters with nothing to tap. The first view, and a region picked on the welcome sheet, now fit the busiest
+   three clusters with nothing to tap. The first view, and a region picked on the welcome sheet, now open on the busiest
    part of the region: the cafes within DENSE_KM of the one with the most neighbours, when that is at least a third
    of the region and five cafes (San Francisco, 35 of California's 70, as dots). The pill names it after the town
    most of them are in, with the count; leave it and the pill says "All places", as for any place. The region menu
    still fits a whole region, so the wide view is one tap away. */
 const DENSE_KM = 12;
+/* Bubbles stop above this zoom; from one level in, every cafe is its own pin. The busiest part opens there, centred on
+   its busiest cafe: fitting all of San Francisco's 36 (out to Daly City and San Bruno) landed on zoom 11, one level
+   short, and the live map showed bubbles of 3, 4 and 8 where the dots were meant to be. */
+const CLUSTER_MAX_ZOOM = 11;
 /** The busiest part of a region, or null when the region is small or spread evenly.
     @param {string} val a region value @returns {{val:string, list:Cafe[], label:string}|null} */
 function denseView(val) {
@@ -1015,7 +1019,11 @@ function denseView(val) {
 function fitDense(val) {
   const d = denseView(val);
   if (d) {
-    fitList(d.list);
+    const p = d.val.slice(5).split(",");
+    if (gmap) {
+      gmap.setCenter({ lat: +p[0], lng: +p[1] });
+      gmap.setZoom(CLUSTER_MAX_ZOOM + 1);
+    }
     setPillLabel(d.val, d.label);
   } else {
     fitList(locationList(val));

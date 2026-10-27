@@ -1992,3 +1992,11 @@ one. Sign out is outlined: the filled accent is for the one main action on a scr
 800 for names and titles. Mapping 700 to 600 across the board flattened names into the line under them, so names
 and titles went to 800. At 14px "12 ordered · latest Oct 17" broke the date across lines, so a drink card reads
 "12 cups · last Oct 17". `tests/design-batch.js`.
+
+## The busiest part, as dots (v115)
+
+On the live site v114 opened on San Francisco at zoom 11. Fitting every cafe within 12 km of the busiest one took in
+Daly City and San Bruno, and zoom 11 is the last level the clusterer still bubbles at (`CLUSTER_MAX_ZOOM`), so the
+map showed bubbles of 3, 4 and 8. The busiest part now opens centred on its busiest cafe at `CLUSTER_MAX_ZOOM + 1`,
+where every cafe is its own dot; at zoom 12 over San Francisco that was 35 of them. The clusterer reads the same
+constant, so the two cannot drift apart.
