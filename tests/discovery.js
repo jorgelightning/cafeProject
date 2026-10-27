@@ -136,8 +136,8 @@ const { eq, done } = checker();
     const txt = e => e.querySelector(".oa-name").textContent + " | " + e.querySelector(".oa-meta").textContent;
     const t = txt(el), shown = !el.hidden; openDetail("a5", "list"); const t2 = txt(document.getElementById("d-orderagain"));
     return { t, shown, t2 }; });
-  eq([r.shown, r.t], [true, "Matcha latte | 3× ordered · last Sep 27, 2026"], "a cafe page says what to order, how often, and when last");
-  eq(r.t2, "Pour-over | 1× ordered · last May 2, 2026", "…for every cafe with a history");
+  eq([r.shown, r.t], [true, "Matcha latte | 3× ordered · last Sep 27"], "a cafe page says what to order, how often, and when last");
+  eq(r.t2, "Pour-over | 1× ordered · last May 2", "…for every cafe with a history");
 
   // ---- U2: the tab bar is drawn ---------------------------------------------------------
   r = await pg.evaluate(() => { const tabs = document.querySelectorAll(".tabbar .tab");

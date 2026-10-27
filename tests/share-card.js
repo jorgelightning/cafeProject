@@ -51,7 +51,7 @@ const { eq, done } = checker();
   }, admin);
 
   const v = await seed(false);
-  eq(v.banner, "Hojicha latte | $7.25 · 2× ordered · last Sep 23, 2026", "what to order leads: the drink, its price, how often, and when last");
+  eq(v.banner, "Hojicha latte | $7.25 · 2× ordered · last Sep 23", "what to order leads: the drink, its price, how often, and when last (no year when it is this one)");
   eq(v.glyph, "matcha", "…with the drawn mark for the kind of drink (the same vessel as the cafe tiles)");
   eq(v.bannerButtons, 0, "the order block is information, not a second way to log: the bar at the bottom is the one");
   eq(v.medalInHero, true, "the rank is a medal on the hero, not a tile beside the name");
@@ -79,8 +79,8 @@ const { eq, done } = checker();
     cafes = cafes.filter(c => c.id !== "many");
     return res;
   });
-  eq([fold.shown, fold.folded, fold.total], [3, 2, 5], "five drinks are three in view and two folded (nothing is dropped)");
-  eq([fold.label, fold.before, fold.after], ["Show 2 more", "none", "block"], "…behind a Show 2 more that opens them");
+  eq([fold.shown, fold.folded, fold.total], [2, 3, 5], "five drinks had once each: two in view and three folded (nothing is dropped)");
+  eq([fold.label, fold.before, fold.after], ["3 more: Drink C, Drink B, Drink A", "none", "block"], "…behind one line that names them and opens them");
 
   // ---- the postcard ----
   await pg.evaluate(() => { openDetail("top", "list"); });

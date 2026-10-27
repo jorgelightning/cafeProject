@@ -700,7 +700,7 @@ function openDetail(id, from) {
         (price ? "<b>" + price + "</b> \u00b7 " : "") +
         td.n +
         "\u00d7 ordered" +
-        (last ? " \u00b7 last " + esc(fmtDate(last)) : "") +
+        (last ? " \u00b7 last " + esc(_noteDay(last)) : "") +
         "</span></span>";
       _oa.hidden = false;
     } else {
@@ -798,7 +798,12 @@ function openDetail(id, from) {
   }
 
   const _lastDate = d => (latestDrinkOrder(d) || {}).date || "";
-  const _dsorted = (c.drinks || []).slice().sort((a, b) => _lastDate(b).localeCompare(_lastDate(a)));
+  const _cupsOf = d => drinkOrders(d).reduce((t, o) => t + orderQty(o), 0);
+  /* Most ordered first (design audit D6). Newest first opened Kissaten HiFi on a chai you had once and did not like,
+     above the Flat White you have had twelve times: the list should agree with What to order. Ties go to the newest. */
+  const _dsorted = (c.drinks || [])
+    .slice()
+    .sort((a, b) => _cupsOf(b) - _cupsOf(a) || _lastDate(b).localeCompare(_lastDate(a)));
   /* One compact card per drink, and all of them start closed. The newest used to open itself,
    which meant the one cafe with a long history pushed the note and the tags off the screen on
    arrival. The summary line — name, how many, latest, price — is the part worth reading at a
@@ -818,7 +823,8 @@ function openDetail(id, from) {
           const v = reorderVal(latest),
             open = false,
             hid = "drink-history-" + di;
-          const last = latest.date ? fmtDate(latest.date) : "Undated";
+          /* "Oct 17", not "Oct 17, 2026": the year only when it is not this one, so the line fits on one row */
+          const last = latest.date ? _noteDay(latest.date) : "Undated";
           const rows = orders
             .map(function (o, oi) {
               const ov = reorderVal(o),
@@ -917,17 +923,22 @@ function openDetail(id, from) {
       (isAdmin ? "Tap \uFF0B Log here below." : "No drinks logged yet.") +
       "</div>";
 
-  /* the first three drinks, then "Show N more": a cafe with five drinks pushed the note off the screen */
+  /* The drinks worth ordering, then the rest in one line that names them (design audit D6): the ones had at least
+     twice, two or three of them, or all of them when there are three or fewer. A cafe with five drinks used to push
+     the note off the screen. */
   const _cards = $("d-drinks").querySelectorAll(".drinkcard");
-  if (_cards.length > 3) {
+  const _often = _dsorted.filter(d => _cupsOf(d) >= 2).length;
+  const _keep = _cards.length <= 3 ? _cards.length : Math.max(2, Math.min(3, _often));
+  if (_cards.length > _keep) {
     const box = document.createElement("div");
     box.className = "foldbox";
-    _cards[2].after(box);
-    for (let i = 3; i < _cards.length; i++) box.appendChild(_cards[i]);
+    _cards[_keep - 1].after(box);
+    for (let i = _keep; i < _cards.length; i++) box.appendChild(_cards[i]);
     const more = document.createElement("button");
     more.type = "button";
     more.className = "morebtn";
-    more.dataset.lab = "Show " + (_cards.length - 3) + " more";
+    const names = _dsorted.slice(_keep).map(d => d.n);
+    more.dataset.lab = names.length + " more: " + names.slice(0, 4).join(", ") + (names.length > 4 ? ", …" : "");
     more.textContent = more.dataset.lab + " \u25be";
     more.onclick = function () {
       statFold(more);
@@ -936,6 +947,9 @@ function openDetail(id, from) {
   }
   /* Directions and Share live in one place, the row under the name; the pair that used to close the page is gone */
   $("d-review").textContent = c.review || (isAdmin ? "Tap \u270E Edit to add your thoughts\u2026" : "No notes yet.");
+  /* a visitor reads whose drinks and whose words these are, as Stats already says (design audit D6) */
+  if ($("d-drinks-lab")) $("d-drinks-lab").textContent = youOr("Drinks I had", "Drinks " + OWNER_NAME + " had");
+  if ($("d-review-lab")) $("d-review-lab").textContent = youOr("My thoughts", OWNER_NAME + "\u2019s thoughts");
   show("detail");
   if (c.lat != null && gmap)
     setTimeout(function () {
