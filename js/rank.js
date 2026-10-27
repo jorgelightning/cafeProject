@@ -255,7 +255,10 @@ function lbToggle(btn) {
   row.classList.toggle("open", open);
 }
 function boardRow(c, pos, unique) {
-  const rank = pos <= 3 && unique ? ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"][pos - 1] : (unique ? "#" : "=") + pos;
+  /* 1 to 3 are numbers on gold, silver and bronze (design audit D5): the emoji medals drew at 16px and read as clip
+     art beside a list of "#4", "#5". Ties keep "=N". */
+  const medal = pos <= 3 && unique;
+  const rank = medal ? String(pos) : (unique ? "#" : "=") + pos;
   const ar = boardArea(c),
     m = matchCount(c);
   const dkm = boardDistTo(c);
@@ -290,8 +293,16 @@ function boardRow(c, pos, unique) {
     '<div class="lbhit tap" role="button" tabindex="0"' +
     act("openDetail", [c.id, "compare"]) +
     ">" +
-    '<span class="lbrank">' +
+    '<span class="lbrank' +
+    (medal ? " medal m" + pos : "") +
+    '">' +
     rank +
+    "</span>" +
+    /* the cafe's drawn mark, as on the List: the board reads as places at a glance, not only names */
+    '<span class="lbmark" aria-hidden="true" style="' +
+    nophotoStyle(c) +
+    '">' +
+    markArt(c) +
     "</span>" +
     '<div class="lbmain">' +
     '<div class="lbname">' +
@@ -409,7 +420,11 @@ function goRegions(board) {
     });
 }
 /** @param {Cafe[]} board */
-function goControls(board) {
+/* One row of controls (design audit D5): Rank a pair (the owner's), the region, Top 5 and Near me share a row that
+   scrolls sideways, and the kinds sit under it. They were three rows, and the best cafe started 221px down.
+   @param {any[]} board @param {string[]} [chips] the tab's buttons, Rank a pair first when it is there */
+function goControls(board, chips) {
+  chips = chips || [];
   const regs = goRegions(board);
   const inReg = board.filter(function (c) {
     return !pickedRegion || regionOf(c).val === pickedRegion;
@@ -430,7 +445,13 @@ function goControls(board) {
         })
         .join("") +
       "</div>";
-  h += '<div class="gofilter">';
+  const lead = chips.filter(function (x) {
+      return /class="gochip p"/.test(x);
+    }),
+    rest = chips.filter(function (x) {
+      return !/class="gochip p"/.test(x);
+    });
+  h += '<div class="gofilter"><div class="gorow" role="group" aria-label="On this tab">' + lead.join("");
   if (regs.length > 1)
     h +=
       '<select class="goreg" aria-label="Region"' + act("setGoRegion", ["$value"], "change") + '><option value="">Everywhere · ' +
@@ -444,6 +465,7 @@ function goControls(board) {
         })
         .join("") +
       "</select>";
+  h += rest.join("") + "</div>";
   if (kinds.length > 1)
     h +=
       '<div class="gokinds" role="group" aria-label="Kind of place">' +
@@ -558,8 +580,8 @@ function renderBoard() {
     );
   if (_t5 >= 3) _chips.push('<button type="button" class="gochip"' + act("openTop5Story") + ' aria-label="Share my top ' + _t5 + '">' + ico("podium") + "Top " + _t5 + "</button>");
   if (!userLoc && board.length) _chips.push('<button type="button" class="gochip"' + act("locate") + '>' + ico("pin") + "Near me</button>");
-  if (_chips.length) h += '<div class="gochips" role="group" aria-label="On this tab">' + _chips.join("") + "</div>";
-  if (board.length) h += goControls(board);
+  if (board.length) h += goControls(board, _chips);
+  else if (_chips.length) h += '<div class="gochips" role="group" aria-label="On this tab">' + _chips.join("") + "</div>";
   const shown = board.filter(goPass);
   if (board.length && !shown.length) {
     h +=

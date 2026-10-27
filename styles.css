@@ -3,7 +3,7 @@
    and [data-theme="dark"] = manually chosen dark. Keep any new colour in all three.
    --acc stays the identity orange for fills/pins/underlines; --acc-strong is the only
    one that may sit under white text (--acc is 3.01:1 there, --acc-strong is 4.94:1). */
-:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a5521a; --on-acc:#fff; --acc2:#c0374b; --bg:#f4f4f5; --surface:#fff; --surface2:#ececee; --text:#18181b; --soft:#5a5a63; --faint:#666670; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d6d6db; --border:rgba(20,20,40,.11); --shadow:0 2px 4px rgba(30,24,16,.06),0 14px 32px rgba(30,24,16,.14); --shadow-sm:0 1px 2px rgba(30,24,16,.07),0 2px 6px rgba(30,24,16,.06); --glass:rgba(255,255,255,.9); --glass-strong:rgba(244,244,245,.88); --gold-a:#f6d77f; --gold-b:#dca13a; --gold-ink:#3b2606; --amber-bg:rgba(213,128,59,.14); --amber-ink:#7a3f0a; --wash:rgba(120,120,150,.08); /* ---------- the scale ----------
+:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a5521a; --on-acc:#fff; --acc2:#c0374b; --bg:#f4f4f5; --surface:#fff; --surface2:#ececee; --text:#18181b; --soft:#5a5a63; --faint:#666670; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d6d6db; --border:rgba(20,20,40,.11); --shadow:0 2px 4px rgba(30,24,16,.06),0 14px 32px rgba(30,24,16,.14); --shadow-sm:0 1px 2px rgba(30,24,16,.07),0 2px 6px rgba(30,24,16,.06); --glass:rgba(255,255,255,.9); --glass-strong:rgba(244,244,245,.88); --gold-a:#f6d77f; --gold-b:#dca13a; --gold-ink:#3b2606; --silver-a:#e6e8ec; --silver-b:#b4b9c2; --silver-ink:#23262c; --bronze-a:#ecc29a; --bronze-b:#b9773f; --bronze-ink:#2e1708; --amber-bg:rgba(213,128,59,.14); --amber-ink:#7a3f0a; --wash:rgba(120,120,150,.08); /* ---------- the scale ----------
    Colour was tokenised; nothing dimensional was, so the stylesheet grew 23 font sizes, 18
    corner radii and 13 gap values — seven of the font sizes inside three pixels, which nobody
    can see and the cascade can. These are the whole set.
@@ -172,7 +172,16 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .statsec{ font-size:var(--fs-2); font-weight:700; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; margin:20px 0 8px; }
 .lbrow{ display:flex; align-items:center; gap:var(--sp-3); padding:9px 2px; border-bottom:1px solid var(--border); }
 .lbrow:last-child{ border-bottom:none; }
-.lbrank{ font-size:var(--fs-3); font-weight:800; color:var(--soft); width:26px; text-align:center; flex:none; }
+.lbrank{ font-size:var(--fs-3); font-weight:800; color:var(--soft); width:30px; text-align:center; flex:none; }
+/* 1 to 3: a number on its metal (design audit D5) */
+.lbrank.medal{ width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:var(--fs-2); }
+.lbrank.m1{ background:linear-gradient(135deg,var(--gold-a),var(--gold-b)); color:var(--gold-ink); }
+.lbrank.m2{ background:linear-gradient(135deg,var(--silver-a),var(--silver-b)); color:var(--silver-ink); }
+.lbrank.m3{ background:linear-gradient(135deg,var(--bronze-a),var(--bronze-b)); color:var(--bronze-ink); }
+/* the cafe's drawn mark on each row, as on the List */
+.lbmark{ width:40px; height:40px; flex:none; border-radius:var(--r-2); display:flex; align-items:center; justify-content:center; color:#fff; }
+.lbmark .mkv{ width:28px; height:28px; }
+.lbmark .mke{ font-size:var(--fs-4); }
 .lbmain{ flex:1; min-width:0; }
 .lbname{ font-weight:700; font-size:var(--fs-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbsub{ font-size:var(--fs-2); color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -1201,8 +1210,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .bkpill.t-okay i{ background:var(--mid); }
 .bkpill.t-skip i{ background:var(--bad); }
 /* Go: a region menu and a row of kinds over the standing, and regions offered when Near me cannot get a position. */
-.gofilter{ display:flex; flex-wrap:wrap; gap:var(--sp-2); align-items:center; margin:var(--sp-2) 0 var(--sp-3); }
-.goreg{ max-width:100%; min-height:36px; padding:0 var(--sp-3); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:700; }
+/* One row for the tab's buttons and the region, scrolling sideways, then the kinds (design audit D5) */
+.gofilter{ display:flex; flex-direction:column; gap:var(--sp-2); align-items:stretch; margin:var(--sp-2) 0; }
+.gorow{ display:flex; flex-wrap:nowrap; gap:var(--sp-2); align-items:center; overflow-x:auto; scrollbar-width:none; -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); }
+.gorow::-webkit-scrollbar{ display:none; }
+.gorow > *{ flex:none; }
+.goreg{ max-width:100%; min-height:44px; padding:0 var(--sp-3); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:700; }
 .gokinds{ display:flex; gap:var(--sp-1); max-width:100%; overflow-x:auto; scrollbar-width:none; }
 .gokinds::-webkit-scrollbar{ display:none; }
 .gokinds button{ flex:none; min-height:36px; padding:0 var(--sp-3); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }

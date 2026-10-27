@@ -58,7 +58,7 @@ const { eq, done } = checker();
   await pg.evaluate(() => { setGoRegion(regionOf(cafes.find(x => x.id === "CaCoffeeA")).val); setGoKind("coffee"); });
   let r = await board();
   eq(r.names, ["CaCoffeeA", "CaCoffeeB"], "Coffee in California: only those, best first");
-  eq(r.ranks, ["🥇", "🥈"], "…numbered inside what is shown, so the best coffee in California is first");
+  eq(r.ranks, ["1", "2"], "…numbered inside what is shown, so the best coffee in California is first (on gold, then silver)");
   const k = await pg.evaluate(() => [...document.querySelectorAll("#cmp-body .gokinds button")].map(x => x.textContent + ":" + x.getAttribute("aria-pressed")));
   eq(k, ["All:false", "Coffee:true", "Matcha:false", "Boba:false"], "…with Coffee shown as on");
   await pg.evaluate(() => goReset());
