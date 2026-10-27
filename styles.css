@@ -517,14 +517,23 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .listtabs .tabn{ font-weight:700; font-variant-numeric:tabular-nums; }
 /* Admin only, and the one thing in the row that does not fit beside the tabs on a phone.
    Given its own line on purpose rather than shoving the controls around as its text changes. */
-.listbar #save-state{ flex-basis:100%; }
-.listbar{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin:0 16px 10px; }
+#save-state{ display:block; margin:0 16px 8px; font-size:var(--fs-1); font-weight:600; color:var(--soft); }
+/* One row under search that scrolls sideways (design audit D1): the tabs, Filters, Map and the guides. While the list
+   scrolls down it steps aside and only search stays; scrolling up brings it back (listScrolled, list.js). */
+.listbar{ display:flex; flex-wrap:nowrap; align-items:center; gap:var(--sp-2); margin:0 0 10px; padding:0 16px; overflow-x:auto; scrollbar-width:none; max-height:80px; transition:max-height .2s ease, opacity .2s ease, margin .2s ease;
+  /* it fades at its right edge, so it reads as a row that scrolls on */
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent); }
+.listbar::-webkit-scrollbar{ display:none; }
+.listbar > *{ flex:none; }
+#pane-list.scrolled .listbar{ max-height:0; opacity:0; margin-bottom:0; pointer-events:none; }
 .listbar .sub{ font-size:var(--fs-2); color:var(--soft); font-weight:600; }
-.filterbtn{ margin-left:auto; display:inline-flex; align-items:center; gap:var(--sp-1); min-height:44px; padding:0 12px; border-radius:var(--r-2); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
+.filterbtn{ display:inline-flex; align-items:center; gap:var(--sp-2); min-height:44px; padding:0 var(--sp-3); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 .filterbtn.on{ border-color:var(--acc-strong); color:var(--acc-strong); }
 .filterbtn .fcount{ min-width:18px; height:18px; padding:0 5px; border-radius:var(--r-pill); background:var(--acc-strong); color:var(--on-acc); font-size:var(--fs-1); font-weight:800; display:inline-flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
 .filterbtn .fcount[hidden]{ display:none; }
-.filterbtn .fchev{ color:var(--soft); font-size:var(--fs-1); }
+/* Filters carries the sliders now that Settings has the gear (D4); Map sits beside it as a chip */
+.mapchip{ display:inline-flex; align-items:center; gap:var(--sp-2); min-height:44px; padding:0 var(--sp-3); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
+.filterbtn .ico, .mapchip .ico{ width:16px; height:16px; }
 .listpanel{ margin:0 16px 12px; padding:12px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); display:flex; flex-direction:column; gap:var(--sp-3); }
 .listpanel[hidden]{ display:none; }
 .lp-row{ display:flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-2); font-weight:600; color:var(--soft); }
@@ -1224,7 +1233,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .tidyb[disabled]{ opacity:.5; cursor:default; }
 .qcsame:focus-visible, .tidyb:focus-visible{ outline:3px solid var(--acc-strong); outline-offset:2px; }
 /* Five guides do not fit four columns: one row that scrolls sideways, like Go's chips, so it still costs one row. */
-.guiderow{ flex-basis:100%; grid-template-columns:repeat(4,1fr); gap:var(--sp-2); display:flex; overflow-x:auto; scrollbar-width:none; }
+.guiderow{ display:flex; gap:var(--sp-2); }
 .guiderow::-webkit-scrollbar{ display:none; }
 
 /* ---------- the UI audit batch (v107) ---------- */

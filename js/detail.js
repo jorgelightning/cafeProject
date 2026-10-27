@@ -321,7 +321,7 @@ function renderDrinkMenu() {
       '<button type="button" class="dnmi"' +
       act("editDrinkInVisit") +
       ">" +
-      ico("sliders") +
+      ico("edit") +
       "<span>Edit in the visit…</span></button>" +
       "</div>" +
       '<button type="button" class="btn ghost dnclose"' +

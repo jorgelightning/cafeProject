@@ -891,8 +891,27 @@ function toggleListFilters() {
   if (!p || !b) return;
   p.hidden = !p.hidden;
   b.setAttribute("aria-expanded", String(!p.hidden));
-  const ch = b.querySelector(".fchev");
-  if (ch) ch.textContent = p.hidden ? "\u25be" : "\u25b4";
+  /* the panel hangs off the row, so the row stays while it is open */
+  if (!p.hidden && $("pane-list")) $("pane-list").classList.remove("scrolled");
+}
+/* ---------- a header that gets out of the way (design audit D1) ----------
+   Search, the tabs, Filters, Map and the guides stayed pinned while the list scrolled: with the tab bar, 253 of a
+   phone's 844px. The row under search now steps aside while you scroll down, and comes back as soon as you scroll
+   up, near the top, or while Filters is open or something in the row has focus. Search never moves. The list scrolls
+   in its own box below the header, so hiding the row cannot move the list under your thumb. */
+let _listY = 0;
+function listScrolled() {
+  const pane = $("pane-list"),
+    sc = pane && pane.querySelector(".scroll");
+  if (!sc) return;
+  const y = sc.scrollTop,
+    dy = y - _listY;
+  /* a few pixels of wobble is not a direction */
+  if (Math.abs(dy) < 6 && y > 40) return;
+  const panel = $("listpanel"),
+    keep = (panel && !panel.hidden) || !!pane.querySelector(".listbar:focus-within");
+  pane.classList.toggle("scrolled", !keep && y > 40 && dy > 0);
+  _listY = y;
 }
 /* A count only means anything if it matches what a person would call a filter. The default
    sort is not one; every other choice is. */
