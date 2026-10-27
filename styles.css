@@ -9,10 +9,12 @@
    can see and the cascade can. These are the whole set.
 
    Text only. Emoji and icon glyphs (the raised ＋, the star widget, the empty-state marks) are
-   artwork being sized, not type being set, so they keep their own dimensions. */ --fs-1:12px; /* labels, captions, tab text — 12px is the floor; it was 11 until v65 */ --fs-2:13px; /* secondary text, list subtitles */ --fs-3:15px; /* body */ --fs-4:18px; /* subheads */ --fs-5:22px; /* headings and stat figures */ --r-1:6px; --r-2:10px; --r-3:14px; --r-4:20px; --r-pill:999px; --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; }
+   artwork being sized, not type being set, so they keep their own dimensions. */ --fs-1:12px; /* labels, captions, tab text — 12px is the floor; it was 11 until v65 */ --fs-2:14px; /* secondary text, list subtitles (13 until v114) */ --fs-3:16px; /* body, and names at 800 (15 until v114) */ --fs-4:16px; /* subheads: the body size at 800, so a phone has five sizes, not nine (18 until v114) */ --fs-5:22px; /* headings and stat figures */ --r-1:6px; --r-2:10px; --r-3:14px; --r-4:20px; --r-pill:999px; --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.1); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); } }
 :root[data-theme="dark"]{ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.1); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); }
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+/* the browser draws <b> and <strong> at 700; the app has three weights, 400, 600 and 800 (design audit D10) */
+b, strong{ font-weight:600; }
 /* Everything reachable by keyboard has to show where the keyboard is. :focus-visible keeps
    this off mouse clicks, so it costs the pointer experience nothing. */
 :focus-visible{ outline:2px solid var(--text); outline-offset:3px; border-radius:var(--r-1); }
@@ -90,7 +92,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mapsearch select{ font-family:inherit; max-width:62vw; appearance:none; -webkit-appearance:none; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--border); border-radius:var(--r-3); padding:10px 34px 10px 14px; font-size:var(--fs-3); font-weight:600; color:var(--text); box-shadow:var(--shadow); cursor:pointer; outline:none; background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%); background-position:calc(100% - 17px) calc(50% - 2px),calc(100% - 12px) calc(50% - 2px); background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
 /* The Want to try switch. On a phone the row spans the width so the place picker gives way
    to it (and truncates) rather than pushing the gear off the screen. */
-.wantchip{ flex:none; display:inline-flex; align-items:center; gap:var(--sp-2); height:44px; padding:0 12px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:700; white-space:nowrap; cursor:pointer; }
+.wantchip{ flex:none; display:inline-flex; align-items:center; gap:var(--sp-2); height:44px; padding:0 12px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:600; white-space:nowrap; cursor:pointer; }
 .wantchip[hidden]{ display:none; }
 .wantchip .bm{ width:15px; height:15px; fill:var(--want); flex:none; }
 .wantchip .wantn{ min-width:20px; height:20px; padding:0 5px; box-sizing:border-box; border-radius:var(--r-pill); background:var(--surface2); color:var(--text); font-size:var(--fs-1); display:inline-flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
@@ -99,7 +101,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 @media (max-width:899px){ .mapsearch select{ flex:1 1 auto; min-width:0; max-width:none; } }
 .wantbar{ position:absolute; z-index:6; top:calc(64px + env(safe-area-inset-top)); left:12px; display:flex; align-items:center; gap:var(--sp-1); padding-left:12px; border-radius:var(--r-pill); background:rgba(29,26,23,.86); color:#f6f5f3; font-size:var(--fs-2); font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,.15); }
 .wantbar[hidden]{ display:none; }
-.wantbar button{ min-height:44px; padding:0 14px; border:none; border-radius:var(--r-pill); background:transparent; color:#f3c79f; font:inherit; font-weight:700; cursor:pointer; }
+.wantbar button{ min-height:44px; padding:0 14px; border:none; border-radius:var(--r-pill); background:transparent; color:#f3c79f; font:inherit; font-weight:600; cursor:pointer; }
 @media (min-width:900px){ .wantbar{ left:calc(var(--sidebar) + 12px); top:66px; } }
 .bkpill.wantpill{ background:var(--want-bg); color:var(--want-ink); }
 .bkpill.wantpill i{ background:var(--want); }
@@ -112,7 +114,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .mappanel{ display:contents; }
 @media (max-width:899px){
   .mapsearch{ right:auto; flex-direction:column; align-items:flex-start; gap:var(--sp-2); }
-  .mappill{ display:inline-flex; align-items:center; gap:var(--sp-2); height:44px; padding:0 14px; border:1px solid var(--border); border-radius:var(--r-pill); background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); color:var(--text); font:inherit; font-size:var(--fs-3); font-weight:700; cursor:pointer; }
+  .mappill{ display:inline-flex; align-items:center; gap:var(--sp-2); height:44px; padding:0 14px; border:1px solid var(--border); border-radius:var(--r-pill); background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); color:var(--text); font:inherit; font-size:var(--fs-3); font-weight:600; cursor:pointer; }
   .mappill .pilldots{ display:inline-flex; gap:var(--sp-1); }
   .mappill .pilldots i{ width:8px; height:8px; border-radius:50%; }
   .mappill .pillcar{ color:var(--soft); font-size:var(--fs-2); }
@@ -169,7 +171,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .statgrid{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3); }
 .statcard .v{ font-size:var(--fs-5); font-weight:800; color:var(--text); }
 .statcard .k{ font-size:var(--fs-2); color:var(--soft); margin-top:2px; font-weight:600; }
-.statsec{ font-size:var(--fs-2); font-weight:700; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; margin:20px 0 8px; }
+.statsec{ font-size:var(--fs-2); font-weight:600; color:var(--soft); text-transform:uppercase; letter-spacing:.04em; margin:20px 0 8px; }
 .lbrow{ display:flex; align-items:center; gap:var(--sp-3); padding:9px 2px; border-bottom:1px solid var(--border); }
 .lbrow:last-child{ border-bottom:none; }
 .lbrank{ font-size:var(--fs-3); font-weight:800; color:var(--soft); width:30px; text-align:center; flex:none; }
@@ -183,15 +185,15 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lbmark .mkv{ width:28px; height:28px; }
 .lbmark .mke{ font-size:var(--fs-4); }
 .lbmain{ flex:1; min-width:0; }
-.lbname{ font-weight:700; font-size:var(--fs-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lbname{ font-weight:800; font-size:var(--fs-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbsub{ font-size:var(--fs-2); color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lbscore{ font-weight:800; color:var(--good); font-size:var(--fs-3); flex:none; }
 /* ---- the board ---- */
 .boardwrap{ padding:16px 16px 34px; width:100%; }
 .cmp-head.left{ text-align:left; }
 .handoff.top{ margin-top:12px; }
-.lbscore.soft{ color:var(--soft); font-weight:700; font-size:var(--fs-2); }
-.rank-lnk{ font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); flex:none; }
+.lbscore.soft{ color:var(--soft); font-weight:600; font-size:var(--fs-2); }
+.rank-lnk{ font-size:var(--fs-2); font-weight:600; color:var(--acc-strong); flex:none; }
 /* ---- post-save ranking sheet ---- */
 #d-chaser{ position:fixed; inset:0; z-index:150; display:flex; align-items:flex-end; }
 #d-chaser:empty{ display:none; }
@@ -207,7 +209,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 }
 .ch-hd{ display:flex; justify-content:space-between; align-items:flex-start; gap:var(--sp-2); }
 .ch-qwrap{ min-width:0; }
-.ch-why{ display:block; font-size:var(--fs-1); font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); }
+.ch-why{ display:block; font-size:var(--fs-1); font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); }
 .ch-q{ display:block; font-size:var(--fs-4); font-weight:800; letter-spacing:-.01em; margin-top:3px; }
 .ch-x{ flex:0 0 auto; width:44px; height:44px; margin:-11px -10px -11px 0; background:none; border:none; color:var(--faint); font-size:var(--fs-4); cursor:pointer; border-radius:50%; font-family:inherit; }
 .ch-pair{ display:flex; flex-direction:column; gap:var(--sp-2); margin-top:10px; }
@@ -217,36 +219,36 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .ch-opt:active{ transform:scale(.97); }
 .ch-th{ width:40px; height:40px; flex:0 0 40px; border-radius:var(--r-2); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; color:#fff; font-size:var(--fs-3); font-weight:800; }
 .ch-m{ flex:1; min-width:0; }
-.ch-n{ display:block; font-size:var(--fs-3); font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.ch-s{ display:block; font-size:var(--fs-1); font-weight:500; color:var(--soft); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ch-n{ display:block; font-size:var(--fs-3); font-weight:800; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ch-s{ display:block; font-size:var(--fs-1); font-weight:400; color:var(--soft); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ch-nrow{ display:flex; align-items:center; gap:var(--sp-2); min-width:0; }
 .ch-nrow .ch-n{ min-width:0; }
 /* what kind each side is: the question stays inside one kind, and this says which */
-.ch-kind{ flex:none; font-size:var(--fs-1); font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--soft); background:var(--surface2); border-radius:var(--r-1); padding:1px 6px; }
+.ch-kind{ flex:none; font-size:var(--fs-1); font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--soft); background:var(--surface2); border-radius:var(--r-1); padding:1px 6px; }
 .ch-even{ width:100%; height:42px; margin-top:8px; background:transparent; border:1px dashed var(--border); border-radius:var(--r-3); font-size:var(--fs-2); font-weight:600; color:var(--soft); font-family:inherit; cursor:pointer; }
 .ch-as{ display:block; width:100%; min-height:44px; margin-top:var(--sp-1); background:none; border:none; font-family:inherit; font-size:var(--fs-1); color:var(--soft); cursor:pointer; }
-.ch-as u{ font-weight:700; color:var(--acc-strong); text-underline-offset:3px; }
+.ch-as u{ font-weight:600; color:var(--acc-strong); text-underline-offset:3px; }
 .ch-kinds{ justify-content:center; margin-top:var(--sp-3); }
 .ch-rl{ font-size:var(--fs-4); font-weight:800; }
 .ch-mv{ display:flex; flex-direction:column; gap:var(--sp-1); margin-top:8px; font-size:var(--fs-2); color:var(--soft); }
-.ch-mv b{ font-weight:700; }
+.ch-mv b{ font-weight:600; }
 .ch-mv .up{ color:var(--good); }
 .ch-mv .dn{ color:var(--bad); }
 .ch-done{ display:flex; align-items:center; gap:var(--sp-3); margin-top:16px; }
-.ch-lnk{ flex:1; text-align:left; background:none; border:none; padding:0; font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); cursor:pointer; }
-.ch-close{ flex:0 0 108px; height:44px; border-radius:var(--r-3); border:none; background:var(--acc-strong); color:var(--on-acc); font-family:inherit; font-size:var(--fs-3); font-weight:700; cursor:pointer; }
+.ch-lnk{ flex:1; text-align:left; background:none; border:none; padding:0; font-family:inherit; font-size:var(--fs-2); font-weight:600; color:var(--acc-strong); cursor:pointer; }
+.ch-close{ flex:0 0 108px; height:44px; border-radius:var(--r-3); border:none; background:var(--acc-strong); color:var(--on-acc); font-family:inherit; font-size:var(--fs-3); font-weight:600; cursor:pointer; }
 /* ---- stats components ---- */
 /* Magnitude rows: the bar is a 3px rule along the row's bottom edge, so a leaderboard row
    carries rank, full name, area and value AND its proportion without a separate bar column
    eating half the width. --mag is set inline per row. */
-.lbrow.one .lbname i{ font-style:normal; font-weight:500; color:var(--soft); }
+.lbrow.one .lbname i{ font-style:normal; font-weight:400; color:var(--soft); }
 .lbrow.tap{ cursor:pointer; }
 .lbrow.guide .gotile{ margin-top:1px; }
 .lbrow.guide .lbmain{ display:flex; flex-direction:column; min-width:0; gap:0; }
 .lbrow.guide .lbname{ display:flex; align-items:baseline; gap:var(--sp-2); flex-wrap:wrap; }
 /* One value deserves a word, not a run of glyphs. The dot carries the colour so the pill
    reads the same as the tile and the map pin it belongs to. */
-.bkpill{ display:inline-flex; align-items:center; gap:var(--sp-1); padding:2px 9px 2px 7px; border-radius:var(--r-pill); background:var(--surface2); color:var(--text); font-size:var(--fs-1); font-weight:700; white-space:nowrap; flex:none; }
+.bkpill{ display:inline-flex; align-items:center; gap:var(--sp-1); padding:2px 9px 2px 7px; border-radius:var(--r-pill); background:var(--surface2); color:var(--text); font-size:var(--fs-1); font-weight:600; white-space:nowrap; flex:none; }
 .bkpill i{ width:8px; height:8px; border-radius:50%; flex:none; }
 .bkpill.big{ font-size:var(--fs-2); padding:4px 12px 4px 9px; }
 .bkpill.big i{ width:10px; height:10px; }
@@ -254,7 +256,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lborder{ font-size:var(--fs-2); font-weight:600; color:var(--acc-strong); overflow-wrap:anywhere; }
 .lbsay{ font-size:var(--fs-2); line-height:1.45; color:var(--soft); overflow-wrap:anywhere; }
 
-.statcard .v .of{ font-size:var(--fs-3); color:var(--soft); font-weight:700; }
+.statcard .v .of{ font-size:var(--fs-3); color:var(--soft); font-weight:600; }
 .statcard .s{ font-size:var(--fs-1); font-weight:600; color:var(--faint); margin-top:auto; padding-top:5px; line-height:1.25; }
 .sc-meter{ display:block; height:4px; border-radius:var(--r-1); background:var(--star-off); overflow:hidden; margin-bottom:4px; }
 .sc-meter > i{ display:block; height:100%; background:var(--mid); }
@@ -266,11 +268,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .gostar{ flex:none; }
 .foldbox{ display:none; }
 .foldbox[data-open]{ display:block; }
-.morebtn{ display:block; width:100%; min-height:44px; background:none; border:none; border-top:1px solid var(--border); color:var(--acc-strong); font-size:var(--fs-2); font-weight:700; font-family:inherit; cursor:pointer; padding:0 2px; text-align:center; margin-top:var(--sp-2); }
+.morebtn{ display:block; width:100%; min-height:44px; background:none; border:none; border-top:1px solid var(--border); color:var(--acc-strong); font-size:var(--fs-2); font-weight:600; font-family:inherit; cursor:pointer; padding:0 2px; text-align:center; margin-top:var(--sp-2); }
 .rseg{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-1); padding:4px; margin-bottom:13px; border-radius:var(--r-3); background:var(--surface2); }
-.rseg button{ height:40px; border:0; border-radius:var(--r-2); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; }
+.rseg button{ height:40px; border:0; border-radius:var(--r-2); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 .rseg button.on{ background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.1); }
-.rhythm .rhead{ font-size:var(--fs-2); font-weight:700; color:var(--soft); }
+.rhythm .rhead{ font-size:var(--fs-2); font-weight:600; color:var(--soft); }
 .rhythm .rhead b{ font-size:var(--fs-5); font-weight:800; color:var(--text); }
 .rhythm .rhead > span{ display:block; margin-top:3px; font-size:var(--fs-2); font-weight:600; color:var(--soft); }
 .rchart{ display:flex; align-items:stretch; gap:var(--sp-1); height:102px; margin-top:12px; }
@@ -281,17 +283,17 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .rcol.on .rbar{ box-shadow:0 0 0 2px var(--acc-strong); }
 .rcov{ display:block; width:100%; height:3px; overflow:hidden; border-radius:var(--r-1); background:var(--star-off); }
 .rcov > i{ display:block; height:100%; background:var(--good); }
-.rlab{ height:14px; text-align:center; font-size:var(--fs-1); font-weight:700; }
+.rlab{ height:14px; text-align:center; font-size:var(--fs-1); font-weight:600; }
 /* Cadence, price and taste charts: inline SVG and CSS only, every colour a token. Text inside the
    SVGs is sized here, not in the markup, so the type scale still governs it. */
 .sc-wide{ gap:var(--sp-3); }
-.sc-head{ font-size:var(--fs-4); font-weight:700; line-height:1.35; }
+.sc-head{ font-size:var(--fs-4); font-weight:600; line-height:1.35; }
 .sc-head b{ color:var(--acc-strong); }
-.sc-cap{ font-size:var(--fs-2); font-weight:700; color:var(--soft); }
+.sc-cap{ font-size:var(--fs-2); font-weight:600; color:var(--soft); }
 .sc-svg{ display:block; width:100%; height:auto; max-width:520px; }
 .sc-svg text{ fill:var(--faint); font-size:var(--fs-1); }
 .sc-svg .big{ fill:var(--text); font-size:var(--fs-5); font-weight:800; }
-.sc-svg .acct{ fill:var(--acc-strong); font-weight:700; }
+.sc-svg .acct{ fill:var(--acc-strong); font-weight:600; }
 .heat .hc{ fill:var(--star-off); }
 .heat .hc.on{ fill:var(--acc); }
 .sc-svg .hb{ fill:var(--acc); }
@@ -299,7 +301,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .sc-svg.donut{ width:132px; flex:none; max-width:132px; }
 .sc-duo{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-2); }
 .sc-duo > div{ min-width:0; padding:var(--sp-3); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-2); }
-.sc-duo span{ display:block; font-size:var(--fs-1); font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.04em; }
+.sc-duo span{ display:block; font-size:var(--fs-1); font-weight:600; color:var(--faint); text-transform:uppercase; letter-spacing:.04em; }
 .sc-duo b{ display:block; margin-top:2px; font-size:var(--fs-3); overflow-wrap:anywhere; }
 .sc-duo i{ display:block; font-style:normal; font-size:var(--fs-1); color:var(--soft); }
 .rcol.static{ cursor:default; }
@@ -319,15 +321,15 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .hb-nm{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
 .hb-tr{ height:12px; border-radius:var(--r-pill); background:var(--star-off); overflow:hidden; }
 .hb-tr > i{ display:block; height:100%; background:var(--acc); border-radius:var(--r-pill); }
-.hb-v{ color:var(--soft); font-weight:700; font-variant-numeric:tabular-nums; }
+.hb-v{ color:var(--soft); font-weight:600; font-variant-numeric:tabular-nums; }
 .usualcard .chips{ margin:10px 0 0; }
-.handoff{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; min-height:52px; margin-top:22px; padding:0 14px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-3); font-size:var(--fs-2); font-weight:700; cursor:pointer; color:var(--text); }
+.handoff{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; min-height:52px; margin-top:22px; padding:0 14px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-3); font-size:var(--fs-2); font-weight:600; cursor:pointer; color:var(--text); }
 .handoff span{ font-weight:600; color:var(--soft); }
 .card .b{ padding:8px 11px 11px; }
 /* min-height pins every card to the same height so the star pills line up down the column */
-.card .n{ font-weight:700; font-size:var(--fs-3); line-height:1.25; min-height:38px; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; letter-spacing:-.015em; }
-.card .m{ font-size:var(--fs-2); font-weight:500; color:var(--soft); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.card .m .near{ color:var(--text); font-weight:700; }
+.card .n{ font-weight:800; font-size:var(--fs-3); line-height:1.25; min-height:38px; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; letter-spacing:-.015em; }
+.card .m{ font-size:var(--fs-2); font-weight:400; color:var(--soft); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card .m .near{ color:var(--text); font-weight:600; }
 /* Two-colour track using the SAME glyph for both halves — ☆ is optically lighter and a
    different advance width, so a filled/hollow mix does not read as a proportion. */
 /* Position, in the corner the star run used to hold. It survives on a photo tile because it
@@ -405,7 +407,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .peekhead{ display:flex; align-items:flex-start; gap:var(--sp-3); }
 .peekmain{ flex:1; min-width:0; }
 .peekname{ font-size:var(--fs-4); font-weight:800; letter-spacing:-.01em; }
-.peekorder{ margin-top:6px; font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.peekorder{ margin-top:6px; font-size:var(--fs-2); font-weight:600; color:var(--acc-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .peekbtns{ display:flex; gap:var(--sp-2); }
 .peekbtns .btn{ flex:1; min-height:46px; padding:0 12px; }
 /* the locate button rides above the card instead of under it; the legend steps out */
@@ -426,7 +428,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    the list. The rating is the filled badge above it, so the two no longer share a row. */
 .where{ display:flex; align-items:center; gap:var(--sp-2); width:100%; min-height:48px; margin-top:var(--sp-3); padding:0 var(--sp-3); font-family:inherit; font-size:var(--fs-2); font-weight:600; color:var(--soft); text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-3); cursor:pointer; }
 .where:hover, .where[aria-expanded="true"]{ background:var(--surface2); }
-.where .wname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--fs-3); font-weight:700; color:var(--text); }
+.where .wname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--fs-3); font-weight:600; color:var(--text); }
 .where .wcount{ flex:none; }
 .where .car{ flex:none; color:var(--acc-strong); transition:transform .15s; }
 .where[aria-expanded="true"] .car{ transform:rotate(180deg); }
@@ -443,7 +445,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
   .brhead-r{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); padding:0 var(--sp-4) var(--sp-2); }
   .brhead-r b{ display:block; font-size:var(--fs-4); font-weight:800; }
   .brhead-r span{ display:block; font-size:var(--fs-2); color:var(--soft); }
-  .brdone{ min-height:44px; padding:0 var(--sp-3); font-family:inherit; font-size:var(--fs-3); font-weight:700; color:var(--acc-strong); background:none; border:0; border-radius:var(--r-2); cursor:pointer; }
+  .brdone{ min-height:44px; padding:0 var(--sp-3); font-family:inherit; font-size:var(--fs-3); font-weight:600; color:var(--acc-strong); background:none; border:0; border-radius:var(--r-2); cursor:pointer; }
   .branches .br{ min-height:52px; }
 }
 @keyframes brrise{ from{ transform:translateY(24px); opacity:.6; } }
@@ -456,16 +458,16 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .br .brtag{ flex:none; width:10px; text-align:center; font-size:var(--fs-2); line-height:1; }
 .br .ck{ flex:none; color:var(--acc-strong); }
 .br.on{ cursor:default; }
-.br.add{ color:var(--acc-strong); font-weight:700; border-top:1px solid var(--border); }
+.br.add{ color:var(--acc-strong); font-weight:600; border-top:1px solid var(--border); }
 .br.add .pl{ flex:none; }
 /* the form's brand link: a chip under the name, only when there is a brand to show */
 .linkrow{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-1) var(--sp-2); }
 .linkrow[hidden]{ display:none; }
 .linkchip{ display:inline-flex; align-items:center; flex-wrap:wrap; gap:0 var(--sp-1); min-height:44px; padding:0 var(--sp-1) 0 var(--sp-3); max-width:100%; font-size:var(--fs-2); font-weight:600; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-pill); }
-.linkchip button, .linkrow .relink{ min-height:44px; padding:0 var(--sp-3); font-family:inherit; font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); background:none; border:0; cursor:pointer; }
+.linkchip button, .linkrow .relink{ min-height:44px; padding:0 var(--sp-3); font-family:inherit; font-size:var(--fs-2); font-weight:600; color:var(--acc-strong); background:none; border:0; cursor:pointer; }
 .linkrow .relink{ padding:0 var(--sp-1); }
-.branchbadge{ display:flex; align-items:center; gap:var(--sp-2); min-height:44px; padding:0 var(--sp-3); font-size:var(--fs-2); font-weight:700; color:var(--want-ink); background:var(--want-bg); border-radius:var(--r-3); width:100%; }
-.lab{ font-size:var(--fs-2); font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--soft); margin:18px 0 8px; }
+.branchbadge{ display:flex; align-items:center; gap:var(--sp-2); min-height:44px; padding:0 var(--sp-3); font-size:var(--fs-2); font-weight:600; color:var(--want-ink); background:var(--want-bg); border-radius:var(--r-3); width:100%; }
+.lab{ font-size:var(--fs-2); font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--soft); margin:18px 0 8px; }
 .drinklab{ display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-3); }
 .drinklab small{ font-size:var(--fs-1); font-weight:600; text-transform:none; letter-spacing:0; color:var(--faint); }
 /* Detail mirrors the editor's grouped mental model without exposing editable controls:
@@ -478,10 +480,10 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinksum:focus-visible{ outline:2px solid var(--text); outline-offset:-3px; }
 .drinkicon{ width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:var(--r-2); background:var(--surface2); font-size:20px; }
 .drinkcopy{ display:flex; flex-direction:column; min-width:0; }
-.drinkcopy .dtop{ display:block; font-size:var(--fs-3); font-weight:700; overflow:hidden; text-overflow:ellipsis; /* the ⋯ takes 40px from the row, so a long name wraps to a second line rather than losing its end */ white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.drinkcopy .dtop{ display:block; font-size:var(--fs-3); font-weight:800; overflow:hidden; text-overflow:ellipsis; /* the ⋯ takes 40px from the row, so a long name wraps to a second line rather than losing its end */ white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 .drinkcopy .dsub{ display:block; margin-top:3px; font-size:var(--fs-2); color:var(--soft); overflow:hidden; text-overflow:ellipsis; white-space:normal; }
 .drinkprice{ min-width:0; text-align:right; white-space:nowrap; }
-.drinkprice .pr{ color:var(--text); font-size:var(--fs-3); font-weight:700; font-variant-numeric:tabular-nums; }
+.drinkprice .pr{ color:var(--text); font-size:var(--fs-3); font-weight:600; font-variant-numeric:tabular-nums; }
 .drinkprice .prwrap{ display:block; text-align:right; }
 .drinkprice .prwrap .pr{ display:block; }
 .drinkprice .prsub{ display:block; margin-top:2px; color:var(--soft); font-size:var(--fs-1); font-variant-numeric:tabular-nums; }
@@ -495,11 +497,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .dorder.v-yes:before{ background:var(--good); }
 .dorder.v-neutral:before{ background:var(--mid); }
 .dorder.v-no:before{ background:var(--bad); }
-.dorderdate{ min-width:0; color:var(--text); font-size:var(--fs-2); font-weight:700; }
+.dorderdate{ min-width:0; color:var(--text); font-size:var(--fs-2); font-weight:600; }
 .dorderdate span{ color:var(--soft); font-size:var(--fs-1); font-weight:600; }
 .dorderdate b{ display:inline-block; margin-left:4px; padding:1px 5px; border-radius:var(--r-1); background:var(--surface2); font-size:var(--fs-1); font-weight:800; color:var(--soft); }
 .dorderprice{ text-align:right; white-space:nowrap; }
-.dorderprice .pr{ color:var(--text); font-size:var(--fs-2); font-weight:700; font-variant-numeric:tabular-nums; }
+.dorderprice .pr{ color:var(--text); font-size:var(--fs-2); font-weight:600; font-variant-numeric:tabular-nums; }
 .dorderprice .prwrap{ display:block; }
 .dorderprice .prsub{ display:block; margin-top:2px; color:var(--soft); font-size:var(--fs-1); font-variant-numeric:tabular-nums; }
 .dorderprice .prsub.needs{ color:var(--mid); font-weight:600; }
@@ -522,8 +524,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    label redundant, so dropping that paid for most of this. */
 .listtabs{ display:flex; gap:var(--sp-1); padding:4px; background:var(--surface2); border-radius:var(--r-2); }
 .listtabs button{ min-height:44px; padding:0 10px; border:none; border-radius:var(--r-1); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:600; white-space:nowrap; cursor:pointer; }
-.listtabs button[aria-pressed="true"]{ background:var(--surface); color:var(--acc-strong); font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.1); }
-.listtabs .tabn{ font-weight:700; font-variant-numeric:tabular-nums; }
+.listtabs button[aria-pressed="true"]{ background:var(--surface); color:var(--acc-strong); font-weight:600; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.listtabs .tabn{ font-weight:600; font-variant-numeric:tabular-nums; }
 /* Admin only, and the one thing in the row that does not fit beside the tabs on a phone.
    Given its own line on purpose rather than shoving the controls around as its text changes. */
 #save-state{ display:block; margin:0 16px 8px; font-size:var(--fs-1); font-weight:600; color:var(--soft); }
@@ -567,7 +569,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    lands exactly on top of it and needs no safe-area padding of its own. */
 /* Same sticky-commit pattern as the form's save rail. */
 .savebar{ position:sticky; bottom:0; margin:20px -16px 0; padding:10px 16px; background:var(--glass-strong); backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); border-top:1px solid var(--border); z-index:5; }
-.savebar .btn{ width:100%; height:52px; border-radius:var(--r-3); background:var(--acc-strong); color:var(--on-acc); font-size:var(--fs-4); font-weight:700; border:none; }
+.savebar .btn{ width:100%; height:52px; border-radius:var(--r-3); background:var(--acc-strong); color:var(--on-acc); font-size:var(--fs-4); font-weight:600; border:none; }
 /* The native picker stays: the real input is stretched over the pill at opacity 0.
    16px font-size on it is what stops iOS zooming when it takes focus. */
 .orderdate{flex:1 1 100%;min-width:0;}
@@ -594,10 +596,10 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .uchip > :first-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .uchip:hover{ border-color:var(--acc); }
 .uchip:active{ transform:scale(.97); }
-.uchip .ucount{ font-size:var(--fs-1); font-weight:700; color:var(--on-acc); background:var(--acc-strong); border-radius:var(--r-1); padding:1px 6px; font-variant-numeric:tabular-nums; flex:none; }
+.uchip .ucount{ font-size:var(--fs-1); font-weight:600; color:var(--on-acc); background:var(--acc-strong); border-radius:var(--r-1); padding:1px 6px; font-variant-numeric:tabular-nums; flex:none; }
 .drinkrows .dr .convhint{ flex:1 1 100%; display:flex; align-items:baseline; gap:var(--sp-2); flex-wrap:wrap; padding:0 2px; font-size:var(--fs-2); color:var(--soft); }
 .drinkrows .dr .convhint:empty{ display:none; }
-.drinkrows .dr .convhint .usd{ font-size:var(--fs-3); font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.drinkrows .dr .convhint .usd{ font-size:var(--fs-3); font-weight:600; color:var(--text); font-variant-numeric:tabular-nums; }
 /* NOT .rate — that name is already the 34px star widget below, and its letter-spacing:10px
    leaks into anything reusing the class. */
 .drinkrows .dr .convhint .fxrate{ font-size:var(--fs-1); color:var(--faint); font-variant-numeric:tabular-nums; }
@@ -611,7 +613,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* Three buttons, not five glyphs. They wrap rather than shrink below the touch floor on a
    narrow phone. */
 .rate{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
-.bkt{ flex:1 1 30%; min-height:52px; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2); padding:0 10px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; }
+.bkt{ flex:1 1 30%; min-height:52px; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2); padding:0 10px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 .bkt i{ width:10px; height:10px; border-radius:50%; flex:none; }
 .bkt.on{ border-color:var(--acc-strong); border-width:2px; background:var(--surface2); color:var(--acc-strong); }
 .drinkrows .dr{ display:flex; flex-wrap:wrap; gap:var(--sp-2); margin-bottom:10px; }
@@ -620,11 +622,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinkrows .drgchev{ flex:0 0 auto; color:var(--soft); }
 .drinkrows .drgmain{ flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--sp-1); }
 .drinkrows .drgmain b{ font-size:var(--fs-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.drinkrows .drgmain small{ font-size:var(--fs-1); color:var(--soft); font-weight:500; }
-.drinkrows .drgprice{ flex:0 0 auto; max-width:42%; font-size:var(--fs-2); font-weight:700; color:var(--acc-strong); font-variant-numeric:tabular-nums; text-align:right; }
+.drinkrows .drgmain small{ font-size:var(--fs-1); color:var(--soft); font-weight:400; }
+.drinkrows .drgprice{ flex:0 0 auto; max-width:42%; font-size:var(--fs-2); font-weight:600; color:var(--acc-strong); font-variant-numeric:tabular-nums; text-align:right; }
 .drinkrows .drgbody, .drinkrows .drgadd{ display:none; }
 .drinkrows .drgroup.open .drgbody{ display:block; padding:10px 10px 0; border-top:1px solid var(--border); }
-.drinkrows .drgname{ display:flex; flex-direction:column; gap:var(--sp-2); margin-bottom:10px; font-size:var(--fs-1); font-weight:700; color:var(--soft); }
+.drinkrows .drgname{ display:flex; flex-direction:column; gap:var(--sp-2); margin-bottom:10px; font-size:var(--fs-1); font-weight:600; color:var(--soft); }
 .drinkrows .drgname input{ width:100%; font-size:var(--fs-4); }
 .drinkrows .drgroup.open .drgadd{ display:block; width:100%; border:0; border-top:1px solid var(--border); padding:11px 12px; background:transparent; color:var(--acc-strong); font:600 13px/1.2 inherit; text-align:left; cursor:pointer; }
 .drinkrows .drgroup .dr:last-child{ margin-bottom:0; }
@@ -680,10 +682,10 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .sync-review{ margin-top:4px; }
 .sync-review p b{ color:var(--text); }
 .cfhead,.cfrow{ display:grid; grid-template-columns:minmax(58px,auto) 1fr 1fr; gap:6px 10px; align-items:baseline; padding:5px 0; }
-.cfhead{ font-size:var(--fs-1); font-weight:700; color:var(--soft); border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:.03em; }
+.cfhead{ font-size:var(--fs-1); font-weight:600; color:var(--soft); border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:.03em; }
 .cfrow{ border-bottom:1px solid var(--border); font-size:var(--fs-2); }
 .cfrow:last-of-type{ border-bottom:none; }
-.cfk{ font-size:var(--fs-1); font-weight:700; color:var(--soft); }
+.cfk{ font-size:var(--fs-1); font-weight:600; color:var(--soft); }
 .cfv{ overflow-wrap:anywhere; color:var(--text); }
 /* The side you are on gets the emphasis; the other is the alternative, not the default. */
 .cfv.mine{ font-weight:600; color:var(--acc-strong); }
@@ -714,7 +716,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .cdsum::-webkit-details-marker{ display:none; }
 .cdchev{ color:var(--soft); font-size:12px; flex:none; }
 .cdmain{ display:flex; flex-direction:column; gap:var(--sp-1); min-width:0; }
-.cdmain b{ font-weight:700; }
+.cdmain b{ font-weight:600; }
 .cdmain small{ font-size:var(--fs-1); color:var(--soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cafedetails[open] .cdsum{ border-bottom:1px solid var(--border); }
 .cdbody{ padding:14px 14px 4px; }
@@ -723,8 +725,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .wheresum{ min-height:46px; gap:var(--sp-2); padding:0 var(--sp-3); font-size:var(--fs-2); color:var(--soft); }
 .wherepin{ width:16px; height:16px; flex:none; }
 .wheretext{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.wheretext b{ color:var(--text); font-weight:700; }
-.whereact{ flex:none; color:var(--acc-strong); font-weight:700; }
+.wheretext b{ color:var(--text); font-weight:600; }
+.whereact{ flex:none; color:var(--acc-strong); font-weight:600; }
 .wherebox.located{ background:color-mix(in srgb, var(--good) 11%, var(--surface)); border-color:color-mix(in srgb, var(--good) 28%, transparent); }
 .wherebox.located .wheresum{ color:var(--good); }
 .wherebox.located .wheretext b{ color:var(--good); }
@@ -738,7 +740,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .rulewarn{ position:absolute; z-index:8; left:12px; right:12px; top:calc(64px + env(safe-area-inset-top)); display:flex; flex-wrap:wrap; align-items:baseline; gap:var(--sp-2); padding:12px 14px; border-radius:var(--r-3); background:var(--bad); color:#fff; font-size:var(--fs-2); line-height:1.5; box-shadow:var(--shadow); }
 .rulewarn[hidden]{ display:none; }
 .rulewarn > span{ flex:1 1 0; min-width:0; align-self:center; }
-.rulewarn b{ font-weight:700; }
+.rulewarn b{ font-weight:600; }
 .rulewarn code{ background:rgba(255,255,255,.22); border-radius:var(--r-1); padding:0 4px; font-size:var(--fs-1); }
 .rulewarn button{ margin-left:auto; min-width:44px; min-height:44px; border:none; border-radius:var(--r-2); background:rgba(255,255,255,.18); color:#fff; font-size:var(--fs-3); cursor:pointer; flex:none; }
 .rulewarn button:hover{ background:rgba(255,255,255,.3); }
@@ -785,10 +787,10 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .seg button{ flex:1; min-height:44px; padding:0 8px; border:none; border-radius:var(--r-2); background:transparent; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 .seg button:hover{ color:var(--text); }
 /* --acc-strong is the only accent that clears 4.5:1 on --surface; --acc is 3.01:1 there. */
-.seg button.on{ background:var(--surface); color:var(--acc-strong); font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.seg button.on{ background:var(--surface); color:var(--acc-strong); font-weight:600; box-shadow:0 1px 4px rgba(0,0,0,.1); }
 .setnote{ margin:0; font-size:var(--fs-2); color:var(--soft); line-height:1.5; }
 .setrow{ display:flex; align-items:center; gap:var(--sp-3); }
-.setmode{ flex:1; min-width:0; font-size:var(--fs-3); font-weight:700; }
+.setmode{ flex:1; min-width:0; font-size:var(--fs-3); font-weight:600; }
 .setrow .btn{ width:auto; flex:0 0 auto; min-height:44px; padding:12px 16px; }
 .setactions{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
 .setactions[hidden]{ display:none; }
@@ -805,7 +807,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* Wishlist mode: a place you have not been has no visit to describe, so the visit fields
    step aside. Hidden, not cleared — anything already typed survives unticking. */
 #pane-form[data-wish="1"] .visit-only{ display:none !important; }
-.listbar #count{ font-weight:700; color:var(--text); }
+.listbar #count{ font-weight:600; color:var(--text); }
 .lp-row select{ flex:1; border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--text); font-size:var(--fs-2); padding:7px 10px; cursor:pointer; }
 .compare{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; padding:16px; display:flex; flex-direction:column; gap:var(--sp-4); scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
 .compare::-webkit-scrollbar{ width:8px; } .compare::-webkit-scrollbar-thumb{ background:var(--border); border-radius:var(--r-2); background-clip:padding-box; border:2px solid transparent; }
@@ -813,12 +815,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .cmp-head .ct{ font-size:var(--fs-4); font-weight:800; letter-spacing:-.01em; }
 .cmp-head .cs{ font-size:var(--fs-2); color:var(--soft); margin-top:4px; }
 .dscore{ background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-2); padding:1px 7px; font-size:var(--fs-1); font-weight:600; color:var(--acc); }
-.reorder{ display:inline-flex; align-items:center; gap:var(--sp-1); border-radius:var(--r-2); padding:2px 9px; font-size:var(--fs-1); font-weight:700; margin-top:6px; }
+.reorder{ display:inline-flex; align-items:center; gap:var(--sp-1); border-radius:var(--r-2); padding:2px 9px; font-size:var(--fs-1); font-weight:600; margin-top:6px; }
 .reorder.yes{ background:rgba(46,158,91,.14); color:var(--good); }
 .reorder.no{ background:rgba(224,85,107,.14); color:var(--bad); }
 .reorder.neutral{ background:rgba(138,90,9,.14); color:var(--mid); }
 .drinkrows .dr .rowrap{ flex:1 1 100%; display:flex; align-items:center; gap:var(--sp-3); background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-2); padding:8px 12px; }
-.qbtn{ flex:0 0 auto; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:var(--r-2); font-size:var(--fs-4); font-weight:700; line-height:1; cursor:pointer; font-family:inherit; width:44px; height:44px; /* ---------- the legend folds into a ? on the laptop (v83) ----------
+.qbtn{ flex:0 0 auto; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:var(--r-2); font-size:var(--fs-4); font-weight:600; line-height:1; cursor:pointer; font-family:inherit; width:44px; height:44px; /* ---------- the legend folds into a ? on the laptop (v83) ----------
    The four-dot legend sat in the corner at every size. A phone already folds it into the pill's panel;
    a laptop now folds it into a ? above the locate button, so the corner holds one control and a hint. */ display:none; }
 .qval{ font-size:var(--fs-3); font-weight:800; text-align:center; min-width:0; }
@@ -840,12 +842,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lp-group{ display:flex; flex-direction:column; gap:var(--sp-1); }
 .lp-group .chiprow{ padding-left:4px; }
 .lp-group[hidden]{ display:none; }
-.lp-label{ font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); padding:0 4px; }
+.lp-label{ font-size:var(--fs-1); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); padding:0 4px; }
 .chip .vdot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:var(--sp-2); flex:none; }
-.chip small{ margin-left:var(--sp-2); font-size:var(--fs-1); font-weight:700; opacity:.7; font-variant-numeric:tabular-nums; }
+.chip small{ margin-left:var(--sp-2); font-size:var(--fs-1); font-weight:600; opacity:.7; font-variant-numeric:tabular-nums; }
 .resultline{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin:0 16px var(--sp-2); font-size:var(--fs-2); color:var(--soft); }
 .resultline[hidden]{ display:none; }
-.resultline button{ min-height:44px; padding:0 var(--sp-3); border:0; background:none; color:var(--acc-strong); font:inherit; font-weight:700; cursor:pointer; }
+.resultline button{ min-height:44px; padding:0 var(--sp-3); border:0; background:none; color:var(--acc-strong); font:inherit; font-weight:600; cursor:pointer; }
 .orderagain b{ color:var(--acc-strong); }
 /* a first paint that is the shape of the list, at the card's own dimensions so nothing jumps */
 .skel-card{ border:1px solid var(--border); border-radius:var(--r-3); overflow:hidden; background:var(--surface); }
@@ -902,11 +904,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .dranktile b, .drinkprice, .dscore, .lbscore, .prsub, .dorderprice .pr, .wantn{ font-variant-numeric:tabular-nums lining-nums; }
 
 .guiderow[hidden]{ display:none; }
-.guiderow button{ min-height:44px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm); font-family:inherit; font-size:var(--fs-1); font-weight:700; white-space:nowrap; cursor:pointer; flex:none; padding:0 var(--sp-3); }
+.guiderow button{ min-height:44px; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm); font-family:inherit; font-size:var(--fs-1); font-weight:600; white-space:nowrap; cursor:pointer; flex:none; padding:0 var(--sp-3); }
 .guiderow button[aria-pressed="true"]{ background:var(--acc-strong); color:var(--on-acc); border-color:transparent; box-shadow:none; }
 .card .cdrink:has(.cdp) .cdo{ display:none; }
 .card .cdrink .cdn{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.card .cdrink .cdp{ flex:none; margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums lining-nums; color:var(--soft); }
+.card .cdrink .cdp{ flex:none; margin-left:auto; font-weight:600; font-variant-numeric:tabular-nums lining-nums; color:var(--soft); }
 
 .grid.compact-list 
 /* ---------- cafe page: banner, pills, quote, postcard (v81) ---------- */
@@ -916,12 +918,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .orderagain[hidden]{ display:none; }
 .orderagain .oa-gl{ width:48px; height:48px; flex:none; display:grid; place-items:center; border-radius:var(--r-2); background:var(--surface2); font-size:26px; }
 .orderagain .oa-tx{ min-width:0; flex:1 1 140px; display:flex; flex-direction:column; }
-.orderagain .oa-tx small{ font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); }
-.orderagain .oa-name{ font-size:var(--fs-4); line-height:1.25; font-weight:700; overflow-wrap:anywhere; color:var(--text); }
+.orderagain .oa-tx small{ font-size:var(--fs-1); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); }
+.orderagain .oa-name{ font-size:var(--fs-4); line-height:1.25; font-weight:800; overflow-wrap:anywhere; color:var(--text); }
 .orderagain .oa-meta{ font-size:var(--fs-2); color:var(--soft); font-variant-numeric:tabular-nums lining-nums; }
 .orderagain .oa-meta b{ color:var(--text); }
 .dmods{ display:flex; flex-wrap:wrap; gap:var(--sp-1); margin-top:var(--sp-1); }
-.mpill{ display:inline-flex; align-items:center; padding:1px var(--sp-2); border:1px solid var(--border); border-radius:var(--r-pill); background:var(--surface2); color:var(--soft); font-size:var(--fs-1); font-weight:700; white-space:nowrap; }
+.mpill{ display:inline-flex; align-items:center; padding:1px var(--sp-2); border:1px solid var(--border); border-radius:var(--r-pill); background:var(--surface2); color:var(--soft); font-size:var(--fs-1); font-weight:600; white-space:nowrap; }
 .mpill.k-sw{ background:var(--amber-bg); color:var(--amber-ink); border-color:transparent; }
 .mpill.k-mk{ background:var(--want-bg); color:var(--want-ink); border-color:transparent; }
 .dordermeta .mpill{ margin-right:var(--sp-1); }
@@ -949,7 +951,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 @media (min-width:900px){
   .maplegend{ display:none; right:62px; bottom:26px; }
   .mapbox[data-legend="open"] .maplegend{ display:flex; bottom:78px; }
-  .qbtn{ position:absolute; z-index:6; right:12px; bottom:78px; width:44px; height:44px; padding:0; display:grid; place-items:center; border:1px solid var(--border); border-radius:50%; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); color:var(--text); font-family:inherit; font-size:var(--fs-3); font-weight:700; cursor:pointer; }
+  .qbtn{ position:absolute; z-index:6; right:12px; bottom:78px; width:44px; height:44px; padding:0; display:grid; place-items:center; border:1px solid var(--border); border-radius:50%; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2); box-shadow:var(--shadow); color:var(--text); font-family:inherit; font-size:var(--fs-3); font-weight:600; cursor:pointer; }
   .qbtn[aria-expanded="true"]{ background:var(--text); color:var(--bg); }
   .locbtn{ bottom:26px; }
   .mapbox.worlding .locbtn{ bottom:26px; }
@@ -970,7 +972,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* ---------- rows with landmarks (v87) ---------- */
 #save-state:empty{ display:none; }
 .rkcol, .band{ display:none; }
-.grid.compact-list .band{ display:block; position:sticky; top:0; z-index:5; padding:var(--sp-4) 0 var(--sp-2); font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); background:linear-gradient(var(--bg) 78%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); background:var(--glass); }
+.grid.compact-list .band{ display:block; position:sticky; top:0; z-index:5; padding:var(--sp-4) 0 var(--sp-2); font-size:var(--fs-1); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); background:linear-gradient(var(--bg) 78%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); background:var(--glass); }
 .grid.compact-list .card .ph{ border-radius:var(--r-2); overflow:visible; font-size:var(--fs-4); flex:0 0 46px; width:46px; height:46px; padding:0; justify-content:center; align-items:center; }
 .grid.compact-list .card .ph .rankbadge{ display:none; }
 .grid.compact-list .card .ph .favbadge{ display:none; }
@@ -978,7 +980,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .grid.compact-list .card .cdrink{ display:flex; margin-top:1px; font-size:var(--fs-2); }
 .grid.compact-list .card .m{ margin-top:1px; font-size:var(--fs-1); color:var(--faint); }
 .grid.compact-list .card .compact-stars{ display:none; }
-.grid.compact-list .card .rkcol{ display:block; flex:none; min-width:34px; text-align:right; font-size:var(--fs-2); font-weight:700; color:var(--faint); font-variant-numeric:tabular-nums; }
+.grid.compact-list .card .rkcol{ display:block; flex:none; min-width:34px; text-align:right; font-size:var(--fs-2); font-weight:600; color:var(--faint); font-variant-numeric:tabular-nums; }
 .grid.compact-list .card .rkcol.g{ background:linear-gradient(135deg, var(--gold-a), var(--gold-b)); color:var(--gold-ink); border-radius:var(--r-pill); padding:2px 9px; text-align:center; }
 .grid.compact-list .card .b{ min-width:0; flex:1; padding:0; display:flex; flex-direction:column; }
 .grid.compact-list .card .b .cdrink{ order:2; }
@@ -995,7 +997,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
    (which opens leftwards from its right edge) has room. */ justify-content:flex-end; }
 .dactions > .btn{ width:auto; flex:1 1 auto; }
 .dmore{ position:relative; flex:none; }
-.dmore > summary{ list-style:none; min-width:48px; min-height:48px; display:grid; place-items:center; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface2); cursor:pointer; font-size:var(--fs-4); font-weight:700; }
+.dmore > summary{ list-style:none; min-width:48px; min-height:48px; display:grid; place-items:center; border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface2); cursor:pointer; font-size:var(--fs-4); font-weight:600; }
 .dmore > summary::-webkit-details-marker{ display:none; }
 .dmorepop{ position:absolute; right:0; bottom:calc(100% + var(--sp-2)); z-index:10; width:160px; display:flex; flex-direction:column; gap:var(--sp-2); padding:var(--sp-2); border:1px solid var(--border); border-radius:var(--r-3); background:var(--surface); box-shadow:var(--shadow); }
 .dmorepop .btn{ width:100%; }
@@ -1005,7 +1007,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 
 /* ---------- Stats in three tabs (v89) ---------- */
 .stabs{ display:flex; gap:var(--sp-1); padding:4px; margin:0 0 var(--sp-3); background:var(--surface2); border-radius:var(--r-2); position:sticky; top:0; z-index:4; }
-.stabs button{ flex:1; min-height:44px; border:0; border-radius:var(--r-1); background:none; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; }
+.stabs button{ flex:1; min-height:44px; border:0; border-radius:var(--r-1); background:none; color:var(--soft); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 .stabs button[aria-pressed="true"]{ background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.1); }
 .stabpanel[hidden]{ display:none; }
 .legrows.inl{ flex-direction:row; flex-wrap:wrap; gap:var(--sp-1) var(--sp-4); flex:none; }
@@ -1060,16 +1062,16 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .wrapped{ display:flex; flex-direction:column; gap:var(--sp-2); margin:0 0 var(--sp-4); }
 .wrapped .sech{ display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-2); padding:0 2px; }
 .wrapped .sech b{ font-size:var(--fs-3); font-weight:800; letter-spacing:-.01em; }
-.wrapped .sech button{ background:none; border:0; color:var(--acc-strong); font:inherit; font-size:var(--fs-2); font-weight:700; min-height:44px; padding:0 2px; margin-block:calc(-1 * var(--sp-3)); cursor:pointer; }
+.wrapped .sech button{ background:none; border:0; color:var(--acc-strong); font:inherit; font-size:var(--fs-2); font-weight:600; min-height:44px; padding:0 2px; margin-block:calc(-1 * var(--sp-3)); cursor:pointer; }
 .wstrip{ display:flex; gap:var(--sp-3); overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; padding:2px 2px; scroll-padding-inline:2px; border-radius:var(--r-3); }
 .wstrip::-webkit-scrollbar{ display:none; }
 .wc{ flex:0 0 min(232px, 72%); min-height:168px; scroll-snap-align:start; border-radius:var(--r-4); padding:var(--sp-3); display:flex; flex-direction:column; justify-content:space-between; gap:var(--sp-2); border:1px solid var(--border); background:color-mix(in srgb, var(--tint, var(--acc)) 20%, var(--surface)); color:var(--text); min-width:0; }
-.wc .wk{ font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); }
+.wc .wk{ font-size:var(--fs-1); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); }
 .wc .big{ font-size:40px; line-height:1; font-weight:800; letter-spacing:-.03em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
-.wc .big small{ font-size:var(--fs-3); font-weight:700; letter-spacing:0; color:var(--soft); margin-left:var(--sp-1); }
-.wc.sm .big{ font-size:26px; line-height:1.1; }
+.wc .big small{ font-size:var(--fs-3); font-weight:600; letter-spacing:0; color:var(--soft); margin-left:var(--sp-1); }
+.wc.sm .big{ font-size:var(--fs-5); line-height:1.1; }
 .wc .wcap{ font-size:var(--fs-2); line-height:1.35; color:var(--text); }
-.wc .wcap.strong{ font-size:var(--fs-3); font-weight:700; }
+.wc .wcap.strong{ font-size:var(--fs-3); font-weight:600; }
 .wbars{ display:flex; align-items:flex-end; gap:var(--sp-1); height:44px; }
 .wbars i{ flex:1; display:block; background:color-mix(in srgb, var(--acc) 45%, var(--surface2)); border-radius:3px 3px 0 0; min-height:3px; }
 .wbars i.hi{ background:var(--acc); }
@@ -1083,7 +1085,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 
 
 /* ---------- the year in review label, and Share on the strip is the owner's ---------- */
-.wrapped .sech .wrev{ flex:1; margin-left:var(--sp-2); font-size:var(--fs-1); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); }
+.wrapped .sech .wrev{ flex:1; margin-left:var(--sp-2); font-size:var(--fs-1); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); }
 
 /* ---------- redesign (v101): one visual language ----------
    The drawn mark: the share card's vessel, in cream line art on the drink's colour (set inline by nophotoStyle).
@@ -1123,8 +1125,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* Go's actions are one row of chips, not three full-width grey bars: the first cafe is up the screen, and nothing
    reads as disabled. Rank a pair is the filled one. */
 .gochips{ display:flex; gap:var(--sp-2); margin:var(--sp-3) 0 var(--sp-1); flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
-.gochip{ display:inline-flex; align-items:center; gap:var(--sp-2); min-height:44px; border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; padding:0 var(--sp-3); flex:none; }
-.gochip em{ font-style:normal; font-weight:500; font-variant-numeric:tabular-nums; } /* full strength: at 80% it fell to 4.1:1 on the accent */
+.gochip{ display:inline-flex; align-items:center; gap:var(--sp-2); min-height:44px; border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; padding:0 var(--sp-3); flex:none; }
+.gochip em{ font-style:normal; font-weight:400; font-variant-numeric:tabular-nums; } /* full strength: at 80% it fell to 4.1:1 on the accent */
 .gochip .ico{ width:16px; height:16px; }
 
 /* Three button styles. Primary: the accent, filled (.btn, the Save bar, Rank a pair). Secondary: the surface with a
@@ -1153,7 +1155,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .drinknote.v-yes{ background:color-mix(in srgb,var(--good) 11%,transparent); }
 .drinknote.v-neutral{ background:color-mix(in srgb,var(--mid) 12%,transparent); }
 .nts{ display:flex; flex-wrap:wrap; gap:var(--sp-1); }
-.nt{ display:inline-flex; align-items:center; padding:1px 8px; border-radius:var(--r-pill); background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:var(--fs-1); font-weight:700; }
+.nt{ display:inline-flex; align-items:center; padding:1px 8px; border-radius:var(--r-pill); background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:var(--fs-1); font-weight:600; }
 .ntq{ quotes:"\201C" "\201D"; overflow-wrap:anywhere; }
 .ntwho{ color:var(--soft); font-size:var(--fs-1); font-weight:600; }
 .dordernote{ grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:baseline; gap:var(--sp-1); color:var(--text); font-size:var(--fs-2); }
@@ -1174,11 +1176,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .dnmi{ display:flex; align-items:center; gap:var(--sp-3); min-height:48px; padding:var(--sp-2) 2px; border:0; border-bottom:1px solid var(--border); background:transparent; color:var(--text); font:inherit; font-size:var(--fs-3); font-weight:600; text-align:left; cursor:pointer; }
 .dnmi:last-child{ border-bottom:0; }
 .dnmi .ico, .dnmi .g{ width:22px; height:22px; flex:none; color:var(--acc-strong); text-align:center; }
-.dnmi small{ margin-left:auto; color:var(--faint); font-size:var(--fs-1); font-weight:500; }
+.dnmi small{ margin-left:auto; color:var(--faint); font-size:var(--fs-1); font-weight:400; }
 .dnrow{ cursor:default; }
 .dnvs{ margin-left:auto; display:flex; gap:var(--sp-1); }
 .dnvs.big{ margin-left:0; display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-2); }
-.dnv{ min-width:44px; min-height:44px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-1); padding:var(--sp-1) var(--sp-2); border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--soft); font:inherit; font-size:var(--fs-2); font-weight:700; cursor:pointer; }
+.dnv{ min-width:44px; min-height:44px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-1); padding:var(--sp-1) var(--sp-2); border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--soft); font:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
 .dnv .e{ font-size:var(--fs-4); line-height:1; filter:grayscale(.6); opacity:.55; }
 .dnvs.big .dnv .e{ font-size:var(--fs-5); }
 .dnv[aria-pressed="true"] .e{ filter:none; opacity:1; }
@@ -1189,7 +1191,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .dnlab{ color:var(--faint); font-size:var(--fs-1); font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
 .dntags{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
 .dntag{ min-height:36px; padding:0 var(--sp-3); border:1px solid var(--border); border-radius:var(--r-pill); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
-.dntag[aria-pressed="true"]{ border-color:var(--acc-strong); background:color-mix(in srgb,var(--acc) 16%,transparent); color:var(--text); font-weight:700; }
+.dntag[aria-pressed="true"]{ border-color:var(--acc-strong); background:color-mix(in srgb,var(--acc) 16%,transparent); color:var(--text); font-weight:600; }
 .dnact{ display:flex; gap:var(--sp-2); }
 .dnact .btn{ flex:1; padding:12px; }
 .dnact .dnrm{ color:var(--bad); }
@@ -1215,7 +1217,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .gobar{ display:flex; flex-wrap:nowrap; gap:var(--sp-2); align-items:center; overflow-x:auto; scrollbar-width:none; -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); }
 .gobar::-webkit-scrollbar{ display:none; }
 .gobar > *{ flex:none; }
-.goreg{ max-width:100%; min-height:44px; padding:0 var(--sp-3); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:700; }
+.goreg{ max-width:100%; min-height:44px; padding:0 var(--sp-3); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:600; }
 .gokinds{ display:flex; gap:var(--sp-1); max-width:100%; overflow-x:auto; scrollbar-width:none; }
 .gokinds::-webkit-scrollbar{ display:none; }
 .gokinds button{ flex:none; min-height:36px; padding:0 var(--sp-3); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:600; cursor:pointer; }
@@ -1272,8 +1274,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
   border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text);
   box-shadow:none; font-family:inherit; font-size:var(--fs-2); font-weight:600; white-space:nowrap; }
 .chiprow .chip.on, .guiderow button[aria-pressed="true"], .gokinds button[aria-pressed="true"], .dntag[aria-pressed="true"]{
-  background:var(--text); color:var(--bg); border-color:transparent; font-weight:700; }
-.uchip .ucount, .dntag small, .chip small{ margin:0; padding:0; background:none; color:var(--faint); font-size:var(--fs-1); font-weight:700; opacity:1; }
+  background:var(--text); color:var(--bg); border-color:transparent; font-weight:600; }
+.uchip .ucount, .dntag small, .chip small{ margin:0; padding:0; background:none; color:var(--faint); font-size:var(--fs-1); font-weight:600; opacity:1; }
 .chiprow .chip.on small, .dntag[aria-pressed="true"] small{ color:inherit; opacity:.75; }
 .gochip.p{ background:var(--acc-strong); color:var(--on-acc); border-color:transparent; }
 .guiderow button .ico, .chiprow .chip .ico, .gochip .ico{ width:16px; height:16px; flex:none; }

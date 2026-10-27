@@ -138,7 +138,9 @@ function ratio(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.
   const oneLine = await pg.evaluate(() => {
     const bar = document.querySelector(".listbar");
     const kids = [...bar.children].filter(e => e.getBoundingClientRect().height > 0 && e.id !== "save-state" && e.id !== "guiderow");
-    return [...new Set(kids.map(e => Math.round(e.getBoundingClientRect().top / 10)))].length;
+    /* one line: their middles within a few pixels (the tabs are taller than the chips, so tops differ) */
+    const mids = kids.map(e => { const r = e.getBoundingClientRect(); return (r.top + r.bottom) / 2; });
+    return Math.max(...mids) - Math.min(...mids) <= 6 ? 1 : 2;
   });
   eq(oneLine, 1, "…and the taller controls still share one line at 390px");
 

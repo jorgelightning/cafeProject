@@ -76,7 +76,7 @@ const { eq, done } = checker();
    const sep=$("stats-body").innerText;
    return {summary,rows,fits,startsShut,opens,closesAgain,june,sep};
  });
- eq(/Hojicha Latte/.test(r.summary)&&/3 ordered/.test(r.summary)&&/\$6\.75–\$7\.25/.test(r.summary),true,
+ eq(/Hojicha Latte/.test(r.summary)&&/3 cups/.test(r.summary)&&/\$6\.75–\$7\.25/.test(r.summary),true,
     'detail summary shows drink, order count and historical price range');
  eq(r.rows.length,2,'detail expands to one row per dated order');
  eq(/Sep 2, 2026/.test(r.rows[0])&&/Latest/.test(r.rows[0])&&/×2/.test(r.rows[0])&&/\$7\.25/.test(r.rows[0]),true,
@@ -150,7 +150,7 @@ const { eq, done } = checker();
  });
  eq(r.cards,3,'three drinks on the cafe');
  eq(r.chev,['▾','▾','▾'],'…and every one of them can be opened');
- eq(r.summaries.every(t=>/ordered/.test(t)&&/latest/.test(t)),true,
+ eq(r.summaries.every(t=>/\d+ cups?/.test(t)&&/last/.test(t)),true,
     'the summary still says how many and when, so collapsing costs no information at a glance');
  eq(r.all>r.shut,true,'opening them all is still available, and taller ('+r.shut+'px → '+r.all+'px)');
 

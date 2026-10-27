@@ -35,7 +35,7 @@ const { eq, done } = checker();
       const bad = await pg.evaluate(() => [...document.querySelectorAll("#app *")].filter(e => {
         if (!e.offsetParent) return false;
         const r = e.getBoundingClientRect();
-        return r.width > 0 && (r.right > innerWidth + 1 || r.left < -1) && !e.closest(".mapwrap, svg, .wstrip");
+        return r.width > 0 && (r.right > innerWidth + 1 || r.left < -1) && !e.closest(".mapwrap, svg, .wstrip, .listbar, .gobar, .gokinds") /* rows that scroll sideways clip their own ends */;
       }).slice(0, 3).map(e => e.tagName + "." + String(e.className).slice(0, 24)));
       if (bad.length) sticking.push(k + ": " + bad.join(", "));
     }

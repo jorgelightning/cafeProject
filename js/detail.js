@@ -889,9 +889,10 @@ function openDetail(id, from) {
             esc(d.n) +
             (drinkMatches(d) ? ' <span class="dscore">' + drinkScore(d) + "</span>" : "") +
             "</span>" +
+            /* "12 cups · last Oct 17": at the 14px secondary size "12 ordered · latest Oct 17" broke the date across lines */
             '<span class="dsub">' +
             cnt +
-            " ordered · latest " +
+            (cnt === 1 ? " cup · last " : " cups · last ") +
             esc(last) +
             "</span>" +
             modPills(latest) +
