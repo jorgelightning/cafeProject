@@ -451,7 +451,7 @@ function goControls(board, chips) {
     rest = chips.filter(function (x) {
       return !/class="gochip p"/.test(x);
     });
-  h += '<div class="gofilter"><div class="gorow" role="group" aria-label="On this tab">' + lead.join("");
+  h += '<div class="gofilter"><div class="gobar" role="group" aria-label="On this tab">' + lead.join("");
   if (regs.length > 1)
     h +=
       '<select class="goreg" aria-label="Region"' + act("setGoRegion", ["$value"], "change") + '><option value="">Everywhere · ' +

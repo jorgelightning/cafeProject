@@ -1212,9 +1212,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* Go: a region menu and a row of kinds over the standing, and regions offered when Near me cannot get a position. */
 /* One row for the tab's buttons and the region, scrolling sideways, then the kinds (design audit D5) */
 .gofilter{ display:flex; flex-direction:column; gap:var(--sp-2); align-items:stretch; margin:var(--sp-2) 0; }
-.gorow{ display:flex; flex-wrap:nowrap; gap:var(--sp-2); align-items:center; overflow-x:auto; scrollbar-width:none; -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); }
-.gorow::-webkit-scrollbar{ display:none; }
-.gorow > *{ flex:none; }
+.gobar{ display:flex; flex-wrap:nowrap; gap:var(--sp-2); align-items:center; overflow-x:auto; scrollbar-width:none; -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent); }
+.gobar::-webkit-scrollbar{ display:none; }
+.gobar > *{ flex:none; }
 .goreg{ max-width:100%; min-height:44px; padding:0 var(--sp-3); border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); font-weight:700; }
 .gokinds{ display:flex; gap:var(--sp-1); max-width:100%; overflow-x:auto; scrollbar-width:none; }
 .gokinds::-webkit-scrollbar{ display:none; }
