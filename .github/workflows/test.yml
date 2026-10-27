@@ -16,7 +16,7 @@ jobs:
       - name: Check the lockfile is present
         run: |
           test -f package-lock.json || { echo "::error::package-lock.json is missing. Restore it (git checkout <last good commit> -- package-lock.json); npm ci and the npm cache both need it."; exit 1; }
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -35,7 +35,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
