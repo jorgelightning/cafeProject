@@ -19,6 +19,7 @@ const SUITE = [
   ["go-filters",       "Go by kind and region, Best coffee, a no-match search that suggests, Near me refused offers regions"],
   ["welcome",          "a first visit says whose list it is, once per device, never for the owner or over a shared cafe"],
   ["rank-pairs",       "Rank a pair asks never-compared, then placing, then ties; same kind and region preferred"],
+  ["compare-kind",     "the question after a save stays in one kind (a stand-in when short, none when alone), asks a nearby place you remember, shows both drinks and kinds, and a kind can be set"],
   ["ui-system",        "one header and back button, one chip, drawn drink marks, one-line options, one word for visitors, a readable List, a pill that follows the map, Near me"],
   ["share-pages",      "a shared link is /c/<id>, a page per public cafe that previews as it and forwards; 404.html for new ones"],
   ["site-build",       "the published site: only the app's files and all they load, the data checked for private details, and minified JS and CSS that keep every name and still run"],

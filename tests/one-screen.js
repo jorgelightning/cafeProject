@@ -111,7 +111,7 @@ const { eq, done } = checker();
     toggleTag("cozy"); toggleTag("matcha");
     $("f-brand").value = "Tadaima"; $("f-brand").dispatchEvent(new Event("input", { bubbles: true }));
     return { blank, set: $("f-more-sum").textContent }; });
-  eq(r.blank, "tags, brand, favourite, wishlist, private", "shut and empty, More lists what it holds");
+  eq(r.blank, "kind, tags, brand, favourite, wishlist, private", "shut and empty, More lists what it holds");
   eq(r.set, "Favourite · Tadaima · 2 tags", "once anything is set, it says what — so a tick is never out of sight");
 
   r = await pg.evaluate(() => {

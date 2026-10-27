@@ -152,12 +152,14 @@ function openForm(id) {
   formPhoto = c ? c.photo || null : null;
   formRating = c ? c.rating || 0 : 0;
   formTags = c ? (c.tags || []).slice() : [];
+  formKind = c ? c.kind || "" : "";
   formCC = c ? c.cc || "" : branchSrc ? branchSrc.cc || "" : "";
   formCcy = c ? c.ccy || "" : branchSrc ? branchSrc.ccy || "" : "";
   formPid = c ? c.pid || "" : "";
   picked = c && latOf(c) != null ? { lat: latOf(c), lng: lngOf(c) } : null;
   renderRate();
   renderTags();
+  renderKind(c);
   renderDrinkRows(c ? c.drinks : null);
   syncBrandUI();
   renderUsuals();
@@ -224,6 +226,7 @@ function formSnapshot() {
     formPhoto,
     formRating,
     formTags,
+    formKind,
     picked ? [+(+picked.lat).toFixed(5), +(+picked.lng).toFixed(5)] : null,
     rows,
   ]);
@@ -430,6 +433,31 @@ function toggleTag(t) {
   renderTags();
   syncMoreSum();
 }
+/* What kind of place it is: comparisons stay inside one kind, and Go lists by kind, so a wrong guess puts a cafe in
+   the wrong questions. Nothing chosen means guessed from what you order; tapping the chosen one again goes back to
+   the guess. @param {Cafe|null} [c] the cafe being edited, for the guess */
+function renderKind(c) {
+  const host = $("f-kind");
+  if (!host) return;
+  if (c !== undefined) host.dataset.guess = c ? guessedKind(c) : "";
+  host.innerHTML = KIND_KEYS.map(
+    k => '<span class="chip' + (formKind === k ? " on" : "") + '" role="button" tabindex="0" aria-pressed="' + (formKind === k) + '"' + act("toggleKind", [k]) + ">" + KIND_WORD[k] + "</span>"
+  ).join("");
+  const hint = $("f-kind-hint"),
+    g = host.dataset.guess;
+  if (hint)
+    hint.textContent = formKind
+      ? "Set by you. Tap it again to go back to the guess" + (g ? " (" + kindAs(g) + ")." : ".")
+      : g
+        ? "Guessed from what you order: " + kindAs(g) + "."
+        : "Guessed from what you order until you choose.";
+}
+/** @param {string} k */
+function toggleKind(k) {
+  formKind = formKind === k ? "" : k;
+  renderKind();
+  syncMoreSum();
+}
 function drinkGroupPriceText(d) {
   const r = drinkPriceRange(d);
   if (!r) return "No price";
@@ -605,8 +633,9 @@ function syncMoreSum() {
   if (!wish && ck("f-fav")) set.push("Favourite");
   const br = $("f-brand") ? $("f-brand").value.trim() : "";
   if (br) set.push(br);
+  if (formKind) set.push(KIND_WORD[formKind]);
   if (!wish && formTags.length) set.push(formTags.length + (formTags.length === 1 ? " tag" : " tags"));
-  el.textContent = set.length ? set.join(" · ") : "tags, brand, favourite, wishlist, private";
+  el.textContent = set.length ? set.join(" · ") : "kind, tags, brand, favourite, wishlist, private";
   el.classList.toggle("set", set.length > 0);
 }
 function renderUsuals() {
@@ -1914,6 +1943,9 @@ function saveForm() {
         if (!keep[k] || (d.matches || 0) > (keep[k].matches || 0)) keep[k] = { elo: d.elo, matches: d.matches };
       });
       Object.assign(c, data);
+      /* `data` carries no kind, so a kind you cleared in the form has to be taken off here */
+      if (formKind) c.kind = formKind;
+      else delete c.kind;
       (c.drinks || []).forEach(function (d) {
         const p = keep[(d.n || "").trim().toLowerCase()];
         if (!p) return;
@@ -1943,11 +1975,13 @@ function saveForm() {
       const ex = findSameCafe(data.name, data.area, data.lat, data.lng);
       if (ex) {
         mergeVisitInto(ex, data);
+        if (formKind) ex.kind = formKind;
         savedId = ex.id;
         msg = "Added another visit to " + ex.name + " ✓";
       } else {
         data.id = uid();
         data.emoji = data.custom ? "🏠" : "☕";
+        if (formKind) data.kind = formKind;
         savedId = data.id;
         cafes.push(data);
       }

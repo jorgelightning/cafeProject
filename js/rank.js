@@ -60,34 +60,90 @@ function eloScoreNum(c) {
    own verdict, best-guess first, and each answer moves its position by a step that shrinks. The
    position IS its Elo (read back by rank among the references), and the number of comparisons says
    how far along the search is, so nothing new is stored on a cafe. */
-function placementRefs(c) {
-  const est = cafes.filter(function (x) {
-    return !x.wish && x.id !== c.id && !isProvisional(x);
+/* ---------- one kind at a time ----------
+   On 26 Oct a pour over at The Coffee Movement was put against Brian Black Tea, and nobody can answer that. Placing
+   looked only at the verdict, most Loved cafes are matcha and boba, and the middle of them was a tea house, so it was
+   the same question every time; 62% of placing questions and 36% of the rest paired two kinds. Every question now
+   stays inside one kind (cafeKind: what you order there, or what you set). When a kind has too few cafes to compare,
+   tea and matcha stand in for each other and boba leans on both; coffee, gelato and bakeries have no stand-in, and
+   with nobody to compare there is no question. */
+const NEAR_KINDS = { matcha: ["tea"], tea: ["matcha"], boba: ["tea", "matcha"] };
+/** 0 for one kind, 1 for a stand-in kind, 2 for two kinds that are never compared. @param {Cafe} a @param {Cafe} b */
+function kindGap(a, b) {
+  const ka = cafeKind(a),
+    kb = cafeKind(b);
+  return ka === kb ? 0 : (NEAR_KINDS[ka] || []).indexOf(kb) >= 0 ? 1 : 2;
+}
+/** Of `list`, the cafes `c` may be compared with: its own kind, or its stand-ins when its own has fewer than `min`.
+    @param {Cafe} c @param {Cafe[]} list @param {number} [min] */
+function kindPool(c, list, min) {
+  const same = list.filter(function (x) {
+    return kindGap(c, x) === 0;
   });
+  return same.length >= (min || 1)
+    ? same
+    : list.filter(function (x) {
+        return kindGap(c, x) < 2;
+      });
+}
+/* Visited in the last four months: a place you can still picture. The sheet's "Too long ago to say" uses the same line. */
+const RECENT_DAYS = 120;
+/** @param {Cafe} c */
+function visitedRecently(c) {
+  const lv = chaserLast(c);
+  return !!lv && (Date.now() - new Date(lv).getTime()) / 86400000 <= RECENT_DAYS;
+}
+function placementRefs(c) {
+  const est = kindPool(
+    c,
+    cafes.filter(function (x) {
+      return !x.wish && x.id !== c.id && !isProvisional(x);
+    }),
+    3
+  );
+  /* a place with no drink logged is one you cannot picture, so it is no reference, unless there are too few others */
+  const known = est.filter(function (x) {
+    return (x.drinks || []).length > 0;
+  });
+  const pool = known.length >= 3 ? known : est;
   const k = bucketOf(c) || "";
   const same = k
-    ? est.filter(function (x) {
+    ? pool.filter(function (x) {
         return (bucketOf(x) || "") === k;
       })
     : [];
-  /* a verdict with too few established cafes to search among borrows the whole board */
-  return (same.length >= 6 ? same : est).sort(function (a, b) {
+  /* a verdict with too few established cafes of the kind to search among uses the whole kind */
+  return (same.length >= 6 ? same : pool).sort(function (a, b) {
     return eloFor(b) - eloFor(a);
   });
 }
 /** Where an Elo falls among the references: 0 is at the top, n-1 at the bottom, fractions between. */
-/** The reference a provisional cafe should meet next, or null when there are too few to search. */
+/** The reference a provisional cafe should meet next, or null when there are too few to search.
+    The search says roughly where to look; within two places of that, the easiest one to answer about wins: in the
+    same region (The Coffee Movement in San Francisco, not a place in Bali), visited in the last four months, and as
+    close to the search point as those allow. The answer is read against the cafe it actually met (chaserApply), so
+    asking one or two places off the point still moves the search the right way. */
 function placementOpponent(c) {
   const refs = placementRefs(c);
   if (refs.length < 3) return null;
   const r0 = matchCount(c) === 0 ? refs.length / 2 : placementPos(eloFor(c), refs);
   const mid = Math.max(0, Math.min(refs.length - 1, Math.round(r0)));
-  const order = [0, 1, -1, 2, -2, 3, -3];
+  const order = [0, 1, -1, 2, -2];
+  let best = null,
+    bestCost = Infinity;
   for (let i = 0; i < order.length; i++) {
     const x = refs[mid + order[i]];
-    if (x && _chaserSeen.indexOf(pairKey(c.id, x.id)) < 0) return x;
+    if (!x) continue;
+    let cost = Math.abs(order[i]);
+    if (c.lat != null && x.lat != null && regionOf(x).val !== regionOf(c).val) cost += 1.5;
+    if (!visitedRecently(x)) cost += 1;
+    if (_chaserSeen.indexOf(pairKey(c.id, x.id)) >= 0) cost += 10;
+    if (cost < bestCost) {
+      best = x;
+      bestCost = cost;
+    }
   }
-  return refs[mid];
+  return best || refs[mid];
 }
 function eloScore(c) {
   return eloScoreNum(c).toFixed(1);
@@ -650,8 +706,16 @@ function boardRank(id) {
       .sort(function (a, b) {
         return matchCount(a) - matchCount(b);
       });
-    const ties = settledTies().filter(function (g) {
-      return _chaserSeen.indexOf(pairKey(g[0].id, g[1].id)) < 0;
+    /* two on one score are asked against each other only when they can be compared: the first pair in each group of
+       one kind (or stand-in kinds) not already asked */
+    const ties = [];
+    settledTies().forEach(function (g) {
+      for (let i = 0; i < g.length; i++)
+        for (let j = i + 1; j < g.length; j++)
+          if (kindGap(g[i], g[j]) < 2 && _chaserSeen.indexOf(pairKey(g[i].id, g[j].id)) < 0) {
+            ties.push([g[i], g[j]]);
+            return;
+          }
     });
     if (never.length) anchor = never[Math.floor(Math.random() * never.length)];
     else if (placing.length) anchor = placing[Math.floor(Math.random() * Math.min(3, placing.length))];
@@ -677,8 +741,10 @@ function boardRank(id) {
   if (twin) {
     _chaser.opp = twin.id;
     _chaser.tier = "T";
-    _chaser.myDrink = null;
-    _chaser.theirDrink = null;
+    _chaser.myDrink = usualDrink(anchor);
+    _chaser.myUsual = true;
+    _chaser.theirDrink = usualDrink(twin);
+    _chaser.theirUsual = true;
   }
   _chaser.board = true;
   chaserPaint();
@@ -740,6 +806,11 @@ function chaserLast(c) {
   });
   return ds.sort().slice(-1)[0] || "";
 }
+/** What you order most at a cafe, or null when nothing is logged. @param {Cafe} c */
+function usualDrink(c) {
+  const t = typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
+  return t && t.d && t.d.n ? String(t.d.n).trim() || null : null;
+}
 function chaserWhen(iso) {
   if (!iso) return "no dates";
   const dd = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -757,13 +828,20 @@ function chaserArm(id) {
     return x.id === id;
   });
   if (!c || c.wish) return;
-  const base = cafes.filter(function (x) {
-    return !x.wish && x.id !== c.id;
-  });
+  /* only cafes of its kind, or a stand-in kind when it has none (see kindPool); nobody to compare, no question */
+  const base = kindPool(
+    c,
+    cafes.filter(function (x) {
+      return !x.wish && x.id !== c.id;
+    })
+  );
   if (!base.length) return;
   const fresh = chaserFresh(c),
     fam = fresh ? chaserFam(fresh.n) : null;
-  /* A cafe still being placed meets a reference from its own verdict, whatever it just drank. */
+  /* What each side is remembered by: the drink just logged, else what you order most there ("Usually a Flat White"),
+     so the other side is never only a date. */
+  const mine = fresh ? fresh.n : usualDrink(c);
+  /* A cafe still being placed meets a reference of its own kind and verdict, whatever it just drank. */
   if (isProvisional(c)) {
     const ref = placementOpponent(c);
     if (ref) {
@@ -772,8 +850,10 @@ function chaserArm(id) {
         opp: ref.id,
         tier: "P",
         fam: fam,
-        myDrink: fresh ? fresh.n : null,
-        theirDrink: null,
+        myDrink: mine,
+        myUsual: !fresh,
+        theirDrink: usualDrink(ref),
+        theirUsual: true,
         flip: Math.random() < 0.5,
         ts: Date.now(),
         res: null,
@@ -839,8 +919,10 @@ function chaserArm(id) {
     opp: pick.id,
     tier: tier,
     fam: fam,
-    myDrink: fresh ? fresh.n : null,
-    theirDrink: theirDrink,
+    myDrink: mine,
+    myUsual: !fresh,
+    theirDrink: theirDrink || usualDrink(pick),
+    theirUsual: !theirDrink,
     flip: Math.random() < 0.5,
     ts: Date.now(),
     res: null,
@@ -1086,24 +1168,74 @@ function chaserRepaint() {
     warn("rank.js", e);
   }
 }
-function chaserOpt(c, drink, side) {
+/* Each side says what you'd be comparing: the drink (yours just now, or "Usually a Flat White" for what you order
+   most there), when you were last there, and what kind of place it is. @param {Cafe} c @param {string|null} drink
+   @param {number} side @param {boolean} [usual] */
+function chaserOpt(c, drink, side, usual) {
   const gp = typeof gphotoFor === "function" ? gphotoFor(c) : null;
   const th =
     gp && !_imgFail[c.id]
       ? '<span class="ch-th" style="background-image:url(\'' + safeUrl(gp) + "')\"></span>"
       : '<span class="ch-th" style="' + nophotoStyle(c) + '">' + markArt(c) + "</span>";
-  const sub = [drink ? esc(drink) : "", chaserWhen(chaserLast(c))].filter(Boolean).join(" · ");
+  const d = drink ? (usual ? "Usually " + (/^[aeiou]/i.test(drink) ? "an " : "a ") : "") + esc(drink) : "";
+  const sub = [d, chaserWhen(chaserLast(c))].filter(Boolean).join(" · ");
   return (
     '<button class="ch-opt"' +
     act("chaserPick", [side]) +
     ">" +
     th +
-    '<span class="ch-m"><span class="ch-n">' +
+    '<span class="ch-m"><span class="ch-nrow"><span class="ch-n">' +
     esc(c.name) +
-    '</span><span class="ch-s">' +
+    '</span><span class="ch-kind">' +
+    KIND_WORD[cafeKind(c)] +
+    '</span></span><span class="ch-s">' +
     sub +
     "</span></span></button>"
   );
+}
+/* The question names the kind when both places are one, or the drink when both serve it. */
+/** @type {Record<string, string>} */
+const KIND_Q = {
+  coffee: "Which coffee would you go back for?",
+  matcha: "Which matcha would you go back for?",
+  tea: "Which tea would you go back for?",
+  boba: "Which boba would you go back for?",
+  gelato: "Which gelato would you go back for?",
+  pastry: "Which bakery would you go back to?",
+};
+/** @param {Cafe} c @param {Cafe} opp */
+function chaserQuestion(c, opp) {
+  if (_chaser && _chaser.tier === "A" && _chaser.myDrink && !_chaser.myUsual) return "Which " + _chaser.myDrink.toLowerCase() + " would you go back for?";
+  const k = cafeKind(c);
+  return (k === cafeKind(opp) && KIND_Q[k]) || "Which would you go back to?";
+}
+/* "Comparing as coffee · Change": when the guess at a kind is wrong, it is put right where it shows, and the question
+   is asked again among the right kind. */
+function chaserKindPick() {
+  if (!_chaser || _chaser.res) return;
+  _chaser.kindPick = true;
+  chaserRepaint();
+}
+/** @param {string} k */
+function chaserSetKind(k) {
+  if (!_chaser || _chaser.res || !CARD_KINDS[k]) return;
+  const c = cafes.find(function (x) {
+    return x.id === _chaser.cafe;
+  });
+  if (!c) return;
+  const board = _chaser.board;
+  setCafeKind(c, k);
+  chaserArm(c.id);
+  if (!_chaser) {
+    const host = $("d-chaser");
+    if (host) host.innerHTML = "";
+    toast("Saved as " + kindAs(k) + ". No other " + KIND_WORD[k].toLowerCase() + " places to compare it with yet");
+    if (board) renderBoard();
+    return;
+  }
+  _chaser.board = board;
+  toast("Saved as " + kindAs(k));
+  chaserRepaint();
 }
 /* Bottom sheet. The scrim dismisses, matching every other sheet the app has had. */
 function chaserShell(inner) {
@@ -1220,18 +1352,31 @@ function chaserPaint() {
   const L = _chaser.flip ? opp : c,
     R = _chaser.flip ? c : opp;
   const LD = _chaser.flip ? _chaser.theirDrink : _chaser.myDrink,
-    RD = _chaser.flip ? _chaser.myDrink : _chaser.theirDrink;
+    RD = _chaser.flip ? _chaser.myDrink : _chaser.theirDrink,
+    LU = _chaser.flip ? _chaser.theirUsual : _chaser.myUsual,
+    RU = _chaser.flip ? _chaser.myUsual : _chaser.theirUsual;
+  const k = cafeKind(c);
+  const kindLine = _chaser.kindPick
+    ? '<div class="ch-kinds tagpick" role="group" aria-label="What kind of place ' +
+      esc(c.name) +
+      ' is">' +
+      KIND_KEYS.map(function (x) {
+        return '<span class="chip' + (x === k ? " on" : "") + '" role="button" tabindex="0"' + act("chaserSetKind", [x]) + ">" + KIND_WORD[x] + "</span>";
+      }).join("") +
+      "</div>"
+    : '<button class="ch-as"' + act("chaserKindPick") + ">Comparing as " + kindAs(k) + " · <u>Change</u></button>";
   host.innerHTML = chaserShell(
     '<div class="ch-hd"><span class="ch-qwrap">' +
       (eyebrow ? '<span class="ch-why">' + eyebrow + "</span>" : "") +
-      '<span class="ch-q">Which would you go back to?</span></span>' +
+      '<span class="ch-q">' + esc(chaserQuestion(c, opp)) + "</span></span>" +
       '<button class="ch-x"' + act("chaserDismiss") + ' aria-label="Not now">' + ico("x") + "</button></div>" +
       '<div class="ch-pair">' +
-      chaserOpt(L, LD, 0) +
-      chaserOpt(R, RD, 1) +
+      chaserOpt(L, LD, 0, LU) +
+      chaserOpt(R, RD, 1, RU) +
       "</div>" +
       '<button class="ch-even"' + act("chaserEven") + '>' +
       (stale ? "Too long ago to say" : "Too close to call") +
-      "</button>"
+      "</button>" +
+      kindLine
   );
 }

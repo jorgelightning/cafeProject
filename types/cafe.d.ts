@@ -61,6 +61,8 @@ interface Cafe {
   cc?: string;
   ccy?: string;
   emoji?: string;
+  /** what kind of place, when you set it (coffee, matcha, tea, boba, gelato, pastry); absent means guessed */
+  kind?: string;
   drinks?: Drink[];
   updated?: string;
 }

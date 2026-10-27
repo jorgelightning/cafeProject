@@ -210,7 +210,14 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .ch-m{ flex:1; min-width:0; }
 .ch-n{ display:block; font-size:var(--fs-3); font-weight:700; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ch-s{ display:block; font-size:var(--fs-1); font-weight:500; color:var(--soft); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ch-nrow{ display:flex; align-items:center; gap:var(--sp-2); min-width:0; }
+.ch-nrow .ch-n{ min-width:0; }
+/* what kind each side is: the question stays inside one kind, and this says which */
+.ch-kind{ flex:none; font-size:var(--fs-1); font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--soft); background:var(--surface2); border-radius:var(--r-1); padding:1px 6px; }
 .ch-even{ width:100%; height:42px; margin-top:8px; background:transparent; border:1px dashed var(--border); border-radius:var(--r-3); font-size:var(--fs-2); font-weight:600; color:var(--soft); font-family:inherit; cursor:pointer; }
+.ch-as{ display:block; width:100%; min-height:44px; margin-top:var(--sp-1); background:none; border:none; font-family:inherit; font-size:var(--fs-1); color:var(--soft); cursor:pointer; }
+.ch-as u{ font-weight:700; color:var(--acc-strong); text-underline-offset:3px; }
+.ch-kinds{ justify-content:center; margin-top:var(--sp-3); }
 .ch-rl{ font-size:var(--fs-4); font-weight:800; }
 .ch-mv{ display:flex; flex-direction:column; gap:var(--sp-1); margin-top:8px; font-size:var(--fs-2); color:var(--soft); }
 .ch-mv b{ font-weight:700; }
@@ -673,6 +680,8 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .delrow{ width:38px; flex:0 0 auto; border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface2); cursor:pointer; color:var(--soft); }
 .tagpick{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
 .tagpick .chip.on{ background:var(--acc-strong); color:var(--on-acc); border-color:transparent; }
+/* under the kind chips in the form: guessed, or set by you */
+.kindhint{ margin:var(--sp-2) 0 0; font-size:var(--fs-1); color:var(--soft); }
 /* White on --acc is 3.01:1 — a real failure at label size, the same one the update bar
    had. --acc-strong/--on-acc carries text in both themes. */
 .btn{ display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2); width:100%; padding:14px; border:none; border-radius:var(--r-3); font-size:var(--fs-3); font-weight:600; cursor:pointer; background:var(--acc-strong); color:var(--on-acc); }

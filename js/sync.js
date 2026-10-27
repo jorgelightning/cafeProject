@@ -580,6 +580,12 @@ const SYNC_FIELDS = [
     },
   ],
   [
+    "Kind",
+    function (c) {
+      return c.kind ? KIND_WORD[c.kind] || c.kind : "guessed";
+    },
+  ],
+  [
     "Favourite",
     function (c) {
       return c.fav ? "yes" : "no";

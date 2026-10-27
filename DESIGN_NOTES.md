@@ -1887,3 +1887,41 @@ honest reading. Built from main's `cafes.json` (no data branch yet, or a local r
 is no file, and the card says what the backup is rather than when. The service worker treats `backup.json` like
 `cafes.json`: network-first, stored under its bare path, so the `?t=` on each request does not leave a cache entry
 behind. `tests/site-build.js` serves a real one through the service worker to the card.
+
+## Coffee against coffee (v112)
+
+On 26 Oct a pour over at The Coffee Movement was put against Brian Black Tea. Placing a new cafe looked only at its
+verdict: The Coffee Movement was Loved, so it searched the 43 placed Loved cafes, only 5 of them coffee, from the
+middle, and the middle was a tea house. With no answers yet the middle never moves, so it was the same question
+every time (200 of 200 simulated). On the live list 62% of placing questions and 36% of the others paired two
+kinds. The compare audit (27 Oct) measured it; four of its six picks are in.
+
+**One kind (C1).** Every question, placing or not, and every tie Rank a pair settles, is between two cafes of one
+kind (`kindPool`, `kindGap`; the kind is `cafeKind`, what you order most there unless you set it). When a kind is
+short, tea and matcha stand in for each other and boba leans on both; coffee, gelato and bakeries have no stand-in,
+and a cafe with nobody of its kind gets no question. The verdict still narrows the search when the kind has six
+or more placed cafes of it. The cost: the overall Best list orders a coffee bar against a tea house by verdict and
+by where each stands in its own kind, never by a direct answer. Go already lists each kind on its own. Run on the
+live list, 0 of 3,540 questions cross kinds and every save still asks one.
+
+**Nearby and remembered (C2).** The search still says roughly where to look; within two places of that point the
+easiest one wins: same region (+1.5 if not), visited in the last 120 days (+1 if not), then the distance. A placed
+cafe with no drink logged is no reference unless fewer than three others are. The Coffee Movement now meets Kasama
+Cà Phê (California, a month ago) instead of Xi Bo Ba Renon in Bali, which has nothing logged. `chaserApply`
+already reads an answer against the cafe actually met, so asking off the point still moves the search correctly,
+and `rank-placement.js` (a board of drinkless, regionless cafes) converges exactly as before.
+
+**What is being compared (C3).** The other side shows what you order there ("Usually a Davao Mocha · 1mo ago"),
+never only a date; your side shows today's drink, or yours as usual when there is none (Rank a pair). Each side
+carries a kind tag, and the question names the kind ("Which coffee would you go back for?") or, when both serve
+the drink you just had, the drink.
+
+**A kind you can set (C6).** `cafe.kind` overrides the guess (and the emoji). The form's More has a Kind of place
+row that shows the guess and clears back to it on a second tap; the sheet has "Comparing as coffee · Change",
+which saves the kind and asks again among the right cafes. Before this an emoji could only say matcha, boba, gelato
+or bakery: nothing could say a place was tea or coffee, and Teapresso Bar, whose one drink ("Plantation") says
+nothing, counted as coffee. The conflict review lists Kind with the other fields.
+
+Not done: C4 (ways out that record nothing; "Too long ago to say" still records a tie) and C5 (placing progress
+and "Place it now") were not picked. The drink guesser reads "oolong" as boba, which the new test ran into; a
+cafe whose drinks say oolong tea and is a tea house can now be set to Tea.

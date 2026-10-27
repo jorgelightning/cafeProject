@@ -1119,6 +1119,8 @@ function queryKind(q) {
  *  you go for the flat white, and Zen Gelato is a bowl, you go for the matcha latte); a gelato or bakery name; then
  *  a vote across its other drinks weighted by how often you ordered each, and the cafe's own tags. @param {Cafe} c */
 function cafeKind(c) {
+  /* what you said it is wins over every guess (setCafeKind) */
+  if (c.kind && CARD_KINDS[c.kind]) return c.kind;
   if (c.emoji && EMOJI_KIND[c.emoji]) return EMOJI_KIND[c.emoji];
   const who = [c.name, c.brand].join(" ").toLowerCase();
   if (/boba|bubble tea|milk tea|heytea|chagee|tiger sugar|gong cha|milksha|comebuy|teapioca|tapioca/.test(who)) return "boba";
@@ -1143,6 +1145,25 @@ function cafeKind(c) {
   if (/matcha|hojicha/.test(who) && !/coffee|espresso/.test(who)) return "matcha";
   if (/\btea\b/.test(who) && !/coffee|espresso/.test(who)) return "tea";
   return "coffee";
+}
+/* What a kind is called where you choose it, and in the comparison sheet. The guess above gets a place wrong now and
+   then (Teapresso Bar's one drink, "Plantation", says nothing, so it fell to coffee), and an emoji could only ever say
+   matcha, boba, gelato or bakery, so a cafe's kind can be set: in the form, or from the sheet. */
+const KIND_KEYS = ["coffee", "matcha", "tea", "boba", "gelato", "pastry"];
+const KIND_WORD = { coffee: "Coffee", matcha: "Matcha", tea: "Tea", boba: "Boba", gelato: "Gelato", pastry: "Bakery" };
+/** "as coffee", "as a bakery" @param {string} k */
+function kindAs(k) {
+  return k === "pastry" ? "a bakery" : (KIND_WORD[k] || "coffee").toLowerCase();
+}
+/** What the guess says, whatever was set. @param {Cafe} c */
+function guessedKind(c) {
+  return cafeKind(Object.assign({}, c, { kind: "" }));
+}
+/** Sets what kind of place a cafe is, or with no kind clears it back to the guess. @param {Cafe} c @param {string} [k] */
+function setCafeKind(c, k) {
+  if (k && CARD_KINDS[k]) c.kind = k;
+  else delete c.kind;
+  saveCafe(c.id);
 }
 /* The cafe's mark, drawn: the same vessel as its share card, in cream line art, on its drink's colour. Tiles, the
    cafe page, the Go queue and the rank sheet all use it, so the app and what you share speak one language. An
