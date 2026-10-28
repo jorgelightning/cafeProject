@@ -354,7 +354,7 @@ const { eq, done } = checker();
     openForm();
     return document.querySelector("#f-usuals .usuallbl").textContent;
   });
-  eq(r, "Log again", "a form with no brand shows plain usuals");
+  eq(r, "Your usuals", "a form with no brand shows your usuals, not \"Log again\" (day run)");
 
   r = await pg.evaluate(() => {
     openForm();

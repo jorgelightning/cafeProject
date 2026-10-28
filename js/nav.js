@@ -56,8 +56,13 @@ function show(view, fav) {
    action, 124px of the bottom of every cafe. The tab is the one now. On a cafe page it is "Log here" and opens the
    quick cup for that cafe; anywhere else it is "Log", a new visit. */
 function logTab() {
-  if (app.dataset.view === "detail" && curId && isAdmin && typeof openQuickCup === "function") openQuickCup();
-  else openForm();
+  if (app.dataset.view === "detail" && curId && isAdmin && typeof openQuickCup === "function") {
+    openQuickCup();
+    return;
+  }
+  /* standing in a cafe on your list: its quick cup, from anywhere (form.js logHere) */
+  if (isAdmin && typeof logHere === "function" && logHere()) return;
+  openForm();
 }
 function syncLogTab() {
   const t = $("t-log"),

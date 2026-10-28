@@ -12,6 +12,7 @@ let cafes = [],
   formCC = "",
   formCcy = "",
   formPid = "",
+  formStreet = "",
   favOnly = false,
   lastMain = "map";
 let gReady = false,
@@ -321,12 +322,20 @@ function youOr(you, them) {
   return isAdmin ? you : them;
 }
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-function toast(m) {
+/** @param {string} m @param {{label:string, on:string}} [a] one thing to do about it (a quiet save's Compare one),
+    which keeps the toast up long enough to reach */
+function toast(m, a) {
   const t = $("toast");
   t.textContent = m;
+  t.classList.toggle("has-act", !!a);
+  if (a)
+    t.insertAdjacentHTML(
+      "beforeend",
+      '<button type="button" class="toastact"' + act(a.on) + ">" + esc(a.label) + "</button>"
+    );
   t.classList.add("show");
   clearTimeout(t._t);
-  t._t = setTimeout(() => t.classList.remove("show"), 1800);
+  t._t = setTimeout(() => t.classList.remove("show"), a ? 5000 : 1800);
 }
 const _imgFail = {};
 let _photoRetried = {};

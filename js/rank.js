@@ -119,24 +119,29 @@ function placementRefs(c) {
 }
 /** Where an Elo falls among the references: 0 is at the top, n-1 at the bottom, fractions between. */
 /** The reference a provisional cafe should meet next, or null when there are too few to search.
-    The search says roughly where to look; within two places of that, the easiest one to answer about wins: in the
+    The search says roughly where to look; within three places of that, the easiest one to answer about wins: in the
     same region (The Coffee Movement in San Francisco, not a place in Bali), visited in the last four months, and as
     close to the search point as those allow. The answer is read against the cafe it actually met (chaserApply), so
-    asking one or two places off the point still moves the search the right way. */
+    asking a few places off the point still moves the search the right way.
+    Day run, 27 Oct: Andytown met Quán 1974, last visited Sep 2022, because two places either side held nothing
+    better and another region or an old visit cost little more than a step. 90% of placing questions were hard to
+    judge (another region, four months unvisited or 40+ places apart). Three either side, another region at 2.5 and
+    an old visit at 2: 73%, and Andytown meets Kasama Cà Phê, a month ago. Most of the list is older than four
+    months, so a new cafe cannot always meet a fresh one. */
 function placementOpponent(c) {
   const refs = placementRefs(c);
   if (refs.length < 3) return null;
   const r0 = matchCount(c) === 0 ? refs.length / 2 : placementPos(eloFor(c), refs);
   const mid = Math.max(0, Math.min(refs.length - 1, Math.round(r0)));
-  const order = [0, 1, -1, 2, -2];
+  const order = [0, 1, -1, 2, -2, 3, -3];
   let best = null,
     bestCost = Infinity;
   for (let i = 0; i < order.length; i++) {
     const x = refs[mid + order[i]];
     if (!x) continue;
     let cost = Math.abs(order[i]);
-    if (c.lat != null && x.lat != null && regionOf(x).val !== regionOf(c).val) cost += 1.5;
-    if (!visitedRecently(x)) cost += 1;
+    if (c.lat != null && x.lat != null && regionOf(x).val !== regionOf(c).val) cost += 2.5;
+    if (!visitedRecently(x)) cost += 2;
     if (_chaserSeen.indexOf(pairKey(c.id, x.id)) >= 0) cost += 10;
     if (cost < bestCost) {
       best = x;
@@ -198,6 +203,28 @@ function boardArea(c) {
    No photo here on purpose: photos are fetched lazily on the detail page so Places costs one
    lookup per cafe *viewed* rather than one per cafe *listed*, and 102 rows would invert that.
    The emoji tile the board already used stays. */
+/* ---------- would you order it again ----------
+   The newest answer to "Would order again?" for a drink, or "" when no cup has one: a cup logged without an answer
+   leaves the last answer standing. */
+/** @param {Drink} d @returns {"yes"|"neutral"|"no"|""} */
+function drinkVerdict(d) {
+  const os = drinkOrders(d)
+    .filter(function (o) {
+      return o.reorder;
+    })
+    .sort(function (a, b) {
+      return (a.date || "").localeCompare(b.date || "");
+    });
+  return os.length ? /** @type {"yes"|"neutral"|"no"} */ (os[os.length - 1].reorder) : "";
+}
+/* For breaking a tie in cups: 👍 first, then no answer, then 😐, then 👎. On 27 Oct a Cortado said Maybe to became
+   What to order at The Coffee Movement over a Pour over with 👍 and a note, because one cup each was settled by
+   the alphabet. Cups still come first, so a drink you keep ordering leads whatever you said once. */
+const VERDICT_ORDER = { yes: 0, "": 1, neutral: 2, no: 3 };
+/** @param {Drink} d */
+function verdictRank(d) {
+  return VERDICT_ORDER[drinkVerdict(d)];
+}
 /** @param {Cafe|null|undefined} c @returns {{d:Drink,n:number}|null} */
 function topDrinkAt(c) {
   const ds = ((c && c.drinks) || [])
@@ -214,9 +241,21 @@ function topDrinkAt(c) {
     });
   if (!ds.length) return null;
   ds.sort(function (a, b) {
-    return b.n - a.n || (a.d.n || "").localeCompare(b.d.n || "");
+    return (
+      b.n - a.n ||
+      verdictRank(a.d) - verdictRank(b.d) ||
+      ((latestDrinkOrder(b.d) || {}).date || "").localeCompare((latestDrinkOrder(a.d) || {}).date || "") ||
+      (a.d.n || "").localeCompare(b.d.n || "")
+    );
   });
-  return ds[0];
+  /* A drink whose last answer was 👎 is never the one to order. */
+  const ok = ds.filter(function (x) {
+    return drinkVerdict(x.d) !== "no";
+  });
+  if (ok.length) return ok[0];
+  /* Every drink here was last a 👎: nothing to recommend, so What to order hides, the List row names no drink and
+     the ranking question shows only the date. Naming one anyway would recommend a drink you said no to. */
+  return null;
 }
 /* Trim on a word boundary — a note cut mid-word reads as broken rather than abbreviated. */
 function boardSnip(t, max) {
@@ -843,7 +882,37 @@ function chaserWhen(iso) {
   if (dd <= 120) return Math.floor(dd / 30) + "mo ago";
   return fmtDate(iso).replace(/ \d+,/, "");
 }
-function chaserArm(id) {
+/* ---------- your usual, saved quietly ----------
+   A 13th Flat White at Kissaten HiFi (#3) asked Kissaten or Island Vintage in Kapolei (#112)? The answer was obvious
+   and nothing moved (day run, 27 Oct). A drink had QUIET_CUPS times at a cafe that already has its place says
+   nothing new about the cafe, so it saves without a question; the toast says where the cafe stands and offers
+   Compare one. A new drink, or a cafe still being placed, still asks. */
+const QUIET_CUPS = 3;
+/** @param {Drink} d */
+function cupsOf(d) {
+  return drinkOrders(d).reduce(function (t, o) {
+    return t + orderQty(o);
+  }, 0);
+}
+/** @param {Cafe} c @param {Drink} d */
+function chaserQuiet(c, d) {
+  const m = rankMap(),
+    r = rankOf(c, m);
+  toast("Logged " + d.n + (r ? " · stays " + rankText(r, m) : ""), { label: "Compare one", on: "chaserCompareOne" });
+}
+/* the toast's Compare one: the question the quiet save skipped, for the cafe on screen */
+function chaserCompareOne() {
+  const t = $("toast");
+  if (t) t.classList.remove("show");
+  const c = cafes.find(function (x) {
+    return x.id === curId;
+  });
+  if (!c) return;
+  chaserArm(c.id, true);
+  renderChaser(c);
+}
+/** @param {string} id @param {boolean} [force] ask even about your usual (Compare one) */
+function chaserArm(id, force) {
   _chaser = null;
   if (!isAdmin) return;
   const c = cafes.find(function (x) {
@@ -860,6 +929,10 @@ function chaserArm(id) {
   if (!base.length) return;
   const fresh = chaserFresh(c),
     fam = fresh ? chaserFam(fresh.n) : null;
+  if (!force && fresh && !isProvisional(c) && cupsOf(fresh) >= QUIET_CUPS) {
+    chaserQuiet(c, fresh);
+    return;
+  }
   /* What each side is remembered by: the drink just logged, else what you order most there ("Usually a Flat White"),
      so the other side is never only a date. */
   const mine = fresh ? fresh.n : usualDrink(c);
@@ -908,26 +981,32 @@ function chaserArm(id) {
     }
   }
   /* Coverage is the binding constraint — 18 cafes have never been compared and most were
-     visited recently — so fewest-matches dominates the cost. */
+     visited recently — so fewest-matches dominates the cost.
+     Day run, 27 Oct: 63% of these questions were hard to judge, and 42% put two cafes 40 or more places apart, like
+     Kissaten (#3) against Island Vintage (#112). Another region now costs 1.5 (was 0.5), four months unvisited 1,
+     each place between the two 1/20, and the pick is among the three cheapest (was five): 37%, and 4% that far apart. */
+  const rm = rankMap();
   const scored = cand
     .map(function (x) {
       let cost = 0.35 * matchCount(x);
       const lv = chaserLast(x);
       if (!lv) cost += 0.6;
       else if ((Date.now() - new Date(lv).getTime()) / 86400000 > 180) cost += 1.2;
+      if (!visitedRecently(x)) cost += 1;
       if (x.area && c.area && x.area.trim() === c.area.trim()) cost -= 0.4;
       /* the easiest question to answer is between two of a kind in one region: two coffee bars in California,
          not a tea ceremony against a gelato bar an ocean apart */
       if (cafeKind(x) !== cafeKind(c)) cost += 0.6;
-      if (x.lat != null && c.lat != null && regionOf(x).val !== regionOf(c).val) cost += 0.5;
+      if (x.lat != null && c.lat != null && regionOf(x).val !== regionOf(c).val) cost += 1.5;
       if ((bucketOf(x) || "") !== (bucketOf(c) || "")) cost += 1.0;
+      if (rm[c.id] && rm[x.id]) cost += Math.abs(rm[c.id] - rm[x.id]) / 20;
       if (_chaserSeen.indexOf(pairKey(c.id, x.id)) >= 0) cost += 2.0;
       return { x: x, cost: cost + Math.random() * 0.3 };
     })
     .sort(function (a, b) {
       return a.cost - b.cost;
     });
-  const shortlist = scored.slice(0, 5);
+  const shortlist = scored.slice(0, 3);
   const pick = shortlist[Math.floor(Math.random() * shortlist.length)].x;
   let theirDrink = null;
   if (tier === "A" || tier === "B") {

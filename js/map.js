@@ -1213,7 +1213,8 @@ function welcomeRegion(v) {
   /* after jumpToLocation's own fit of the whole region: a first look goes to where its cafes are (D3) */
   if (v) setTimeout(() => fitDense(v), 0);
 }
-let userLoc = null;
+let userLoc = null,
+  userLocAt = 0; /* when that fix came in: Log trusts only a recent one (form.js logHere) */
 /* A region picked by hand (a regionOf() value): where Go filters to, and what Near me falls back to when the phone
    will not give a position. "" is everywhere. */
 let pickedRegion = "";
@@ -1390,6 +1391,7 @@ function showUserLocation(center, done, force) {
     p => {
       const pos = { lat: p.coords.latitude, lng: p.coords.longitude };
       userLoc = pos;
+      userLocAt = Date.now();
       if (app.dataset.view === "list") renderList();
       /* The guide regroups the moment we know where you are, rather than on the next navigation. */
       else if (app.dataset.view === "compare" && typeof renderBoard === "function") renderBoard();
@@ -1487,3 +1489,12 @@ function autoLocate() {
     });
   });
 }
+/* A phone left open at home and taken out at the counter comes back with a fix from home. Coming back to the
+   screen refreshes it, silently and only with permission already given, so Log opens on the cafe you are in
+   (form.js logHere). It never moves the map. */
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState !== "visible" || !userLoc || Date.now() - userLocAt < 60000) return;
+  ifLocationAlreadyAllowed(function () {
+    showUserLocation(false);
+  });
+});

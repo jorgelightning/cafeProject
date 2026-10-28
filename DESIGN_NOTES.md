@@ -2000,3 +2000,40 @@ Daly City and San Bruno, and zoom 11 is the last level the clusterer still bubbl
 map showed bubbles of 3, 4 and 8. The busiest part now opens centred on its busiest cafe at `CLUSTER_MAX_ZOOM + 1`,
 where every cafe is its own dot; at zoom 12 over San Francisco that was 35 of them. The clusterer reads the same
 constant, so the two cannot drift apart.
+
+## One day, three cafes (v116)
+
+A day logged on the live site at phone size (owner mode in a throwaway browser, saving off): Andytown Coffee
+Roasters, new; a 13th Flat White at Kissaten HiFi; a Cortado at The Coffee Movement. 29 taps, 7 of them typing,
+and three ranking questions that taught the app little. Five changes came of it.
+
+**Log starts where you are.** A return visit took nine taps: Log opened the new-cafe form unless that cafe's page
+was already open, so you found it in the List first. Log now opens the quick cup of a cafe on your list within
+150 m (`HERE_M`) of a fix under five minutes old, with "You're here · 98 ft" and Not here?, which lists the five
+closest and Somewhere new. Otherwise Log is the new-cafe form, as before. Private spots never match, because their
+pins are blurred on purpose. The app still never asks for location on its own: the fix is the one it already reads
+when permission was given, refreshed silently when the app comes back to the screen. Kissaten went from 9 taps to 4.
+
+**The right branch.** The first Andytown suggestion was the Kearny St one, six miles away; the one I was in was
+third. The form named only "Union Square", so nothing looked wrong. The name field now asks Google's suggestion
+service with your location as the origin and as a preference (not a fence), shows branches of one name nearest
+first with their distance, and leaves different names in Google's order. The where line names the street: "Lawton
+St · Outer Sunset". Where that service is missing, the old dropdown is used.
+
+**A Maybe never becomes What to order.** The 😐 Cortado (one cup) became What to order over the 👍 Pour over (one
+cup, and a note) because the tie was broken by the alphabet. A tie in cups now goes to the newest answer to Would
+order again (👍, then none, then 😐, then 👎), then the newest cup; a drink last marked 👎 is never What to order,
+and a cafe where every drink was last a 👎 shows none rather than recommend one you said no to. Cups still come first. The cafe page, its drink list and the List row read the same order.
+
+**Fewer, better questions.** The usual at a cafe that already has its place (a drink had three or more times,
+`QUIET_CUPS`) saves without a question; the toast says "Logged Flat White · stays #3" and offers Compare one.
+Otherwise the other cafe is picked more carefully. Simulated over every public cafe, 20 questions each, the share
+that were hard to judge (another region, four months unvisited, or 40+ places apart) went from 90% to 73% while
+placing (three places either side; another region 2.5, an old visit 2) and from 63% to 37% for settled cafes
+(another region 1.5, four months unvisited 1, each place between them 1/20, the pick among the three cheapest).
+Pairs 40+ places apart went from 42% to 4%. Placing stays high because most of the list is older than four months.
+
+**Small fixes.** Ranks below #10 were cream on a white pill, because the badge inherited the photo header's text
+colour; it has its own ink now. The price copied from last time reads 5.00, not 5. A drink card shows its latest
+price, so "$4.25–$5.00" no longer breaks "12 cups · last Oct 17"; each cup in the history keeps its own price. The
+new-cafe form's chips say Your usuals, keeping "Log again" for another branch of the same brand. `tests/day-run.js`.

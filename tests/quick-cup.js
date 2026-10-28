@@ -55,17 +55,22 @@ const { eq, done } = checker();
   eq(s.focus, "dns-title", "…and the sheet opens with the keyboard on its title, so no drink looks chosen");
   await pg.locator('#dns-panel .dntag[data-n="Flat White"]').click();
   s = await pg.evaluate(() => ({ same: document.querySelector(".qcsame").innerText.replace(/\s+/g, " "), price: $("qc-price").value }));
-  eq(s, { same: "✓ Same as last time 8 oz · oat · no sugar · warm", price: "5" }, "the drink brings its last options and its last price");
+  eq(s, { same: "✓ Same as last time 8 oz · oat · no sugar · warm", price: "5.00" }, "the drink brings its last options and its last price, as money (5.00, not 5: day run)");
   await pg.getByRole("button", { name: "Would order again: yes" }).click();
-  eq(await pg.evaluate(() => $("qc-price").value), "5", "choosing 👍 keeps the price in the box");
+  eq(await pg.evaluate(() => $("qc-price").value), "5.00", "choosing 👍 keeps the price in the box");
   await pg.getByRole("button", { name: "Save cup" }).click();
   s = await pg.evaluate(() => {
     const d = cafes[0].drinks.find(x => x.n === "Flat White"), o = d.orders[d.orders.length - 1];
     return { n: d.orders.length, o: [o.date, o.p, o.size, o.sweet, o.ice, o.milk, o.reorder, !!o.id], sheet: !$("dnsheet").hidden, view: app.dataset.view, chaser: !!_chaser };
   });
   eq(s.n, 4, "Save cup adds a fourth Flat White");
-  eq(s.o, [T, "5", "8 oz", "0%", "Warm", "Oat", "yes", true], "…dated today, at the price, with the same options and the 👍");
-  eq([s.sheet, s.view, s.chaser], [false, "detail", true], "…puts the sheet away, back on the cafe, with the ranking question that follows a visit");
+  eq(s.o, [T, "5.00", "8 oz", "0%", "Warm", "Oat", "yes", true], "…dated today, at the price, with the same options and the 👍");
+  /* a fourth Flat White at a cafe that has its place is the usual: no question (day run R4) */
+  eq([s.sheet, s.view, s.chaser], [false, "detail", false], "…puts the sheet away, back on the cafe, and the usual asks no ranking question");
+  s = await pg.evaluate(() => ({ t: $("toast").firstChild.textContent, b: ($("toast").querySelector(".toastact") || {}).textContent, tap: getComputedStyle($("toast")).pointerEvents }));
+  eq([/^Logged Flat White · stays [#=]\d+$/.test(s.t), s.b, s.tap], [true, "Compare one", "auto"], "…the toast says where the cafe stands and offers Compare one");
+  await pg.locator("#toast .toastact").click();
+  eq(await pg.evaluate(() => [!!_chaser && _chaser.cafe, !!document.querySelector("#d-chaser .ch-sheet")]), ["kh", true], "…which asks the question it skipped");
   await pg.evaluate(() => { chaserDismiss(); });
 
   /* not the same as last time, and something new */
@@ -73,7 +78,7 @@ const { eq, done } = checker();
   await pg.locator(".qcsame").click();
   await pg.getByRole("button", { name: "Save cup" }).click();
   s = await pg.evaluate(() => { const d = cafes[0].drinks.find(x => x.n === "Flat White"), o = d.orders[d.orders.length - 1]; return [o.size || null, o.milk || null, o.p]; });
-  eq(s, [null, null, "5"], "with Same as last time off, the options are left out and the price stays");
+  eq(s, [null, null, "5.00"], "with Same as last time off, the options are left out and the price stays");
   await pg.evaluate(() => { chaserDismiss(); openQuickCup(); });
   await pg.getByRole("button", { name: "Something else" }).click();
   await pg.locator("#qc-other").fill("Cortado");

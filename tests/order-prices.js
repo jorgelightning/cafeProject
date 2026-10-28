@@ -76,8 +76,8 @@ const { eq, done } = checker();
    const sep=$("stats-body").innerText;
    return {summary,rows,fits,startsShut,opens,closesAgain,june,sep};
  });
- eq(/Hojicha Latte/.test(r.summary)&&/3 cups/.test(r.summary)&&/\$6\.75–\$7\.25/.test(r.summary),true,
-    'detail summary shows drink, order count and historical price range');
+ eq(/Hojicha Latte/.test(r.summary)&&/3 cups/.test(r.summary)&&/\$7\.25/.test(r.summary)&&!/–/.test(r.summary),true,
+    'detail summary shows drink, order count and the latest price, not the range (day run)');
  eq(r.rows.length,2,'detail expands to one row per dated order');
  eq(/Sep 2, 2026/.test(r.rows[0])&&/Latest/.test(r.rows[0])&&/×2/.test(r.rows[0])&&/\$7\.25/.test(r.rows[0]),true,
     'newest order row shows date, latest marker, quantity and its own price');

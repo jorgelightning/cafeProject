@@ -175,15 +175,6 @@ function drinkNoteHTML(orders) {
     '<span class="ntwho">' + esc(noteContext(orders, o)) + "</span></div>"
   );
 }
-function drinkHistoryPrice(d, latest) {
-  const range = drinkPriceRange(d);
-  if (range && Math.abs(range.max - range.min) >= 0.0001) {
-    const lo = range.code === "USD" ? fmtPrice(range.min) : fmtLocal(range.min, range.code);
-    const hi = range.code === "USD" ? fmtPrice(range.max) : fmtLocal(range.max, range.code);
-    return '<span class="pr range">' + esc(lo + "–" + hi) + "</span>";
-  }
-  return priceHTML(latest);
-}
 function toggleDrinkHistory(btn) {
   const card = btn.closest(".drinkcard");
   if (!card) return;
@@ -807,10 +798,13 @@ function openDetail(id, from) {
   const _lastDate = d => (latestDrinkOrder(d) || {}).date || "";
   const _cupsOf = d => drinkOrders(d).reduce((t, o) => t + orderQty(o), 0);
   /* Most ordered first (design audit D6). Newest first opened Kissaten HiFi on a chai you had once and did not like,
-     above the Flat White you have had twelve times: the list should agree with What to order. Ties go to the newest. */
+     above the Flat White you have had twelve times: the list should agree with What to order. Ties go to the one you
+     would order again (verdictRank, rank.js), then the newest. */
   const _dsorted = (c.drinks || [])
     .slice()
-    .sort((a, b) => _cupsOf(b) - _cupsOf(a) || _lastDate(b).localeCompare(_lastDate(a)));
+    .sort(
+      (a, b) => _cupsOf(b) - _cupsOf(a) || verdictRank(a) - verdictRank(b) || _lastDate(b).localeCompare(_lastDate(a))
+    );
   /* One compact card per drink, and all of them start closed. The newest used to open itself,
    which meant the one cafe with a long history pushed the note and the tags off the screen on
    arrival. The summary line — name, how many, latest, price — is the part worth reading at a
@@ -897,8 +891,10 @@ function openDetail(id, from) {
             "</span>" +
             modPills(latest) +
             "</span>" +
+            /* The latest price, not the range: "$4.25–$5.00" took the right side of Kissaten's Flat White and broke
+               "12 cups · last Oct 17" after "Oct" (day run, 27 Oct). Each cup in the history keeps its own price. */
             '<span class="drinkprice">' +
-            drinkHistoryPrice(d, latest) +
+            priceHTML(latest) +
             "</span>" +
             '<span class="drinkchev" aria-hidden="true">' +
             (open ? "▾" : "▸") +

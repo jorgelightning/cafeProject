@@ -156,6 +156,7 @@ function openForm(id) {
   formCC = c ? c.cc || "" : branchSrc ? branchSrc.cc || "" : "";
   formCcy = c ? c.ccy || "" : branchSrc ? branchSrc.ccy || "" : "";
   formPid = c ? c.pid || "" : "";
+  formStreet = "";
   picked = c && latOf(c) != null ? { lat: latOf(c), lng: lngOf(c) } : null;
   renderRate();
   renderTags();
@@ -266,6 +267,212 @@ function closeForm() {
   else if (favOnly) show("list", true);
   else show(lastMain);
 }
+/** A place picked from either dropdown, in the old Places shape. @param {any} p */
+function formPlacePicked(p) {
+  /* Picking a different place is a relocation, so the area has to follow it. Keeping the
+    old one left the cafe reading as its previous neighbourhood, and left the photo query
+    (name + area) unchanged, so the wrong photo came straight back. */
+  const _wasAt = picked ? { lat: picked.lat, lng: picked.lng } : null;
+  let _moved = false;
+  if (p.geometry && p.geometry.location) {
+    const loc = p.geometry.location;
+    setPicked(loc.lat(), loc.lng());
+    if (fgmap) {
+      fgmap.setCenter(loc);
+      fgmap.setZoom(16);
+    }
+    _moved = !_wasAt || Math.abs(_wasAt.lat - picked.lat) > 0.0004 || Math.abs(_wasAt.lng - picked.lng) > 0.0004;
+  }
+  if (p.name) $("f-name").value = p.name;
+  /* The one piece of the answer that is not a guess. Every Places record has a unique id,
+    and this response already contains it — the app used to throw it away and then go
+    looking for the place again by name, which is how a cafe ends up wearing another
+    cafe's photo. Keep it and the photo lookup stops searching entirely. */
+  if (p.place_id) formPid = String(p.place_id);
+  /* address_components was already being requested and already being walked for the area;
+   the country component rides along on the same response. It is the authoritative answer
+   to "which money is this", which no lat/lng rectangle can be. */
+  if (p.address_components) {
+    const co = p.address_components.find(x => x.types.includes("country"));
+    if (co && co.short_name) {
+      formCC = co.short_name.toUpperCase();
+      refreshRowCcy();
+    }
+    if (!$("f-area").value || _moved) {
+      const nb = p.address_components.find(
+        x => x.types.includes("neighborhood") || x.types.includes("sublocality") || x.types.includes("locality")
+      );
+      if (nb) $("f-area").value = nb.long_name;
+    }
+    /* the street, for the where line only: "Union Square" alone hid that this Andytown was six miles away */
+    const rt = p.address_components.find(x => x.types.includes("route"));
+    formStreet = rt ? rt.short_name || rt.long_name || "" : "";
+  }
+  syncWhere();
+  autoBrand();
+  checkExisting();
+}
+/* ---------- nearest branch first ----------
+   Day run, 27 Oct: at the Lawton St Andytown, the first suggestion was the Kearny St one, six miles away; the
+   search was never told where you were. This list asks Google with your location as the origin and as a
+   preference (never a fence: a cafe in another city still comes up by name), keeps Google's order between
+   different names, and puts branches of one name nearest first, each with its distance. A pick is fetched once
+   and handed to formPlacePicked in the shape the old dropdown gave. */
+let _ns = /** @type {{tok:any, list:any[], t:number, seq:number}|null} */ (null);
+const NEAR_BIAS_M = 20000;
+function nearSearchInit() {
+  const inp = /** @type {HTMLInputElement} */ ($("f-name"));
+  if (!inp || inp.dataset.near) return;
+  inp.dataset.near = "1";
+  inp.setAttribute("autocomplete", "off");
+  inp.setAttribute("aria-autocomplete", "list");
+  inp.setAttribute("aria-controls", "f-sugg");
+  const box = document.createElement("div");
+  box.id = "f-sugg";
+  box.className = "fsugg";
+  box.setAttribute("role", "listbox");
+  box.setAttribute("aria-label", "Places");
+  box.hidden = true;
+  inp.after(box);
+  _ns = { tok: null, list: [], t: 0, seq: 0 };
+  inp.addEventListener("input", function () {
+    clearTimeout(_ns.t);
+    _ns.t = setTimeout(nearSearchRun, 250);
+  });
+  inp.addEventListener("keydown", function (e) {
+    const first = /** @type {HTMLElement|null} */ (box.querySelector(".fsg"));
+    if (e.key === "ArrowDown" && first && !box.hidden) {
+      e.preventDefault();
+      first.focus();
+    } else if (e.key === "Escape") nearSearchClose();
+  });
+  box.addEventListener("keydown", function (e) {
+    const opts = /** @type {HTMLElement[]} */ ([...box.querySelectorAll(".fsg")]);
+    const i = opts.indexOf(/** @type {HTMLElement} */ (document.activeElement));
+    if (e.key === "ArrowDown" && i < opts.length - 1) opts[i + 1].focus();
+    else if (e.key === "ArrowUp") (i > 0 ? opts[i - 1] : inp).focus();
+    else if (e.key === "Escape") {
+      nearSearchClose();
+      inp.focus();
+    } else return;
+    e.preventDefault();
+  });
+  document.addEventListener("pointerdown", function (e) {
+    const t = /** @type {Node} */ (e.target);
+    if (!box.hidden && t !== inp && !box.contains(t)) nearSearchClose();
+  });
+}
+function nearSearchClose() {
+  const box = $("f-sugg");
+  if (box) {
+    box.hidden = true;
+    box.innerHTML = "";
+  }
+  if ($("f-name")) $("f-name").setAttribute("aria-expanded", "false");
+}
+async function nearSearchRun() {
+  const inp = /** @type {HTMLInputElement} */ ($("f-name"));
+  const q = (inp.value || "").trim();
+  if (!_ns || q.length < 2 || document.activeElement !== inp) {
+    nearSearchClose();
+    return;
+  }
+  const P = google.maps.places;
+  if (!_ns.tok) _ns.tok = new P.AutocompleteSessionToken();
+  const seq = ++_ns.seq;
+  /** @type {any} */
+  const req = { input: q, sessionToken: _ns.tok };
+  const here = typeof userLoc !== "undefined" && userLoc ? userLoc : null;
+  if (here) {
+    req.origin = here;
+    req.locationBias = { center: here, radius: NEAR_BIAS_M };
+  }
+  let res;
+  try {
+    res = await P.AutocompleteSuggestion.fetchAutocompleteSuggestions(req);
+  } catch (e) {
+    warn("form.js place search", e);
+    return;
+  }
+  if (seq !== _ns.seq) return; /* a newer keystroke has its own answer coming */
+  const preds = ((res && res.suggestions) || []).map(s => s.placePrediction).filter(Boolean);
+  _ns.list = nearSort(preds);
+  nearSearchPaint();
+}
+/** Google's order between names, nearest first within one name. @param {any[]} preds */
+function nearSort(preds) {
+  const nameOf = p =>
+    String((p.mainText && p.mainText.text) || (p.text && p.text.text) || "")
+      .trim()
+      .toLowerCase();
+  const firstAt = {};
+  preds.forEach((p, i) => {
+    const k = nameOf(p);
+    if (!(k in firstAt)) firstAt[k] = i;
+  });
+  const far = p => (p.distanceMeters == null ? Infinity : p.distanceMeters);
+  return preds
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => firstAt[nameOf(a.p)] - firstAt[nameOf(b.p)] || far(a.p) - far(b.p) || a.i - b.i)
+    .map(x => x.p);
+}
+function nearSearchPaint() {
+  const box = $("f-sugg");
+  if (!box || !_ns) return;
+  if (!_ns.list.length) {
+    nearSearchClose();
+    return;
+  }
+  box.innerHTML =
+    _ns.list
+      .map(function (p, i) {
+        const main = (p.mainText && p.mainText.text) || (p.text && p.text.text) || "";
+        const sub = (p.secondaryText && p.secondaryText.text) || "";
+        const d = p.distanceMeters == null ? "" : fmtDist(p.distanceMeters / 1000);
+        return (
+          '<button type="button" class="fsg" role="option" id="fsg-' +
+          i +
+          '"' +
+          act("nearSearchPick", [i]) +
+          ">" +
+          ico("pin") +
+          "<b>" +
+          esc(main) +
+          "</b>" +
+          (d ? '<span class="d">' + esc(d) + "</span>" : "") +
+          (sub ? "<small>" + esc(sub) + "</small>" : "") +
+          "</button>"
+        );
+      })
+      .join("") + '<span class="fsg-by">Powered by Google</span>';
+  box.hidden = false;
+  $("f-name").setAttribute("aria-expanded", "true");
+}
+/** @param {number} i */
+async function nearSearchPick(i) {
+  const p = _ns && _ns.list[i];
+  if (!p) return;
+  nearSearchClose();
+  $("f-name").focus();
+  try {
+    const pl = p.toPlace();
+    await pl.fetchFields({ fields: ["displayName", "location", "addressComponents", "id"] });
+    _ns.tok = null; /* a pick ends the session; the next search starts another */
+    formPlacePicked({
+      name: pl.displayName || "",
+      place_id: pl.id || p.placeId || "",
+      geometry: pl.location ? { location: pl.location } : null,
+      address_components: (pl.addressComponents || []).map(a => ({
+        types: a.types || [],
+        long_name: a.longText,
+        short_name: a.shortText,
+      })),
+    });
+  } catch (e) {
+    warn("form.js place pick", e);
+    toast("Couldn't load that place. Try again, or drop a pin.");
+  }
+}
 function initFormMap() {
   if (!gReady) return;
   const start = picked ? { lat: picked.lat, lng: picked.lng } : { lat: DEFAULT_CENTER[0], lng: DEFAULT_CENTER[1] };
@@ -281,54 +488,19 @@ function initFormMap() {
     });
     fgmap.addListener("click", e => {
       formPid = "";
+      formStreet = "";
       setPicked(e.latLng.lat(), e.latLng.lng());
     });
     try {
-      const ac = new google.maps.places.Autocomplete($("f-name"), {
-        fields: ["name", "geometry", "address_components", "place_id"],
-      });
-      ac.addListener("place_changed", () => {
-        const p = ac.getPlace();
-        /* Picking a different place is a relocation, so the area has to follow it. Keeping the
-    old one left the cafe reading as its previous neighbourhood, and left the photo query
-    (name + area) unchanged, so the wrong photo came straight back. */
-        const _wasAt = picked ? { lat: picked.lat, lng: picked.lng } : null;
-        let _moved = false;
-        if (p.geometry && p.geometry.location) {
-          const loc = p.geometry.location;
-          setPicked(loc.lat(), loc.lng());
-          fgmap.setCenter(loc);
-          fgmap.setZoom(16);
-          _moved = !_wasAt || Math.abs(_wasAt.lat - picked.lat) > 0.0004 || Math.abs(_wasAt.lng - picked.lng) > 0.0004;
-        }
-        if (p.name) $("f-name").value = p.name;
-        /* The one piece of the answer that is not a guess. Every Places record has a unique id,
-    and this response already contains it — the app used to throw it away and then go
-    looking for the place again by name, which is how a cafe ends up wearing another
-    cafe's photo. Keep it and the photo lookup stops searching entirely. */
-        if (p.place_id)
-          formPid = String(
-            p.place_id
-          ); /* address_components was already being requested and already being walked for the area;
-   the country component rides along on the same response. It is the authoritative answer
-   to "which money is this", which no lat/lng rectangle can be. */
-        if (p.address_components) {
-          const co = p.address_components.find(x => x.types.includes("country"));
-          if (co && co.short_name) {
-            formCC = co.short_name.toUpperCase();
-            refreshRowCcy();
-          }
-          if (!$("f-area").value || _moved) {
-            const nb = p.address_components.find(
-              x => x.types.includes("neighborhood") || x.types.includes("sublocality") || x.types.includes("locality")
-            );
-            if (nb) $("f-area").value = nb.long_name;
-          }
-        }
-        syncWhere();
-        autoBrand();
-        checkExisting();
-      });
+      /* Nearest first when Google's suggestion service is there (nearSearchInit); the plain dropdown otherwise. */
+      const P = google.maps.places;
+      if (P.AutocompleteSuggestion && P.AutocompleteSessionToken) nearSearchInit();
+      else {
+        const ac = new P.Autocomplete($("f-name"), {
+          fields: ["name", "geometry", "address_components", "place_id"],
+        });
+        ac.addListener("place_changed", () => formPlacePicked(ac.getPlace()));
+      }
     } catch (e) {
       warn("form.js", e);
     }
@@ -377,6 +549,7 @@ function formLocate() {
   navigator.geolocation.getCurrentPosition(
     p => {
       formPid = "";
+      formStreet = "";
       if (fgmap) {
         fgmap.setCenter({ lat: p.coords.latitude, lng: p.coords.longitude });
         fgmap.setZoom(15);
@@ -586,7 +759,9 @@ function syncWhere() {
     a = $("f-where-act");
   if (!t) return;
   const area = ($("f-area").value || "").trim();
-  if (picked) t.innerHTML = "<b>" + esc(area || "Pinned") + "</b> · " + (formPid ? "from Google" : "pinned by you");
+  /* "Lawton St · Outer Sunset": with the street, a branch six miles off shows before you save (day run) */
+  const where = (formPid && formStreet ? formStreet + " · " : "") + (area || "Pinned");
+  if (picked) t.innerHTML = "<b>" + esc(where) + "</b> · " + (formPid ? "from Google" : "pinned by you");
   else t.innerHTML = area ? "<b>" + esc(area) + "</b> · no pin yet" : "No location yet";
   if (d) d.classList.toggle("located", !!picked);
   if (a) a.textContent = d && d.open ? "Done" : picked ? "Change" : "Add pin";
@@ -660,8 +835,10 @@ function renderUsuals() {
   }
   host.hidden = false;
   host.innerHTML =
-    '<span class="usuallbl">Log again' +
-    (Object.keys(sib).length ? " \u00b7 " + esc(brand) : "") +
+    /* "Log again" only where you have been: another branch of this brand. Otherwise these are your drinks from
+       everywhere, and "again" read as if you had been to a cafe you had never logged (day run). */
+    '<span class="usuallbl">' +
+    (Object.keys(sib).length ? "Log again \u00b7 " + esc(brand) : "Your usuals") +
     "</span>" +
     top
       .map(function (e) {
@@ -1628,9 +1805,9 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
 /* What makes two names the same name. "MoonTea" and "Moon Tea", and "Sunright Tea Studio" and
    "Sunright Tea Studio - Burlingame", are one cafe written two ways; the exact-match check missed both, and each
    became a second record. Returns a key: two names with the same key are the same name.
-   TODO(human): decide how forgiving this is. Too loose and two different places merge into one record (the visit
-   is merged silently, with only a toast); too strict and the next duplicate slips through. The placeholder below
-   ignores case, accents, spacing, punctuation, a "(branch)" in brackets and a " - suffix". */
+   How forgiving it is decides which way it fails: too loose and two different places merge into one record (the
+   visit is merged silently, with only a toast); too strict and the next duplicate slips through. It ignores case,
+   accents, spacing, punctuation, a "(branch)" in brackets and a " - suffix". */
 function sameCafeKey(name) {
   return String(name || "")
     .toLowerCase()
@@ -2029,8 +2206,70 @@ function saveForm() {
    one-handed. Now it is a sheet. Pick the drink (this cafe's, most ordered first, or something else), and "Same as
    last time" carries the size, milk, sweetness and ice of the last one; the price is the last price; 👍 😐 👎 if you
    like; Save. "More options" is the full form with that cup already in it. A new cafe still uses the form. */
-/** @type {{n:string, same:boolean, rv:string, other:boolean, keepPrice?:boolean}|null} */
+/** @type {{n:string, same:boolean, rv:string, other:boolean, keepPrice?:boolean, here?:number}|null} */
 let _qc = null;
+/* ---------- Log, where you are ----------
+   Day run, 27 Oct: a 13th Flat White at Kissaten HiFi took nine taps, because Log opened the new-cafe form unless
+   that cafe's page was already open: List, search, the row, Log here, then the cup. Now Log, anywhere, opens the
+   quick cup of a cafe on your list within HERE_M of a recent fix (four taps). "Not here?" lists the closest ones
+   and Somewhere new. No fix, an old one, or nothing that close, and Log is the new-cafe form as before. Private
+   spots never match: their pins are blurred on purpose. Location is only read when you have already allowed it. */
+const HERE_M = 150,
+  HERE_FRESH_MS = 5 * 60000;
+/** Cafes on your list by distance from a recent fix, closest first; none without one. */
+function cafesNearYou() {
+  if (typeof userLoc === "undefined" || !userLoc || Date.now() - userLocAt > HERE_FRESH_MS) return [];
+  const at = userLoc;
+  return cafes
+    .filter(c => !c.custom && latOf(c) != null)
+    .map(c => ({ c: c, m: 1000 * distKm(at.lat, at.lng, latOf(c), lngOf(c)) }))
+    .sort((a, b) => a.m - b.m);
+}
+/** Opens the quick cup of the cafe you are standing in, if there is one. @returns {boolean} */
+function logHere() {
+  const near = cafesNearYou();
+  if (!near.length || near[0].m > HERE_M) return false;
+  openDetail(near[0].c.id);
+  openQuickCup("", near[0].m);
+  return true;
+}
+/* "Not here?": the closest cafes on your list, and a new one */
+function qcNotHere() {
+  const near = cafesNearYou().slice(0, 5);
+  closeSheet();
+  openSheet(
+    '<span class="dngrab" aria-hidden="true"></span>' +
+      '<div class="dnhead"><h2 id="dns-title">Where are you?</h2><p>Closest on your list</p></div>' +
+      '<div class="qcwhere">' +
+      near
+        .map(
+          x =>
+            '<button type="button" class="qcw"' +
+            act("logAt", [x.c.id]) +
+            ">" +
+            ico("pin") +
+            "<b>" +
+            esc(x.c.name) +
+            '</b><span class="d">' +
+            esc(fmtDist(x.m / 1000)) +
+            "</span></button>"
+        )
+        .join("") +
+      '<button type="button" class="qcw new"' +
+      act("logSomewhereNew") +
+      ">＋ Somewhere new</button></div>"
+  );
+}
+/** @param {string} id */
+function logAt(id) {
+  closeSheet();
+  openDetail(id);
+  openQuickCup();
+}
+function logSomewhereNew() {
+  closeSheet();
+  openForm();
+}
 /** The last cup of a drink called `n` here, or, for a drink new to this cafe, your usual for it anywhere.
     @param {Cafe} c @param {string} n @returns {any} */
 function _qcSource(c, n) {
@@ -2044,8 +2283,9 @@ function _qcSource(c, n) {
 function _qcSpecText(o) {
   return orderOptsText(o);
 }
-/** @param {string} [n] a drink to start on (from the drink's own ⋯) */
-function openQuickCup(n) {
+/** @param {string} [n] a drink to start on (from the drink's own ⋯) @param {number} [here] metres away, when Log
+    picked this cafe from where you are (logHere) */
+function openQuickCup(n, here) {
   if (!isAdmin || !curId) return;
   const c = cafes.find(x => x.id === curId);
   if (!c) return;
@@ -2053,7 +2293,7 @@ function openQuickCup(n) {
   openSheet("", opener, function () {
     _qc = null;
   });
-  _qc = { n: n || "", same: true, rv: "", other: false, keepPrice: false };
+  _qc = { n: n || "", same: true, rv: "", other: false, keepPrice: false, here: here };
   _qcRedraw();
   _qcFocus();
 }
@@ -2112,6 +2352,9 @@ function _qcHTML(c) {
       spec = _qcSpecText(src);
     const code = String(src.pc || ccyFor(c)).toUpperCase();
     const last = code !== "USD" && src.pl != null ? src.pl : src.p;
+    /* "5" as typed last time reads as "5.00", the way money reads everywhere else (day run) */
+    const lastNum = ccyNum(last),
+      lastTxt = lastNum == null ? "" : lastNum.toFixed(ccyMeta(code).dec);
     if (spec)
       body +=
         '<button type="button" class="qcsame" aria-pressed="' + st.same + '"' + act("qcSame") + '><b>' +
@@ -2119,7 +2362,7 @@ function _qcHTML(c) {
     body +=
       '<label class="dnlab" for="qc-price">Price' + (code !== "USD" ? " (" + esc(code) + ")" : "") + "</label>" +
       '<input id="qc-price" class="dntext qcin" type="text" inputmode="decimal" autocomplete="off" placeholder="' +
-      esc(ccyMeta(code).sym || "") + '0.00" value="' + esc(last == null ? "" : String(last)) + '">' +
+      esc(ccyMeta(code).sym || "") + '0.00" value="' + esc(lastTxt) + '">' +
       '<div class="dnq" role="group" aria-label="Would order again?"><span class="dnlab">Would order again?</span><span class="dnvs big">' +
       _verdictButtons(st.rv, true, "qcVerdict") +
       "</span></div>";
@@ -2127,6 +2370,10 @@ function _qcHTML(c) {
   return (
     '<span class="dngrab" aria-hidden="true"></span>' +
     '<div class="dnhead"><h2 id="dns-title">A cup at ' + esc(c.name) + "</h2><p>Today, " + esc(_noteDay(localToday())) + "</p></div>" +
+    (st.here != null
+      ? '<p class="qchere">' + ico("pin") + "You’re here · " + esc(fmtDist(st.here / 1000)) +
+        '<button type="button" class="qcnot"' + act("qcNotHere") + ">Not here?</button></p>"
+      : "") +
     '<div class="dnq" role="group" aria-label="Which drink"><span class="dntags">' + chips + "</span></div>" +
     body +
     '<div class="dnact"><button type="button" class="btn ghost"' + act("qcMore") + '>More options</button>' +
