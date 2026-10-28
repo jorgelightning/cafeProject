@@ -75,7 +75,7 @@ const SUITE = [
   ["updates",          "a new build applies itself when nobody is mid-use, and can never loop"],
   ["peek",             "a pin on a phone opens a card over the map, and the map stays put"],
   ["want-pins",        "want-to-try pins you can find, and a switch that shows only them"],
-  ["map-bubbles",      "zoomed-out bubbles: want-to-try as a violet tag that never covers the number, a 4px ring, the World view in the same bubble, biggest on top"],
+  ["map-bubbles",      "zoomed-out bubbles: want-to-try as a violet tag that never covers the number, a 4px ring, the World view in the same bubble, biggest on top, and the you-are-here dot under the bubbles with a blue mark on yours"],
   ["csp",              "a Content Security Policy with no inline script: the page keeps to it, it names every host, every screen runs under it, and gstatic scripts are pinned by hash"],
   ["hardening",        "the 14 Oct audit: head tags, one heading, no passphrase, safe ids, local clusterer"],
   ["discovery",        "verdict and area filters, empty states, skeleton, order-again, SVG tab bar"],

@@ -101,6 +101,7 @@ function initMap() {
   gmap.addListener("idle", function () {
     if (mapWantOnly) updateWantBar();
     refreshPinIcons();
+    syncYouDot();
     syncPillToView();
   });
   const _mapEl = $("map");
@@ -217,17 +218,23 @@ function drawWorldBubbles() {
   clearWorldBubbles();
   _worldList = worldRegions();
   _worldList.forEach(function (g, i) {
-    const cnt = { loved: g.loved, fine: g.fine, meh: g.meh, "": g.been - g.loved - g.fine - g.meh, wish: g.wish };
+    const cnt = { loved: g.loved, fine: g.fine, meh: g.meh, "": g.been - g.loved - g.fine - g.meh, wish: g.wish },
+      d = 2 * Math.round(12 + Math.min(14, Math.sqrt(g.n) * 2.2)) + 6,
+      title = g.label + " \u00b7 " + g.n + (g.n === 1 ? " place" : " places");
     const m = new google.maps.Marker({
       position: { lat: g.lat, lng: g.lng },
       map: gmap,
-      icon: clusterIcon(cnt, 2 * Math.round(12 + Math.min(14, Math.sqrt(g.n) * 2.2)) + 6),
-      title: g.label + " \u00b7 " + g.n + (g.n === 1 ? " place" : " places"),
+      icon: clusterIcon(cnt, d),
+      title: title,
       zIndex: 4 + g.n,
     });
+    m._cnt = cnt;
+    m._d = d;
+    m._title = title;
     m.addListener("click", () => showRegionAt(i));
     gworld.push(m);
   });
+  syncYouDot();
 }
 function fitWorld() {
   if (!gmap) return;
@@ -375,6 +382,8 @@ function _showPins() {
         renderer: _clusterRenderer,
         algorithm: markerClusterer.SuperClusterAlgorithm ? new markerClusterer.SuperClusterAlgorithm({ maxZoom: CLUSTER_MAX_ZOOM, radius: 60 }) : undefined,
       });
+      /* every redraw of the bubbles places the you-are-here dot again */
+      if (google.maps.event && google.maps.event.addListener) google.maps.event.addListener(gclusterer, "clusteringend", syncYouDot);
       return;
     }
     been.forEach(function (m) {
@@ -384,6 +393,7 @@ function _showPins() {
   want.forEach(function (m) {
     m.setMap(gmap);
   });
+  syncYouDot();
 }
 function wishPinCount() {
   return gmarkers.filter(function (m) {
@@ -471,7 +481,8 @@ function toggleWantOnly(on) {
    Zoomed-out audit: want-to-try places are a violet tag with a bookmark and their count, at the top right, and the face
    still counts the places you have been, as the World list does ("70 been · 13 to try"); a bubble of want-to-try places
    only is a violet disc. The ring is 4px (it was 7): most rings are nearly all green, and half the ink still tells a
-   so-so area from a loved one. The World view draws its regions with this too, at its own size (d). */
+   so-so area from a loved one. The World view draws its regions with this too, at its own size (d). `you` adds the
+   blue dot at the lower left: you are somewhere under this bubble (syncYouDot). */
 function bucketCounts(markers) {
   const cnt = { loved: 0, fine: 0, meh: 0, "": 0, wish: 0 };
   markers.forEach(function (m) {
@@ -480,13 +491,17 @@ function bucketCounts(markers) {
   });
   return cnt;
 }
-function clusterIcon(cnt, d) {
+function bubbleSize(cnt) {
+  const n = (cnt.loved || 0) + (cnt.fine || 0) + (cnt.meh || 0) + (cnt[""] || 0);
+  return Math.round(38 + Math.min(24, (n || cnt.wish || 0) * 2.2));
+}
+function clusterIcon(cnt, d, you) {
   const keys = ["loved", "fine", "meh", ""],
     n = keys.reduce(function (t, k) {
       return t + (cnt[k] || 0);
     }, 0),
     wish = cnt.wish || 0;
-  d = d || Math.round(38 + Math.min(24, (n || wish) * 2.2));
+  d = d || bubbleSize(cnt);
   const tag = n && wish ? 1 : 0,
     w = d + tag * 14,
     h = d + tag * 6,
@@ -532,6 +547,12 @@ function clusterIcon(cnt, d) {
         wish + "</text>";
     }
   }
+  if (you) {
+    /* the you-are-here blue, on the ring at the lower left, opposite the tag */
+    const off = (d / 2 - 4) * Math.SQRT1_2;
+    body +=
+      '<circle class="you" cx="' + (cx - off).toFixed(1) + '" cy="' + (cy + off).toFixed(1) + '" r="6.5" fill="#1a73e8" stroke="#ffffff" stroke-width="2.5"/>';
+  }
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '">' + body + "</svg>";
   return {
     url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
@@ -545,13 +566,17 @@ function bubbleTitle(n, wish) {
 }
 const _clusterRenderer = {
   render: function (cluster) {
-    const cnt = bucketCounts(cluster.markers || []);
-    return new google.maps.Marker({
+    const cnt = bucketCounts(cluster.markers || []),
+      title = bubbleTitle(cluster.count - cnt.wish, cnt.wish);
+    const m = new google.maps.Marker({
       position: cluster.position,
       icon: clusterIcon(cnt),
-      title: bubbleTitle(cluster.count - cnt.wish, cnt.wish),
+      title: title,
       zIndex: google.maps.Marker.MAX_ZINDEX + cluster.count,
     });
+    m._cnt = cnt;
+    m._title = title;
+    return m;
   },
 };
 /* Google's own shops, hotels, clinics and churches drew their icons over the cafe pins. Hiding
@@ -1390,8 +1415,45 @@ function drawUserLocation(pos, acc) {
       zIndex: google.maps.Marker.MAX_ZINDEX + 999,
     });
   }
+  syncYouDot();
 }
 
+/* Zoomed out, the dot sat above the bubbles and covered their numbers: standing in the Outer Sunset at zoom 7, San
+   Francisco's 46 read as a blue dot and a 6. While there are bubbles (zoom 11 and out, and the World view) it goes
+   under them, and the bubble it is under gets a small blue dot at its lower left, so you can still tell which one you
+   are in. From zoom 12 every cafe is its own pin and the dot is back on top. */
+function syncYouDot() {
+  if (!userMarker || !gmap || typeof gmap.getProjection !== "function" || typeof userMarker.setZIndex !== "function") return;
+  const z = gmap.getZoom() || 12,
+    world = _worldOn(),
+    MAX = google.maps.Marker.MAX_ZINDEX;
+  const bubbles = world
+    ? gworld
+    : gclusterer && z <= CLUSTER_MAX_ZOOM
+      ? (gclusterer.clusters || [])
+          .filter(function (c) {
+            return c.count > 1 && c.marker;
+          })
+          .map(function (c) {
+            return c.marker;
+          })
+      : [];
+  /* under World bubbles (4 + n) and cluster bubbles (MAX + n), still over a lone visited dot */
+  userMarker.setZIndex(!bubbles.length ? MAX + 1000 : world ? 1 : MAX);
+  const proj = gmap.getProjection();
+  if (!proj) return;
+  const sc = Math.pow(2, z),
+    u = proj.fromLatLngToPoint(userMarker.getPosition());
+  bubbles.forEach(function (m) {
+    if (!m._cnt) return;
+    const p = proj.fromLatLngToPoint(m.getPosition()),
+      you = Math.hypot(p.x - u.x, p.y - u.y) * sc < (m._d || bubbleSize(m._cnt)) / 2;
+    if (!!m._you === you) return;
+    m._you = you;
+    m.setIcon(clusterIcon(m._cnt, m._d, you));
+    m.setTitle(m._title + (you ? " · you are here" : ""));
+  });
+}
 function showUserLocation(center, done, force) {
   if (!navigator.geolocation) {
     done && done(false);

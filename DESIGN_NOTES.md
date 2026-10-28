@@ -2059,3 +2059,10 @@ bubbles, as before.
 **One bubble for the World view.** Regions were solid orange discs, the colour of the app's buttons, and the smaller
 ones drew on top, so California's 83 sat under the 1s for Nevada and Utah. They are now the cluster bubble, ring and
 tag included, at the World view's own sizes (34 to 58px), with the biggest region on top. `tests/map-bubbles.js`.
+
+**You are under the bubble (v118).** The you-are-here dot is drawn above everything, so zoomed out it landed on the
+bubble it was in: standing in the Outer Sunset at zoom 7, San Francisco's 46 read as a blue dot and a 6. While there
+are bubbles (zoom 11 and out, and the World view) the dot now goes under them, still above a lone visited dot, and the
+bubble it is under gets a small blue dot on its ring at the lower left, opposite the violet tag; its name adds "you
+are here". From zoom 12 every cafe is its own pin and the dot is back on top. `syncYouDot()` runs after every redraw
+of the bubbles, on every idle and when a new fix is drawn.

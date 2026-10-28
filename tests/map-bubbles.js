@@ -23,10 +23,14 @@ const { eq, done } = checker();
   await pg.waitForTimeout(600);
   await pg.evaluate(() => {
     window.google = { maps: {
-      Map: function () { this.addListener = () => {}; this.setCenter = () => {}; this.setZoom = () => {}; this.getZoom = () => 6;
-        this.fitBounds = () => {}; this.setOptions = () => {}; this.getBounds = () => ({ contains: () => true }); },
+      Map: function () { this.addListener = () => {}; this.setCenter = () => {}; this.setZoom = () => {}; this.getZoom = () => window.__zoom || 6;
+        this.fitBounds = () => {}; this.setOptions = () => {}; this.getBounds = () => ({ contains: () => true });
+        /* Web Mercator on a 256px world, as Google's projection */
+        this.getProjection = () => ({ fromLatLngToPoint: p => { const s = Math.sin(p.lat * Math.PI / 180);
+          return { x: 256 * (0.5 + p.lng / 360), y: 256 * (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) }; } }); },
       Marker: function (o) { this.o = o; this.map = o.map || null; this.addListener = function () {};
-        this.setMap = m => { this.map = m; }; this.getPosition = () => o.position; this.setIcon = () => {}; this.setZIndex = () => {}; },
+        this.setMap = m => { this.map = m; }; this.getPosition = () => o.position; this.setIcon = i => { o.icon = i; };
+        this.setZIndex = z => { o.zIndex = z; }; this.setTitle = t => { o.title = t; }; },
       Circle: function () { this.setMap = () => {}; },
       LatLngBounds: function () { this.extend = () => {}; },
       Size: function (w, h) { this.width = w; this.height = h; }, Point: function (x, y) { this.x = x; this.y = y; },
@@ -132,6 +136,37 @@ const { eq, done } = checker();
   eq(r[0], ["California · 3 places", "2", "1", 38, true, 7],
      "California: the cluster bubble at the World view's size (38px for 3), 2 been and a tag of 1, named for all 3");
   eq(r[1], ["Nevada · 1 place", "1", null, 34, true, 5], "Nevada: 34px, no tag, and drawn under California");
+
+  // ================= E: the you-are-here dot =================
+  /* On the live map, standing in the Outer Sunset at zoom 7, the dot (drawn above everything) covered the first digit
+     of San Francisco's 46. While there are bubbles it now goes under them, and the bubble it is under shows a blue dot. */
+  r = await pg.evaluate(() => {
+    const out = {}, has = m => /class="you"/.test(decodeURIComponent(m.o.icon.url));
+    const here = { lat: 37.7599, lng: -122.507 }, taipei = { lat: 25.03, lng: 121.54 };
+    const put = pos => { userMarker = new google.maps.Marker({ position: pos, map: gmap, zIndex: 1000 + 1000 }); };
+    mapWorld = null; _focusVal = null; renderMarkers();
+    const list = [{ _bucket: "loved" }, { _bucket: "loved" }, { _bucket: "fine" }, { _wish: true }];
+    const bubble = _clusterRenderer.render({ count: 4, markers: list, position: { lat: 37.77, lng: -122.44 } });
+    gclusterer.clusters = [{ count: 4, marker: bubble, markers: list, position: bubble.o.position }];
+    window.__zoom = 7; put(here); syncYouDot();
+    out.z7 = { dotZ: userMarker.o.zIndex, you: has(bubble), title: bubble.o.title };
+    window.__zoom = 7; put(taipei); syncYouDot();
+    out.away = { dotZ: userMarker.o.zIndex, you: has(bubble), title: bubble.o.title };
+    window.__zoom = 13; put(here); syncYouDot();
+    out.z13 = userMarker.o.zIndex;
+    window.__zoom = 2; jumpToLocation(""); put(here); syncYouDot();
+    out.world = { dotZ: userMarker.o.zIndex, you: gworld.filter(has).map(m => m.o.title) };
+    window.__zoom = 7; jumpToLocation("state:United States|California"); toggleWantOnly(true); put(here); syncYouDot();
+    out.want = userMarker.o.zIndex;
+    toggleWantOnly(false); window.__zoom = 0;
+    return out;
+  });
+  eq(r.z7, { dotZ: 1000, you: true, title: "3 cafes · 1 to try · you are here" },
+     "zoom 7 in the Outer Sunset: the dot goes under the bubbles, and San Francisco's bubble shows the blue dot and says so");
+  eq(r.away, { dotZ: 1000, you: false, title: "3 cafes · 1 to try" }, "…standing in Taipei, that bubble loses the blue dot again");
+  eq(r.z13, 2000, "from zoom 12, where every cafe is its own pin, the dot is back on top");
+  eq(r.world, { dotZ: 1, you: ["California · 3 places · you are here"] }, "in the World view it is under the region bubbles, and California says you are in it");
+  eq(r.want, 2000, "under the Want to try switch there are no bubbles, so the dot stays on top");
   eq(errs, [], "no page errors");
 
   const ok = done();
