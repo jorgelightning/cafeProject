@@ -181,12 +181,17 @@ const { eq, done } = checker();
     bubbles: gworld.length,
     pinsOnMap: gmarkers.filter(m => m.map).length,
     onMap: gworld.every(m => m.map === gmap),
-    counts: gworld.map(m => decodeURIComponent(m.o.icon.url).replace(/.*>(\d+)<\/text>.*/, "$1")),
+    counts: gworld.map(m => (decodeURIComponent(m.o.icon.url).match(/>(\d+)<\/text>/) || [])[1]),
+    tags: gworld.map(m => (decodeURIComponent(m.o.icon.url).match(/class="tag"[^>]*>(\d+)</) || [, "-"])[1]),
+    z: gworld.map(m => m.o.zIndex),
     title: gworld[0].o.title,
     fit: window.__fits[window.__fits.length - 1].length,
   }));
   eq([r.bubbles, r.pinsOnMap, r.onMap], [6, 0, true], "six bubbles on the map and none of the 14 individual pins");
-  eq(r.counts, ["6", "3", "2", "1", "1", "1"], "each bubble carries its count");
+  /* the face counts where you have been and a violet tag the want-to-try places, as the rows do (zoomed-out audit) */
+  eq(r.counts, ["5", "2", "2", "1", "1", "1"], "each bubble carries how many places you have been");
+  eq(r.tags, ["1", "1", "-", "-", "-", "-"], "…and a tag for the want-to-try ones (California's and Vancouver's)");
+  eq(r.z.every((z, i) => i === 0 || z <= r.z[i - 1]) && r.z[0] > r.z[5], true, "the biggest region draws on top (z " + r.z.join(", ") + ")");
   eq(r.title, "California · 6 places", "…and a name for anyone who cannot see the number");
   eq(r.fit, 6, "the view is fitted to the bubbles, not to every pin");
 

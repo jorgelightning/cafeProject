@@ -5,7 +5,8 @@
    the same blue as water and the you-are-here dot. De Matcha, 130m from 8 Grams Matcha,
    simply vanished. Three changes, pinned here:
      A. a violet pin with a white edge and a bookmark, the size of a visited one
-     B. above the cluster bubbles and never clustered
+     B. above the cluster bubbles; zoomed out, inside them as a violet tag (map-bubbles.js), since
+        on top of them they covered the count
      C. a Want to try switch on the map, which the Want tab's map button turns on */
 const { serve, launch, checker } = require("./harness");
 const { eq, done } = checker();
@@ -77,8 +78,9 @@ const { eq, done } = checker();
   eq(r.visited, true, "visited pins stay round discs (9px, scaled with the zoom once a real map reports one)");
   eq(r.wz > 1000 + 100 && r.wz < 1000 + 1000, true, "it sits above every cluster bubble and below the you-are-here dot (z " + r.wz + ")");
   eq(r.wz > r.vz, true, "…and above visited pins, so De Matcha is no longer under 8 Grams Matcha");
-  eq(r.clustered, ["8 Grams Matcha", "ChaHalo", "Purple Kow"], "only visited pins go into clusters");
-  eq(r.wishOnMap, true, "every want-to-try pin is on the map in its own right");
+  eq(r.clustered, ["8 Grams Matcha", "ChaHalo", "De Matcha", "Forest Tea Bar", "Purple Kow", "Yume Mori Matcha", "cowdog"],
+     "want-to-try pins go to the clusterer too, so zoomed out they join a bubble instead of covering its number");
+  eq(r.wishOnMap, true, "…and one the clusterer leaves alone is on the map in its own right");
 
   r = await ph.pg.evaluate(() => {
     const lg = [...document.querySelectorAll(".maplegend span")].find(s => /want to try/.test(s.textContent));

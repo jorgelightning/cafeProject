@@ -210,51 +210,20 @@ function clearWorldBubbles() {
   gworld.forEach(m => m.setMap(null));
   gworld = [];
 }
-function _bubbleIcon(n) {
-  const r = Math.round(12 + Math.min(14, Math.sqrt(n) * 2.2));
-  const d = 2 * r + 6;
-  const svg =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="' +
-    d +
-    '" height="' +
-    d +
-    '" viewBox="0 0 ' +
-    d +
-    " " +
-    d +
-    '">' +
-    '<circle cx="' +
-    d / 2 +
-    '" cy="' +
-    d / 2 +
-    '" r="' +
-    r +
-    '" fill="#d5803b" fill-opacity=".95" stroke="#ffffff" stroke-width="3"/>' +
-    '<text x="' +
-    d / 2 +
-    '" y="' +
-    (d / 2 + 5) +
-    '" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="' +
-    (n > 99 ? 12 : 15) +
-    '" font-weight="700" fill="#ffffff">' +
-    n +
-    "</text></svg>";
-  return {
-    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
-    scaledSize: new google.maps.Size(d, d),
-    anchor: new google.maps.Point(d / 2, d / 2),
-  };
-}
+/* A region is drawn with the cluster bubble (zoomed-out audit): it was a solid orange disc, the colour of the app's
+   buttons, with nothing to say how the region went. It keeps its own size, from 34px for one place to 58px, and the
+   biggest region draws on top: California's 83 sat under the 1s for Nevada and Utah. */
 function drawWorldBubbles() {
   clearWorldBubbles();
   _worldList = worldRegions();
   _worldList.forEach(function (g, i) {
+    const cnt = { loved: g.loved, fine: g.fine, meh: g.meh, "": g.been - g.loved - g.fine - g.meh, wish: g.wish };
     const m = new google.maps.Marker({
       position: { lat: g.lat, lng: g.lng },
       map: gmap,
-      icon: _bubbleIcon(g.n),
+      icon: clusterIcon(cnt, 2 * Math.round(12 + Math.min(14, Math.sqrt(g.n) * 2.2)) + 6),
       title: g.label + " \u00b7 " + g.n + (g.n === 1 ? " place" : " places"),
-      zIndex: 4,
+      zIndex: 4 + g.n,
     });
     m.addListener("click", () => showRegionAt(i));
     gworld.push(m);
@@ -337,8 +306,9 @@ let gclusterer = null;
    you-are-here dot, and De Matcha vanished into 8 Grams Matcha 130m away.
    Now: the size of a visited pin, a white edge, violet (a hue nothing else on the map uses,
    4.6–6.8:1 on streets, parks and water) and a bookmark, so it reads without colour too. They
-   sit above the cluster bubbles (but under the you-are-here dot, MAX+1000), and are never
-   clustered — there are a handful, and a want-to-try is the pin you are looking for. */
+   sit above the cluster bubbles (but under the you-are-here dot, MAX+1000). Zoomed out they
+   used to stay out of the bubbles and so landed on top of them; now a bubble takes them in as
+   a violet tag with their count (clusterIcon), and a want-to-try on its own stays a pin. */
 const WISH_PIN_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">' +
   '<circle cx="15" cy="15" r="12" fill="' +
@@ -392,18 +362,24 @@ function _showPins() {
     m.setMap(null);
   });
   if (!mapWantOnly) {
-    if (window.markerClusterer && markerClusterer.MarkerClusterer && been.length) {
-      /* bubbles only for a country or a state; from a city view in, every cafe is its own pin (UI audit) */
+    if (window.markerClusterer && markerClusterer.MarkerClusterer && gmarkers.length) {
+      /* bubbles only for a country or a state; from a city view in, every cafe is its own pin (UI audit). Want-to-try
+         pins go in too (zoomed-out audit): drawn above the bubbles, they landed on them and covered the count.
+         clusterIcon() counts them in a violet tag, and one with nothing near it is still its own pin. */
+      want.forEach(function (m) {
+        m.setMap(null);
+      });
       gclusterer = new markerClusterer.MarkerClusterer({
         map: gmap,
-        markers: been,
+        markers: gmarkers.slice(),
         renderer: _clusterRenderer,
         algorithm: markerClusterer.SuperClusterAlgorithm ? new markerClusterer.SuperClusterAlgorithm({ maxZoom: CLUSTER_MAX_ZOOM, radius: 60 }) : undefined,
       });
-    } else
-      been.forEach(function (m) {
-        m.setMap(gmap);
-      });
+      return;
+    }
+    been.forEach(function (m) {
+      m.setMap(gmap);
+    });
   }
   want.forEach(function (m) {
     m.setMap(gmap);
@@ -491,56 +467,90 @@ function toggleWantOnly(on) {
 }
 /* A cluster used to be a plain orange circle, which looked like a rating colour and said nothing
    about what was inside. It is now a ring split by how the cafes went — loved, fine, not for me,
-   not rated — around a white face with the count. Want-to-try pins are never clustered, so they
-   have no segment. Literal hex throughout: Google needs real colour strings. */
-function clusterIcon(buckets) {
+   not rated — around a white face with the count. Literal hex throughout: Google needs real colour strings.
+   Zoomed-out audit: want-to-try places are a violet tag with a bookmark and their count, at the top right, and the face
+   still counts the places you have been, as the World list does ("70 been · 13 to try"); a bubble of want-to-try places
+   only is a violet disc. The ring is 4px (it was 7): most rings are nearly all green, and half the ink still tells a
+   so-so area from a loved one. The World view draws its regions with this too, at its own size (d). */
+function bucketCounts(markers) {
+  const cnt = { loved: 0, fine: 0, meh: 0, "": 0, wish: 0 };
+  markers.forEach(function (m) {
+    if (m._wish) cnt.wish++;
+    else cnt[m._bucket in cnt ? m._bucket : ""]++;
+  });
+  return cnt;
+}
+function clusterIcon(cnt, d) {
   const keys = ["loved", "fine", "meh", ""],
-    cnt = { loved: 0, fine: 0, meh: 0, "": 0 };
-  buckets.forEach(function (b) {
-    cnt[b in cnt ? b : ""]++;
-  });
-  const n = buckets.length,
-    d = Math.round(38 + Math.min(24, n * 2.2)),
-    r = d / 2 - 5,
-    C = 2 * Math.PI * r,
-    used = keys.filter(function (k) {
-      return cnt[k];
+    n = keys.reduce(function (t, k) {
+      return t + (cnt[k] || 0);
+    }, 0),
+    wish = cnt.wish || 0;
+  d = d || Math.round(38 + Math.min(24, (n || wish) * 2.2));
+  const tag = n && wish ? 1 : 0,
+    w = d + tag * 14,
+    h = d + tag * 6,
+    cx = d / 2,
+    cy = d / 2 + tag * 6;
+  let body;
+  if (!n)
+    body =
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + (d / 2 - 1.5) + '" fill="' + WISH_HEX + '" stroke="#ffffff" stroke-width="2.5"/>' +
+      '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dy=".35em" font-family="Helvetica,Arial,sans-serif" font-size="' +
+      (wish > 9 ? 14 : 13) + '" font-weight="700" fill="#ffffff">' + wish + "</text>";
+  else {
+    const r = d / 2 - 3.5,
+      C = 2 * Math.PI * r,
+      used = keys.filter(function (k) {
+        return cnt[k];
+      });
+    let off = 0,
+      segs = "";
+    used.forEach(function (k) {
+      const len = (C * cnt[k]) / n,
+        vis = used.length > 1 ? Math.max(1, len - 2.5) : len;
+      segs +=
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + BUCKET_HEX[k] +
+        '" stroke-width="4" stroke-dasharray="' + vis.toFixed(2) + " " + (C - vis).toFixed(2) +
+        '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 ' + cx + " " + cy + ')"/>';
+      off += len;
     });
-  let off = 0,
-    segs = "";
-  used.forEach(function (k) {
-    const len = (C * cnt[k]) / n,
-      vis = used.length > 1 ? Math.max(1, len - 2.5) : len;
-    segs +=
-      '<circle cx="' + d / 2 + '" cy="' + d / 2 + '" r="' + r + '" fill="none" stroke="' + BUCKET_HEX[k] +
-      '" stroke-width="7" stroke-dasharray="' + vis.toFixed(2) + " " + (C - vis).toFixed(2) +
-      '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 ' + d / 2 + " " + d / 2 + ')"/>';
-    off += len;
-  });
-  const svg =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="' + d + '" height="' + d + '" viewBox="0 0 ' + d + " " + d + '">' +
-    '<circle cx="' + d / 2 + '" cy="' + d / 2 + '" r="' + (d / 2 - 1) + '" fill="#ffffff" stroke="#00000022" stroke-width="1"/>' +
-    segs +
-    '<text x="' + d / 2 + '" y="' + d / 2 + '" text-anchor="middle" dy=".35em" font-family="Helvetica,Arial,sans-serif" font-size="' +
-    (n > 9 ? 14 : 13) + '" font-weight="700" fill="#1d1a17">' + n + "</text></svg>";
+    body =
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + (d / 2 - 1) + '" fill="#ffffff" stroke="#00000022" stroke-width="1"/>' +
+      segs +
+      '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dy=".35em" font-family="Helvetica,Arial,sans-serif" font-size="' +
+      (n > 99 ? 12 : n > 9 ? 14 : 13) + '" font-weight="700" fill="#1d1a17">' + n + "</text>";
+    if (tag) {
+      /* the tag: a white-edged violet chip, the bookmark and the count, overhanging the top right */
+      const bw = wish > 9 ? 30 : 24,
+        tx = d - 4 + (wish > 9 ? 1 : -2),
+        x0 = tx - bw / 2;
+      body +=
+        '<rect x="' + x0 + '" y=".5" width="' + bw + '" height="17" rx="8.5" fill="' + WISH_HEX + '" stroke="#ffffff" stroke-width="2"/>' +
+        '<path d="M' + (x0 + 6) + ' 4.5h5.4v9l-2.7-2.2-2.7 2.2z" fill="#ffffff"/>' +
+        '<text class="tag" x="' + (x0 + 14) + '" y="9" dy=".35em" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="#ffffff">' +
+        wish + "</text>";
+    }
+  }
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '">' + body + "</svg>";
   return {
     url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
-    scaledSize: new google.maps.Size(d, d),
-    anchor: new google.maps.Point(d / 2, d / 2),
+    scaledSize: new google.maps.Size(w, h),
+    anchor: new google.maps.Point(cx, cy),
   };
+}
+/** What a bubble says to anyone who cannot see it. @param {number} n places you have been @param {number} wish */
+function bubbleTitle(n, wish) {
+  return n ? n + (n === 1 ? " cafe" : " cafes") + (wish ? " · " + wish + " to try" : "") : wish + " to try";
 }
 const _clusterRenderer = {
   render: function (cluster) {
-    const n = cluster.count;
+    const cnt = bucketCounts(cluster.markers || []);
     return new google.maps.Marker({
       position: cluster.position,
-      icon: clusterIcon(
-        (cluster.markers || []).map(function (m) {
-          return m._bucket || "";
-        })
-      ),
-      title: n + " cafes",
-      zIndex: google.maps.Marker.MAX_ZINDEX + n,
+      icon: clusterIcon(cnt),
+      title: bubbleTitle(cluster.count - cnt.wish, cnt.wish),
+      zIndex: google.maps.Marker.MAX_ZINDEX + cluster.count,
     });
   },
 };

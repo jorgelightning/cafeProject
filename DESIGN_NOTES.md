@@ -2037,3 +2037,25 @@ Pairs 40+ places apart went from 42% to 4%. Placing stays high because most of t
 colour; it has its own ink now. The price copied from last time reads 5.00, not 5. A drink card shows its latest
 price, so "$4.25–$5.00" no longer breaks "12 cups · last Oct 17"; each cup in the history keeps its own price. The
 new-cafe form's chips say Your usuals, keeping "Log again" for another branch of the same brand. `tests/day-run.js`.
+
+## Zoomed out (v117)
+
+The live map at phone size at zoom 11, 9 and 7, the whole of California and the World view, public cafes only. The
+worst of it: the want-to-try bookmarks, drawn above the bubbles so they are never lost, landed on them and covered
+the count. In the California view the Bay Area's 62 showed two bookmarks and no number, and Los Angeles showed only
+bookmarks. Three changes; bigger steps in bubble size and wider spacing were mocked and skipped, and town names on
+bubbles were tried and dropped (the towns come from the cafes' addresses, which gave Southside for Berkeley and
+Downtown for San Mateo, and the pills hid the map's own correct names).
+
+**The number always shows.** Zoomed out, want-to-try pins go into the bubbles too. A bubble shows them as a violet
+tag with a bookmark and their count at its top right, clear of the number, and the number still counts the places
+you have been, as the World list does ("70 been · 13 to try"). Want-to-try places with nothing else near them make a
+violet bubble; one on its own is still its own pin, above the bubbles. Under the Want to try switch there are no
+bubbles, as before.
+
+**A lighter ring.** 4px instead of 7. Most rings are nearly all green, and half the ink still tells a so-so area
+(the 13 near Union Square is half yellow) from a loved one. Sizes are unchanged.
+
+**One bubble for the World view.** Regions were solid orange discs, the colour of the app's buttons, and the smaller
+ones drew on top, so California's 83 sat under the 1s for Nevada and Utah. They are now the cluster bubble, ring and
+tag included, at the World view's own sizes (34 to 58px), with the biggest region on top. `tests/map-bubbles.js`.
