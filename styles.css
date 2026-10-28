@@ -3,15 +3,15 @@
    and [data-theme="dark"] = manually chosen dark. Keep any new colour in all three.
    --acc stays the identity orange for fills/pins/underlines; --acc-strong is the only
    one that may sit under white text (--acc is 3.01:1 there, --acc-strong is 4.94:1). */
-:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a5521a; --on-acc:#fff; --acc2:#c0374b; --bg:#f4f4f5; --surface:#fff; --surface2:#ececee; --text:#18181b; --soft:#5a5a63; --faint:#666670; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d6d6db; --border:rgba(20,20,40,.11); --shadow:0 2px 4px rgba(30,24,16,.06),0 14px 32px rgba(30,24,16,.14); --shadow-sm:0 1px 2px rgba(30,24,16,.07),0 2px 6px rgba(30,24,16,.06); --glass:rgba(255,255,255,.9); --glass-strong:rgba(244,244,245,.88); --gold-a:#f6d77f; --gold-b:#dca13a; --gold-ink:#3b2606; --silver-a:#e6e8ec; --silver-b:#b4b9c2; --silver-ink:#23262c; --bronze-a:#ecc29a; --bronze-b:#b9773f; --bronze-ink:#2e1708; --amber-bg:rgba(213,128,59,.14); --amber-ink:#7a3f0a; --wash:rgba(120,120,150,.08); /* ---------- the scale ----------
+:root{ --want:#6b3fbf; --want-bg:#f0eafb; --want-ink:#4a2a8a; --acc:#d5803b; --acc-strong:#a5521a; --on-acc:#fff; --acc2:#c0374b; --bg:#f4f4f5; --surface:#fff; --surface2:#ececee; --text:#18181b; --soft:#5a5a63; --faint:#666670; --good:#1f7a4d; --mid:#8a5a09; --bad:#c0374b; --star:#96600a; --star-off:#d6d6db; --border:rgba(20,20,40,.11); --shadow:0 2px 4px rgba(30,24,16,.06),0 14px 32px rgba(30,24,16,.14); --shadow-sm:0 1px 2px rgba(30,24,16,.07),0 2px 6px rgba(30,24,16,.06); --glass:rgba(255,255,255,.9); --glass-strong:rgba(244,244,245,.88); --gold-a:#f6d77f; --gold-b:#dca13a; --gold-ink:#3b2606; --silver-a:#e6e8ec; --silver-b:#b4b9c2; --silver-ink:#23262c; --bronze-a:#ecc29a; --bronze-b:#b9773f; --bronze-ink:#2e1708; --amber-bg:rgba(213,128,59,.14); --amber-ink:#7a3f0a; --wash:rgba(120,120,150,.08); /* chart colours (stats audit): verdicts, an ordered orange, cold and hot, a muted step; checked for contrast and colour blindness */ --ch-yes:#2e9e5b; --ch-mid:#b7791f; --ch-no:#c0374b; --ch-o1:#e09a5c; --ch-o2:#d5803b; --ch-o3:#a5521a; --ch-o4:#6e3410; --ch-hot:#a5521a; --ch-warm:#e09a5c; --ch-cool:#7fb0dc; --ch-cold:#2f6fb0; --ch-mute:#c9c5bf; /* ---------- the scale ----------
    Colour was tokenised; nothing dimensional was, so the stylesheet grew 23 font sizes, 18
    corner radii and 13 gap values — seven of the font sizes inside three pixels, which nobody
    can see and the cascade can. These are the whole set.
 
    Text only. Emoji and icon glyphs (the raised ＋, the star widget, the empty-state marks) are
    artwork being sized, not type being set, so they keep their own dimensions. */ --fs-1:12px; /* labels, captions, tab text — 12px is the floor; it was 11 until v65 */ --fs-2:14px; /* secondary text, list subtitles (13 until v114) */ --fs-3:16px; /* body, and names at 800 (15 until v114) */ --fs-4:16px; /* subheads: the body size at 800, so a phone has five sizes, not nine (18 until v114) */ --fs-5:22px; /* headings and stat figures */ --r-1:6px; --r-2:10px; --r-3:14px; --r-4:20px; --r-pill:999px; --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; }
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.1); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); } }
-:root[data-theme="dark"]{ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.1); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.1); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); --ch-yes:#2e9e5b; --ch-mid:#c88a2a; --ch-no:#d04a5e; --ch-o1:#8a4a1c; --ch-o2:#b8692e; --ch-o3:#d9935a; --ch-o4:#f0c08f; --ch-hot:#e8a46a; --ch-warm:#a8622a; --ch-cool:#3d78b5; --ch-cold:#8dbbe6; --ch-mute:#4a4744; } }
+:root[data-theme="dark"]{ --ch-yes:#2e9e5b; --ch-mid:#c88a2a; --ch-no:#d04a5e; --ch-o1:#8a4a1c; --ch-o2:#b8692e; --ch-o3:#d9935a; --ch-o4:#f0c08f; --ch-hot:#e8a46a; --ch-warm:#a8622a; --ch-cool:#3d78b5; --ch-cold:#8dbbe6; --ch-mute:#4a4744; --want:#9c7ae8; --want-bg:#352659; --want-ink:#e4dbff; --acc-strong:#e59a55; --on-acc:#1a1310; --acc2:#ff8a9e; --bg:#0e0e10; --surface:#18181b; --surface2:#232328; --text:#f4f4f5; --soft:#b2b2bc; --faint:#9a9aa5; --good:#5fd39a; --mid:#f3b95f; --bad:#ff8a9e; --star:#f0a93b; --star-off:#3b3b42; --border:rgba(255,255,255,.1); --shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 36px rgba(0,0,0,.6); --shadow-sm:0 1px 0 rgba(255,255,255,.05) inset,0 2px 8px rgba(0,0,0,.45); --glass:rgba(24,24,27,.88); --glass-strong:rgba(14,14,16,.86); --gold-a:#f6d27c; --gold-b:#d99a30; --gold-ink:#2a1a04; --amber-bg:rgba(229,154,85,.16); --amber-ink:#f6c58c; --wash:rgba(255,255,255,.04); }
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 /* the browser draws <b> and <strong> at 700; the app has three weights, 400, 600 and 800 (design audit D10) */
 b, strong{ font-weight:600; }
@@ -970,9 +970,37 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .sc-wide > .legrows{ flex:none; }
 .sc-stack{ display:flex; gap:var(--sp-1); height:22px; border-radius:var(--r-2); overflow:hidden; }
 .sc-stack > span{ display:block; min-width:3px; }
+/* ---- stats audit (28 Oct): ordered colours, the collection line, the price strip, regulars' strips, places' bars ---- */
+.sc-stack.thin{ height:10px; border-radius:var(--r-1); }
+.sc-one{ font-size:var(--fs-2); color:var(--soft); }
+.sc-pick{ font-size:var(--fs-2); color:var(--soft); line-height:1.45; }
+.sc-pick b{ color:var(--text); }
+.sc-svg .gr-line{ fill:none; stroke:var(--acc); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+.sc-svg .gr-area{ fill:var(--acc); opacity:.12; }
+.sc-svg .gr-end{ fill:var(--acc); stroke:var(--surface); stroke-width:2; }
+.sc-svg .gr-endl{ fill:var(--text); font-weight:700; }
+.sc-svg .gr-lead{ stroke:var(--faint); stroke-width:1; opacity:.6; }
+.sc-svg .gr-hit{ fill:transparent; cursor:pointer; outline:none; }
+.sc-svg .gr-hit.on, .sc-svg .gr-hit:hover, .sc-svg .gr-hit:focus-visible{ fill:var(--wash); }
+.sc-svg .gr-hit:focus-visible{ stroke:var(--acc-strong); stroke-width:1.5; }
+.sc-svg .ps-lane{ stroke:var(--border); stroke-width:1; }
+.sc-svg .ps-med{ stroke:var(--faint); stroke-width:1; opacity:.7; }
+.sc-svg .ps-yes{ fill:var(--ch-yes); }
+.sc-svg .ps-mid{ fill:var(--ch-mid); stroke:var(--surface); stroke-width:2; }
+.sc-svg .ps-no{ fill:var(--ch-no); stroke:var(--surface); stroke-width:2; }
+.sc-svg text.ps-emo{ font-size:var(--fs-2); }
+.lbrow.reg .lbscore{ min-width:4.6em; text-align:right; }
+.rstrip{ display:block; width:100%; height:16px; margin-top:var(--sp-1); }
+.rstrip .rg-grid{ stroke:var(--border); stroke-width:1; vector-effect:non-scaling-stroke; }
+.rstrip .rg-tick{ fill:var(--acc); }
+.rg-note{ display:block; font-size:var(--fs-1); color:var(--faint); }
+.lbrow.rg-axisrow{ border-bottom:none; padding-top:0; }
+.rg-axis{ position:relative; height:16px; font-size:var(--fs-1); color:var(--faint); }
+.rg-axis span{ position:absolute; top:0; transform:translateX(-50%); }
+.legrows.geoleg{ margin-top:var(--sp-2); }
 .usualcard .usual{ font-size:var(--fs-5); line-height:1.25; font-weight:800; letter-spacing:-.02em; text-wrap:balance; }
 .sc-dots{ display:inline-flex; flex-wrap:wrap; gap:var(--sp-1); }
-.sc-dots i{ width:12px; height:12px; border-radius:50%; background:var(--good); }
+.sc-dots i{ width:12px; height:12px; border-radius:50%; background:var(--soft); } /* a logged branch, not a verdict, so not the loved green (stats audit) */
 .sc-dots i.w{ background:none; border:2px solid var(--want); box-sizing:border-box; }
 
 @media (min-width:900px){

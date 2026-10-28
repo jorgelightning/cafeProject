@@ -2066,3 +2066,36 @@ are bubbles (zoom 11 and out, and the World view) the dot now goes under them, s
 bubble it is under gets a small blue dot on its ring at the lower left, opposite the violet tag; its name adds "you
 are here". From zoom 12 every cafe is its own pin and the dot is back on top. `syncYouDot()` runs after every redraw
 of the bubbles, on every idle and when a new fix is drawn.
+
+## Your numbers, drawn (v119)
+
+An audit of the Stats screen at phone size on the live site, for someone who reads charts for fun. The screen had
+plenty of charts; the trouble was that colours changed meaning from one to the next, a few charts said less than the
+text beside them, and some of the best stories in the log were not drawn. Five of six recommendations were picked
+(the day-of-week chart was skipped). Every chart colour was run through a palette checker in both themes.
+
+**One colour language.** Worth it drew Regret in the map's loved green; Drink DNA gave 25% sugar the want-to-try
+violet and 50% the loved green; the "It was fine" yellow was 2:1 on a white card. Stats charts now take their
+colours from `--ch-*` tokens: green, yellow (a deeper step that reads on a card) and red only for a verdict, always
+with 👍 😐 👎 or a label beside them, because red and green look alike to some colour-blind readers in any shade; one
+orange from light to dark for things with an order; cold blue to hot orange for Ice or heat, on the form's own scale;
+grey for Other. Sweetness and Size keep their real order instead of sorting by count (it read 12, 16, 8, 14 oz), and
+an option that is 90% one value (milk, 97% oat) is a sentence. A chain's logged-branch dots are neutral, not green.
+
+**Your collection, growing.** Habits opens on a line of cafes tried, from each cafe's first visit, over two years,
+with everything earlier as where the line starts. A month with three or more new cafes outside the biggest region is
+a trip, and the biggest are named on the line (Taiwan +3, Hawaii +9, Washington, Canada +8). Tap a month for what it
+added; a private spot is counted, never named.
+
+**Regulars with a rhythm.** Each regular has a strip of its visit days over the last nine months, and "none since"
+when it has been a month. "27 days" never said that Kissaten became weekly in July, or that Constance stopped in
+August.
+
+**Every drink on the price line.** "Order-again rate by price" (89, 91, 89 and 100%, the 100% from one drink) is now
+every priced drink placed by its price, a row per answer: 👍 as a small histogram, 😐 and 👎 as dots, one or two 👎
+named. The two you would not reorder cost $6.50 and $7.50, around the $7.25 median, so price was not the reason.
+
+**Small fixes.** Taste's legend counts the cafes you rated, as its title does (it said 81% and 73% for the same
+fact), and the unrated ones are a line. Where you go has the World list's verdict bar on each place, and "Other" is a
+count in the note, not a row. The monthly chart lost its green coverage line, and "Logged and still to try" its bar.
+`tests/stats-charts.js`.

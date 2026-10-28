@@ -47,6 +47,12 @@ function setRhythmMonth(month) {
   _rhythmMonth = month;
   renderStats();
 }
+let _growthMonth = "";
+function setGrowthMonth(month) {
+  if (!/^\d{4}-\d{2}$/.test(month)) return;
+  _growthMonth = month;
+  renderStats();
+}
 
 /* ---------- cadence, price and taste charts ----------
    Plain SVG and CSS, coloured from the theme tokens. Nothing here reads a location, an area or
@@ -119,7 +125,8 @@ function statHeat(dayCount) {
     '" role="img" aria-label="Visits per day over the last 30 weeks">' + labels + rows + cells + "</svg>"
   );
 }
-/* A ring split by verdict. Colours are the map's own, so a loved cafe is the same green here. */
+/* A ring split by verdict, in the chart verdict colours: the map's green and red, and a deeper yellow that reads on a
+   white card (the map's is 2:1 against it). */
 function statDonut(items, centre, label) {
   const R = 44,
     C = 2 * Math.PI * R,
@@ -134,7 +141,8 @@ function statDonut(items, centre, label) {
     const len = (C * i.n) / tot,
       vis = Math.max(1, len - 2);
     segs +=
-      '<circle cx="60" cy="60" r="' + R + '" fill="none" stroke="' + i.color + '" stroke-width="16" stroke-dasharray="' +
+      /* a style, not a stroke attribute, so a theme token (var(--ch-yes)) works */
+      '<circle cx="60" cy="60" r="' + R + '" fill="none" style="stroke:' + i.color + '" stroke-width="16" stroke-dasharray="' +
       vis.toFixed(2) + " " + (C - vis).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) +
       '" transform="rotate(-90 60 60)"><title>' + i.label + ": " + i.n + "</title></circle>";
     off += len;
@@ -200,12 +208,215 @@ function statBarRows(items) {
     "</div>"
   );
 }
+/* Every priced drink on one price line, a row per answer (stats audit, 28 Oct). It replaced "Order-again rate by price":
+   four bands at 89, 91, 89 and 100%, the longest bar from one drink. The 👍 drinks are a small histogram in 50¢ steps,
+   the 😐 and 👎 ones are dots (with their drink and cafe on hover), and one or two 👎 are named on the chart, so you can
+   see whether price had anything to do with it. A private spot is never named; it is "a private spot".
+   @param {{p:number, v:string, d:string, c:string}[]} pts price, answer (yes | neutral | no), drink, cafe label
+   @param {number} med the median of every priced drink, so this line and Price spread's agree */
+function statPriceStrip(pts, med) {
+  const W = 320,
+    l = 24,
+    r = 8,
+    iw = W - l - r,
+    hi = Math.max(8, Math.ceil(Math.max.apply(null, pts.map(function (x) {
+      return x.p;
+    })) / 2) * 2),
+    X = function (p) {
+      return l + (Math.min(p, hi) / hi) * iw;
+    },
+    y1 = 50,
+    y2 = 74,
+    y3 = 98;
+  const lane = function (y, emoji) {
+    return '<text class="ps-emo" x="0" y="' + (y + 4) + '">' + emoji + '</text><line class="ps-lane" x1="' + l + '" x2="' + (W - r) + '" y1="' + y + '" y2="' + y + '"/>';
+  };
+  let s = lane(y1, "👍") + lane(y2, "😐") + lane(y3, "👎");
+  const bins = {};
+  pts.forEach(function (x) {
+    if (x.v === "yes") bins[Math.floor(x.p * 2) / 2] = (bins[Math.floor(x.p * 2) / 2] || 0) + 1;
+  });
+  const mx = Math.max.apply(null, Object.keys(bins).map(function (k) {
+      return bins[k];
+    }).concat([1])),
+    bw = iw / hi / 2 - 1.5;
+  Object.keys(bins).forEach(function (k) {
+    const h = Math.max(3, (bins[k] / mx) * 38),
+      x = X(+k) + 0.75;
+    s +=
+      '<rect class="ps-yes" x="' + x.toFixed(1) + '" y="' + (y1 - h).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) +
+      '" rx="2"><title>' + statMoney(+k) + " to " + statMoney(+k + 0.5) + ": " + bins[k] + " you would order again</title></rect>";
+  });
+  const seen = {};
+  const no = pts.filter(function (x) {
+    return x.v === "no";
+  }).sort(function (a, b) {
+    return a.p - b.p;
+  });
+  pts.forEach(function (x) {
+    if (x.v !== "neutral" && x.v !== "no") return;
+    const y = x.v === "no" ? y3 : y2,
+      k = x.v + x.p.toFixed(2),
+      o = (seen[k] = (seen[k] || 0) + 1) - 1;
+    s +=
+      '<circle class="' + (x.v === "no" ? "ps-no" : "ps-mid") + '" cx="' + X(x.p).toFixed(1) + '" cy="' + (y - o * 7) + '" r="4.5"><title>' +
+      esc(x.d) + " · " + esc(x.c) + " · " + statMoney(x.p) + "</title></circle>";
+  });
+  if (no.length && no.length <= 2)
+    no.forEach(function (x, i) {
+      const right = no.length === 1 ? X(x.p) < W * 0.6 : i === 1,
+        name = x.c.length > 15 ? x.c.slice(0, 14).trim() + "…" : x.c;
+      s +=
+        '<text x="' + (X(x.p) + (right ? 8 : -8)).toFixed(1) + '" y="' + (y3 + 17) + '" text-anchor="' + (right ? "start" : "end") + '">' +
+        esc(name) + " " + statMoney(x.p) + "</text>";
+    });
+  s +=
+    '<line class="ps-med" x1="' + X(med).toFixed(1) + '" x2="' + X(med).toFixed(1) + '" y1="4" y2="' + (y3 + 6) + '"/><text x="' + (X(med) + 4).toFixed(1) +
+    '" y="10">median ' + statMoney(med) + '</text><line class="ps-lane" x1="' + l + '" x2="' + (W - r) + '" y1="' + (y3 + 26) + '" y2="' + (y3 + 26) + '"/>';
+  for (let v = 0; v <= hi; v += 4) s += '<text x="' + X(v).toFixed(1) + '" y="' + (y3 + 40) + '" text-anchor="middle">$' + v + "</text>";
+  return (
+    '<svg class="sc-svg pstrip" viewBox="0 0 ' + W + " " + (y3 + 46) + '" role="img" aria-label="Priced drinks by price: ' +
+    pts.filter(function (x) {
+      return x.v === "yes";
+    }).length + " you would order again, " + pts.filter(function (x) {
+      return x.v === "neutral";
+    }).length + " maybe, " + no.length + ' you would not, median ' + statMoney(med) + '">' + s + "</svg>"
+  );
+}
+/* The collection, growing (stats audit, 28 Oct): cafes tried, counted from each cafe's first visit, over the last two
+   years, with everything before as where the line starts. The twelve-month chart below began in an empty November and
+   put 2022 and the trips in one sentence. A month with three or more new cafes outside your biggest region is a trip,
+   and the two or three biggest are named on the line by region. Tap a month for what it added; a private spot is
+   counted, never named.
+   @param {{d:string, r:string, n:string}[]} firsts first visit date, region, name (or "" for a private spot)
+   @param {string} home the biggest region @param {string} sel the month picked, "YYYY-MM" */
+function statGrowth(firsts, home, sel) {
+  const now = new Date(),
+    months = [];
+  for (let i = 23; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"));
+  }
+  const by = {};
+  let start = 0;
+  firsts.forEach(function (x) {
+    const k = x.d.slice(0, 7);
+    if (k < months[0]) start++;
+    else (by[k] = by[k] || []).push(x);
+  });
+  let run = start;
+  const pts = months.map(function (k) {
+    run += (by[k] || []).length;
+    return { k: k, v: run, add: by[k] || [] };
+  });
+  const top = Math.max(10, Math.ceil(run / 50) * 50),
+    W = 320,
+    H = 170,
+    l = 26,
+    r = 26,
+    t = 22,
+    b = 20,
+    iw = W - l - r,
+    ih = H - t - b,
+    step = iw / months.length,
+    X = function (i) {
+      return l + (i + 1) * step;
+    },
+    Y = function (v) {
+      return t + ih - (v / top) * ih;
+    };
+  let line = "M" + l + "," + Y(start).toFixed(1);
+  pts.forEach(function (p, i) {
+    line += " H" + X(i).toFixed(1) + " V" + Y(p.v).toFixed(1);
+  });
+  let s = "";
+  [0, top / 2, top].forEach(function (v) {
+    s += '<line class="ps-lane" x1="' + l + '" x2="' + (W - r) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/><text x="' + (l - 5) + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + v + "</text>";
+  });
+  months.forEach(function (k, i) {
+    if (k.slice(5) === "01" || k.slice(5) === "07")
+      s += '<text x="' + (X(i) - step / 2).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle">' + (k.slice(5) === "01" ? k.slice(0, 4) : "Jul") + "</text>";
+  });
+  s += '<path class="gr-area" d="' + line + " H" + X(pts.length - 1).toFixed(1) + " V" + Y(0).toFixed(1) + " H" + l + ' Z"/><path class="gr-line" d="' + line + '"/>';
+  /* trips: away from the biggest region, three or more in a month, biggest first, never two within two months */
+  const trips = [];
+  pts
+    .map(function (p, i) {
+      const away = p.add.filter(function (x) {
+        return x.r !== home;
+      });
+      return { i: i, n: away.length, regions: away.map(function (x) {
+        return x.r;
+      }) };
+    })
+    .filter(function (x) {
+      return x.n >= 3;
+    })
+    .sort(function (a, b) {
+      return b.n - a.n;
+    })
+    .forEach(function (x) {
+      /* two months apart is enough: the line has climbed between them, so the labels sit at different heights */
+      if (trips.length < 3 && !trips.some(function (y) {
+        return Math.abs(y.i - x.i) < 2;
+      })) trips.push(x);
+    });
+  trips.forEach(function (x) {
+    const names = [];
+    x.regions.forEach(function (rg) {
+      if (names.indexOf(rg) < 0) names.push(rg);
+    });
+    const px = X(x.i) - step / 2,
+      py = Y(pts[x.i].v),
+      ly = Math.max(12, py - 30),
+      end = px > W * 0.45;
+    s +=
+      '<line class="gr-lead" x1="' + px.toFixed(1) + '" x2="' + px.toFixed(1) + '" y1="' + (ly + 4) + '" y2="' + (py - 3).toFixed(1) + '"/><text x="' +
+      (px + (end ? 3 : -3)).toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="' + (end ? "end" : "start") + '">' + esc(names.slice(0, 2).join(", ")) + " +" + x.n + "</text>";
+  });
+  const last = pts[pts.length - 1];
+  s +=
+    '<circle class="gr-end" cx="' + X(pts.length - 1).toFixed(1) + '" cy="' + Y(last.v).toFixed(1) + '" r="4.5"/><text class="gr-endl" x="' + (X(pts.length - 1) + 7).toFixed(1) + '" y="' + (Y(last.v) + 4).toFixed(1) + '">' + last.v + "</text>";
+  pts.forEach(function (p, i) {
+    s +=
+      '<rect class="gr-hit' + (p.k === sel ? " on" : "") + '" x="' + (X(i) - step).toFixed(1) + '" y="' + t + '" width="' + step.toFixed(1) + '" height="' + ih + '"' +
+      /* the months that added cafes are the ones worth reaching from the keyboard */
+      (p.add.length ? ' role="button" tabindex="0" aria-label="' + statMonthLabel(p.k) + ", " + p.add.length + ' new"' : "") +
+      act("setGrowthMonth", [p.k]) + "><title>" + statMonthLabel(p.k) + ": " + p.v + " cafes" + (p.add.length ? ", " + p.add.length + " new" : "") + "</title></rect>";
+  });
+  const picked = pts.filter(function (p) {
+    return p.k === sel;
+  })[0] || last;
+  const named = picked.add.filter(function (x) {
+      return x.n;
+    }),
+    priv = picked.add.length - named.length;
+  return {
+    svg: '<svg class="sc-svg growth" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Cafes tried over two years: ' + start + " before, " + last.v + ' now">' + s + "</svg>",
+    total: last.v,
+    picked:
+      "<b>" + statMonthLabel(picked.k) + "</b> · " +
+      (picked.add.length
+        ? picked.add.length + " new: " + esc(named.slice(0, 4).map(function (x) {
+            return x.n;
+          }).join(", ")) + (named.length > 4 ? " and " + (named.length - 4) + " more" : "") + (priv ? (named.length ? ", " : "") + (priv === 1 ? "a private spot" : priv + " private spots") : "")
+        : "no new cafes"),
+  };
+}
 
 /* ---------- Wrapped: drink DNA, worth it, chains and independents ----------
    Everything here is counted from what is already stored; nothing is estimated, and each card says
    how much of the data it stood on. No location, area or review is read — a brand name and a count
    are all a private spot contributes. */
-const STAT_SEG = ["var(--acc)", "var(--want)", "var(--good)", "var(--mid)", "var(--soft)"];
+/* Colours by meaning (stats audit, 28 Oct): Worth it drew Regret in the map's loved green, and Drink DNA gave 25% sugar
+   the want-to-try violet. Green, yellow and red now only mean a verdict (--ch-yes/mid/no), ordered things take one
+   orange from light to dark (--ch-o1..4), temperature runs cold blue to hot orange, and "Other" is muted. These are for
+   things with no order and no verdict, and never a verdict or want-to-try hue. */
+const STAT_SEG = ["var(--acc)", "var(--ch-cold)", "var(--ch-o4)"];
+/** A segment's colour: its own, grey for "Other", else the next nominal one. */
+function statSegColor(i, ix) {
+  return i.color || (i.label === "Other" ? "var(--ch-mute)" : STAT_SEG[ix % STAT_SEG.length]);
+}
 /** The top few values of a counter, with everything else folded into "Other". */
 function statGroups(counter, keep) {
   const keys = Object.keys(counter).sort(function (a, b) {
@@ -220,13 +431,14 @@ function statGroups(counter, keep) {
   if (rest) items.push({ label: "Other", n: rest });
   return items;
 }
-function statStack(items) {
+/** @param {{label:string,n:number,color?:string}[]} items @param {string} [cls] e.g. "thin", for a bar in a row */
+function statStack(items, cls) {
   const tot =
     items.reduce(function (s, i) {
       return s + i.n;
     }, 0) || 1;
   return (
-    '<div class="sc-stack" role="img" aria-label="' +
+    '<div class="sc-stack' + (cls ? " " + cls : "") + '" role="img" aria-label="' +
     items
       .map(function (i) {
         return esc(i.label) + " " + i.n;
@@ -235,7 +447,7 @@ function statStack(items) {
     '">' +
     items
       .map(function (i, ix) {
-        return '<span style="width:' + (i.n / tot) * 100 + "%;background:" + STAT_SEG[ix % STAT_SEG.length] + '" title="' + esc(i.label) + " · " + i.n + '"></span>';
+        return '<span style="width:' + (i.n / tot) * 100 + "%;background:" + statSegColor(i, ix) + '" title="' + esc(i.label) + " · " + i.n + '"></span>';
       })
       .join("") +
     "</div>"
@@ -247,13 +459,39 @@ function statLegend(items, total) {
     items
       .map(function (i, ix) {
         return (
-          '<div><i style="background:' + STAT_SEG[ix % STAT_SEG.length] + '"></i><span>' + esc(i.label) + "</span><b>" + i.n + " \u00b7 " +
+          '<div><i style="background:' + statSegColor(i, ix) + '"></i><span>' + esc(i.label) + "</span><b>" + i.n + " \u00b7 " +
           Math.round((i.n / (total || 1)) * 100) + "%</b></div>"
         );
       })
       .join("") +
     "</div>"
   );
+}
+/* Drink DNA drew each option sorted by count, so Size read 12, 16, 8, 14 oz and could not show small to large. An option
+   with an order keeps it: sweetness and size by their number, light to dark; ice and heat on the form's own scale,
+   coldest to hottest, blue to orange. "Other", or a value with no place on the scale, is grey and goes last. */
+const STAT_ICE = ["Extra ice", "Regular ice", "Less ice", "No ice", "Warm", "Hot"];
+const STAT_ICE_COL = ["var(--ch-cold)", "var(--ch-cold)", "var(--ch-cool)", "var(--ch-cool)", "var(--ch-warm)", "var(--ch-hot)"];
+/** @param {string} kind sweet | ice | size, anything else is left as it is @param {{label:string,n:number,color?:string}[]} items */
+function statOrdered(kind, items) {
+  if (kind !== "sweet" && kind !== "ice" && kind !== "size") return items;
+  const rank = function (i) {
+    if (kind === "ice") return STAT_ICE.indexOf(i.label) < 0 ? Infinity : STAT_ICE.indexOf(i.label);
+    const n = i.label === "No sugar" ? 0 : parseFloat(i.label);
+    return i.label === "Other" || isNaN(n) ? Infinity : n;
+  };
+  const out = items.slice().sort(function (a, b) {
+    return rank(a) - rank(b);
+  });
+  const ranked = out.filter(function (i) {
+    return isFinite(rank(i));
+  });
+  out.forEach(function (i) {
+    if (!isFinite(rank(i))) i.color = "var(--ch-mute)";
+    else if (kind === "ice") i.color = STAT_ICE_COL[rank(i)];
+    else i.color = "var(--ch-o" + (ranked.length < 2 ? 2 : 1 + Math.round((ranked.indexOf(i) * 3) / (ranked.length - 1))) + ")";
+  });
+  return out;
 }
 
 /* ---------- Wrapped: the year, told back to you ----------
@@ -580,10 +818,11 @@ function renderStats() {
   /* The bar under each row encoded a magnitude the row already prints beside it, competing
      with the monthly chart, which draws data you cannot otherwise see. Rows are separated by
      a rule now, and the figure does the comparing. */
-  const magRow = function (rank, name, sub, val, onclick) {
+  const magRow = function (rank, name, sub, val, onclick, extra) {
     return (
       '<div class="lbrow one' +
       (onclick ? " tap" : "") +
+      (extra ? " reg" : "") +
       '"' +
       (onclick ? ' role="button" tabindex="0"' + act(onclick[0], onclick[1]) : "") +
       ">" +
@@ -591,7 +830,9 @@ function renderStats() {
       '<div class="lbmain"><div class="lbname">' +
       esc(name) +
       (sub ? " <i>· " + esc(sub) + "</i>" : "") +
-      "</div></div>" +
+      "</div>" +
+      (extra || "") +
+      "</div>" +
       '<span class="lbscore">' +
       val +
       "</span></div>"
@@ -693,6 +934,32 @@ function renderStats() {
       " drinks priced</div></div></div>";
 
   mark("habits");
+  /* ---------- 2b. the collection, growing (stats audit) ---------- */
+  const firsts = [],
+    regionN = {};
+  nonWish.forEach(function (c) {
+    const d = visitDates(c)[0],
+      rg = regionOf(c).label;
+    regionN[rg] = (regionN[rg] || 0) + 1;
+    if (d) firsts.push({ d: d, r: rg, n: c.custom ? "" : c.name || "" });
+  });
+  if (firsts.length >= 5) {
+    const home = Object.keys(regionN).sort(function (a, b) {
+        return regionN[b] - regionN[a];
+      })[0],
+      gr = statGrowth(firsts, home, _growthMonth),
+      yr = String(new Date().getFullYear()),
+      thisYear = firsts.filter(function (x) {
+        return x.d.slice(0, 4) === yr;
+      }).length,
+      undated = nonWish.length - firsts.length;
+    h +=
+      '<div class="statsec">' + youOr("Your collection", esc(OWNER_NAME) + "’s collection") + '</div><div class="statcard sc-wide">' +
+      '<div class="sc-head"><b>' + gr.total + "</b> cafes" + (thisYear ? ", " + thisYear + " of them this year" : "") + "</div>" + gr.svg +
+      '<div class="sc-pick">' + gr.picked + "</div>" +
+      '<div class="statnote">Counted from each cafe’s first visit' + (undated ? "; " + undated + " more have no date" : "") + ". Tap a month to see what it added.</div></div>";
+  }
+
   /* ---------- 3. rhythm ---------- */
   const d0 = new Date(),
     mk = [];
@@ -815,7 +1082,6 @@ function renderStats() {
           '" style="height:' +
           hgt +
           'px"></span>' +
-          (isAdmin ? '<span class="rcov"><i style="width:' + coverage + '%"></i></span>' : "") +
           '<span class="rlab">' +
           MOL[+k.slice(5, 7) - 1] +
           "</span></button>"
@@ -824,11 +1090,9 @@ function renderStats() {
       .join("") +
     "</div>" +
     '<div class="statnote">' +
-    (isAdmin
-      ? metric === "spend"
-        ? "Bar: spend. Green line: share of drinks with a price. "
-        : "Bar: cafe visits. Green line: share of drinks with a price. "
-      : "Tap a month for its visits. ") +
+    /* the thin green line under each bar (share of drinks with a price) was a second chart squeezed into this one; the
+       picked month's coverage is in the line above the bars, and every month's in its label (stats audit) */
+    (isAdmin ? (metric === "spend" ? "Bar: spend. " : "Bar: cafe visits. ") + "Tap a month for its total. " : "Tap a month for its visits. ") +
     (earlier > 0 ? "Earlier: " + earlier + " visits before this window." : "") +
     "</div>" +
     "</div>";
@@ -913,10 +1177,10 @@ function renderStats() {
         return b.n - a.n;
       })[0];
     const rows = [
-      ["Sweetness", sweetC, 4],
-      ["Ice or heat", iceC, 4],
-      ["Milk", milkC, 3],
-      ["Size", sizeC, 4],
+      ["Sweetness", sweetC, 4, "sweet"],
+      ["Ice or heat", iceC, 4, "ice"],
+      ["Milk", milkC, 3, ""],
+      ["Size", sizeC, 4, "size"],
     ].filter(function (r) {
       return sum(r[1]) > 0;
     });
@@ -929,8 +1193,20 @@ function renderStats() {
       rows
         .map(function (r) {
           const g = statGroups(r[1], r[2]),
-            t = sum(r[1]);
-          return '<div class="sc-cap">' + r[0] + " \u00b7 " + Math.round((g[0].n / t) * 100) + "% " + esc(g[0].label.toLowerCase()) + "</div>" + statStack(g) + statLegend(g, t);
+            t = sum(r[1]),
+            cap = '<div class="sc-cap">' + r[0] + " \u00b7 " + Math.round((g[0].n / t) * 100) + "% " + esc(g[0].label.toLowerCase()) + "</div>";
+          /* a bar that is nearly all one colour (milk: 97% oat) says less than the sentence does */
+          if (g[0].n / t >= 0.9)
+            return (
+              cap + '<div class="sc-one">' + g[0].n + " of " + t + " drinks" +
+              (g.length > 1
+                ? ". The rest: " + g.slice(1).map(function (i) {
+                    return esc(i.label) + " " + i.n;
+                  }).join(", ")
+                : "") + ".</div>"
+            );
+          const o = statOrdered(String(r[3]), g);
+          return cap + statStack(o) + statLegend(o, t);
         })
         .join("") +
       '<div class="statnote">' + (adv && adv.n > 1 ? "Most adventurous: <b>" + esc(adv.c.name) + "</b>, " + adv.n + " different drinks. " : "") +
@@ -956,23 +1232,29 @@ function renderStats() {
           }, 0) / a.length
         : 0;
     };
-    const tiers = [
-      ["Under $6", 0, 6],
-      ["$6 to $8", 6, 8],
-      ["$8 to $10", 8, 10],
-      ["$10 and up", 10, 1e9],
-    ].map(function (t) {
-      const inT = orderRows.filter(function (x) {
-        return x.p >= t[1] && x.p < t[2] && (x.o.reorder === "yes" || x.o.reorder === "neutral" || x.o.reorder === "no");
-      });
-      const yes = inT.reduce(function (s, x) {
-        return s + (x.o.reorder === "yes" ? x.q : 0);
-      }, 0);
-      const all = inT.reduce(function (s, x) {
-        return s + x.q;
-      }, 0);
-      return { label: t[0], n: all ? Math.round((yes / all) * 100) : 0, all: all, yes: yes };
+    /* every priced drink with an answer, for the price strip; a private spot is never named */
+    const strip = [];
+    orderRows.forEach(function (x) {
+      const v = x.o.reorder;
+      if (x.p > 0 && (v === "yes" || v === "neutral" || v === "no"))
+        for (let i = 0; i < x.q; i++) strip.push({ p: x.p, v: v, d: x.dn, c: x.c.custom ? "a private spot" : x.c.name || "" });
     });
+    const noP = strip
+      .filter(function (x) {
+        return x.v === "no";
+      })
+      .map(function (x) {
+        return x.p;
+      })
+      .sort(function (a, b) {
+        return a - b;
+      });
+    /* green, yellow and red as on the map, each with its emoji, so colour is never the only cue */
+    const vItems3 = [
+      { label: "👍 Order again", n: verdicts.yes, color: "var(--ch-yes)" },
+      { label: "😐 Maybe", n: verdicts.neutral, color: "var(--ch-mid)" },
+      { label: "👎 Wouldn’t", n: verdicts.no, color: "var(--ch-no)" },
+    ];
     const cheap = nonWish
       .filter(function (c) {
         return bucketOf(c) === "loved";
@@ -997,26 +1279,24 @@ function renderStats() {
     h +=
       '<div class="statsec">Worth it</div><div class="statcard sc-wide">' +
       '<div class="sc-head"><b>' + Math.round((verdicts.yes / vTotal) * 100) + "%</b> " + youOr("of your drinks, you would order again", "of drinks " + OWNER_NAME + " would order again") + "</div>" +
-      statStack([
-        { label: "Order again", n: verdicts.yes },
-        { label: "Neutral", n: verdicts.neutral },
-        { label: "Regret", n: verdicts.no },
-      ]) +
-      statLegend([
-        { label: "Order again", n: verdicts.yes },
-        { label: "Neutral", n: verdicts.neutral },
-        { label: "Regret", n: verdicts.no },
-      ], vTotal) +
+      statStack(vItems3) +
+      statLegend(vItems3, vTotal) +
       (vPrice.yes.length && vPrice.neutral.length
         ? '<div class="sc-duo"><div><span>Avg price, order again</span><b>' + statMoney(avgOf(vPrice.yes)) + "</b><i>" + vPrice.yes.length +
-          " priced</i></div><div><span>Avg price, neutral</span><b>" + statMoney(avgOf(vPrice.neutral)) + "</b><i>" + vPrice.neutral.length + " priced</i></div></div>"
+          " priced</i></div><div><span>Avg price, maybe</span><b>" + statMoney(avgOf(vPrice.neutral)) + "</b><i>" + vPrice.neutral.length + " priced</i></div></div>"
         : "") +
-      '<div class="sc-cap">Order-again rate by price</div>' +
-      statBarRows(
-        tiers.map(function (t) {
-          return { label: t.label + " (" + t.all + ")", n: t.n, text: t.n + "%" };
-        })
-      ) +
+      (strip.length >= 5
+        ? '<div class="sc-cap">' +
+          (!noP.length
+            ? "Every priced drink, by your answer"
+            : noP.length === 1
+              ? "Your one 👎 cost " + statMoney(noP[0])
+              : "Your " + (noP.length === 2 ? "two" : noP.length) + " 👎 cost " + statMoney(noP[0]) +
+                (noP[noP.length - 1] > noP[0] ? (noP.length === 2 ? " and " : " to ") + statMoney(noP[noP.length - 1]) : " each")) +
+          "</div>" + statPriceStrip(strip, allPrices.length ? median(allPrices) : median(strip.map(function (x) {
+            return x.p;
+          })))
+        : "") +
       (cheap.length
         ? '<div class="sc-cap">Loved cafes with the lowest average drink</div>' +
           statBarRows(
@@ -1025,8 +1305,8 @@ function renderStats() {
             })
           )
         : "") +
-      '<div class="statnote">' + vTotal + " of " + nDrinkRows + " drinks carry a verdict" +
-      (regret < 5 ? ", and only " + regret + " were a regret, so the price bands show a pattern to watch, not a rule" : "") + ".</div></div>";
+      '<div class="statnote">' + vTotal + " of " + nDrinkRows + " drinks carry an answer; the " + strip.length + " with a price are on the line" +
+      (regret && regret < 5 ? ". Only " + regret + (regret === 1 ? " was" : " were") + " a 👎, so read them as examples, not a rule" : "") + ".</div></div>";
   }
 
   mark("you");
@@ -1037,11 +1317,12 @@ function renderStats() {
   });
   const ratedN = verdictN.loved + verdictN.fine + verdictN.meh;
   if (ratedN >= 3) {
+    /* One base for every percent (stats audit): the title counted the cafes you rated (81%) and the legend all of them
+       (73%). The ring and the legend are rated cafes only now; the unrated ones are a line in the note. */
     const vItems = [
-      { label: "Loved it", n: verdictN.loved, color: BUCKET_HEX.loved },
-      { label: "It was fine", n: verdictN.fine, color: BUCKET_HEX.fine },
-      { label: "Not for me", n: verdictN.meh, color: BUCKET_HEX.meh },
-      { label: "Not rated", n: verdictN[""], color: BUCKET_HEX[""] },
+      { label: "Loved it", n: verdictN.loved, color: "var(--ch-yes)" },
+      { label: "It was fine", n: verdictN.fine, color: "var(--ch-mid)" },
+      { label: "Not for me", n: verdictN.meh, color: "var(--ch-no)" },
     ];
     const tagRows = Object.keys(tagC)
       .sort(function (a, b) {
@@ -1051,7 +1332,6 @@ function renderStats() {
       .map(function (t) {
         return { label: "#" + t, n: tagC[t] };
       });
-    const logged = Math.round((nonWish.length / Math.max(1, cafes.length)) * 100);
     h +=
       '<div class="statsec">Taste</div><div class="statcard sc-wide">' +
       '<div class="sc-head"><b>' + Math.round((verdictN.loved / ratedN) * 100) + "%</b> " + youOr("of the cafes you rated, you loved", "of the cafes " + OWNER_NAME + " rated were a “Loved it”") + "</div>" +
@@ -1061,17 +1341,12 @@ function renderStats() {
         .map(function (i) {
           return (
             '<div><i style="background:' + i.color + '"></i><span>' + i.label + '</span><b>' + i.n + " · " +
-            Math.round((i.n / nonWish.length) * 100) + "%</b></div>"
+            Math.round((i.n / ratedN) * 100) + "%</b></div>"
           );
         })
         .join("") +
       "</div></div>" +
-      (wishN
-        ? '<div class="sc-cap">Logged and still to try</div><div class="sc-split" role="img" aria-label="' + nonWish.length +
-          " logged, " + wishN + ' still to try"><span style="width:' + logged + '%"></span><span class="w" style="width:' +
-          (100 - logged) + '%"></span></div><div class="legrows"><div><i class="lg"></i><span>Logged</span><b>' +
-          nonWish.length + '</b></div><div><i class="wsh"></i><span>Still to try</span><b>' + wishN + "</b></div></div>"
-        : "") +
+      /* "Logged and still to try" was a bar of two numbers the line at the top of You already gives (stats audit) */
       (tagRows.length ? '<div class="sc-cap">' + youOr("What your tags say", "What " + OWNER_NAME + "’s tags say") + "</div>" + statBarRows(tagRows) : "") +
       '<div class="statnote">Four and five read as loved, three as fine, one and two as not for me. ' + verdictN[""] +
       " visited cafes have no rating yet.</div></div>";
@@ -1090,10 +1365,45 @@ function renderStats() {
       return b.n - a.n;
     });
   if (reg.length) {
+    /* Each regular has a strip of its visit days since the start of the month eight months ago (stats audit): the count
+       says how often, the strip says when, and whether it is still going. "27 days" never said that Kissaten became
+       weekly in July, or that Constance stopped in August. Dates only; nothing else about the cafe is read. */
+    const s0 = new Date(new Date().getFullYear(), new Date().getMonth() - 8, 1),
+      t0 = s0.getTime(),
+      t1 = Date.now(),
+      from = statDayKey(s0),
+      sx = function (ms) {
+        return ((ms - t0) / (t1 - t0)) * 300;
+      };
+    let grid = "",
+      axis = "";
+    for (let m = 0; m <= 8; m++) {
+      const a = new Date(s0.getFullYear(), s0.getMonth() + m, 1).getTime(),
+        z = Math.min(t1, new Date(s0.getFullYear(), s0.getMonth() + m + 1, 1).getTime());
+      if (m) grid += '<line class="rg-grid" x1="' + sx(a).toFixed(1) + '" x2="' + sx(a).toFixed(1) + '" y1="0" y2="16"/>';
+      axis += '<span style="left:' + ((sx((a + z) / 2) / 300) * 100).toFixed(1) + '%">' + STAT_MON[new Date(a).getMonth()].charAt(0) + "</span>";
+    }
     h += '<div class="statsec">Regulars</div>';
     reg.slice(0, 4).forEach(function (x, i) {
-      h += magRow(i + 1, x.c.name, x.c.area, x.n + " days", ["openDetail", [x.c.id, "stats"]]);
+      const days = visitDates(x.c),
+        recent = days.filter(function (d) {
+          return d >= from;
+        }),
+        last = days[days.length - 1],
+        stale = (t1 - new Date(last + "T12:00:00").getTime()) / 864e5 > 30;
+      const strip =
+        '<svg class="rstrip" viewBox="0 0 300 16" preserveAspectRatio="none" role="img" aria-label="' + recent.length + " visit days in the last nine months" +
+        (stale ? ", none since " + fmtDate(last) : "") + '">' + grid +
+        recent
+          .map(function (d) {
+            return '<rect class="rg-tick" x="' + (sx(new Date(d + "T12:00:00").getTime()) - 1).toFixed(1) + '" y="2" width="2" height="12"><title>' + d + "</title></rect>";
+          })
+          .join("") +
+        "</svg>" +
+        (stale ? '<span class="rg-note">none since ' + esc(fmtDate(last)) + "</span>" : "");
+      h += magRow(i + 1, x.c.name, x.c.area, x.n + " days", ["openDetail", [x.c.id, "stats"]], strip);
     });
+    h += '<div class="lbrow one reg rg-axisrow" aria-hidden="true"><span class="lbrank"></span><div class="lbmain"><div class="rg-axis">' + axis + '</div></div><span class="lbscore"></span></div>';
     h +=
       '<div class="statnote">Counted in separate days out, not drinks ordered. Only ' +
       reg.length +
@@ -1101,7 +1411,9 @@ function renderStats() {
   }
 
   mark("habits");
-  /* ---------- 8. where you go ---------- */
+  /* ---------- 8. where you go ----------
+     Each place carries the loved / fine / not-for-me bar the World list on the map has (stats audit), and "Other", a
+     cafe whose country the app cannot tell, is no longer a row that reads like a place: it is counted in the note. */
   const geo = {};
   nonWish
     .filter(function (c) {
@@ -1109,20 +1421,28 @@ function renderStats() {
     })
     .forEach(function (c) {
       const k = cafeStateName(c) || cafeCountryName(c);
-      if (k) geo[k] = (geo[k] || 0) + 1;
+      if (!k) return;
+      const g = (geo[k] = geo[k] || { n: 0, loved: 0, fine: 0, meh: 0, "": 0 });
+      g.n++;
+      g[bucketOf(c) || ""]++;
     });
   const geoA = Object.keys(geo)
+    .filter(function (k) {
+      return k !== "Other";
+    })
     .map(function (k) {
       return [k, geo[k]];
     })
     .sort(function (a, b) {
-      return b[1] - a[1];
+      return b[1].n - a[1].n;
     });
   if (geoA.length > 1) {
-    const shown = geoA.slice(0, 4);
-    const rest = geoA.slice(4).reduce(function (s, x) {
-      return s + x[1];
-    }, 0);
+    const shown = geoA.slice(0, 5),
+      moreN = geoA.length - shown.length,
+      placed = geoA.slice(5).reduce(function (s, x) {
+        return s + x[1].n;
+      }, 0),
+      unplaced = geo.Other ? geo.Other.n : 0;
     const far = nonWish
       .filter(function (c) {
         return c.lat != null;
@@ -1133,13 +1453,35 @@ function renderStats() {
       .sort(function (a, b) {
         return b.mi - a.mi;
       })[0];
-    h += '<div class="statsec">' + youOr("Where you go", "Where " + OWNER_NAME + " goes") + "</div>";
-    shown.forEach(function (x) {
-      h += magRow(null, x[0], "", x[1] + " cafe" + (x[1] === 1 ? "" : "s"), null);
-    });
+    const rest = [];
+    if (placed) rest.push(placed + " in " + moreN + " more place" + (moreN === 1 ? "" : "s"));
+    if (unplaced) rest.push(unplaced + " the app can’t place");
     h +=
+      '<div class="statsec">' + youOr("Where you go", "Where " + OWNER_NAME + " goes") + '</div><div class="hbars geo">' +
+      shown
+        .map(function (x) {
+          const g = x[1];
+          return (
+            '<div class="hb-row"><span class="hb-nm">' + esc(x[0]) + "</span>" +
+            statStack(
+              [
+                { label: "Loved it", n: g.loved, color: "var(--ch-yes)" },
+                { label: "It was fine", n: g.fine, color: "var(--ch-mid)" },
+                { label: "Not for me", n: g.meh, color: "var(--ch-no)" },
+                { label: "Not rated", n: g[""], color: "var(--ch-mute)" },
+              ].filter(function (i) {
+                return i.n;
+              }),
+              "thin"
+            ) +
+            '<span class="hb-v">' + g.n + "</span></div>"
+          );
+        })
+        .join("") +
+      '</div><div class="legrows inl geoleg"><div><i style="background:var(--ch-yes)"></i><span>Loved</span></div><div><i style="background:var(--ch-mid)"></i><span>Fine</span></div>' +
+      '<div><i style="background:var(--ch-no)"></i><span>Not for me</span></div><div><i style="background:var(--ch-mute)"></i><span>Not rated</span></div></div>' +
       '<div class="statnote">' +
-      (rest ? "+" + rest + " elsewhere. " : "") +
+      (rest.length ? "+" + (placed + unplaced) + " more: " + rest.join(", ") + ". " : "") +
       (far ? "Farthest: " + esc(far.c.name) + " — " + Math.round(far.mi).toLocaleString() + " mi." : "") +
       "</div>";
   }
