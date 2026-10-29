@@ -183,6 +183,13 @@ function _rankNum(c) {
 function _hasPrice(o) {
   return parseFloat(String((o && o.p) || "").replace(/[^0-9.]/g, "")) > 0;
 }
+/* A price was entered, a free cup's 0 included (v120). Tidy up and the No price view ask about a cup with no price,
+   and a cup at a friend's place has one: it was free. _hasPrice stays "cost something", which is what every average,
+   median and the price strip count, so free cups never make the rest of the list look cheaper. */
+/** @param {any} o */
+function _priceGiven(o) {
+  return !!o && [o.p, o.pl].some(v => ccyNum(v) != null);
+}
 /** @param {Cafe} c @param {string} g */
 function guideMatch(c, g) {
   if (g === "top10") return _rankNum(c) <= 10;
@@ -205,7 +212,7 @@ function guideMatch(c, g) {
   if (g === "noprice")
     return (c.drinks || []).some(function (d) {
       return drinkOrders(d).some(function (o) {
-        return !_hasPrice(o);
+        return !_priceGiven(o);
       });
     });
   return true;
@@ -276,7 +283,7 @@ function renderQuickChips() {
 /** The latest priced order of a drink, as dollars — the card's order line carries it. */
 function cardPrice(d) {
   const os = drinkOrders(d)
-    .filter(_hasPrice)
+    .filter(_priceGiven)
     .sort(function (x, y) {
       return (y.date || "").localeCompare(x.date || "");
     });

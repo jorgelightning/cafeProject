@@ -2656,7 +2656,7 @@ function tidyNeeds(c, k) {
     return (
       ds.length > 0 &&
       ds.every(function (d) {
-        return !_hasPrice(latestDrinkOrder(d));
+        return !_priceGiven(latestDrinkOrder(d));
       })
     );
   if (k === "date")

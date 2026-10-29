@@ -685,6 +685,7 @@ function ccyNum(v) {
 function fmtLocal(amt, code) {
   const n = ccyNum(amt);
   if (n == null) return "";
+  if (n === 0) return "Free"; /* a friend's cup, in any currency (fmtPrice says the same in dollars) */
   const m = ccyMeta(code);
   return m.sym + n.toFixed(m.dec);
 }

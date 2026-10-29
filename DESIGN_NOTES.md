@@ -2177,3 +2177,12 @@ for script and frame and nothing else on that host. The reCAPTCHA badge is hidde
 words, which Google allows. With `RECAPTCHA_SITE_KEY` empty, tips are off and nothing asks for one; README.md, Reader
 tips, has the six console steps. A send that does not finish in 20 seconds says it could not send (Firestore keeps
 trying a write it holds, so the tip may still arrive). `tests/tips.js` fakes the store (`tipStore`).
+
+## Free cups (v121)
+
+A cup at a friend's place costs nothing, and was already logged as 0 (Cafe Plaza, Viv & Iv's). The cafe page showed no
+price for it, the cup history said $0.00, and Tidy up counted both places as missing a price. Now `fmtPrice` and
+`fmtLocal` read 0 as Free, in dollars or local money, and `_priceGiven` (list.js) counts a 0 as a price entered, for
+Tidy up and the No price view. `_hasPrice` still means "cost something", and every average, median, spend chart and the
+quick cup's price strip count only those, so free cups never make the rest of the list look cheaper. No Free button:
+typing 0 is rare enough (the owner's call). `tests/free-cups.js`.

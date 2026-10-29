@@ -19,11 +19,12 @@ function setHeroTag(c) {
     t.style.display = "none";
   }
 }
+/* A cup at a friend's place costs nothing and is logged as 0; it reads Free, not $0.00 (v120). */
 function fmtPrice(p) {
   p = (p == null ? "" : String(p)).trim();
   if (!p) return "";
   const m = p.replace(/[^0-9.]/g, "");
-  if (m && !isNaN(parseFloat(m))) return "$" + parseFloat(m).toFixed(2);
+  if (m && !isNaN(parseFloat(m))) return parseFloat(m) === 0 ? "Free" : "$" + parseFloat(m).toFixed(2);
   return p;
 }
 /* Local amount leads, dollars follow. Standing in Taipei, NT$65 is the number you recognise
@@ -33,7 +34,7 @@ function priceHTML(d) {
   if (!d) return "";
   const usd = fmtPrice(d.p);
   const loc = d.pl && d.pc && String(d.pc).toUpperCase() !== "USD" ? fmtLocal(d.pl, d.pc) : "";
-  if (!loc) return usd ? '<span class="pr">' + esc(usd) + "</span>" : "";
+  if (!loc || loc === "Free") return usd || loc ? '<span class="pr">' + esc(loc || usd) + "</span>" : "";
   const sub = usd ? esc(usd) : "needs rate";
   return (
     '<span class="prwrap"><span class="pr">' +
