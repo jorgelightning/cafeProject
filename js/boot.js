@@ -274,6 +274,7 @@ load()
     applyMode();
     const _sp = new URLSearchParams(location.search);
     const _sc = _sp.get("cafe");
+    const _do = _sp.get("do");
     show("map");
     /* Tells anything watching (the test suite) that the first paint from the saved data is done. It is set before
        the map starts, so a map that cannot load cannot hold it back. */
@@ -294,7 +295,8 @@ load()
         }
       };
       _wait(8);
-    } else setTimeout(maybeWelcome, 600);
+    } else if (_do) runShortcut(_do);
+    else setTimeout(maybeWelcome, 600);
     if (_fbOk && isAdmin) {
       fbDb
         .ref("cafes")

@@ -46,6 +46,17 @@ NOTE: public read is expected for a shared map; writes are locked to your Google
 const FIREBASE_AUTH_SRC = "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js";
 /* its hash, checked by the browser before it runs (Subresource Integrity); node scripts/sri.js prints a new one */
 const FIREBASE_AUTH_SRI = "sha384-TnlRYaR4JYz/lpaGuaiU61PjNberSA4vjLjtF+oRC/IkohkJqnWxw5EmDSOt1vA1";
+/* Reader tips (v120). A visitor can tell you about a place; only you can read what they send. Tips live in Firestore,
+   not the Realtime Database, because App Check is switched on per database: on the map's database it would also
+   stop the nightly backup's plain download and any visitor whose ad blocker stops reCAPTCHA. Both scripts and
+   reCAPTCHA load only when someone opens the tip sheet or you open the inbox (tips.js). README.md, "Reader tips",
+   has the console steps. RECAPTCHA_SITE_KEY is the reCAPTCHA v3 site key registered with App Check: public by
+   design (the secret stays in the console). Empty means tips are off and nothing asks for them. */
+const RECAPTCHA_SITE_KEY = "";
+const FIREBASE_APPCHECK_SRC = "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js";
+const FIREBASE_APPCHECK_SRI = "sha384-E3vxFxXu8FhW5kvqdQJ5Yf8ugrV7iCJP8jgnItRH2Rk8Q08cJzJGTi/oMC3FEp3j";
+const FIREBASE_FIRESTORE_SRC = "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js";
+const FIREBASE_FIRESTORE_SRI = "sha384-qn4Jh88HhJA8dplNQyGjOh9OGI4izVhrfj/qIFgaKcdgOE06pXqIKGlsCILZcLAC";
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDoTgqNZjj7oyoeulJAiqNvPMCGltUbrio",
   authDomain: "cafeproject-b604f.firebaseapp.com",

@@ -6,7 +6,7 @@ const os = require("os");
 const path = require("path");
 
 const SUITE = [
-  ["unit",             "the pure helpers in js/lib/ (escaping, URLs, spelling distance, dates, Elo, placement), by Node alone"],
+  ["unit",             "the pure helpers in js/lib/ (escaping, URLs, spelling distance, dates, Elo, placement, an order's words), by Node alone"],
   ["cache-version",     "the deploy versions agree and a stale build cannot pin itself"],
   ["currency-units",   "conversion, rounding and the country->currency table (no browser)"],
   ["currency-form",    "logging a drink in local money, end to end"],
@@ -15,6 +15,9 @@ const SUITE = [
   ["order-editor",     "editing dates above history preserves separate purchases"],
   ["drink-notes",      "a drink's ⋯ puts a note, tags and 👍 😐 👎 on its newest cup; shown under the drink, kept by Edit, merged by sync"],
   ["quick-cup",        "a cup on one sheet (same as last time, last price, 👍 😐 👎) and Tidy up's one-cafe-at-a-time gaps"],
+  ["barista",          "Show the barista: What to order's last cup on the whole screen in the counter's language, English under each word, the screen kept on"],
+  ["shortcuts-pace-price", "the icon's long-press Log a cup, Near me and Want to try; Wrapped's year on pace; the quick cup's price among every like cup"],
+  ["tips",             "reader tips: off without a reCAPTCHA key; a visitor's tip from Go or a search that found nothing, cleaned to the rule; the owner's inbox, Want to try and Dismiss"],
   ["visitor-view",     "a visitor gets Directions/Hours/Share up top, one word instead of a rank, =N ties, Stats in Jorge's name, one Cupertino"],
   ["go-filters",       "Go by kind and region, Best coffee, a no-match search that suggests, Near me refused offers regions"],
   ["welcome",          "a first visit says whose list it is, once per device, never for the owner or over a shared cafe"],

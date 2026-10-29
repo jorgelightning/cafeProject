@@ -19,3 +19,9 @@ declare const eloStep: typeof import("../js/lib/elo.js").eloStep;
 declare const placementPos: typeof import("../js/lib/elo.js").placementPos;
 declare const placementElo: typeof import("../js/lib/elo.js").placementElo;
 declare const placementStep: typeof import("../js/lib/elo.js").placementStep;
+
+declare const ORDER_LANGS: typeof import("../js/lib/order.js").ORDER_LANGS;
+declare const SWEET_LEVELS: typeof import("../js/lib/order.js").SWEET_LEVELS;
+declare const sweetLevel: typeof import("../js/lib/order.js").sweetLevel;
+declare const orderLines: typeof import("../js/lib/order.js").orderLines;
+declare const orderLangFor: typeof import("../js/lib/order.js").orderLangFor;

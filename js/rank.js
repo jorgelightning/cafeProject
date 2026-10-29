@@ -729,6 +729,11 @@ function renderBoard() {
       .slice(0, 5);
     h += '<div class="statsec">Still placing — ' + placing.length + "</div>" + pq.map(boardQueueRow).join("");
   }
+  /* a reader with a place in mind (tips.js), once they have seen the list */
+  if (!isAdmin && typeof tipsOn === "function" && tipsOn())
+    h +=
+      '<button type="button" class="tipask"' + act("openTipSheet", ["", "go"]) + ">" + ico("bookmark") +
+      "<span><b>Know a place " + esc(OWNER_NAME) + " should try?</b><small>Send a tip. Only " + esc(OWNER_NAME) + " sees it.</small></span></button>";
   h +=
     '<div class="handoff" role="button" tabindex="0"' + act("show", ["stats"]) + '>' + ico("bars") + " See the numbers behind this <span>›</span></div>";
   host.innerHTML = '<div class="boardwrap">' + h + "</div>";
@@ -874,7 +879,9 @@ function usualDrink(c) {
 }
 function chaserWhen(iso) {
   if (!iso) return "no dates";
-  const dd = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  /* calendar days, both read as dates: "2026-10-28" parsed alone is midnight UTC, 5pm the day before in California,
+     so after 5pm a cup logged today used to read "yesterday" (found by the suite at 11pm, 28 Oct) */
+  const dd = Math.round((Date.parse(localToday()) - Date.parse(String(iso).slice(0, 10))) / 86400000);
   if (dd <= 0) return "today";
   if (dd === 1) return "yesterday";
   if (dd < 7) return dd + "d ago";

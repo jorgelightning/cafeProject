@@ -61,8 +61,16 @@ eq(ext.filter(t => !/\bintegrity="sha384-[A-Za-z0-9+/=]{64}"/.test(t) || !/\bcro
 eq(/const FIREBASE_AUTH_SRI = "sha384-[A-Za-z0-9+/=]{64}";/.test(cfg), true, "the sign-in script has its hash too (config.js)");
 eq(/s\.integrity = FIREBASE_AUTH_SRI;/.test(read("js/storage.js")) && /s\.crossOrigin = "anonymous";/.test(read("js/storage.js")), true,
    "…and ensureAuth() sets it on the script it adds");
-eq(new Set([...bare.matchAll(/firebasejs\/([\d.]+)\//g)].map(m => m[1]).concat(/firebasejs\/([\d.]+)\//.exec(authSrc)[1])).size, 1,
-   "all three Firebase scripts are one version, so their hashes are from one release");
+eq(new Set([...bare.matchAll(/firebasejs\/([\d.]+)\//g)].map(m => m[1]).concat([...cfg.matchAll(/const FIREBASE_\w+_SRC = "[^"]*firebasejs\/([\d.]+)\//g)].map(m => m[1]))).size, 1,
+   "every Firebase script, in the page and loaded on demand, is one version, so their hashes are from one release");
+/* reader tips (v120): App Check and Firestore load on demand, pinned like sign-in, and reCAPTCHA gets its script and frame */
+eq(["APPCHECK", "FIRESTORE"].filter(k => !new RegExp('const FIREBASE_' + k + '_SRI = "sha384-[A-Za-z0-9+/=]{64}";').test(cfg)), [],
+   "App Check and Firestore, loaded for reader tips, have their hashes too (config.js)");
+eq(/s\.integrity = sri;/.test(read("js/tips.js")) && /s\.crossOrigin = "anonymous";/.test(read("js/tips.js")), true,
+   "…and tips.js sets the hash on each script it adds");
+eq([(dir["script-src"] || []).includes("https://www.google.com/recaptcha/"), (dir["frame-src"] || []).includes("https://www.google.com/recaptcha/"),
+    [...(dir["script-src"] || []), ...(dir["frame-src"] || [])].filter(x => /www\.google\.com/.test(x) && x !== "https://www.google.com/recaptcha/")],
+   [true, true, []], "reCAPTCHA's script and frame are allowed for App Check, and nothing else on www.google.com");
 
 /* the app, walked under the policy */
 (async () => {

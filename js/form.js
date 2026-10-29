@@ -2362,7 +2362,8 @@ function _qcHTML(c) {
     body +=
       '<label class="dnlab" for="qc-price">Price' + (code !== "USD" ? " (" + esc(code) + ")" : "") + "</label>" +
       '<input id="qc-price" class="dntext qcin" type="text" inputmode="decimal" autocomplete="off" placeholder="' +
-      esc(ccyMeta(code).sym || "") + '0.00" value="' + esc(lastTxt) + '">' +
+      esc(ccyMeta(code).sym || "") + '0.00" value="' + esc(lastTxt) + '"' + act("qcPriceCtx", [], "input") + ">" +
+      '<div class="qcctx" id="qc-ctx" aria-live="polite"></div>' +
       '<div class="dnq" role="group" aria-label="Would order again?"><span class="dnlab">Would order again?</span><span class="dnvs big">' +
       _verdictButtons(st.rv, true, "qcVerdict") +
       "</span></div>";
@@ -2389,6 +2390,110 @@ function _qcRedraw() {
   /* a price you had typed survives a redraw for the same drink */
   const p2 = /** @type {HTMLInputElement|null} */ ($("qc-price"));
   if (p2 && keep != null && _qc.keepPrice) p2.value = keep;
+  qcPriceCtx();
+}
+/* ---------- the price, in context ----------
+   Typing $8.14 for a hojicha latte said nothing about whether that is a lot (ideas, 28 Oct). Under the price, every
+   cup of drinks like this one you have priced, as dots on one line in dollars, with the one you are typing on it and a
+   sentence: "Your hojicha lattes: $3.54 to $11.00, middle $7.00. 5 of 19 cost more." Drinks are alike when
+   rank.js chaserFam puts them in one family and both are, or are not, lattes (a hojicha tea is not a hojicha
+   latte); a drink in no family matches its own name only. Under four priced cups there is nothing to compare, so
+   nothing shows. Each dot names its drink and cafe on hover, a private spot as "a private spot", as Stats does. */
+/** @param {string} n */
+function _priceKey(n) {
+  const f = chaserFam(n);
+  return f ? f + (/latte/i.test(n || "") ? " latte" : "") : "=" + normDrink(n);
+}
+/** Every priced cup of drinks like `n`, in dollars, and what to call them.
+    @param {string} n @returns {{label: string, pts: {p: number, t: string}[]}} */
+function priceKin(n) {
+  const want = _priceKey(n),
+    f = chaserFam(n);
+  const label = f
+    ? /latte/i.test(n || "")
+      ? f === "coffee"
+        ? "lattes"
+        : f + " lattes"
+      : { coffee: "coffees", "milk tea": "milk teas", tea: "teas" }[f] || f + " drinks"
+    : "";
+  /** @type {{p: number, t: string}[]} */
+  const pts = [];
+  cafes.forEach(function (c) {
+    if (c.wish) return;
+    (c.drinks || []).forEach(function (d) {
+      if (_priceKey(d.n) !== want) return;
+      drinkOrders(d).forEach(function (o) {
+        const p = ccyNum(o.p);
+        if (p != null && p > 0) pts.push({ p: p, t: statMoney(p) + " · " + (d.n || "") + ", " + (c.custom ? "a private spot" : c.name) });
+      });
+    });
+  });
+  return { label: label, pts: pts };
+}
+function qcPriceCtx() {
+  const host = $("qc-ctx");
+  const c = cafes.find(x => x.id === curId);
+  if (!host || !c || !_qc || !_qc.n.trim()) return;
+  const kin = priceKin(_qc.n);
+  if (kin.pts.length < 4) {
+    host.innerHTML = "";
+    return;
+  }
+  const src = _qcSource(c, _qc.n),
+    code = String(src.pc || ccyFor(c)).toUpperCase(),
+    typed = ccyNum(/** @type {HTMLInputElement} */ ($("qc-price")).value),
+    rate = fxRateAt(code, localToday()).rate,
+    usd = typed != null && typed > 0 && rate > 0 ? typed / rate : null;
+  const ps = kin.pts.map(x => x.p).sort((a, b) => a - b),
+    n = ps.length,
+    mid = n % 2 ? ps[(n - 1) / 2] : (ps[n / 2 - 1] + ps[n / 2]) / 2;
+  const more = usd == null ? 0 : ps.filter(p => p > usd + 0.004).length;
+  const who = kin.label ? "Your " + kin.label : "“" + _qc.n.trim() + "”";
+  host.innerHTML =
+    _priceStrip(kin.pts, usd, mid) +
+    "<p>" + esc(who) + ": " + statMoney(ps[0]) + " to " + statMoney(ps[n - 1]) + ", middle " + statMoney(mid) + "." +
+    (usd == null ? "" : " " + (more === 0 ? "None of " + n : more === n ? "All " + n : more + " of " + n) + " cost more.") +
+    "</p>";
+}
+/** One line of dots, one per priced cup, and the price being typed as an orange dot with its amount above it. The
+    sentence under it carries the range and the middle, so the strip needs no axis labels of its own.
+    @param {{p: number, t: string}[]} pts @param {number|null} usd @param {number} mid */
+function _priceStrip(pts, usd, mid) {
+  const W = 300,
+    l = 8,
+    r = 8;
+  const all = pts.map(x => x.p).concat(usd != null ? [usd] : []);
+  const lo = Math.floor(Math.min.apply(null, all)),
+    hi = Math.max(lo + 1, Math.ceil(Math.max.apply(null, all)));
+  const X = p => l + ((p - lo) / (hi - lo)) * (W - l - r);
+  /* equal prices (within 6px) stack upward, 9px apart, so every cup stays a dot of its own; the strip is as tall as
+     its tallest stack, and the amount being typed sits under the line */
+  const seen = {};
+  const dots = pts
+    .slice()
+    .sort((a, b) => a.p - b.p)
+    .map(function (x) {
+      const cx = X(x.p),
+        k = Math.round(cx / 6);
+      /* five high at most: a twelfth Flat White at $5.00 sits on the fifth, and its title still names it */
+      return { cx: cx, o: Math.min(4, (seen[k] = (seen[k] || 0) + 1) - 1), t: x.t };
+    });
+  const y = 10 + 9 * Math.max.apply(null, dots.map(d => d.o)),
+    H = y + (usd != null ? 24 : 8);
+  let s =
+    '<line class="qcs-axis" x1="' + l + '" x2="' + (W - r) + '" y1="' + y + '" y2="' + y + '"/>' +
+    '<line class="qcs-mid" x1="' + X(mid).toFixed(1) + '" x2="' + X(mid).toFixed(1) + '" y1="2" y2="' + (y + 6) + '"/>';
+  dots.forEach(function (d) {
+    s += '<circle class="qcs-dot" cx="' + d.cx.toFixed(1) + '" cy="' + (y - d.o * 9) + '" r="4"><title>' + esc(d.t) + "</title></circle>";
+  });
+  if (usd != null) {
+    const ux = X(usd);
+    s +=
+      '<circle class="qcs-me" cx="' + ux.toFixed(1) + '" cy="' + y + '" r="5.5"><title>This cup: ' + statMoney(usd) + "</title></circle>" +
+      '<text class="qcs-me-t" x="' + Math.max(22, Math.min(W - 22, ux)).toFixed(1) + '" y="' + (y + 20) + '">' + statMoney(usd) + "</text>";
+  }
+  return '<svg class="qcs" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + pts.length + " priced cups on a line from " +
+    statMoney(lo) + " to " + statMoney(hi) + (usd != null ? ", this one at " + statMoney(usd) : "") + '">' + s + "</svg>";
 }
 /** @param {string} n */
 function qcPick(n) {

@@ -1,0 +1,29 @@
+rules_version = '2';
+// Reader tips (v120). Anyone may add one; only the owner (OWNER_EMAIL in js/config.js, with a verified address) may
+// read or delete them; nobody may change one, and nothing else in Firestore can be read or written. Each field has a
+// length limit and a tip carries exactly these fields, stamped with the server's time. App Check, enforced on
+// Firestore in the Firebase console, is what makes a tip come from the site's own pages. Tested against the emulator
+// by `npm run test:rules` (tests/rules.js); deployed with `npx -y firebase-tools@15.33.0 deploy --only firestore:rules`.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'jorgemarco.portillo@gmail.com';
+    }
+    function fits(v, max) {
+      return v is string && v.size() <= max;
+    }
+    match /tips/{tip} {
+      allow create: if request.resource.data.keys().hasOnly(['place', 'where', 'order', 'from', 'via', 'at'])
+        && request.resource.data.keys().hasAll(['place', 'where', 'order', 'from', 'via', 'at'])
+        && fits(request.resource.data.place, 80) && request.resource.data.place.size() > 0
+        && fits(request.resource.data.where, 80)
+        && fits(request.resource.data.order, 200)
+        && fits(request.resource.data.from, 40)
+        && request.resource.data.via in ['go', 'search']
+        && request.resource.data.at == request.time;
+      allow read, delete: if isOwner();
+    }
+  }
+}

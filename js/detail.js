@@ -254,6 +254,99 @@ function closeDrinkMenu() {
   const to = again || (back && back.isConnected ? back : null);
   if (to) to.focus();
 }
+/* ---------- show the barista ----------
+   What to order names the drink; at the counter you also need its size, milk, sugar and ice, and in Taipei you need
+   them as 微糖 and 少冰. Show the barista puts the last cup of What to order on the whole screen in big type, in the
+   counter's language (js/lib/order.js), with the English under each word. It is the shared sheet with another
+   filling (.ocard), so Escape, the scrim, Close and the keyboard going back to the button work as for the quick cup.
+   The screen stays on while it is open, where the browser allows it. */
+let _ocLang = "";
+/** @type {WakeLockSentinel|null} */
+let _ocLock = null;
+function _ocOpen() {
+  return !$("dnsheet").hidden && !!$("dns-panel").querySelector(".ocard");
+}
+/** the cafe on screen, the drink What to order names, and its last cup; or null */
+function _ocCup() {
+  const c = cafes.find(x => x.id === curId);
+  const td = c && !c.wish ? topDrinkAt(c) : null;
+  return td ? { c: c, d: td.d, o: latestDrinkOrder(td.d) || {} } : null;
+}
+/** @param {string} [lang] a key of ORDER_LANGS; without one the card opens in the cafe's own language */
+function showBarista(lang) {
+  const t = _ocCup();
+  if (!t) return;
+  const open = _ocOpen();
+  _ocLang = lang || (open && _ocLang) || orderLangFor(t.c.cc, cafeCountryName(t.c));
+  if (_ocLang === "zhs") _ocLang = "zh";
+  const html = _ocHTML(t);
+  if (open) {
+    $("dns-panel").innerHTML = html;
+    const on = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector('.oclangs [aria-pressed="true"]'));
+    if (on) on.focus();
+    return;
+  }
+  openSheet(html, document.activeElement, function () {
+    _ocWake(false);
+  });
+  /* the keyboard starts on the drink, not on Close: a screen reader reads the order first */
+  const title = $("dns-title");
+  title.setAttribute("tabindex", "-1");
+  title.focus({ preventScroll: true });
+  _ocWake(true);
+}
+/** @param {{c: Cafe, d: Drink, o: any}} t */
+function _ocHTML(t) {
+  /* one 中文 button; the characters follow the cafe, simplified only for mainland China */
+  const lang = _ocLang === "zh" && orderLangFor(t.c.cc) === "zhs" ? "zhs" : _ocLang;
+  const lines = orderLines(t.o, lang);
+  return (
+    '<div class="ocard"><div class="octop"><button type="button" class="ocx" aria-label="Close"' +
+    act("closeSheet") +
+    '><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button><span class="ocwhere">' +
+    esc(t.c.name) +
+    '</span></div><div class="seg oclangs" role="group" aria-label="Language">' +
+    ORDER_LANGS.map(function (l) {
+      const on = l[0] === _ocLang;
+      return (
+        '<button type="button" data-lang="' + l[0] + '" lang="' + (l[0] === "zh" ? "zh" : l[0]) + '" aria-pressed="' + on + '"' +
+        (on ? ' class="on"' : "") + act("showBarista", ["$data.lang"]) + ">" + esc(l[1]) + "</button>"
+      );
+    }).join("") +
+    '</div><h2 class="ocdrink" id="dns-title">' +
+    esc(t.d.n) +
+    '</h2><ul class="oclines">' +
+    lines
+      .map(function (l) {
+        return '<li><b lang="' + l.lang + '">' + esc(l.word) + "</b>" + (l.gloss ? "<small>" + esc(l.gloss) + "</small>" : "") + "</li>";
+      })
+      .join("") +
+    '</ul><p class="ocfoot">' +
+    esc(youOr("Your order", OWNER_NAME + "’s order")) +
+    (t.o.date ? " · last " + esc(_noteDay(t.o.date)) : "") +
+    "</p></div>"
+  );
+}
+/* A phone that dims at the counter loses the order, so the card holds the screen on. The browser drops the lock
+   whenever the page is hidden, so it is taken again when the page comes back with the card still open. */
+/** @param {boolean} on */
+function _ocWake(on) {
+  if (_ocLock) {
+    _ocLock.release().catch(function () {});
+    _ocLock = null;
+  }
+  if (!on || !navigator.wakeLock) return;
+  navigator.wakeLock
+    .request("screen")
+    .then(function (l) {
+      if (_ocOpen()) _ocLock = l;
+      else l.release().catch(function () {});
+    })
+    .catch(function () {});
+}
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible" && _ocOpen()) _ocWake(true);
+});
 /** @param {string} cur @param {boolean} big @param {string} [fn] the action, setDrinkVerdict unless given */
 function _verdictButtons(cur, big, fn) {
   return [
@@ -683,10 +776,12 @@ function openDetail(id, from) {
   if (_oa) {
     const td = !c.wish && typeof topDrinkAt === "function" ? topDrinkAt(c) : null;
     if (td) {
-      const last = (latestDrinkOrder(td.d) || {}).date;
+      const lastCup = latestDrinkOrder(td.d) || {};
+      const last = lastCup.date;
       const price = typeof cardPrice === "function" ? cardPrice(td.d) : "";
       /* The answer to "what do I get here", as the first thing under the name: the drink, what it
-         costs, how often, and when last. The owner can log it again from the same place. */
+         costs, how often, and when last. The owner can log it again from the same place. Show the barista
+         is there when the last cup has a size, milk, sugar or ice to show; a name alone needs no card. */
       _oa.innerHTML =
         '<span class="oa-gl" aria-hidden="true" style="background:' +
         drinkMarkBg(td.d.n) +
@@ -699,7 +794,12 @@ function openDetail(id, from) {
         td.n +
         "\u00d7 ordered" +
         (last ? " \u00b7 last " + esc(_noteDay(last)) : "") +
-        "</span></span>";
+        "</span></span>" +
+        (orderOptsText(lastCup)
+          ? '<button type="button" class="btn ghost oashow"' +
+            act("showBarista") +
+            '><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-globe"/></svg> Show the barista</button>'
+          : "");
       _oa.hidden = false;
     } else {
       _oa.hidden = true;

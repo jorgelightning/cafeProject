@@ -1,10 +1,11 @@
 /* The integrity hashes for the scripts the page loads from gstatic (engineering audit, 27 Oct).
 
-   index.html pins the Firebase app and database scripts by hash, and js/config.js pins the sign-in script
-   (FIREBASE_AUTH_SRI), so a file that changed on gstatic is refused instead of run. Moving to a new Firebase version
-   means new hashes: change the version in the three URLs, then
+   index.html pins the Firebase app and database scripts by hash, and js/config.js pins the ones it loads on demand
+   (each FIREBASE_<X>_SRC beside its FIREBASE_<X>_SRI: sign-in, and App Check and Firestore for reader tips), so a
+   file that changed on gstatic is refused instead of run. Moving to a new Firebase version means new hashes: change
+   the version in every URL, then
 
-     node scripts/sri.js            fetch the three files and write their hashes into index.html and config.js
+     node scripts/sri.js            fetch the files and write their hashes into index.html and config.js
      node scripts/sri.js --check    fetch them and only say whether the pinned hashes still match
 
    Needs the network. tests/csp.js checks that every external script carries a hash; this checks the hash is right. */
@@ -33,14 +34,19 @@ async function fetchBuf(u) {
     have: (/integrity="([^"]*)"/.exec(m[0]) || [])[1] || "",
     put: h => (html = html.replace(m[0], m[0].replace(/ integrity="[^"]*"/, "").replace(/ crossorigin="[^"]*"/, "").replace(/>$/, ' integrity="' + h + '" crossorigin="anonymous">'))),
   }));
-  const authUrl = (/const FIREBASE_AUTH_SRC = "([^"]+)";/.exec(cfg) || [])[1];
-  if (authUrl)
+  /* the scripts config.js loads on demand: each FIREBASE_<X>_SRC with its FIREBASE_<X>_SRI (sign-in; App Check and
+     Firestore for reader tips, v120) */
+  for (const m of cfg.matchAll(/const FIREBASE_(\w+)_SRC = "([^"]+)";/g)) {
+    const name = "FIREBASE_" + m[1] + "_SRI",
+      re = new RegExp("const " + name + ' = "([^"]*)";');
+    if (!re.test(cfg)) throw new Error("config.js has " + m[0].split(" =")[0] + " but no " + name);
     tags.push({
-      where: "config.js FIREBASE_AUTH_SRI",
-      url: authUrl,
-      have: (/const FIREBASE_AUTH_SRI = "([^"]*)";/.exec(cfg) || [])[1] || "",
-      put: h => (cfg = cfg.replace(/const FIREBASE_AUTH_SRI = "[^"]*";/, 'const FIREBASE_AUTH_SRI = "' + h + '";')),
+      where: "config.js " + name,
+      url: m[2],
+      have: (re.exec(cfg) || [])[1] || "",
+      put: h => (cfg = cfg.replace(re, "const " + name + ' = "' + h + '";')),
     });
+  }
   if (!tags.length) throw new Error("no gstatic scripts found in index.html");
 
   let stale = 0;

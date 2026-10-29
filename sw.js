@@ -17,17 +17,17 @@
    CACHE_V would keep serving the old scripts. Anything cross-origin (Maps, Firebase, the FX
    endpoint) is deliberately not intercepted; those must fail normally so their own fallbacks
    run. */
-const CACHE_V = "cafemap-v119";
-const ASSET_V = "?v=119";
+const CACHE_V = "cafemap-v120";
+const ASSET_V = "?v=120";
 
 const SHELL = [
   "./", "./index.html", "./manifest.json", "./cafes.json",
   "./styles.css" + ASSET_V,
-  "./js/theme.js" + ASSET_V, "./js/lib/text.js" + ASSET_V, "./js/lib/elo.js" + ASSET_V,
+  "./js/theme.js" + ASSET_V, "./js/lib/text.js" + ASSET_V, "./js/lib/elo.js" + ASSET_V, "./js/lib/order.js" + ASSET_V,
   "./js/config.js" + ASSET_V, "./js/core.js" + ASSET_V, "./js/storage.js" + ASSET_V,
   "./js/sync.js" + ASSET_V, "./js/nav.js" + ASSET_V, "./js/map.js" + ASSET_V, "./js/photos.js" + ASSET_V,
   "./js/list.js" + ASSET_V, "./js/stats.js" + ASSET_V, "./js/rank.js" + ASSET_V,
-  "./js/detail.js" + ASSET_V, "./js/form.js" + ASSET_V, "./js/boot.js" + ASSET_V,
+  "./js/detail.js" + ASSET_V, "./js/form.js" + ASSET_V, "./js/tips.js" + ASSET_V, "./js/boot.js" + ASSET_V,
   "./vendor/markerclusterer-2.5.3.min.js",
   "./icon-180.png", "./icon-192.png", "./icon-512.png"
 ];

@@ -13,7 +13,7 @@
     "test:site": "node tests/site.js",
     "build": "node scripts/build-site.js",
     "test:live": "node tests/csp-live.js",
-    "test:rules": "npx -y firebase-tools@15.33.0 emulators:exec --only database --project demo-cafemap \"node tests/rules.js --emulator\"",
+    "test:rules": "npx -y firebase-tools@15.33.0 emulators:exec --only database,firestore --project demo-cafemap \"node tests/rules.js --emulator\"",
     "check": "npm run lint && npm run typecheck && npm test",
     "snapshot": "node tests/snapshot.js",
     "bump": "node scripts/bump.js",

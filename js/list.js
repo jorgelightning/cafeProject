@@ -667,6 +667,10 @@ function renderList() {
               "</div>"
             : "") +
           (k === "coffee" && !isAdmin ? actBtn("Show all coffee", "showAllCoffee") : "") +
+          /* a visitor looking for a place that isn't here may know it is worth a visit (tips.js) */
+          (!isAdmin && typeof tipsOn === "function" && tipsOn()
+            ? '<button type="button" class="btn ghost"' + act("openTipSheet", [typed, "search"]) + ">Tell " + esc(OWNER_NAME) + " about “" + esc(typed) + "”</button>"
+            : "") +
           "</div>"
         );
       }

@@ -27,6 +27,10 @@ const same = s => s.replace(/'[^']*@[^']*'|'YOUR_OWNER_EMAIL'/g, "'X'").replace(
 const block = s => (/"rules":\s*\{[\s\S]*?"private":\s*\{[\s\S]*?\}\s*\}/.exec(s) || [""])[0];
 eq(same(block(read("README.md"))), same(block(JSON.stringify(rules, null, 2))), "README.md's copy of the rules says the same");
 eq(same(block(read("js/config.js"))).replace(/ /g, ""), same(block(JSON.stringify(rules))).replace(/ /g, ""), "…and so does config.js's");
+/* reader tips (v120) live in Firestore, under their own rule */
+const fsRules = read("firestore.rules");
+eq((fsRules.match(/request\.auth\.token\.email == '([^']+)'/) || [])[1], OWNER, "firestore.rules names the same owner (OWNER_EMAIL)");
+eq(JSON.parse(read("firebase.json")).firestore, { rules: "firestore.rules" }, "…and firebase.json deploys it");
 
 const HOST = process.env.FIREBASE_DATABASE_EMULATOR_HOST;
 const NS = "demo-cafemap-default-rtdb";
@@ -91,6 +95,54 @@ async function ask(who, method, p, body) {
 
   /* the app's own rule probe (storage.js) asks as a stranger: deleting a key that is not there must be refused */
   eq(await ask("anyone", "DELETE", "cafes/__rulesprobe"), D, "the rule probe's question gets the answer the app hopes for");
+
+  /* ---- reader tips, in Firestore (v120) ---- */
+  const FS = process.env.FIRESTORE_EMULATOR_HOST;
+  if (!FS) eq("no Firestore emulator", "a Firestore emulator", "FIRESTORE_EMULATOR_HOST is set (npm run test:rules starts both)");
+  else {
+    const base = "http://" + FS + "/v1/projects/demo-cafemap/databases/(default)/documents";
+    const str = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { stringValue: v }]));
+    const good = { place: "Sightglass Coffee", where: "SoMa", order: "Their seasonal latte", from: "Sam", via: "go" };
+    let n = 0;
+    /* a tip as the app sends one: its fields, and the server's time as `at` */
+    async function tip(who, fields, stamp) {
+      const name = "projects/demo-cafemap/databases/(default)/documents/tips/t" + ++n;
+      const w = { update: { name, fields: str(fields) }, currentDocument: { exists: false } };
+      if (stamp === "now") w.updateTransforms = [{ fieldPath: "at", setToServerValue: "REQUEST_TIME" }];
+      else if (stamp) w.update.fields.at = { timestampValue: stamp };
+      const r = await fetch(base + ":commit", { method: "POST", headers: WHO[who] ? { Authorization: "Bearer " + WHO[who] } : {},
+        body: JSON.stringify({ writes: [w] }) });
+      return { id: "t" + n, said: r.ok ? "ok" : r.status === 403 ? "denied" : "HTTP " + r.status };
+    }
+    async function on(who, method, p, body) {
+      const r = await fetch(base + p, { method, headers: WHO[who] ? { Authorization: "Bearer " + WHO[who] } : {}, body: body && JSON.stringify(body) });
+      return r.ok ? "ok" : r.status === 403 ? "denied" : "HTTP " + r.status;
+    }
+    const sent = await tip("anyone", good, "now");
+    eq(sent.said, "ok", "a visitor, signed out, can send a tip");
+    eq((await tip("stranger", good, "now")).said, "ok", "…and so can someone signed in");
+    eq((await tip("anyone", Object.assign({}, good, { where: "", order: "", from: "" }), "now")).said, "ok", "…with only the place filled in");
+    const refused = {
+      noPlace: (await tip("anyone", Object.assign({}, good, { place: "" }), "now")).said,
+      longPlace: (await tip("anyone", Object.assign({}, good, { place: "x".repeat(81) }), "now")).said,
+      longOrder: (await tip("anyone", Object.assign({}, good, { order: "x".repeat(201) }), "now")).said,
+      longName: (await tip("anyone", Object.assign({}, good, { from: "x".repeat(41) }), "now")).said,
+      otherVia: (await tip("anyone", Object.assign({}, good, { via: "admin" }), "now")).said,
+      extraField: (await tip("anyone", Object.assign({}, good, { lat: "37.7" }), "now")).said,
+      missingField: (await tip("anyone", { place: "A", where: "", order: "", via: "go" }, "now")).said,
+      backDated: (await tip("anyone", good, "2020-01-01T00:00:00Z")).said,
+    };
+    eq(refused, { noPlace: D, longPlace: D, longOrder: D, longName: D, otherVia: D, extraField: D, missingField: D, backDated: D },
+       "a tip is refused without a place, past any length limit, from anywhere but Go or search, with a field of its own, a field missing, or a date of its own");
+    const doc = "/tips/" + sent.id;
+    eq({ anyone: await on("anyone", "GET", doc), stranger: await on("stranger", "GET", doc), unverified: await on("unverified", "GET", doc),
+         list: await on("anyone", "GET", "/tips"), owner: await on("owner", "GET", doc), ownerList: await on("owner", "GET", "/tips") },
+       { anyone: D, stranger: D, unverified: D, list: D, owner: "ok", ownerList: "ok" },
+       "only the owner, with a verified address, can read a tip or list them");
+    eq(await on("owner", "PATCH", doc + "?updateMask.fieldPaths=order", { fields: str({ order: "changed" }) }), D, "nobody changes a tip, not even the owner");
+    eq([await on("anyone", "DELETE", doc), await on("stranger", "DELETE", doc), await on("owner", "DELETE", doc)], [D, D, "ok"], "only the owner deletes one");
+    eq(await on("anyone", "PATCH", "/elsewhere/x", { fields: str({ a: "b" }) }), D, "nothing outside tips can be written");
+  }
 
   process.exit(done() ? 0 : 1);
 })().catch(e => { console.error(e); process.exit(1); });

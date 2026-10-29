@@ -29,6 +29,8 @@ not built.
 | `js/rank.js` | Cafe Board and optional comparison sheet |
 | `js/detail.js` | Cafe detail and order history |
 | `js/form.js` | Complete drink and cafe editor |
+| `js/tips.js` | Reader tips: the visitor's sheet and your inbox (Firestore, behind App Check) |
+| `js/lib/` | Pure helpers as ES modules, unit-tested by Node: text, Elo, an order's words |
 | `js/boot.js` | Startup, updates and back navigation |
 | `sw.js` | Offline shell and data cache |
 | `scripts/` | Tooling: `build-site.js` (the published copy), `share-pages.js`, `bump.js`, `sri.js`, `css-diff.js` |
@@ -92,7 +94,7 @@ that carries a precise location (`scripts/build-site.js`).
 
 
 Scripts are classic files loaded in order with `defer` — `config.js` first, `boot.js` last — and
-share one global scope. The pure helpers (escaping, dates, the Elo arithmetic) are ES modules in
+share one global scope. The pure helpers (escaping, dates, the Elo arithmetic, an order's words) are ES modules in
 `js/lib/`, loaded first and unit-tested by Node. A control names what it does
 (`data-on="openDetail" data-args="[...]"`, written by `act()` in `core.js`) instead of carrying
 inline code, which is what lets the Content Security Policy in `index.html` forbid inline script.
@@ -166,6 +168,27 @@ stay current; everything else is served from cache.
 - **Admin**: sign in with the owner Google account (🔒 button) to add/edit
   cafes. Public cafe changes are saved to a durable local queue, then synced to Firebase. The owner sees pending/failure/conflict status.
 
+## Reader tips
+
+A visitor can tell you about a place from the end of Go, or from a search that finds nothing, and only you can read
+what they send (Settings > Tips from readers). Tips are in **Firestore**, not the Realtime Database, so that App Check
+can be enforced on them alone. Until `RECAPTCHA_SITE_KEY` in `js/config.js` is set, tips are off and nothing asks for
+one. To turn them on, once:
+
+1. Firebase console > Build > **Firestore Database** > Create database, in production mode, in a region near you.
+2. Publish the rule: `npx -y firebase-tools@15.33.0 deploy --only firestore:rules` (it is `firestore.rules`, tested
+   against the emulator by `npm run test:rules`).
+3. Create a **reCAPTCHA v3** key at https://www.google.com/recaptcha/admin/create with the domain
+   `jorgelightning.github.io`. Keep the site key and the secret key.
+4. Firebase console > **App Check** > Apps > the web app > reCAPTCHA > paste the **secret** key > Save.
+5. Put the **site** key in `RECAPTCHA_SITE_KEY` in `js/config.js` (a site key is public by design), `npm run bump`,
+   and push.
+6. Send yourself a tip from a private window and check it arrives in Settings. Then App Check > APIs >
+   **Cloud Firestore** > Enforce. Leave the Realtime Database unenforced.
+
+The App Check and Firestore scripts and reCAPTCHA load only when someone opens the tip sheet or you open the inbox,
+so a visitor who never does never loads them.
+
 ## Owner checklist (things the code cannot check for you)
 
 The repo can't see Google Cloud, Firebase or GitHub settings, so these are yours to confirm. Tick them
@@ -182,7 +205,14 @@ off once, then again after any key or hosting change.
 - [ ] Rules match the block above, including the `private` section. The app probes this while you are
       signed in and shows a red banner if strangers can write or read private spots.
 - [ ] A budget alert on the project, since `cafes` is world-readable by design.
-- [ ] Optional: App Check, to stop other sites using your database.
+- [ ] **No App Check enforcement on the Realtime Database.** It applies to the whole database: the nightly
+      backup's plain download and any visitor whose ad blocker stops reCAPTCHA would be refused. App Check is
+      enforced on Firestore only, where reader tips live (see Reader tips).
+
+**Reader tips** (console > Firestore and App Check, once tips are on)
+- [ ] Firestore rules match `firestore.rules` (`npx -y firebase-tools@15.33.0 deploy --only firestore:rules`).
+- [ ] App Check > APIs > Cloud Firestore says *Enforced*; Realtime Database says *Unenforced*.
+- [ ] The reCAPTCHA key's domains are `jorgelightning.github.io` (and `localhost` only if you try it locally).
 
 **GitHub** (repo Settings)
 - [ ] Branches: a protection rule on `main` that requires the *App checks* workflow to pass.

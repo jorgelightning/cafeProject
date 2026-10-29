@@ -64,6 +64,43 @@ function logTab() {
   if (isAdmin && typeof logHere === "function" && logHere()) return;
   openForm();
 }
+/* Long-press the home-screen icon (manifest.json shortcuts, v120): Log a cup, Near me, Want to try, each a ?do= the
+   app reads as it starts. Log asks for a fix at once rather than waiting for the map (map.js autoLocate runs only
+   once Google Maps has loaded), and only with location already allowed, so it never raises the prompt. It waits up
+   to six seconds for one, so it opens on the cafe you are in rather than the new-cafe form; with no fix it is Log as
+   ever. A visitor has nothing to log, so their Log is Near me. The ?do= is dropped from the address, so a reload or
+   the back button does not run it again. Android and desktop Chrome show the shortcuts; an iPhone ignores them. */
+/** @param {string} what log | near | want @param {number} [tries] */
+function runShortcut(what, tries) {
+  if (tries === undefined) {
+    try {
+      const u = new URL(location.href);
+      u.searchParams.delete("do");
+      history.replaceState(history.state, "", u.pathname + u.search + u.hash);
+    } catch (e) {
+      warn("nav.js runShortcut", e);
+    }
+  }
+  if (what === "want") {
+    show("list");
+    setListTab("want");
+    return;
+  }
+  if (what === "log" && isAdmin) {
+    if (tries === undefined && typeof ifLocationAlreadyAllowed === "function")
+      ifLocationAlreadyAllowed(function () {
+        showUserLocation(false);
+      });
+    const left = tries === undefined ? 12 : tries;
+    if (left > 0 && !(userLoc && Date.now() - userLocAt < HERE_FRESH_MS)) {
+      setTimeout(() => runShortcut(what, left - 1), 500);
+      return;
+    }
+    logTab();
+    return;
+  }
+  nearMeTab();
+}
 function syncLogTab() {
   const t = $("t-log"),
     l = t && t.querySelector(".tl");

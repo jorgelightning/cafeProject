@@ -39,7 +39,7 @@ const { eq, done } = checker();
     const hero = document.getElementById("d-hero"), more = document.getElementById("d-more"), det = document.getElementById("d-details");
     return {
       banner: ba.querySelector(".oa-name").textContent + " | " + ba.querySelector(".oa-meta").textContent,
-      glyph: (ba.querySelector(".oa-gl svg.mkv") || { dataset: {} }).dataset.k || "", bannerButtons: ba.querySelectorAll("button").length,
+      glyph: (ba.querySelector(".oa-gl svg.mkv") || { dataset: {} }).dataset.k || "", bannerButtons: [...ba.querySelectorAll("button")].map(x => x.textContent.trim()),
       medalInHero: hero.contains(rk), moreShown: getComputedStyle(more).display !== "none", detailsShown: getComputedStyle(det).display !== "none",
       detailsOpen: det.open, folded: document.querySelectorAll("#d-drinks .foldbox .drinkcard").length,
       moreBtn: (document.querySelector("#d-drinks .morebtn") || {}).textContent || "",
@@ -53,7 +53,7 @@ const { eq, done } = checker();
   const v = await seed(false);
   eq(v.banner, "Hojicha latte | $7.25 · 2× ordered · last Sep 23", "what to order leads: the drink, its price, how often, and when last (no year when it is this one)");
   eq(v.glyph, "matcha", "…with the drawn mark for the kind of drink (the same vessel as the cafe tiles)");
-  eq(v.bannerButtons, 0, "the order block is information, not a second way to log: the bar at the bottom is the one");
+  eq(v.bannerButtons, ["Show the barista"], "the order block is information, not a second way to log: its one button shows the order (v120), and the bar at the bottom logs");
   eq(v.medalInHero, true, "the rank is a medal on the hero, not a tile beside the name");
   eq([v.moreShown, v.detailsShown], [false, false], "a viewer has no edit menu and no bookkeeping");
   eq(v.gold, true, "a top-ten cafe gets the gold rank tile");

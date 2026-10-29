@@ -604,8 +604,22 @@ function wrappedPick(list) {
   const last = wrappedYear(list, y - 1);
   return last ? { w: last, review: true } : null;
 }
+/* "82 new caf\u00e9s" is a count; "on pace for about 99" is something to aim at (ideas, 28 Oct). The year's new caf\u00e9s so far,
+   carried at the same rate to Dec 31. Not before February, when three new caf\u00e9s in a week would read as 150 for the
+   year, and not with fewer than three new; 0 means say nothing.
+   @param {number} fresh new caf\u00e9s this year @param {string} today YYYY-MM-DD @returns {number} */
+function wrappedPace(fresh, today) {
+  const y = +today.slice(0, 4),
+    t = Date.UTC(y, +today.slice(5, 7) - 1, +today.slice(8, 10)),
+    day = Math.round((t - Date.UTC(y, 0, 1)) / 86400000) + 1,
+    days = Math.round((Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1)) / 86400000);
+  if (day < 32 || day >= days || fresh < 3) return 0;
+  const n = Math.round((fresh / day) * days);
+  return n > fresh ? n : 0;
+}
 function wrappedCards(w, review) {
   const cards = [];
+  const pace = review ? 0 : wrappedPace(w.fresh, localToday());
   cards.push({
     k: w.year + (review ? " in review" : " so far"),
     big: String(w.visits),
@@ -614,7 +628,8 @@ function wrappedCards(w, review) {
       "At " +
       w.cafes +
       (w.cafes === 1 ? " caf\u00e9" : " caf\u00e9s") +
-      (w.fresh ? ". " + (w.fresh === w.cafes ? "All" : w.fresh) + youOr(" of them new to you.", " of them new to " + OWNER_NAME + ".") : "."),
+      (w.fresh ? ". " + (w.fresh === w.cafes ? "All" : w.fresh) + youOr(" of them new to you.", " of them new to " + OWNER_NAME + ".") : ".") +
+      (pace ? " On pace for about " + pace + " new by Dec 31." : ""),
     tint: "var(--acc)",
   });
   if (w.drink)

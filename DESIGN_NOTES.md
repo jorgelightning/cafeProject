@@ -2099,3 +2099,81 @@ named. The two you would not reorder cost $6.50 and $7.50, around the $7.25 medi
 fact), and the unrated ones are a line. Where you go has the World list's verdict bar on each place, and "Other" is a
 count in the note, not a row. The monthly chart lost its green coverage line, and "Logged and still to try" its bar.
 `tests/stats-charts.js`.
+
+## Show the barista (v120)
+
+The first of five ideas mocked on 28 Oct, picked to build first. What to order named the drink, but the order is the
+drink plus how you take it, and that part was already stored on every cup: 69 drinks are logged at 0% sugar, 42 with
+less ice, 40 with oat milk. At Oolong Tea Project in Ximen the cup was a Large at 25% with less ice, which a Taipei
+counter takes as 微糖, 少冰.
+
+**The button.** What to order has Show the barista when its last cup has a size, milk, sugar or ice (`orderOptsText`
+is not empty); a name alone is already on the page. Visitors get it too: a friend with a `/c/` link can walk in and
+order the drink exactly.
+
+**The card.** The shared sheet with another filling (`.ocard`), so Escape, the scrim, Close and the keyboard going back
+to the button behave as for the quick cup. `.dnpanel:has(> .ocard)` makes it the whole phone screen and keeps it a
+centred card on a laptop. It shows the last cup, as Same as last time does, in four lines in the order a counter hears
+them (size, milk, sugar, ice), each 40px, with the English under each word. The keyboard starts on the drink, not on
+Close. It asks for a screen wake lock while open and takes it again when the page comes back on screen.
+
+**The words** are `js/lib/order.js`, a module with its own unit tests. The drink keeps the name you logged: nothing
+translates free text, and a value the table does not have stays in English, so the card never says something you did
+not order. Four buttons (English, 中文, 日本語, Tiếng Việt); the card opens in the cafe's language (`orderLangFor`: its
+`cc`, else the map's country), and 中文 is simplified only for mainland China. Ounces become millilitres to the
+nearest 10 (16 oz is 470 ml), because a counter abroad reads cups that way. Sugar is logged as any share from 0 to
+100 but a counter takes six levels (無糖 0, 一分糖 10, 微糖 30, 半糖 50, 少糖 70, 全糖 100), so `sweetLevel` asks
+for the nearest, a tie going to the less sweet (85% is 少糖), and any sugar at all is never 無糖 (5% is 一分糖): asking
+for less is the safer mistake, and "no sugar" would be something you did not order. The English under it keeps the
+share you logged. `tests/barista.js`,
+`tests/unit/order.test.mjs`.
+
+## Three small ones (v120)
+
+From the same 28 Oct ideas, each with no new screen. `tests/shortcuts-pace-price.js`.
+
+**Long-press the icon.** `manifest.json` has `shortcuts`: Log a cup, Near me, Want to try, each `./?do=` the app runs
+as it starts (`runShortcut` in nav.js) and then drops from the address, so a reload does not run it again and no
+welcome covers it. Log could not wait for the launch fix, because `autoLocate` runs only once Google Maps has loaded;
+the shortcut asks for a fix itself, only where location is already allowed (the app still never raises the prompt),
+and waits up to six seconds for it, so it opens the quick cup of the cafe you are in. With no fix it is Log as ever. A
+visitor has nothing to log, so their Log is Near me. Android and desktop Chrome show the menu; an iPhone ignores it.
+
+**On pace.** Wrapped's first card adds "On pace for about 99 new by Dec 31" (`wrappedPace`): the year's new cafés so
+far at the same rate to the end of the year. Not before February, when three new cafés in a week would read as 150,
+not with fewer than three new, not on Dec 31, and never on a year in review.
+
+**Price in context.** Typing a price in the quick cup now places it among every like cup you have priced: a dot each
+on one line, this one in the accent, and "Your hojicha lattes: $3.54 to $11.00, middle $7.00. 5 of 19 cost more."
+Alike means one `chaserFam` family and the same latte-ness, so a hojicha tea is not compared with a hojicha latte;
+a drink in no family matches its own name. It compares in dollars (the typed amount converted at today's rate), shows
+nothing under four priced cups, and names a private spot only as "a private spot" on hover, as Stats does. The dots
+are ink (`--faint`), not `--ch-mute`, which is under 2:1 on the sheet; equal prices stack, five high at most.
+
+**A small fix the suite found.** Run at 11pm, compare-kind read a cup logged today as "yesterday": `chaserWhen`
+parsed "2026-10-28" as midnight UTC, which is 5pm the day before in California. It now counts calendar days, so from
+5pm on the ranking question no longer says yesterday about today's cup.
+
+## Reader tips (v120)
+
+Idea 5 of 28 Oct, the bigger bet. Readers could see everything and say nothing. Now a visitor can send a tip from the
+end of Go, or from a search that found nothing (the search becomes the place): place, where, what to order, a first
+name. You read them in Settings > Tips from readers: Want to try opens the new-place form with the name, want-to-try
+ticked and the tip as its notes ("Tip from Sam, Jan 15: Their seasonal latte · SoMa"); Dismiss deletes it. A tip for a
+place already on your list says so. The app stays one author: a tip changes nothing until you save it yourself.
+
+**Where they live, and why.** This is the first write that needs no Google account, so it is guarded by App Check
+with reCAPTCHA v3 (the owner's choice over a rule-only limit). App Check is enforced per database, not per path: on the
+Realtime Database it would also refuse the nightly backup's plain `curl` of `cafes.json` and any visitor whose ad
+blocker stops reCAPTCHA. So tips are in Firestore, with App Check enforced there only, under `firestore.rules`: anyone
+may create a tip with exactly six fields (place 1 to 80 characters, where 80, order 200, from 40, via `go` or
+`search`, `at` the server's time); only the owner, verified, reads or deletes; nobody updates. `tests/rules.js` puts it
+to the Firestore emulator beside the database rules (`npm run test:rules` starts both).
+
+**What loads, and when.** Nothing, for anyone, until the sheet or the inbox opens: then the App Check and Firestore
+compat scripts (pinned by hash in config.js, `FIREBASE_APPCHECK_SRI` and `FIREBASE_FIRESTORE_SRI`, written by
+`scripts/sri.js`, which now pins every `FIREBASE_<X>_SRC`) and reCAPTCHA. The CSP allows `www.google.com/recaptcha/`
+for script and frame and nothing else on that host. The reCAPTCHA badge is hidden and the sheet says the same in
+words, which Google allows. With `RECAPTCHA_SITE_KEY` empty, tips are off and nothing asks for one; README.md, Reader
+tips, has the six console steps. A send that does not finish in 20 seconds says it could not send (Firestore keeps
+trying a write it holds, so the tip may still arrive). `tests/tips.js` fakes the store (`tipStore`).
