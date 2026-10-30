@@ -162,10 +162,22 @@
     "area": "Kapolei",
     "drinks": [
       {
+        "dates": [
+          "2025-12-14"
+        ],
         "elo": 1444,
         "ice": "Hot",
         "matches": 4,
         "n": "Flat white",
+        "orders": [
+          {
+            "date": "2025-12-14",
+            "ice": "Hot",
+            "id": "mvtysqkl0iuc",
+            "p": "8",
+            "sweet": "0%"
+          }
+        ],
         "p": "8",
         "sweet": "0%"
       }
@@ -183,7 +195,7 @@
     "tags": [
       "cozy"
     ],
-    "updated": "2026-06-15T13:52:35.471Z"
+    "updated": "2026-10-29T19:57:09.381Z"
   },
   {
     "area": "Kapolei",
@@ -630,9 +642,9 @@
     "lng": 121.46135,
     "matches": 3,
     "name": "COMEBUY 板橋文德店",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-15T23:33:56.477Z"
+    "updated": "2026-10-29T19:55:19.359Z"
   },
   {
     "area": "Ximen",
@@ -675,9 +687,9 @@
     "lng": 121.55165,
     "matches": 3,
     "name": "ODD ONE OUT Dunnan Shop",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-15T23:34:45.507Z"
+    "updated": "2026-10-29T19:55:21.014Z"
   },
   {
     "area": "Ximen",
@@ -690,9 +702,9 @@
     "lng": 121.50561,
     "matches": 3,
     "name": "Guiji Tea - Ximen",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-15T23:35:14.126Z"
+    "updated": "2026-10-29T19:55:22.201Z"
   },
   {
     "area": "",
@@ -738,9 +750,9 @@
     "lng": 121.52865,
     "matches": 1,
     "name": "Milksha National Taiwan Normal University",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-15T23:35:37.976Z"
+    "updated": "2026-10-29T19:55:23.632Z"
   },
   {
     "area": "",
@@ -753,9 +765,9 @@
     "lng": 121.51607,
     "matches": 3,
     "name": "Nap Tea Taipei Nanyang",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-15T23:36:07.053Z"
+    "updated": "2026-10-29T19:55:24.846Z"
   },
   {
     "area": "",
@@ -768,9 +780,9 @@
     "lng": 115.24006,
     "matches": 5,
     "name": "Xi Bo Ba Renon Bali",
-    "rating": 0,
+    "rating": 3,
     "review": "",
-    "updated": "2026-06-15T23:39:00.366Z"
+    "updated": "2026-10-29T19:55:33.137Z"
   },
   {
     "area": "Achasan-ro 9-gil",
@@ -783,9 +795,9 @@
     "lng": 127.05821,
     "matches": 2,
     "name": "Cafe Onion Seongsu",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-15T23:42:53.565Z"
+    "updated": "2026-10-29T19:55:37.285Z"
   },
   {
     "area": "24",
@@ -976,9 +988,9 @@
     "lng": 107.07894,
     "matches": 2,
     "name": "Sơn Đăng Quán",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-17T08:33:18.181Z"
+    "updated": "2026-10-29T19:55:44.695Z"
   },
   {
     "area": "Ximen",
@@ -1004,9 +1016,9 @@
     "lng": 121.50723,
     "matches": 2,
     "name": "Milksha Taipei Ximending",
-    "rating": 0,
+    "rating": 5,
     "review": "Amazing tea quality!!",
-    "updated": "2026-06-17T08:41:29.323Z"
+    "updated": "2026-10-29T19:55:45.731Z"
   },
   {
     "area": "36",
@@ -1065,9 +1077,9 @@
     "lng": -111.90004,
     "matches": 2,
     "name": "Sunny Honey",
-    "rating": 0,
+    "rating": 5,
     "review": "",
-    "updated": "2026-06-17T11:54:18.297Z"
+    "updated": "2026-10-29T19:55:45.962Z"
   },
   {
     "area": "Outer Richmond",
@@ -3845,32 +3857,7 @@
     "custom": false,
     "drinks": [
       {
-        "dates": [
-          "2026-10-22"
-        ],
-        "ice": "Warm",
-        "milk": "Oat",
-        "n": "SAMPAGUITA CHAI LATTE",
-        "orders": [
-          {
-            "date": "2026-10-22",
-            "ice": "Warm",
-            "id": "mvk2mnwsec2z",
-            "milk": "Oat",
-            "note": "Maybe it's just not my taste",
-            "p": "8.14",
-            "reorder": "neutral",
-            "size": "14 oz",
-            "sweet": "50%"
-          }
-        ],
-        "p": "8.14",
-        "reorder": "neutral",
-        "size": "14 oz",
-        "sweet": "50%"
-      },
-      {
-        "count": 12,
+        "count": 13,
         "dates": [
           "2026-03-24",
           "2026-07-09",
@@ -3883,10 +3870,11 @@
           "2026-10-07",
           "2026-10-14",
           "2026-10-15",
-          "2026-10-17"
+          "2026-10-17",
+          "2026-10-28"
         ],
         "ice": "Warm",
-        "milk": "Oat",
+        "milk": "Whole",
         "n": "Flat White",
         "orders": [
           {
@@ -4008,12 +3996,48 @@
             "reorder": "yes",
             "size": "8 oz",
             "sweet": "0%"
+          },
+          {
+            "date": "2026-10-28",
+            "ice": "Warm",
+            "id": "mvtufa7rmr3o",
+            "milk": "Whole",
+            "note": "The person who was making it doesn't seems to care or listen lol. It was decent tho.",
+            "p": "5",
+            "reorder": "neutral",
+            "size": "8 oz",
+            "sweet": "0%"
           }
         ],
         "p": "5",
-        "reorder": "yes",
+        "reorder": "neutral",
         "size": "8 oz",
         "sweet": "0%"
+      },
+      {
+        "dates": [
+          "2026-10-22"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "SAMPAGUITA CHAI LATTE",
+        "orders": [
+          {
+            "date": "2026-10-22",
+            "ice": "Warm",
+            "id": "mvk2mnwsec2z",
+            "milk": "Oat",
+            "note": "Maybe it's just not my taste",
+            "p": "8.14",
+            "reorder": "neutral",
+            "size": "14 oz",
+            "sweet": "50%"
+          }
+        ],
+        "p": "8.14",
+        "reorder": "neutral",
+        "size": "14 oz",
+        "sweet": "50%"
       },
       {
         "count": 11,
@@ -4222,7 +4246,7 @@
     "tags": [
       "specialty"
     ],
-    "updated": "2026-10-22T21:48:36.329Z",
+    "updated": "2026-10-29T17:55:59.913Z",
     "wish": false
   },
   {
