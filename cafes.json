@@ -3578,6 +3578,23 @@
     "wish": false
   },
   {
+    "area": "五一商圈",
+    "brand": "",
+    "cc": "CN",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvvmeuaxn4ac",
+    "lat": 28.19231,
+    "lng": 112.976,
+    "name": "Sexy Tea",
+    "pid": "ChIJDyFuNl5KJzQRL8kONJZI5Qw",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-10-30T23:45:57.992Z",
+    "wish": true
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
@@ -3857,6 +3874,152 @@
     "custom": false,
     "drinks": [
       {
+        "count": 12,
+        "dates": [
+          "2026-03-22",
+          "2026-03-25",
+          "2026-04-09",
+          "2026-07-31",
+          "2026-08-05",
+          "2026-08-07",
+          "2026-08-11",
+          "2026-09-04",
+          "2026-09-11",
+          "2026-09-14",
+          "2026-09-23",
+          "2026-10-30"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-03-22",
+            "ice": "Warm",
+            "id": "mtvs2elwc6i8",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-03-25",
+            "ice": "Warm",
+            "id": "mtvs2elvrya3",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-04-09",
+            "ice": "Warm",
+            "id": "mtvs2elu1cxx",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-31",
+            "ice": "Warm",
+            "id": "mtvs2eluc131",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-05",
+            "ice": "Warm",
+            "id": "mtvs2els7c5a",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-07",
+            "ice": "Warm",
+            "id": "mtvs2elra3n6",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-08-11",
+            "ice": "Warm",
+            "id": "mtvs2elq5lmi",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-04",
+            "ice": "Warm",
+            "id": "mtvs2elqmwjn",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-11",
+            "ice": "Warm",
+            "id": "mtysu9gimksk",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-14",
+            "ice": "Warm",
+            "id": "mu550y0i80v0",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-23",
+            "ice": "Less ice",
+            "id": "muepi55514xa",
+            "milk": "Oat",
+            "p": "7.25",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-30",
+            "ice": "Warm",
+            "id": "mvv9mv07jv9i",
+            "milk": "Oat",
+            "p": "7",
+            "reorder": "yes",
+            "size": "10 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7",
+        "reorder": "yes",
+        "size": "10 oz",
+        "sweet": "0%"
+      },
+      {
         "count": 13,
         "dates": [
           "2026-03-24",
@@ -4040,141 +4203,6 @@
         "sweet": "50%"
       },
       {
-        "count": 11,
-        "dates": [
-          "2026-03-22",
-          "2026-03-25",
-          "2026-04-09",
-          "2026-07-31",
-          "2026-08-05",
-          "2026-08-07",
-          "2026-08-11",
-          "2026-09-04",
-          "2026-09-11",
-          "2026-09-14",
-          "2026-09-23"
-        ],
-        "ice": "Less ice",
-        "milk": "Oat",
-        "n": "Hojicha latte",
-        "orders": [
-          {
-            "date": "2026-03-22",
-            "ice": "Warm",
-            "id": "mtvs2elwc6i8",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-03-25",
-            "ice": "Warm",
-            "id": "mtvs2elvrya3",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-04-09",
-            "ice": "Warm",
-            "id": "mtvs2elu1cxx",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-31",
-            "ice": "Warm",
-            "id": "mtvs2eluc131",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-08-05",
-            "ice": "Warm",
-            "id": "mtvs2els7c5a",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-08-07",
-            "ice": "Warm",
-            "id": "mtvs2elra3n6",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-08-11",
-            "ice": "Warm",
-            "id": "mtvs2elq5lmi",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-04",
-            "ice": "Warm",
-            "id": "mtvs2elqmwjn",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-11",
-            "ice": "Warm",
-            "id": "mtysu9gimksk",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-14",
-            "ice": "Warm",
-            "id": "mu550y0i80v0",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-23",
-            "ice": "Less ice",
-            "id": "muepi55514xa",
-            "milk": "Oat",
-            "p": "7.25",
-            "reorder": "yes",
-            "size": "12 oz",
-            "sweet": "0%"
-          }
-        ],
-        "p": "7.25",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
-      },
-      {
         "dates": [
           "2026-09-17"
         ],
@@ -4246,7 +4274,7 @@
     "tags": [
       "specialty"
     ],
-    "updated": "2026-10-29T17:55:59.913Z",
+    "updated": "2026-10-30T17:48:49.678Z",
     "wish": false
   },
   {
