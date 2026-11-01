@@ -1183,13 +1183,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1508,
+    "elo": 1500,
     "emoji": "☕",
     "fav": true,
     "id": "mqlipq5e1fwo",
     "lat": 37.77591,
     "lng": -122.49649,
-    "matches": 8,
+    "matches": 9,
     "name": "Constance Tea & Matcha",
     "rating": 5,
     "review": "Freshly milled! Great information from the staff!",
@@ -1527,16 +1527,47 @@
   {
     "area": "Downtown Berkeley",
     "brand": "",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-10-31"
+        ],
+        "ice": "Regular ice",
+        "milk": "Oat",
+        "n": "Hojicha Latte",
+        "orders": [
+          {
+            "date": "2026-10-31",
+            "ice": "Regular ice",
+            "id": "mvx57w4bgg7n",
+            "milk": "Oat",
+            "note": "Hoji-Ru, a specialized hojicha and it's very good!",
+            "p": "6.95",
+            "reorder": "yes",
+            "size": "10 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.95",
+        "reorder": "yes",
+        "size": "10 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1562,
     "emoji": "☕",
     "fav": false,
     "id": "mr7ekhubwa00",
+    "kind": "matcha",
     "lat": 37.86729,
     "lng": -122.26747,
+    "matches": 1,
     "name": "Yume Mori Matcha",
-    "rating": 0,
-    "review": "",
-    "updated": "2026-07-05T06:21:07.283Z",
-    "wish": true
+    "rating": 5,
+    "review": "Strong hojicha taste, they have variety of matcha and hojicha! Which is super cool, small and thoughtful interior design!",
+    "updated": "2026-11-01T01:23:47.388Z",
+    "wish": false
   },
   {
     "area": "Southside",
