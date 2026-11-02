@@ -3626,6 +3626,48 @@
     "wish": true
   },
   {
+    "area": "Mountain View",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-11-01"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Ceremonial Matcha Latte",
+        "orders": [
+          {
+            "date": "2026-11-01",
+            "ice": "Less ice",
+            "id": "mvyo0gbx5pjl",
+            "milk": "Oat",
+            "note": "Strong matcha flavor!",
+            "p": "10",
+            "reorder": "yes",
+            "sweet": "0%"
+          }
+        ],
+        "p": "10",
+        "reorder": "yes",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "mvyo3k1pnfrb",
+    "lat": 37.40269,
+    "lng": -122.11407,
+    "name": "Matcha Mori",
+    "pid": "ChIJl1ICAE2xj4ARWoMYt5vlC_8",
+    "rating": 5,
+    "review": "I ordered to deliver, so not sure about the actual place!",
+    "updated": "2026-11-02T02:56:29.244Z",
+    "wish": false
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
