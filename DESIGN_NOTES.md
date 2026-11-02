@@ -2186,3 +2186,26 @@ price for it, the cup history said $0.00, and Tidy up counted both places as mis
 Tidy up and the No price view. `_hasPrice` still means "cost something", and every average, median, spend chart and the
 quick cup's price strip count only those, so free cups never make the rest of the list look cheaper. No Free button:
 typing 0 is rare enough (the owner's call). `tests/free-cups.js`.
+
+## A ghost price (v122)
+
+Typing a price at the counter was the chore (2 Nov). The quick cup already brought the last price of a drink had
+here; a drink new to the cafe, and every row of the new-cafe form (82 of 98 cafes had one visit), started empty. Now
+an empty price box shows a guess in grey, with a line under it: "≈ $7.25, like your hojicha lattes near here."
+
+**The guess** (`guessPrice`, form.js) is the middle of real prices for like drinks (price in context's `_priceKey`:
+one family and the same latte-ness), in the cup's own currency, from the first of: at this cafe; at least two within
+NEAR_MI; at least three anywhere. A Taipei cup is guessed from NT$ prices only. Rounded as prices are printed: 25¢, or
+5 in a currency without cents. A free cup is not a price, and there is no guess from a single cup in no family.
+
+**Taking it** was the owner's call twice. First, what an untaken guess saves: nothing. The cup saves with no price, as
+before, so every saved price is one you confirmed and guesses never feed later guesses or any average (the other
+choices were saving it as a marked guess, or as a normal price). Then the gesture: a tap that filled the box was
+built first and changed before it shipped, because a tap reads as "let me type". A swipe across the box, mostly
+sideways and at least 40px, takes it with no keyboard; `touch-action: pan-y` on a box with a guess keeps the sheet
+scrolling up and down. A tap still opens the keyboard and takes nothing. The right arrow in the empty box takes it
+from a keyboard, since a swipe is not reachable there. `tests/ghost-price.js`.
+
+**A test that aged.** stats-charts dated one cafe "30 days ago" and expected it in the trip's month, two months
+back; from 1 Nov it fell into the next month and the month read 3 new instead of 4. The app was right. The cafe is
+now dated inside that month, whatever today is.

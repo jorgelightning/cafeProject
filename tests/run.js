@@ -16,6 +16,7 @@ const SUITE = [
   ["drink-notes",      "a drink's ⋯ puts a note, tags and 👍 😐 👎 on its newest cup; shown under the drink, kept by Edit, merged by sync"],
   ["quick-cup",        "a cup on one sheet (same as last time, last price, 👍 😐 👎) and Tidy up's one-cafe-at-a-time gaps"],
   ["barista",          "Show the barista: What to order's last cup on the whole screen in the counter's language, English under each word, the screen kept on"],
+  ["ghost-price",      "an empty price box shows a guess from like drinks here, near here or anywhere, in its own currency; a swipe takes it, a tap types, nothing is saved untaken"],
   ["free-cups",        "a cup logged at 0 reads Free on the cafe page and in local money, Tidy up and No price take it as a price, averages still skip it"],
   ["shortcuts-pace-price","the icon's long-press Log a cup, Near me and Want to try; Wrapped's year on pace; the quick cup's price among every like cup"],
   ["tips",             "reader tips: off without a reCAPTCHA key; a visitor's tip from Go or a search that found nothing, cleaned to the rule; the owner's inbox, Want to try and Dismiss"],

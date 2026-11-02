@@ -765,6 +765,7 @@ function syncWhere() {
   else t.innerHTML = area ? "<b>" + esc(area) + "</b> · no pin yet" : "No location yet";
   if (d) d.classList.toggle("located", !!picked);
   if (a) a.textContent = d && d.open ? "Done" : picked ? "Change" : "Add pin";
+  formGhosts(); /* a guess "near here" follows the place */
 }
 function syncMore(open) {
   const m = $("f-more");
@@ -1080,6 +1081,7 @@ function syncCcy(sel) {
   if (rt) rt.dataset.frozen = ""; /* re-declaring the currency re-rates */
   const dp = dr.querySelector(".dp");
   if (dp) syncPrice(dp);
+  formGhost(dr); /* a guess is in the cup's own currency */
 }
 /* Places resolves the country after the blank first row is already on screen. Adopt the
    cafe's currency on rows that are still empty and untouched; a row with an amount already
@@ -1097,6 +1099,7 @@ function refreshRowCcy() {
     const rt = /** @type {HTMLElement|null} */ (dr.querySelector(".dpr"));
     if (rt) rt.dataset.frozen = "";
     syncPrice(dp);
+    formGhost(dr);
   });
 }
 /* No reverse geocode here on purpose. new google.maps.Geocoder bills against the Geocoding
@@ -1800,6 +1803,7 @@ function addDrinkRow(n, p, date, sweet, ice, size, reorder, old, milk, qty, fx, 
   const host = target || $("f-drinks");
   host.appendChild(div);
   if (!target && !old) activateDrinkRow(div);
+  formGhost(div);
   return div;
 }
 /* What makes two names the same name. "MoonTea" and "Moon Tea", and "Sunright Tea Studio" and
@@ -2355,6 +2359,9 @@ function _qcHTML(c) {
     /* "5" as typed last time reads as "5.00", the way money reads everywhere else (day run) */
     const lastNum = ccyNum(last),
       lastTxt = lastNum == null ? "" : lastNum.toFixed(ccyMeta(code).dec);
+    /* no last price here: a ghost guess instead, one tap to take (v122) */
+    const ghost = lastTxt ? null : guessPrice(st.n, { id: c.id, code: code, at: latOf(c) != null ? { lat: latOf(c), lng: lngOf(c) } : null });
+    const ghostTxt = ghost ? ghost.amount.toFixed(ccyMeta(code).dec) : "";
     if (spec)
       body +=
         '<button type="button" class="qcsame" aria-pressed="' + st.same + '"' + act("qcSame") + '><b>' +
@@ -2362,7 +2369,9 @@ function _qcHTML(c) {
     body +=
       '<label class="dnlab" for="qc-price">Price' + (code !== "USD" ? " (" + esc(code) + ")" : "") + "</label>" +
       '<input id="qc-price" class="dntext qcin" type="text" inputmode="decimal" autocomplete="off" placeholder="' +
-      esc(ccyMeta(code).sym || "") + '0.00" value="' + esc(lastTxt) + '"' + act("qcPriceCtx", [], "input") + ">" +
+      (ghost ? esc(ghostTxt) + '" data-ghost="' + esc(ghostTxt) + '" data-ph="' + esc(ccyMeta(code).sym || "") + '0.00" aria-describedby="qc-ghost' : esc(ccyMeta(code).sym || "") + "0.00") +
+      '" value="' + esc(lastTxt) + '"' + act("qcPriceCtx", [], "input") + ">" +
+      (ghost ? '<p class="ghostnote" id="qc-ghost">≈ ' + esc(fmtLocal(ghost.amount, code)) + ", " + esc(ghost.why) + ". " + GHOST_HOW + "</p>" : "") +
       '<div class="qcctx" id="qc-ctx" aria-live="polite"></div>' +
       '<div class="dnq" role="group" aria-label="Would order again?"><span class="dnlab">Would order again?</span><span class="dnvs big">' +
       _verdictButtons(st.rv, true, "qcVerdict") +
@@ -2406,16 +2415,20 @@ function _priceKey(n) {
 }
 /** Every priced cup of drinks like `n`, in dollars, and what to call them.
     @param {string} n @returns {{label: string, pts: {p: number, t: string}[]}} */
-function priceKin(n) {
-  const want = _priceKey(n),
-    f = chaserFam(n);
-  const label = f
+/** What to call drinks like `n`: "hojicha lattes", "coffees"; "" for a drink in no family. @param {string} n */
+function _priceLabel(n) {
+  const f = chaserFam(n);
+  return f
     ? /latte/i.test(n || "")
       ? f === "coffee"
         ? "lattes"
         : f + " lattes"
       : { coffee: "coffees", "milk tea": "milk teas", tea: "teas" }[f] || f + " drinks"
     : "";
+}
+function priceKin(n) {
+  const want = _priceKey(n),
+    label = _priceLabel(n);
   /** @type {{p: number, t: string}[]} */
   const pts = [];
   cafes.forEach(function (c) {
@@ -2431,6 +2444,8 @@ function priceKin(n) {
   return { label: label, pts: pts };
 }
 function qcPriceCtx() {
+  const pin = /** @type {HTMLInputElement|null} */ ($("qc-price"));
+  if (pin) _ghostNote(pin);
   const host = $("qc-ctx");
   const c = cafes.find(x => x.id === curId);
   if (!host || !c || !_qc || !_qc.n.trim()) return;
@@ -2455,6 +2470,146 @@ function qcPriceCtx() {
     (usd == null ? "" : " " + (more === 0 ? "None of " + n : more === n ? "All " + n : more + " of " + n) + " cost more.") +
     "</p>";
 }
+/* ---------- a ghost price (v122) ----------
+   Typing a price at the counter was the chore (owner, 2 Nov). An empty price box now shows a guess in grey, and
+   under it where the guess comes from. Swipe across the box and the guess becomes the price, with no keyboard; a tap
+   still opens the keyboard to type another (the owner's call: a tap that filled the box read as the wrong gesture).
+   With a keyboard, the right arrow in the empty box takes it. Leave it and the cup saves with no price, as before:
+   every saved price is one you confirmed, so guesses never feed later guesses or any average.
+   The guess is the middle of real prices only (a free cup is not one), in the cup's own currency, from the first of:
+   like drinks at this cafe; at least two within NEAR_MI of it; at least three anywhere. Alike is price in context's
+   rule (_priceKey). It is rounded the way prices are printed: to 25¢, or to 5 in a currency without cents. A drink
+   already priced here needs no guess: the quick cup brings its last price. */
+/** @param {string} n a drink name @param {{id?: string, code?: string, at?: {lat: number, lng: number}|null}} ctx this
+    cafe, the cup's currency, and where the cafe is @returns {{amount: number, why: string}|null} */
+function guessPrice(n, ctx) {
+  n = (n || "").trim();
+  if (!n) return null;
+  const want = _priceKey(n),
+    code = (ctx.code || "USD").toUpperCase();
+  /** @type {number[]} */ const here = [];
+  /** @type {number[]} */ const near = [];
+  /** @type {number[]} */ const far = [];
+  cafes.forEach(function (c) {
+    if (c.wish) return;
+    const isHere = !!ctx.id && c.id === ctx.id,
+      la = latOf(c),
+      ln = lngOf(c);
+    const isNear = !isHere && !!ctx.at && la != null && ln != null && distKm(ctx.at.lat, ctx.at.lng, la, ln) <= NEAR_MI * 1.609;
+    (c.drinks || []).forEach(function (d) {
+      if (_priceKey(d.n) !== want) return;
+      drinkOrders(d).forEach(function (o) {
+        if (String(o.pc || "USD").toUpperCase() !== code) return;
+        const v = ccyNum(code === "USD" ? o.p : o.pl);
+        if (v != null && v > 0) (isHere ? here : isNear ? near : far).push(v);
+      });
+    });
+  });
+  const label = _priceLabel(n) || "“" + n + "”";
+  /** @param {number[]} vs */
+  const mid = vs => {
+    const s = vs.slice().sort((a, b) => a - b),
+      k = s.length;
+    return k % 2 ? s[(k - 1) / 2] : (s[k / 2 - 1] + s[k / 2]) / 2;
+  };
+  const step = ccyMeta(code).dec > 0 ? 0.25 : 5;
+  /** @param {number[]} vs @param {string} why */
+  const out = (vs, why) => ({ amount: Math.max(step, Math.round(mid(vs) / step) * step), why: why });
+  if (here.length) return out(here, "like your " + label + " here");
+  if (near.length >= 2) return out(near, "like your " + label + " near here");
+  const all = here.concat(near, far);
+  return all.length >= 3 ? out(all, "like your " + label) : null;
+}
+/** Show `g` as the box's ghost, and its reason in the note the box is described by; nothing when there is no guess.
+    @param {HTMLInputElement|null} inp @param {{amount: number, why: string}|null} g @param {string} code */
+function _setGhost(inp, g, code) {
+  if (!inp) return;
+  const note = $(inp.getAttribute("aria-describedby") || "");
+  if (!inp.dataset.ph) inp.dataset.ph = inp.placeholder;
+  if (g) {
+    inp.dataset.ghost = g.amount.toFixed(ccyMeta(code).dec);
+    inp.placeholder = inp.dataset.ghost;
+  } else {
+    delete inp.dataset.ghost;
+    inp.placeholder = inp.dataset.ph;
+  }
+  if (note) note.textContent = g ? "≈ " + fmtLocal(g.amount, code) + ", " + g.why + ". " + GHOST_HOW : "";
+  _ghostNote(inp);
+}
+/** The note shows while the box is empty and has a guess. @param {HTMLInputElement} inp */
+function _ghostNote(inp) {
+  const note = $(inp.getAttribute("aria-describedby") || "");
+  if (note) note.hidden = !inp.dataset.ghost || !!inp.value.trim();
+}
+/** A form drink row's ghost, from its name, its currency and where the form's place is. @param {Element|null} dr */
+function formGhost(dr) {
+  if (!dr) return;
+  const inp = /** @type {HTMLInputElement|null} */ (dr.querySelector(".dp")),
+    name = /** @type {HTMLInputElement|null} */ (dr.querySelector(".dn")),
+    sel = /** @type {HTMLSelectElement|null} */ (dr.querySelector(".dpc"));
+  if (!inp || !name) return;
+  if (!inp.getAttribute("aria-describedby")) {
+    const note = document.createElement("p");
+    note.className = "ghostnote";
+    note.id = "gh-" + uid();
+    note.hidden = true;
+    (dr.querySelector(".priceline") || inp).after(note);
+    inp.setAttribute("aria-describedby", note.id);
+  }
+  const code = sel ? sel.value : ccyFor({ cc: formCC, ccy: formCcy });
+  _setGhost(inp, guessPrice(name.value, { id: editId || "", code: code, at: picked }), code);
+}
+function formGhosts() {
+  document.querySelectorAll("#f-drinks .dr").forEach(formGhost);
+}
+const GHOST_HOW = "Swipe across the price to use it.";
+/* how far a finger travels across the box, mostly sideways, before it counts as a swipe rather than a tap */
+const GHOST_SWIPE_PX = 40;
+/** @param {any} el @returns {el is HTMLInputElement} an empty box with a guess in it */
+function _ghostBox(el) {
+  return el instanceof HTMLInputElement && !!el.dataset.ghost && !el.value.trim();
+}
+/** The guess becomes the box's price, as if typed, so the rate, the note and price in context follow. @param {HTMLInputElement} el */
+function _takeGhost(el) {
+  el.value = el.dataset.ghost || "";
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+}
+/** @type {{el: HTMLInputElement, x: number, y: number, id: number}|null} */
+let _ghostSwipe = null;
+document.addEventListener("pointerdown", function (e) {
+  if (!_ghostBox(e.target)) return;
+  const el = /** @type {HTMLInputElement} */ (e.target);
+  _ghostSwipe = { el: el, x: e.clientX, y: e.clientY, id: e.pointerId };
+  /* the finger may leave the box on the way; the end of the swipe still belongs to it */
+  try {
+    el.setPointerCapture(e.pointerId);
+  } catch (err) {
+    warn("form.js ghost capture", err);
+  }
+});
+document.addEventListener("pointerup", function (e) {
+  const s = _ghostSwipe;
+  _ghostSwipe = null;
+  if (!s || e.pointerId !== s.id || !_ghostBox(s.el)) return;
+  const dx = e.clientX - s.x,
+    dy = e.clientY - s.y;
+  if (Math.abs(dx) >= GHOST_SWIPE_PX && Math.abs(dy) <= Math.abs(dx) / 2) _takeGhost(s.el);
+});
+document.addEventListener("pointercancel", function () {
+  _ghostSwipe = null;
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key === "ArrowRight" && _ghostBox(e.target)) {
+    e.preventDefault();
+    _takeGhost(/** @type {HTMLInputElement} */ (e.target));
+  }
+});
+document.addEventListener("input", function (e) {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement)) return;
+  if (el.dataset.ghost !== undefined || el.dataset.ph !== undefined) _ghostNote(el);
+  if (el.classList.contains("dn") && el.closest("#f-drinks")) formGhost(el.closest(".dr"));
+});
 /** One line of dots, one per priced cup, and the price being typed as an orange dot with its amount above it. The
     sentence under it carries the range and the middle, so the strip needs no axis labels of its own.
     @param {{p: number, t: string}[]} pts @param {number|null} usd @param {number} mid */

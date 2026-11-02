@@ -83,7 +83,9 @@ const { eq, done } = checker();
       SF("k", "Kissa", 5, [{ n: "Hojicha latte", orders: [o(day(1), 6, { reorder: "yes", size: "8 oz", sweet: "0%", ice: "Warm", milk: "Oat" }), o(day(8), 7, { reorder: "yes", size: "16 oz", sweet: "50%", ice: "Less ice", milk: "Oat" }),
         o(day(15), 7, { reorder: "yes", size: "12 oz", sweet: "25%", ice: "Hot", milk: "Oat" }), o(day(22), 8, { reorder: "yes", size: "12 oz", sweet: "0%", ice: "Regular ice", milk: "Oat" })] }]),
       SF("q", "Quiet Spot", 4, [{ n: "Cortado", orders: [o(day(70), 5, { reorder: "neutral", size: "8 oz", milk: "Oat" }), o(day(75), 5, { reorder: "no", milk: "Oat" })] }]),
-      SF("m", "Middle", 3, [{ n: "Hojicha latte", orders: [o(day(30), 9, { reorder: "no", size: "16 oz", milk: "Oat" })] }]),
+      /* in the trip's month, whatever today is: as day(30) it left that month on the 1st of November and the month
+         read 3 new where 4 were meant (found 2 Nov) */
+      SF("m", "Middle", 3, [{ n: "Hojicha latte", orders: [o(inMonth(2, 20), 9, { reorder: "no", size: "16 oz", milk: "Oat" })] }]),
       SF("u", "Unrated", 0, [{ n: "Latte", orders: [o(day(5), 6, { reorder: "yes", milk: "Oat" })] }]),
       { id: "h1", name: "Hono One", area: "Honolulu", lat: 21.30, lng: -157.85, rating: 5, drinks: [{ n: "Latte", orders: [o(inMonth(2, 3), 6, { reorder: "yes", milk: "Oat" })] }] },
       { id: "h2", name: "Hono Two", area: "Honolulu", lat: 21.28, lng: -157.80, rating: 4, drinks: [{ n: "Latte", orders: [o(inMonth(2, 4), 6, { reorder: "yes", milk: "Oat" })] }] },
