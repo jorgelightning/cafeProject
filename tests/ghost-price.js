@@ -57,10 +57,14 @@ const { eq, done } = checker();
   /* ---- the quick cup ---- */
   await pg.evaluate(() => { openDetail("N", "list"); openQuickCup("Hojicha latte"); });
   const box = pg.locator("#qc-price");
-  s = await pg.evaluate(() => ({ value: $("qc-price").value, ph: $("qc-price").placeholder, note: $("qc-ghost").textContent, shown: !$("qc-ghost").hidden,
+  /* where the box and the rows under it sit: none of it may move as the guess is taken, typed over or cleared (v123) */
+  const at = () => pg.evaluate(() => { const y = e => Math.round(e.getBoundingClientRect().top);
+    return [y($("qc-price")), y(document.querySelector("#dns-panel .dnq[aria-label='Would order again?']")), y($("dns-panel")), Math.round($("qc-ctx").getBoundingClientRect().height)]; });
+  const still = await at();
+  s = await pg.evaluate(() => ({ value: $("qc-price").value, ph: $("qc-price").placeholder, say: $("qc-say").textContent,
     by: $("qc-price").getAttribute("aria-describedby"), touch: getComputedStyle($("qc-price")).touchAction }));
   eq([s.value, s.ph], ["", "7.25"], "a drink with no price here: an empty box with the guess in grey");
-  eq([s.note, s.shown, s.by], ["≈ $7.25, like your hojicha lattes near here. Swipe across the price to use it.", true, "qc-ghost"],
+  eq([s.say, s.by], ["≈ $7.25, like your hojicha lattes near here. Swipe across the price to use it.", "qc-say"],
      "…and under it, where the guess comes from and how to take it, which the box is described by");
   eq(s.touch, "pan-y", "…and a sideways finger on it is a swipe, not a pan");
 
@@ -74,13 +78,16 @@ const { eq, done } = checker();
   eq(await pg.evaluate(() => $("qc-price").value), "", "an up-and-down drag is not a swipe");
 
   await pg.mouse.move(bb.x + 20, cy); await pg.mouse.down(); await pg.mouse.move(bb.x + 120, cy + 6, { steps: 5 }); await pg.mouse.up();
-  s = await pg.evaluate(() => ({ value: $("qc-price").value, note: $("qc-ghost").hidden, ctx: $("qc-ctx").textContent }));
+  s = await pg.evaluate(() => ({ value: $("qc-price").value, say: $("qc-say").textContent }));
   eq(s.value, "7.25", "a swipe across the box takes the guess");
-  eq(s.note, true, "…the note steps aside once there is a price");
-  eq(/cost more/.test(s.ctx), true, "…and price in context places it, as if it had been typed");
+  eq(/^Your hojicha lattes: .* cost more.$/.test(s.say), true, "…and the same line now places that price among like cups (" + s.say + ")");
+  eq(await at(), still, "…and nothing moved: the box, the rows under it and the sheet's top stay where they were");
+  await box.fill("8.5");
+  eq(await at(), still, "typing a price moves nothing either");
 
   await box.fill("");
-  eq(await pg.evaluate(() => !$("qc-ghost").hidden), true, "emptying the box brings the guess back");
+  eq(await pg.evaluate(() => $("qc-say").textContent), "≈ $7.25, like your hojicha lattes near here. Swipe across the price to use it.", "emptying the box brings the guess back");
+  eq(await at(), still, "…in the same place");
   await box.focus();
   await pg.keyboard.press("ArrowRight");
   eq(await pg.evaluate(() => $("qc-price").value), "7.25", "with a keyboard, the right arrow in the empty box takes it");
@@ -97,18 +104,21 @@ const { eq, done } = checker();
 
   /* a drink already priced here brings its last price, not a guess */
   await pg.evaluate(() => { closeSheet(); openDetail("A", "list"); openQuickCup("Hojicha latte"); });
-  s = await pg.evaluate(() => ({ value: $("qc-price").value, note: !!$("qc-ghost"), ghost: $("qc-price").dataset.ghost || "" }));
-  eq(s, { value: "7.50", note: false, ghost: "" }, "a drink priced here last time starts at that price, with no guess");
+  s = await pg.evaluate(() => ({ value: $("qc-price").value, guess: /Swipe/.test($("qc-ctx").textContent), ghost: $("qc-price").dataset.ghost || "" }));
+  eq(s, { value: "7.50", guess: false, ghost: "" }, "a drink priced here last time starts at that price, with no guess");
   await pg.evaluate(() => closeSheet());
 
   /* ---- the new-cafe form ---- */
   await pg.evaluate(() => { openForm(); });
   const dn = pg.locator("#f-drinks .dr .dn").first();
+  const rowH = () => pg.evaluate(() => Math.round(document.querySelector("#f-drinks .dr").getBoundingClientRect().height));
+  const h0 = await rowH();
   await dn.fill("Hojicha latte");
   s = await pg.evaluate(() => { const dp = document.querySelector("#f-drinks .dr .dp"); const n = $(dp.getAttribute("aria-describedby"));
-    return { ph: dp.placeholder, note: n && n.textContent, shown: n && !n.hidden }; });
-  eq(s, { ph: "7.50", note: "≈ $7.50, like your hojicha lattes. Swipe across the price to use it.", shown: true },
-     "the form's drink row guesses as the name is typed, from everywhere until the place is known");
+    return { ph: dp.placeholder, note: n && n.textContent, shown: n && !n.hidden, sr: n && n.classList.contains("sr-only") }; });
+  eq(s, { ph: "7.50", note: "≈ $7.50, like your hojicha lattes. Swipe across the price to use it.", shown: true, sr: true },
+     "the form's drink row guesses as the name is typed, from everywhere until the place is known; its reason is read by a screen reader");
+  eq(await rowH(), h0, "…and the row does not grow as the guess arrives (v123)");
   await pg.evaluate(SF => { picked = SF; syncWhere(); }, SF);
   eq(await pg.evaluate(() => document.querySelector("#f-drinks .dr .dp").placeholder), "7.25", "…and from near the place once it is picked");
   await dn.fill("");

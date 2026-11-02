@@ -2369,9 +2369,10 @@ function _qcHTML(c) {
     body +=
       '<label class="dnlab" for="qc-price">Price' + (code !== "USD" ? " (" + esc(code) + ")" : "") + "</label>" +
       '<input id="qc-price" class="dntext qcin" type="text" inputmode="decimal" autocomplete="off" placeholder="' +
-      (ghost ? esc(ghostTxt) + '" data-ghost="' + esc(ghostTxt) + '" data-ph="' + esc(ccyMeta(code).sym || "") + '0.00" aria-describedby="qc-ghost' : esc(ccyMeta(code).sym || "") + "0.00") +
-      '" value="' + esc(lastTxt) + '"' + act("qcPriceCtx", [], "input") + ">" +
-      (ghost ? '<p class="ghostnote" id="qc-ghost">≈ ' + esc(fmtLocal(ghost.amount, code)) + ", " + esc(ghost.why) + ". " + GHOST_HOW + "</p>" : "") +
+      (ghost
+        ? esc(ghostTxt) + '" data-ghost="' + esc(ghostTxt) + '" data-why="' + esc(ghost.why) + '" data-ph="' + esc(ccyMeta(code).sym || "") + "0.00"
+        : esc(ccyMeta(code).sym || "") + "0.00") +
+      '" aria-describedby="qc-say" value="' + esc(lastTxt) + '"' + act("qcPriceCtx", [], "input") + ">" +
       '<div class="qcctx" id="qc-ctx" aria-live="polite"></div>' +
       '<div class="dnq" role="group" aria-label="Would order again?"><span class="dnlab">Would order again?</span><span class="dnvs big">' +
       _verdictButtons(st.rv, true, "qcVerdict") +
@@ -2443,32 +2444,43 @@ function priceKin(n) {
   });
   return { label: label, pts: pts };
 }
+/* Under the price is one line that never changes size while you type (v123: the box and Save jumped as the guess's
+   note came and went and the strip grew a row). With the box empty and a guess, it says where the guess comes from;
+   with a price, where that price sits among like cups. The strip keeps its height either way, and the line keeps two
+   lines' room whenever this drink has either to say. What fills the area depends on the drink, never on the typing. */
 function qcPriceCtx() {
-  const pin = /** @type {HTMLInputElement|null} */ ($("qc-price"));
-  if (pin) _ghostNote(pin);
-  const host = $("qc-ctx");
+  const host = $("qc-ctx"),
+    pin = /** @type {HTMLInputElement|null} */ ($("qc-price"));
   const c = cafes.find(x => x.id === curId);
-  if (!host || !c || !_qc || !_qc.n.trim()) return;
-  const kin = priceKin(_qc.n);
-  if (kin.pts.length < 4) {
+  if (!host || !pin || !c || !_qc || !_qc.n.trim()) return;
+  const kin = priceKin(_qc.n),
+    known = kin.pts.length >= 4;
+  if (!known && !pin.dataset.ghost) {
     host.innerHTML = "";
     return;
   }
   const src = _qcSource(c, _qc.n),
     code = String(src.pc || ccyFor(c)).toUpperCase(),
-    typed = ccyNum(/** @type {HTMLInputElement} */ ($("qc-price")).value),
+    typed = ccyNum(pin.value),
     rate = fxRateAt(code, localToday()).rate,
     usd = typed != null && typed > 0 && rate > 0 ? typed / rate : null;
-  const ps = kin.pts.map(x => x.p).sort((a, b) => a - b),
-    n = ps.length,
-    mid = n % 2 ? ps[(n - 1) / 2] : (ps[n / 2 - 1] + ps[n / 2]) / 2;
-  const more = usd == null ? 0 : ps.filter(p => p > usd + 0.004).length;
-  const who = kin.label ? "Your " + kin.label : "“" + _qc.n.trim() + "”";
-  host.innerHTML =
-    _priceStrip(kin.pts, usd, mid) +
-    "<p>" + esc(who) + ": " + statMoney(ps[0]) + " to " + statMoney(ps[n - 1]) + ", middle " + statMoney(mid) + "." +
-    (usd == null ? "" : " " + (more === 0 ? "None of " + n : more === n ? "All " + n : more + " of " + n) + " cost more.") +
-    "</p>";
+  let say = "",
+    strip = "";
+  if (pin.dataset.ghost && !pin.value.trim())
+    say = "≈ " + fmtLocal(+pin.dataset.ghost, code) + ", " + (pin.dataset.why || "") + ". " + GHOST_HOW;
+  if (known) {
+    const ps = kin.pts.map(x => x.p).sort((a, b) => a - b),
+      n = ps.length,
+      mid = n % 2 ? ps[(n - 1) / 2] : (ps[n / 2 - 1] + ps[n / 2]) / 2;
+    const more = usd == null ? 0 : ps.filter(p => p > usd + 0.004).length;
+    const who = kin.label ? "Your " + kin.label : "“" + _qc.n.trim() + "”";
+    strip = _priceStrip(kin.pts, usd, mid);
+    if (!say)
+      say =
+        who + ": " + statMoney(ps[0]) + " to " + statMoney(ps[n - 1]) + ", middle " + statMoney(mid) + "." +
+        (usd == null ? "" : " " + (more === 0 ? "None of " + n : more === n ? "All " + n : more + " of " + n) + " cost more.");
+  }
+  host.innerHTML = strip + '<p id="qc-say">' + esc(say) + "</p>";
 }
 /* ---------- a ghost price (v122) ----------
    Typing a price at the counter was the chore (owner, 2 Nov). An empty price box now shows a guess in grey, and
@@ -2536,10 +2548,11 @@ function _setGhost(inp, g, code) {
   if (note) note.textContent = g ? "≈ " + fmtLocal(g.amount, code) + ", " + g.why + ". " + GHOST_HOW : "";
   _ghostNote(inp);
 }
-/** The note shows while the box is empty and has a guess. @param {HTMLInputElement} inp */
+/** A form row's note is read while the box is empty and has a guess. (The quick cup's line is qcPriceCtx's.)
+    @param {HTMLInputElement} inp */
 function _ghostNote(inp) {
   const note = $(inp.getAttribute("aria-describedby") || "");
-  if (note) note.hidden = !inp.dataset.ghost || !!inp.value.trim();
+  if (note && note.classList.contains("ghostnote")) note.hidden = !inp.dataset.ghost || !!inp.value.trim();
 }
 /** A form drink row's ghost, from its name, its currency and where the form's place is. @param {Element|null} dr */
 function formGhost(dr) {
@@ -2548,12 +2561,14 @@ function formGhost(dr) {
     name = /** @type {HTMLInputElement|null} */ (dr.querySelector(".dn")),
     sel = /** @type {HTMLSelectElement|null} */ (dr.querySelector(".dpc"));
   if (!inp || !name) return;
+  /* The form's rows are compact (name, price, nothing else), so the reason is for a screen reader only: a line
+     appearing under the price as the name was typed moved the whole form (v123). The grey guess is what shows. */
   if (!inp.getAttribute("aria-describedby")) {
     const note = document.createElement("p");
-    note.className = "ghostnote";
+    note.className = "ghostnote sr-only";
     note.id = "gh-" + uid();
     note.hidden = true;
-    (dr.querySelector(".priceline") || inp).after(note);
+    (dr.querySelector(".priceline") || dr).appendChild(note);
     inp.setAttribute("aria-describedby", note.id);
   }
   const code = sel ? sel.value : ccyFor({ cc: formCC, ccy: formCcy });
@@ -2634,7 +2649,7 @@ function _priceStrip(pts, usd, mid) {
       return { cx: cx, o: Math.min(4, (seen[k] = (seen[k] || 0) + 1) - 1), t: x.t };
     });
   const y = 10 + 9 * Math.max.apply(null, dots.map(d => d.o)),
-    H = y + (usd != null ? 24 : 8);
+    H = y + 24; /* room for the amount under the line whether or not one is typed, so typing never grows the strip */
   let s =
     '<line class="qcs-axis" x1="' + l + '" x2="' + (W - r) + '" y1="' + y + '" y2="' + y + '"/>' +
     '<line class="qcs-mid" x1="' + X(mid).toFixed(1) + '" x2="' + X(mid).toFixed(1) + '" y1="2" y2="' + (y + 6) + '"/>';

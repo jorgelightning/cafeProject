@@ -2209,3 +2209,17 @@ from a keyboard, since a swipe is not reachable there. `tests/ghost-price.js`.
 **A test that aged.** stats-charts dated one cafe "30 days ago" and expected it in the trip's month, two months
 back; from 1 Nov it fell into the next month and the month read 3 new instead of 4. The app was right. The cafe is
 now dated inside that month, whatever today is.
+
+## Holding still (v123)
+
+On the phone the price box and the rows around it moved as you used the ghost price (2 Nov). Measured at 390 x 844 in
+the quick cup: taking the guess hid its 32px note and grew the price strip by 36px (it added a row for the amount
+under the line only once there was an amount), and the sheet is anchored at the bottom, so the box and everything
+above it jumped 8px and back. In the form the note sat in a compact row that shows only the name and the price, so
+it never showed; in an open row it would have pushed the row down as the name was typed.
+
+Now the area under the quick cup's price is decided by the drink, never by the typing. One line holds either the
+guess's reason (box empty) or where the price sits among like cups (box filled), with two lines' room whenever the
+drink has either to say, and the strip always keeps the row for the amount. The form's reason is for a screen
+reader only (`.sr-only`, inside the price line, so it takes no room); the grey guess is what shows. Measured again:
+the box at 501px in every state, the area 124px, the form row 105px. `tests/ghost-price.js` checks the positions.
