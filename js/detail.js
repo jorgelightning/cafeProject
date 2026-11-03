@@ -906,6 +906,12 @@ function openDetail(id, from) {
     .sort(
       (a, b) => _cupsOf(b) - _cupsOf(a) || verdictRank(a) - verdictRank(b) || _lastDate(b).localeCompare(_lastDate(a))
     );
+  /* The drinks worth ordering get a full card: the ones had at least twice, two or three of them, or all of them
+     when there are three or fewer (design audit D6). The rest are slim rows in one box under "Had once" (v125): a
+     name, the day and the price. A cafe with five drinks used to push the note off the screen as five full cards;
+     then they were folded behind a line of their names, then behind a Go-tos / All switch (v124). */
+  const _often = _dsorted.filter(d => _cupsOf(d) >= 2).length;
+  const _keep = _dsorted.length <= 3 ? _dsorted.length : Math.max(2, Math.min(3, _often));
   /* One compact card per drink, and all of them start closed. The newest used to open itself,
    which meant the one cafe with a long history pushed the note and the tags off the screen on
    arrival. The summary line — name, how many, latest, price — is the part worth reading at a
@@ -924,7 +930,8 @@ function openDetail(id, from) {
           }, 0);
           const v = reorderVal(latest),
             open = false,
-            hid = "drink-history-" + di;
+            hid = "drink-history-" + di,
+            slim = di >= _keep;
           /* "Oct 17", not "Oct 17, 2026": the year only when it is not this one, so the line fits on one row */
           const last = latest.date ? _noteDay(latest.date) : "Undated";
           const rows = orders
@@ -966,6 +973,7 @@ function openDetail(id, from) {
             '<div class="drinkcard' +
             (open ? " open" : "") +
             (v ? " v-" + v : "") +
+            (slim ? " slim" : "") +
             '">' +
             '<div class="drinktop">' +
             '<button type="button" class="drinksum" aria-expanded="' +
@@ -986,11 +994,11 @@ function openDetail(id, from) {
             "</span>" +
             /* "12 cups · last Oct 17": at the 14px secondary size "12 ordered · latest Oct 17" broke the date across lines */
             '<span class="dsub">' +
-            cnt +
-            (cnt === 1 ? " cup · last " : " cups · last ") +
+            /* a slim row says the day, and how many only when it was more than one */
+            (slim ? (cnt > 1 ? cnt + " cups · " : "") : cnt + (cnt === 1 ? " cup · last " : " cups · last ")) +
             esc(last) +
             "</span>" +
-            modPills(latest) +
+            (slim ? "" : modPills(latest)) +
             "</span>" +
             /* The latest price, not the range: "$4.25–$5.00" took the right side of Kissaten's Flat White and broke
                "12 cups · last Oct 17" after "Oct" (day run, 27 Oct). Each cup in the history keeps its own price. */
@@ -1028,35 +1036,17 @@ function openDetail(id, from) {
       (isAdmin ? "Tap \uFF0B Log here below." : "No drinks logged yet.") +
       "</div>";
 
-  /* The drinks worth ordering, then the rest behind a switch in the heading (design audit D6, v124): the ones had at
-     least twice, two or three of them, or all of them when there are three or fewer. A cafe with five drinks used to
-     push the note off the screen. The rest were one bold, underlined line of names under the cards, the loudest
-     thing in the section and still only half a list; now the heading says Go-tos or All 7, and nothing sits
-     between the cards and the note. */
-  const _cards = $("d-drinks").querySelectorAll(".drinkcard");
-  const _often = _dsorted.filter(d => _cupsOf(d) >= 2).length;
-  const _keep = _cards.length <= 3 ? _cards.length : Math.max(2, Math.min(3, _often));
-  const _seg = $("d-drinks-seg"),
-    _hint = $("d-drinks-hint");
-  if (_drAllFor !== c.id) _drAllFor = null;
-  if (_cards.length > _keep && _seg) {
+  /* the slim rows share one box; "Had once" is true only when it is, since a cafe with four regulars slims the fourth */
+  const _slim = $("d-drinks").querySelectorAll(".drinkcard.slim");
+  if (_slim.length) {
+    const lab = document.createElement("div");
+    lab.className = "drslimlab";
+    lab.textContent = _dsorted.slice(_keep).every(d => _cupsOf(d) <= 1) ? "Had once" : "Also had";
     const box = document.createElement("div");
-    box.className = "foldbox";
-    box.id = "d-drinks-fold";
-    _cards[_keep - 1].after(box);
-    for (let i = _keep; i < _cards.length; i++) box.appendChild(_cards[i]);
-    _seg.innerHTML = [drinksFirstLabel(_keep, _often), "All " + _cards.length]
-      .map(function (lab, i) {
-        return (
-          '<button type="button" data-all="' + i + '" aria-controls="d-drinks-fold" aria-pressed="false"' +
-          act("setDrinksAll", [i === 1]) + ">" + esc(lab) + "</button>"
-        );
-      })
-      .join("");
-    setDrinksAll(_drAllFor === c.id);
+    box.className = "drslim";
+    _slim[0].before(lab, box);
+    _slim.forEach(el => box.appendChild(el));
   }
-  if (_seg) _seg.hidden = _cards.length <= _keep;
-  if (_hint) _hint.hidden = !!_seg && !_seg.hidden;
   /* Directions and Share live in one place, the row under the name; the pair that used to close the page is gone */
   $("d-review").textContent = c.review || (isAdmin ? "Tap \u270E Edit to add your thoughts\u2026" : "No notes yet.");
   /* a visitor reads whose drinks and whose words these are, as Stats already says (design audit D6) */
@@ -1069,28 +1059,6 @@ function openDetail(id, from) {
       gmap.setCenter({ lat: c.lat, lng: c.lng });
       gmap.setZoom(15);
     }, 80);
-}
-/* Go-tos or All holds for the cafe you are on (logging a cup draws the page again) and starts on Go-tos at the next */
-let _drAllFor = /** @type {string|null} */ (null);
-/** @param {boolean} all */
-function setDrinksAll(all) {
-  _drAllFor = all ? curId : null;
-  const box = $("d-drinks-fold"),
-    seg = $("d-drinks-seg");
-  if (box) box.toggleAttribute("data-open", all);
-  if (seg)
-    seg.querySelectorAll("button").forEach(function (b) {
-      const on = (b.dataset.all === "1") === all;
-      b.classList.toggle("on", on);
-      b.setAttribute("aria-pressed", String(on));
-    });
-}
-/* The first half of the switch names the drinks in view: two or three of them, the most ordered first.
-   @param {number} keep how many are in view (2 or 3)
-   @param {number} often how many of all the drinks were had at least twice (0 or more; may be under keep) */
-function drinksFirstLabel(keep, often) {
-  /* Go-tos only when every one in view was had at least twice; five drinks had once each are the top of the list, not habits */
-  return often >= keep ? "Go-tos" : "Top " + keep;
 }
 function toggleFav() {
   const c = cafes.find(x => x.id === curId);

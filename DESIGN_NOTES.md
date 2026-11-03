@@ -2242,3 +2242,19 @@ starts on Go-tos.
 **Go-tos has to be true.** The fold keeps two or three even when none was had twice, so the first half reads Go-tos
 only when every drink in view was, and Top 2 or Top 3 otherwise (`drinksFirstLabel`). Five drinks had once each are
 the top of the list, not habits. `tests/drinks-switch.js`.
+
+## Had once (v125)
+
+The v124 switch shipped broken on the phone: "Go-tos" broke at its hyphen into two lines. `.drseg button` and
+`.seg button` are equally specific and `.seg` comes later in the file, so the Settings seg's `flex:1` won and split
+the switch into two equal halves, narrower than the word. The test measured the heading's height, which the 44px
+buttons held, not whether each label stayed on one line. Shown redrawn five ways on the canvas, the owner went back
+to the first round's compact rows instead (2 Nov).
+
+So nothing is folded now. The two or three drinks had most keep their full cards (the D6 rule, unchanged); the rest
+are slim rows in one box under "Had once": a 28px mark, the name, the day, the price beside it. They are the same
+cards, given `.slim` and set in `.drslim`, so a tap still opens the history and the owner keeps the ⋯; the slim
+rules outrank the phone layout that moves a full card's price under its name. The label says "Had once" only when
+it is true; a cafe with four regulars slims the fourth, and then it reads "Also had" and the row says "2 cups". At
+Constance this puts My thoughts about 230px lower than the fold did; that was the trade the owner chose.
+`tests/drink-rows.js` replaces `tests/drinks-switch.js`.
