@@ -1089,12 +1089,71 @@
       {
         "count": 2,
         "dates": [
+          "2026-06-25",
+          "2026-11-02"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-06-25",
+            "ice": "Extra ice",
+            "id": "mvzorjku3zmi",
+            "milk": "Oat",
+            "p": "7",
+            "reorder": "yes",
+            "size": "32 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-11-02",
+            "ice": "Warm",
+            "id": "mvzorog4trp5",
+            "milk": "Oat",
+            "note": "It's nice that the Hojicha lingers throughout, from sipping and aftertaste!",
+            "p": "7.00",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.00",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "count": 2,
+        "dates": [
           "2026-07-05",
           "2026-08-12"
         ],
         "ice": "Less ice",
         "milk": "Oat",
         "n": "Matcha Einspanner",
+        "orders": [
+          {
+            "date": "2026-07-05",
+            "ice": "Less ice",
+            "id": "mvzorjkim4no",
+            "milk": "Oat",
+            "p": "8",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "50%"
+          },
+          {
+            "date": "2026-08-12",
+            "ice": "Less ice",
+            "id": "mvzorjkfg81o",
+            "milk": "Oat",
+            "p": "8",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "50%"
+          }
+        ],
         "p": "8",
         "reorder": "yes",
         "size": "12 oz",
@@ -1102,10 +1161,45 @@
       },
       {
         "dates": [
+          "2026-08-12"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Black matcha latte w/ oak milk",
+        "orders": [
+          {
+            "date": "2026-08-12",
+            "ice": "Less ice",
+            "id": "mvzorjklzptu",
+            "milk": "Oat",
+            "p": "7.75",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.75",
+        "reorder": "yes",
+        "size": "12 oz",
+        "sweet": "0%"
+      },
+      {
+        "dates": [
           "2026-07-16"
         ],
         "ice": "No ice",
         "n": "Black matcha Einspanner",
+        "orders": [
+          {
+            "date": "2026-07-16",
+            "ice": "No ice",
+            "id": "mvzorjkoal3z",
+            "p": "9",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
         "p": "9",
         "reorder": "yes",
         "size": "12 oz",
@@ -1118,6 +1212,18 @@
         "ice": "Warm",
         "milk": "Oat",
         "n": "Cassia black tea latte",
+        "orders": [
+          {
+            "date": "2026-07-02",
+            "ice": "Warm",
+            "id": "mvzorjkqtzp5",
+            "milk": "Oat",
+            "p": "7.50",
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
         "p": "7.50",
         "reorder": "yes",
         "size": "16 oz",
@@ -1129,21 +1235,20 @@
         ],
         "ice": "Less ice",
         "n": "Freshly Milled Reserved Matcha Latte",
+        "orders": [
+          {
+            "date": "2026-06-29",
+            "ice": "Less ice",
+            "id": "mvzorjks8vo6",
+            "p": "13",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
         "p": "13",
         "reorder": "yes",
         "size": "12 oz",
-        "sweet": "0%"
-      },
-      {
-        "dates": [
-          "2026-06-25"
-        ],
-        "ice": "Extra ice",
-        "milk": "Oat",
-        "n": "Hojicha Latte",
-        "p": "7",
-        "reorder": "yes",
-        "size": "32 oz",
         "sweet": "0%"
       },
       {
@@ -1153,6 +1258,18 @@
         "ice": "Less ice",
         "milk": "Oat",
         "n": "Black Matcha latte + oak milk",
+        "orders": [
+          {
+            "date": "2026-06-20",
+            "ice": "Less ice",
+            "id": "mvzorjkw9mxm",
+            "milk": "Oat",
+            "p": "7.75",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
+          }
+        ],
         "p": "7.75",
         "reorder": "yes",
         "size": "12 oz",
@@ -1165,22 +1282,22 @@
         ],
         "ice": "Less ice",
         "n": "Freshly milled matcha latte",
+        "orders": [
+          {
+            "date": "2026-06-19",
+            "ice": "Less ice",
+            "id": "mvzorjkyshtx",
+            "p": "7.95",
+            "qty": 2,
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "85%"
+          }
+        ],
         "p": "7.95",
         "reorder": "yes",
         "size": "12 oz",
         "sweet": "85%"
-      },
-      {
-        "dates": [
-          "2026-08-12"
-        ],
-        "ice": "Less ice",
-        "milk": "Oat",
-        "n": "Black matcha latte w/ oak milk",
-        "p": "7.75",
-        "reorder": "yes",
-        "size": "12 oz",
-        "sweet": "0%"
       }
     ],
     "elo": 1500,
@@ -1197,7 +1314,7 @@
       "matcha",
       "cozy"
     ],
-    "updated": "2026-08-15T06:51:57.648Z",
+    "updated": "2026-11-02T20:06:38.265Z",
     "wish": false
   },
   {
@@ -3665,6 +3782,50 @@
     "rating": 5,
     "review": "I ordered to deliver, so not sure about the actual place!",
     "updated": "2026-11-02T02:56:29.244Z",
+    "wish": false
+  },
+  {
+    "area": "Central Richmond",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-11-02"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Cortado",
+        "orders": [
+          {
+            "date": "2026-11-02",
+            "ice": "Warm",
+            "id": "mw0edrcpzkj8",
+            "milk": "Oat",
+            "note": "It was quite expensive for Cortado for a okay taste. The espresso was strong but seems plain.",
+            "p": "6.50",
+            "reorder": "neutral",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.50",
+        "reorder": "neutral",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "mw0eg9waz2p0",
+    "lat": 37.78232,
+    "lng": -122.48099,
+    "name": "Home Coffee Roasters",
+    "pid": "ChIJr0cIUgWHhYAR52foWFmMYLw",
+    "rating": 3,
+    "review": "I thought it was a nice vibe to study, but in terms of drink quality, it was okay for me.",
+    "updated": "2026-11-03T08:01:58.810Z",
     "wish": false
   },
   {
