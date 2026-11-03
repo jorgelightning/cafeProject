@@ -2258,3 +2258,16 @@ rules outrank the phone layout that moves a full card's price under its name. Th
 it is true; a cafe with four regulars slims the fourth, and then it reads "Also had" and the row says "2 cups". At
 Constance this puts My thoughts about 230px lower than the fold did; that was the trade the owner chose.
 `tests/drink-rows.js` replaces `tests/drinks-switch.js`.
+
+## A round × in the search (v126)
+
+Starting a new search on the List meant backspacing the old one, or Clear under the box, which also drops every
+filter (3 Nov, the owner's ask). Three ways were drawn on the canvas: a round × in the box, a plain × in the box,
+and Cancel beside it. The owner chose the round one, the clear button phones already put in a search box.
+
+It shows only while something is typed, and empties the box and nothing else: Been or Want to try, Favorites and
+the filter chips stay, and Clear under the box still clears everything. The focus stays in the box, since the
+button's mousedown is cancelled and the click puts it back, so a phone's keyboard stays up for the next search.
+Escape in the box does the same from a keyboard. It is a real button, not `type="search"`, whose × each browser draws
+its own way and iPhone Safari not at all. Its 44px target hangs into the box's padding on negative margins, so the
+box keeps its height (44px on a laptop, 48px on a phone) as the × comes and goes. `tests/search-clear.js`.

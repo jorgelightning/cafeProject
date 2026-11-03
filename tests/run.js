@@ -19,6 +19,7 @@ const SUITE = [
   ["ghost-price",      "an empty price box shows a guess from like drinks here, near here or anywhere, in its own currency; a swipe takes it, a tap types, nothing is saved untaken"],
   ["free-cups",        "a cup logged at 0 reads Free on the cafe page and in local money, Tidy up and No price take it as a price, averages still skip it"],
   ["drink-rows",       "a cafe with more than three drinks: full cards for the two or three had most, the rest as slim rows under Had once (Also had when not), each still opening its history"],
+  ["search-clear",     "the List search has a round × while anything is typed: it empties the box, keeps the filters and the focus; Escape too; the box never changes size"],
   ["shortcuts-pace-price","the icon's long-press Log a cup, Near me and Want to try; Wrapped's year on pace; the quick cup's price among every like cup"],
   ["tips",             "reader tips: off without a reCAPTCHA key; a visitor's tip from Go or a search that found nothing, cleaned to the rule; the owner's inbox, Want to try and Dismiss"],
   ["visitor-view",     "a visitor gets Directions/Hours/Share up top, one word instead of a rank, =N ties, Stats in Jorge's name, one Cupertino"],

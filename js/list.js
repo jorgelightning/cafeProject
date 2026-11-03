@@ -378,6 +378,26 @@ function clearAll() {
   if ($("q")) $("q").value = "";
   clearFilters();
 }
+/* The round × in the search box (v126) empties the box and nothing else: the filters stay, and so does the
+   keyboard, ready for the next search. Clear under the box still clears everything. */
+function clearSearch() {
+  const q = $("q");
+  if (!q) return;
+  q.value = "";
+  renderList();
+  q.focus();
+}
+/* Escape empties the box from a keyboard; pressing the × does not take the focus, and a phone's keyboard, from it */
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && e.target === $("q") && $("q").value) {
+    e.preventDefault();
+    clearSearch();
+  }
+});
+document.addEventListener("mousedown", function (e) {
+  const t = /** @type {Element|null} */ (e.target);
+  if (t && t.closest && t.closest("#q-clear")) e.preventDefault();
+});
 function renderResultLine(n) {
   const el = $("resultline");
   if (!el) return;
@@ -525,6 +545,7 @@ function setChip(v) {
 function renderList() {
   _cardRanks = typeof rankMap === "function" ? rankMap() : null;
   const q = ($("q").value || "").toLowerCase().trim();
+  if ($("q-clear")) $("q-clear").hidden = !$("q").value;
   const grid = $("grid");
   grid.classList.toggle("compact-list", listCompact);
   let items = filteredCafes(q);

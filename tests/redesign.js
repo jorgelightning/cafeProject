@@ -68,11 +68,11 @@ const { eq, done } = checker();
     const row = document.querySelector("#cmp-body .lbrow.guide"), chips = [...document.querySelectorAll("#cmp-body .gobar .gochip, #cmp-body .gochips .gochip")];
     show("list"); renderList();
     return { goTop: Math.round(row.getBoundingClientRect().top), chips: chips.map(c => c.textContent.replace(/\s+/g, " ").trim()), primary: chips.filter(c => c.classList.contains("p")).length,
-             searchButtons: document.querySelectorAll(".search button").length, headerSettings: !!document.querySelector(".searchrow > .setdoor") };
+             searchButtons: document.querySelectorAll(".search button:not(#q-clear)").length, headerSettings: !!document.querySelector(".searchrow > .setdoor") };
   });
   eq(first.goTop < 220, true, "Go's first cafe starts in the top quarter of the phone (" + first.goTop + "px; it was 279)");
   eq([first.chips.some(c => /^Rank a pair/.test(c)), first.primary], [true, 1], "…its actions are one row of chips, Rank a pair the one filled");
-  eq([first.searchButtons, first.headerSettings], [0, true], "the List's search field is only a search field; Settings sits beside it");
+  eq([first.searchButtons, first.headerSettings], [0, true], "the List's search field is only a search field (its own × aside, v126); Settings sits beside it");
 
   /* ---- 5: three button styles ---- */
   const styles = await pg.evaluate(() => {

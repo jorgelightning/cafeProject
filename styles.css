@@ -1187,6 +1187,15 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 #d-wish[aria-pressed="false"]{ opacity:.55; }
 .favbadge .ico{ width:18px; height:18px; color:#ff4d6d; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .search > .ico{ width:18px; height:18px; color:var(--soft); }
+/* The round × that empties the List search (v126). It shows only with something typed, and its 44px target hangs
+   into the field’s padding on negative margins, so the box never changes size as it comes and goes. */
+.qclear{ flex:none; width:44px; height:44px; margin:-4px -14px -4px 0; padding:0; display:flex; align-items:center; justify-content:center; border:0; background:none; cursor:pointer; }
+.qclear[hidden]{ display:none; }
+.qclear span{ width:20px; height:20px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:var(--faint); color:var(--surface); }
+.qclear .ico{ width:10px; height:10px; stroke-width:3.4; }
+.qclear:focus-visible{ outline:none; }
+.qclear:focus-visible span{ outline:2px solid var(--text); outline-offset:3px; }
+@media (max-width:899px){ .qclear{ margin-right:-6px; } }
 .apptitle .ico{ width:1em; height:1em; color:var(--acc-strong); vertical-align:-.12em; }
 .side-nav button .ico{ width:16px; height:16px; }
 .statsec .ico{ width:14px; height:14px; vertical-align:-.15em; }
