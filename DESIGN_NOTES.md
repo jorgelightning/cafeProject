@@ -2223,3 +2223,22 @@ guess's reason (box empty) or where the price sits among like cups (box filled),
 drink has either to say, and the strip always keeps the row for the amount. The form's reason is for a screen
 reader only (`.sr-only`, inside the price line, so it takes no room); the grey guess is what shows. Measured again:
 the box at 501px in every state, the area 124px, the form row 105px. `tests/ghost-price.js` checks the positions.
+
+## Go-tos or All (v124)
+
+A cafe with more than three drinks shows two or three and folds the rest (D6). The fold opened from one line under
+the cards that named what it hid: "5 more: Black matcha latte w/ oak milk, Black matcha Einspanner, Cassia black tea
+latte, Freshly Milled Reserved Matcha Latte, …". It was bold, underlined and in the text colour, so it was the
+loudest thing in the section, louder than the cards it stood for; it wrapped to two centred lines, the underline
+broke at the wrap, and it still named only four. The owner did not like it (2 Nov).
+
+Three ways were drawn on a canvas with Constance's real drinks: a quiet fold (the hidden drinks' marks and "5 more
+drinks"), compact rows with no fold, and a switch in the heading. The owner chose the switch. The heading now reads
+Drinks I had, Go-tos | All 7: the Settings seg, sentence case inside the uppercase label, 44px buttons. Nothing sits
+between the cards and the note, and "Tap for order history" gives the seg its place on cafes that fold (it stays on
+the rest). The choice holds while you stay on a cafe, since logging a cup draws the page again, and the next cafe
+starts on Go-tos.
+
+**Go-tos has to be true.** The fold keeps two or three even when none was had twice, so the first half reads Go-tos
+only when every drink in view was, and Top 2 or Top 3 otherwise (`drinksFirstLabel`). Five drinks had once each are
+the top of the list, not habits. `tests/drinks-switch.js`.

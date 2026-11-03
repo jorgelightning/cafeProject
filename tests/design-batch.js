@@ -69,7 +69,7 @@ const { eq, done } = checker();
   });
   eq(log, { onList: "Log", onCafe: "Log here", bars: 0, sheet: "A cup at Kissaten HiFi" }, "a cafe page has one Log button, the middle tab, and it logs a cup here");
 
-  /* ---- D6: drinks by most ordered, the rest named, short dates, whose words ---- */
+  /* ---- D6: drinks by most ordered, the rest behind All, short dates, whose words ---- */
   const drinks = await pg.evaluate(() => {
     const y = localToday().slice(0, 4);
     const ord = (n, d) => Array.from({ length: n }, (_, i) => ({ id: d + i, date: y + "-" + d, p: "5" }));
@@ -81,11 +81,11 @@ const { eq, done } = checker();
     ] }];
     isAdmin = false; applyMode(); openDetail("k", "list");
     const shown = [...document.querySelectorAll("#d-drinks > .drinkcard .dtop")].map(e => e.textContent.trim());
-    return { shown, more: document.querySelector("#d-drinks .morebtn").dataset.lab, sub: document.querySelector("#d-drinks .dsub").textContent,
+    return { shown, seg: [...$("d-drinks-seg").querySelectorAll("button")].map(x => x.textContent), sub: document.querySelector("#d-drinks .dsub").textContent,
              heads: [$("d-drinks-lab").textContent, $("d-review-lab").textContent] };
   });
   eq(drinks.shown, ["Flat White", "Hojicha latte"], "a cafe's drinks lead with the most ordered, not the newest");
-  eq(drinks.more, "2 more: Sampaguita chai latte, Ichigo Matcha", "…and the rest are one line that names them");
+  eq(drinks.seg, ["Go-tos", "All 4"], "…and the rest wait behind All 4 in the heading (v124; it was a line of their names)");
   eq(drinks.sub, "12 cups · last Oct 17", "…with this year's dates short");
   eq(drinks.heads, ["Drinks Jorge had", "Jorge’s thoughts"], "a visitor reads whose drinks and whose words they are");
 

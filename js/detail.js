@@ -1028,28 +1028,35 @@ function openDetail(id, from) {
       (isAdmin ? "Tap \uFF0B Log here below." : "No drinks logged yet.") +
       "</div>";
 
-  /* The drinks worth ordering, then the rest in one line that names them (design audit D6): the ones had at least
-     twice, two or three of them, or all of them when there are three or fewer. A cafe with five drinks used to push
-     the note off the screen. */
+  /* The drinks worth ordering, then the rest behind a switch in the heading (design audit D6, v124): the ones had at
+     least twice, two or three of them, or all of them when there are three or fewer. A cafe with five drinks used to
+     push the note off the screen. The rest were one bold, underlined line of names under the cards, the loudest
+     thing in the section and still only half a list; now the heading says Go-tos or All 7, and nothing sits
+     between the cards and the note. */
   const _cards = $("d-drinks").querySelectorAll(".drinkcard");
   const _often = _dsorted.filter(d => _cupsOf(d) >= 2).length;
   const _keep = _cards.length <= 3 ? _cards.length : Math.max(2, Math.min(3, _often));
-  if (_cards.length > _keep) {
+  const _seg = $("d-drinks-seg"),
+    _hint = $("d-drinks-hint");
+  if (_drAllFor !== c.id) _drAllFor = null;
+  if (_cards.length > _keep && _seg) {
     const box = document.createElement("div");
     box.className = "foldbox";
+    box.id = "d-drinks-fold";
     _cards[_keep - 1].after(box);
     for (let i = _keep; i < _cards.length; i++) box.appendChild(_cards[i]);
-    const more = document.createElement("button");
-    more.type = "button";
-    more.className = "morebtn";
-    const names = _dsorted.slice(_keep).map(d => d.n);
-    more.dataset.lab = names.length + " more: " + names.slice(0, 4).join(", ") + (names.length > 4 ? ", …" : "");
-    more.textContent = more.dataset.lab + " \u25be";
-    more.onclick = function () {
-      statFold(more);
-    };
-    box.after(more);
+    _seg.innerHTML = [drinksFirstLabel(_keep, _often), "All " + _cards.length]
+      .map(function (lab, i) {
+        return (
+          '<button type="button" data-all="' + i + '" aria-controls="d-drinks-fold" aria-pressed="false"' +
+          act("setDrinksAll", [i === 1]) + ">" + esc(lab) + "</button>"
+        );
+      })
+      .join("");
+    setDrinksAll(_drAllFor === c.id);
   }
+  if (_seg) _seg.hidden = _cards.length <= _keep;
+  if (_hint) _hint.hidden = !!_seg && !_seg.hidden;
   /* Directions and Share live in one place, the row under the name; the pair that used to close the page is gone */
   $("d-review").textContent = c.review || (isAdmin ? "Tap \u270E Edit to add your thoughts\u2026" : "No notes yet.");
   /* a visitor reads whose drinks and whose words these are, as Stats already says (design audit D6) */
@@ -1062,6 +1069,28 @@ function openDetail(id, from) {
       gmap.setCenter({ lat: c.lat, lng: c.lng });
       gmap.setZoom(15);
     }, 80);
+}
+/* Go-tos or All holds for the cafe you are on (logging a cup draws the page again) and starts on Go-tos at the next */
+let _drAllFor = /** @type {string|null} */ (null);
+/** @param {boolean} all */
+function setDrinksAll(all) {
+  _drAllFor = all ? curId : null;
+  const box = $("d-drinks-fold"),
+    seg = $("d-drinks-seg");
+  if (box) box.toggleAttribute("data-open", all);
+  if (seg)
+    seg.querySelectorAll("button").forEach(function (b) {
+      const on = (b.dataset.all === "1") === all;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+}
+/* The first half of the switch names the drinks in view: two or three of them, the most ordered first.
+   @param {number} keep how many are in view (2 or 3)
+   @param {number} often how many of all the drinks were had at least twice (0 or more; may be under keep) */
+function drinksFirstLabel(keep, often) {
+  /* Go-tos only when every one in view was had at least twice; five drinks had once each are the top of the list, not habits */
+  return often >= keep ? "Go-tos" : "Top " + keep;
 }
 function toggleFav() {
   const c = cafes.find(x => x.id === curId);

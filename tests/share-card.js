@@ -42,7 +42,6 @@ const { eq, done } = checker();
       glyph: (ba.querySelector(".oa-gl svg.mkv") || { dataset: {} }).dataset.k || "", bannerButtons: [...ba.querySelectorAll("button")].map(x => x.textContent.trim()),
       medalInHero: hero.contains(rk), moreShown: getComputedStyle(more).display !== "none", detailsShown: getComputedStyle(det).display !== "none",
       detailsOpen: det.open, folded: document.querySelectorAll("#d-drinks .foldbox .drinkcard").length,
-      moreBtn: (document.querySelector("#d-drinks .morebtn") || {}).textContent || "",
       gold: rk.classList.contains("top"), rankText: rk.textContent,
       pills: [...document.querySelectorAll("#d-drinks .drinksum .dopts")].map(x => x.textContent),
       quote: getComputedStyle(document.getElementById("d-review"), "::before").content,
@@ -66,21 +65,21 @@ const { eq, done } = checker();
   const mid = await pg.evaluate(() => { openDetail("mid", "list"); return document.getElementById("d-rank").classList.contains("top"); });
   eq(mid, false, "…and a cafe outside the top ten has no gold");
 
-  // ---- a long drink list shows three, then "Show N more" ----
+  // ---- a long drink list shows two or three, the rest behind All in the heading (v124) ----
   const fold = await pg.evaluate(() => {
     cafes.push({ id: "many", name: "Many Drinks", area: "SF", rating: 4, elo: 1450, matches: 8,
       drinks: ["A", "B", "C", "D", "E"].map(n => ({ n: "Drink " + n, orders: [{ date: "2026-09-0" + (n.charCodeAt(0) - 64), p: 5 }] })) });
     openDetail("many", "list");
-    const box = document.querySelector("#d-drinks .foldbox"), btn = document.querySelector("#d-drinks .morebtn");
+    const box = document.querySelector("#d-drinks .foldbox"), btn = $("d-drinks-seg").querySelector('[data-all="1"]');
     const before = getComputedStyle(box).display;
     btn.click();
-    const res = { shown: document.querySelectorAll("#d-drinks > .drinkcard").length, folded: box.querySelectorAll(".drinkcard").length, label: btn.dataset.lab,
+    const res = { shown: document.querySelectorAll("#d-drinks > .drinkcard").length, folded: box.querySelectorAll(".drinkcard").length, label: [...$("d-drinks-seg").querySelectorAll("button")].map(x => x.textContent),
              before, after: getComputedStyle(box).display, total: document.querySelectorAll("#d-drinks .drinkcard").length };
     cafes = cafes.filter(c => c.id !== "many");
     return res;
   });
   eq([fold.shown, fold.folded, fold.total], [2, 3, 5], "five drinks had once each: two in view and three folded (nothing is dropped)");
-  eq([fold.label, fold.before, fold.after], ["3 more: Drink C, Drink B, Drink A", "none", "block"], "…behind one line that names them and opens them");
+  eq([fold.label, fold.before, fold.after], [["Top 2", "All 5"], "none", "block"], "…behind Top 2 or All 5 in the heading, and All opens them");
 
   // ---- the postcard ----
   await pg.evaluate(() => { openDetail("top", "list"); });

@@ -470,6 +470,10 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .lab{ font-size:var(--fs-2); font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--soft); margin:18px 0 8px; }
 .drinklab{ display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-3); }
 .drinklab small{ font-size:var(--fs-1); font-weight:600; text-transform:none; letter-spacing:0; color:var(--faint); }
+/* Go-tos or All (v124): the Settings seg, in sentence case inside the uppercase heading, at its 44px floor */
+.drseg{ flex:none; padding:3px; text-transform:none; letter-spacing:0; }
+.drseg[hidden]{ display:none; }
+.drseg button{ flex:none; padding:0 var(--sp-3); font-variant-numeric:tabular-nums; }
 /* Detail mirrors the editor's grouped mental model without exposing editable controls:
    scan one card per drink, then open only the order history you want to inspect. */
 .drinkcard{ margin-bottom:9px; border:1px solid var(--border); border-left:4px solid var(--border); border-radius:var(--r-3); background:var(--surface); overflow:hidden; }
