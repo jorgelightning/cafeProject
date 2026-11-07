@@ -260,7 +260,7 @@
     "id": "mqfoz8zpx275",
     "lat": 37.33551,
     "lng": -122.01533,
-    "matches": 5,
+    "matches": 6,
     "name": "Charlie's Tea 茶理宜世",
     "rating": 5,
     "review": "If you are a fan of quality tea, good choices here!",
@@ -2101,6 +2101,29 @@
     "custom": false,
     "drinks": [
       {
+        "dates": [
+          "2026-11-05"
+        ],
+        "ice": "No ice",
+        "n": "K/DA Cassia Black Tea with Cream + Golden Tea Jelly",
+        "orders": [
+          {
+            "date": "2026-11-05",
+            "ice": "No ice",
+            "id": "mw5gu91tcqbj",
+            "note": "It stood out to be a little more sweet than I want.",
+            "p": "19.99",
+            "reorder": "neutral",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "19.99",
+        "reorder": "neutral",
+        "size": "16 oz",
+        "sweet": "0%"
+      },
+      {
         "count": 2,
         "dates": [
           "2026-08-12"
@@ -2108,23 +2131,36 @@
         "ice": "Less ice",
         "milk": "Oat",
         "n": "Dong Ding Oolong Latte",
+        "orders": [
+          {
+            "date": "2026-08-12",
+            "ice": "Less ice",
+            "id": "mw5gfo0aic8s",
+            "milk": "Oat",
+            "p": "7.70",
+            "qty": 2,
+            "reorder": "yes",
+            "size": "16 oz",
+            "sweet": "25%"
+          }
+        ],
         "p": "7.70",
         "reorder": "yes",
         "size": "16 oz",
         "sweet": "25%"
       }
     ],
-    "elo": 1531,
+    "elo": 1539,
     "emoji": "☕",
     "fav": false,
     "id": "msu1q6bvm46n",
     "lat": 37.66805,
     "lng": -122.46815,
-    "matches": 2,
+    "matches": 3,
     "name": "Chicha San Chen 吃茶三千",
     "rating": 4,
     "review": "Nice cafe but like it may take a while to get your order!",
-    "updated": "2026-08-15T07:21:05.832Z",
+    "updated": "2026-11-06T21:09:44.432Z",
     "wish": false
   },
   {
