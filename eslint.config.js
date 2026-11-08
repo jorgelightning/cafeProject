@@ -72,6 +72,7 @@ module.exports = [
         firebase: "readonly",
         google: "readonly",
         markerClusterer: "readonly",
+        Tesseract: "readonly",
         ...appGlobals,
       },
     },

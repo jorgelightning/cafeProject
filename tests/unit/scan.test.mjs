@@ -1,0 +1,121 @@
+/* Unit tests for js/lib/scan.js: what the app makes of a receipt's raw text. Node only.
+   The suite (tests/run.js) runs these through tests/unit.js. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { parseReceipt, SCAN_MAX_ROWS } from "../../js/lib/scan.js";
+
+const ctx = { known: ["Iced matcha latte", "Cortado", "Black matcha latte", "Hojicha latte"], code: "USD", dec: 2, today: "2026-11-08" };
+const read = (lines, over) => parseReceipt(lines.join("\n"), Object.assign({}, ctx, over));
+const names = r => r.items.map(x => x.n);
+
+const SAMPLE = [
+  "SAMPLE TEA BAR", "123 MAIN ST", "(415) 555-0100", "Nov 8, 2026 2:14 PM", "Order #4417",
+  "1 ICD MTCHA LT 6.75", "+ OAT MILK 1.00", "1 HOJI LT 16OZ 7.00", "LESS ICE", "1 CROISSANT 5.00",
+  "SUBTOTAL 19.75", "TAX 1.73", "TIP 3.00", "TOTAL 24.48", "VISA 1234", "THANK YOU",
+];
+
+test("parseReceipt: the items of a receipt, and nothing above or below them", () => {
+  const r = read(SAMPLE);
+  assert.equal(r.kind, "receipt");
+  assert.deepEqual(names(r), ["Iced matcha latte", "Hojicha latte", "Croissant"]);
+  assert.equal(r.total, 24.48);
+  assert.equal(r.date, "2026-11-08");
+  assert.equal(r.other, "");
+});
+
+test("parseReceipt: a modifier belongs to the item above it, and its price is added", () => {
+  const [matcha, hoji] = read(SAMPLE).items;
+  assert.deepEqual([matcha.price, matcha.milk, matcha.isNew, matcha.printed], [7.75, "Oat", false, "1 ICD MTCHA LT + OAT MILK"]);
+  assert.deepEqual([hoji.price, hoji.size, hoji.ice, hoji.isNew], [7, "16 oz", "Less ice", false]);
+  const shot = read(["Latte 5.00", "ADD SHOT 1.00", "TOTAL 6.00"]);
+  assert.deepEqual([names(shot), shot.items[0].price], [["Latte"], 6]);
+});
+
+test("parseReceipt: options come out of the name", () => {
+  const [a, b, c] = read(["ICED LATTE 12 OZ OAT 50% SWEET 6.00", "Chai Latte Almond Milk No Sugar 6.50", "Latte Large 2% Milk 5.00", "TOTAL 17.50"]).items;
+  assert.deepEqual([a.n, a.size, a.milk, a.sweet], ["Iced latte", "12 oz", "Oat", "50%"]);
+  assert.deepEqual([b.n, b.milk, b.sweet], ["Chai Latte", "Almond", "0%"]);
+  assert.deepEqual([c.n, c.size, c.milk, c.sweet], ["Latte", "Large", "2%", ""]);
+  for (const size of ["16OZ", "160Z", "160z", "1602", "16 OZ", "16oz."]) assert.deepEqual([read(["HOJI LT " + size + " 7.00", "TOTAL 7.00"]).items[0].n, read(["HOJI LT " + size + " 7.00", "TOTAL 7.00"]).items[0].size], ["Hojicha latte", "16 oz"], size);
+  assert.equal(read(["HOT CHOCOLATE 5.00", "TOTAL 5.00"]).items[0].n, "Hot chocolate", "Hot in a name stays in the name");
+  assert.equal(read(["LATTE 5.00", "HOT", "TOTAL 5.00"]).items[0].ice, "Hot", "…and on its own line is how it was served");
+});
+
+test("parseReceipt: a name is yours only if every word pairs up", () => {
+  const n = line => read([line + " 7.00", "TOTAL 7.00"]).items[0];
+  assert.deepEqual([n("BLK MTCHA LT").n, n("BLK MTCHA LT").isNew], ["Black matcha latte", false]);
+  assert.deepEqual([n("MATCHA LATTE ICED").n, n("MATCHA LATTE ICED").isNew], ["Iced matcha latte", false], "word order and Iced do not make it another drink");
+  assert.deepEqual([n("Matcha latte").n, n("Matcha latte").isNew], ["Iced matcha latte", false], "Iced is not a different drink");
+  assert.deepEqual([n("White matcha latte").n, n("White matcha latte").isNew], ["White matcha latte", true], "another word is another drink, not Black or Iced");
+  assert.deepEqual([n("CORTADD").n, n("CORTADD").isNew], ["Cortado", false], "a misread letter still finds it");
+  assert.deepEqual([n("Latte").n, n("Latte").isNew], ["Latte", true], "a word of a longer name is not that drink");
+});
+
+test("parseReceipt: the misreads a text reader makes in a price", () => {
+  assert.equal(read(["Cortado 5.O0", "TOTAL 5.00"]).items[0].price, 5);
+  assert.equal(read(["Cortado 1l.50", "TOTAL 11.50"]).items[0].price, 11.5);
+  assert.equal(read(["Cortado 5,50", "TOTAL 5,50"]).items[0].price, 5.5, "a comma for the point");
+  assert.equal(read(["Cortado 5.50 ;", "TOTAL 5.50 :"]).items[0].price, 5.5, "a speck after the price");
+  assert.equal(read(["Cortado $5.50 T", "TOTAL 5.50"]).items[0].price, 5.5, "a tax flag after the price");
+  assert.equal(read(["Cortado $ 5.50", "TOTAL 5.50"]).items[0].price, 5.5, "a space after the dollar sign");
+  assert.equal(read(["Cortado", "+ Oat .75", "TOTAL .75"]).items.length, 0, "no price on the item is no item");
+});
+
+test("parseReceipt: two on one line are two cups at the unit price, within reason", () => {
+  const r = read(["2 Cortado 11.00", "TOTAL 11.00"]);
+  assert.deepEqual([names(r), r.items[0].price], [["Cortado", "Cortado"], 5.5]);
+  assert.equal(read(["2x Cortado 11.00", "TOTAL 11.00"]).items.length, 2);
+  assert.equal(read(["40 Cortado 200.00", "TOTAL 200.00"]).items.length, 6);
+  assert.equal(read(Array.from({ length: 40 }, (_, i) => "Tea " + "abcdefghijklmnopqrstuvwxyzabcdefghijklmnop"[i] + "ee 3.00").concat("TOTAL 120.00")).items.length, SCAN_MAX_ROWS);
+});
+
+test("parseReceipt: prices that do not add up to the subtotal are flagged", () => {
+  assert.equal(read(SAMPLE).off, false);
+  assert.equal(read(["Cortado 3.25", "Drip 2.00", "SUBTOTAL 7.25", "TOTAL 7.25"]).off, true, "a 5 misread as a 3");
+  assert.equal(read(["2 Cortado 10.00", "SUBTOTAL 10.00", "TOTAL 10.00"]).off, false, "quantities count");
+  assert.equal(read(["Cortado 3.25", "TOTAL 7.25"]).off, false, "no subtotal, nothing to check against");
+});
+
+test("parseReceipt: what is not an item", () => {
+  const r = read(["Cortado 5.00", "DISCOUNT -1.00", "Loyalty reward 2.00", "SERVICE FEE 1.00", "Sub-total 7.00", "Oat latte 9.00", "TOTAL 7.00"]);
+  assert.deepEqual(names(r), ["Cortado"], "discounts, fees and anything after the totals begin");
+  assert.deepEqual(names(read(["Cortado 5.00", "~ ee ; 7.00", "12 34 5.00", "TOTAL 5.00"])), ["Cortado"], "scraps of misread print");
+  assert.equal(read(["CROISSANT 5.00", "TOTAL 5.00"]).items[0].drink, false, "food is listed but not ticked");
+  assert.equal(read(["Cortado 5.00", "TOTAL 5.00"]).items[0].drink, true);
+  assert.deepEqual(names(read(["HOJI LT 16OZ", "TOTAL 7.00"])), [], "a size is not a price");
+});
+
+test("parseReceipt: a payment screen is a total, and an empty read is unreadable", () => {
+  const screen = read(["Total", "$8.50", "Add a tip", "15% $1.28", "20% $1.70", "No tip"]);
+  assert.deepEqual([screen.kind, screen.total, screen.items.length], ["total_only", 8.5, 0]);
+  const labelled = read(["Amount due $8.50"]);
+  assert.deepEqual([labelled.kind, labelled.total], ["total_only", 8.5]);
+  for (const bad of ["", "   \n ", "ee ~ ;; ,", "SAMPLE TEA BAR\n123 MAIN ST"]) assert.equal(parseReceipt(bad, ctx).kind, "unreadable", JSON.stringify(bad));
+  assert.equal(parseReceipt(null, ctx).kind, "unreadable");
+});
+
+test("parseReceipt: the date must be a real day, not after today and not from years ago", () => {
+  const on = (d, over) => read([d, "Cortado 5.00", "TOTAL 5.00"], over).date;
+  assert.equal(on("11/01/2026"), "2026-11-01", "month first in dollars");
+  assert.equal(on("11/01/26"), "2026-11-01");
+  assert.equal(on("2026-11-01"), "2026-11-01");
+  assert.equal(on("Oct 30"), "2026-10-30", "no year means this one");
+  assert.equal(on("30 Oct 2026"), "2026-10-30");
+  assert.equal(on("October 30th, 2026"), "2026-10-30");
+  assert.equal(on("25/10/2026"), "2026-10-25", "only day first works");
+  assert.equal(on("01/11/2026", { code: "EUR" }), "2026-11-01", "day first elsewhere");
+  assert.equal(on("11/09/2026"), "2026-09-11", "tomorrow as month first, so it must be day first");
+  assert.equal(on("12/25/2026"), null, "after today");
+  assert.equal(on("02/30/2026"), null, "no such day");
+  assert.equal(on("01/02/2019"), null, "years ago: more likely a misread year");
+  assert.equal(on("Order 4417"), null);
+});
+
+test("parseReceipt: a receipt in another currency keeps its drinks and drops its prices", () => {
+  const r = read(["Cortado NT$120", "TOTAL NT$120"]);
+  assert.deepEqual([r.other, r.items[0].price, r.total], ["TWD", null, null]);
+  assert.equal(read(["Cortado €4.50", "TOTAL €4.50"]).other, "EUR");
+  assert.equal(read(["Cortado €4.50", "TOTAL €4.50"], { code: "EUR" }).other, "", "the cafe's own currency is not another");
+  assert.equal(read(["Cortado ¥600", "TOTAL ¥600"], { code: "JPY", dec: 0 }).items[0].price, 600, "whole numbers count in a currency with no cents");
+  assert.equal(read(["Cortado 1,200", "TOTAL 1,200"], { code: "KRW", dec: 0 }).items[0].price, 1200);
+});

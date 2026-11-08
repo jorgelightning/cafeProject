@@ -25,3 +25,5 @@ declare const SWEET_LEVELS: typeof import("../js/lib/order.js").SWEET_LEVELS;
 declare const sweetLevel: typeof import("../js/lib/order.js").sweetLevel;
 declare const orderLines: typeof import("../js/lib/order.js").orderLines;
 declare const orderLangFor: typeof import("../js/lib/order.js").orderLangFor;
+
+declare const parseReceipt: typeof import("../js/lib/scan.js").parseReceipt;

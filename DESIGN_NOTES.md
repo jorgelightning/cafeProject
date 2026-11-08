@@ -2271,3 +2271,36 @@ button's mousedown is cancelled and the click puts it back, so a phone's keyboar
 Escape in the box does the same from a keyboard. It is a real button, not `type="search"`, whose × each browser draws
 its own way and iPhone Safari not at all. Its 44px target hangs into the box's padding on negative margins, so the
 box keeps its height (44px on a laptop, 48px on a phone) as the × comes and goes. `tests/search-clear.js`.
+
+## Scan a receipt (v127)
+
+Friends asked whether the app could read a receipt or the tablet at the counter and fill in the log (8 Nov). Receipts
+yes; a tablet often shows only a total and tip buttons, with no drinks on it, so that case says so and asks for the
+drink. It is one small button on the log sheet and changes nothing else, because for a repeat order the sheet is
+already faster than taking a photo.
+
+**On the phone.** The first build sent the photo to a vision model through a small private server. The owner chose to
+run it on the phone instead, free and private, knowing it would read less well. Tesseract is self-hosted in vendor/, about
+7 MB on first use, and no visitor ever fetches it. It runs in a worker loaded from a file, because a worker from a file
+is outside the page's Content Security Policy, which rightly does not allow WebAssembly. The service worker keeps these
+files once fetched, rather than refreshing them on every use as it does the app's own.
+
+**Text into cups.** Tesseract only gives lines of text, so `parseReceipt` (js/lib/scan.js) does the understanding: lines
+ending in a price before the first subtotal are items, a line after an item that only says "+ OAT MILK" belongs to it,
+options come out of the name, and "ICD MTCHA LT" is expanded from a table of what receipts shorten. A name is one of
+yours only if every word pairs up, bar a few that do not change the drink, so "Matcha latte" is not "Black matcha
+latte". It is deliberately rule-based and testable with plain strings; a shop's new abbreviation is one line.
+
+**What the trial showed.** On a drawn receipt made to look like a phone photo (tilted, shaded, soft) every name came
+through and one price read $3.25 for $5.25. So the parser adds up what it read and, when that misses the printed
+subtotal, says so on the list and on each cup. "16OZ" reads as "160Z" or "1602", and the size rule expects that. A dark
+table around the paper defeated the first contrast step, and evening out the lighting locally fixed that photo while
+adding stray marks to good ones, so that is a second look, only when the first read finds nothing. A very faded
+receipt still comes back with little or nothing: then it says so, or shows what it got, and you type it in.
+
+**Believing it.** Nothing is saved from a scan: as with a ghost price, it fills in the sheet, shows what was printed, and
+you press Save. Prices in a currency that is not the cafe's are dropped, since NT$120 would look like a very dear
+coffee. What a receipt printed goes over last time's options, and the block says which it shows. Two lattes on one line
+are two rows, since one may be a friend's. More options carries every remaining cup into the form. The file box has no
+`capture`, so a screenshot of an emailed receipt works too, at the cost of one more tap to reach the camera. English
+print only: other languages need their own, larger model. `tests/scan-receipt.js`, `tests/unit/scan.test.mjs`.

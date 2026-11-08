@@ -1332,6 +1332,40 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .dntag small{ color:var(--soft); font-weight:600; }
 /* The quick cup and Tidy up use the sheet. */
 .qcin{ min-height:44px; resize:none; }
+/* Scan a receipt (v127): one small button beside the sheet's title, and what the sheet looks like once it has read one */
+.qctop{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-3); }
+.qctop .dnhead{ flex:1; min-width:0; }
+.btn.qcscan{ flex:none; width:auto; min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-1); padding:0 var(--sp-3); font-size:var(--fs-2); }
+.qcscan .ico{ width:18px; height:18px; }
+.qcof{ flex:none; margin-top:2px; padding:3px 9px; border-radius:var(--r-2); background:var(--surface2); color:var(--soft); font-size:var(--fs-1); font-weight:600; font-variant-numeric:tabular-nums; }
+.qcfrom{ display:flex; align-items:flex-start; gap:var(--sp-1); margin:0; font-size:var(--fs-1); line-height:1.4; color:var(--soft); }
+.qcfrom .ico{ width:14px; height:14px; margin-top:1px; color:var(--good); }
+.dnpanel:has(> .scanr){ max-width:none; max-height:none; height:100%; border-radius:0; padding-top:calc(var(--sp-3) + env(safe-area-inset-top, 0px)); }
+@media (min-width:900px){ .dnpanel:has(> .scanr){ max-width:520px; height:auto; max-height:88%; border-radius:var(--r-4); } }
+.scanr{ display:flex; flex-direction:column; align-items:center; gap:var(--sp-4); min-height:100%; }
+.scanr .ocx{ align-self:flex-start; }
+.scanphoto{ position:relative; flex:1; min-height:0; width:100%; max-width:320px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.scanphoto img{ display:block; max-width:100%; max-height:58vh; border-radius:var(--r-1); }
+.scanphoto img[hidden]{ display:none; }
+.scanline{ position:absolute; left:0; right:0; height:2px; background:var(--acc-strong); box-shadow:0 0 14px 3px color-mix(in srgb,var(--acc-strong) 55%,transparent); animation:scanline 2.6s ease-in-out infinite; }
+@keyframes scanline{ 0%,100%{ top:4%; } 50%{ top:94%; } }
+@media (prefers-reduced-motion:reduce){ .scanline{ animation:none; top:50%; } }
+.scanwords{ text-align:center; }
+.scanwords h2{ margin:0; font-size:var(--fs-5); font-weight:800; }
+.scanwords h2:focus{ outline:none; }
+.scanwords p{ margin:var(--sp-1) 0 0; color:var(--soft); font-size:var(--fs-2); line-height:1.5; }
+.scanlist{ border:1px solid var(--border); border-radius:var(--r-3); overflow:hidden; }
+.scanrow{ width:100%; min-height:72px; display:grid; grid-template-columns:24px 38px minmax(0,1fr) auto; align-items:center; gap:var(--sp-3); padding:10px 12px; border:0; border-top:1px solid var(--border); background:none; color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+.scanrow:first-child{ border-top:0; }
+.scanrow:focus-visible{ outline:2px solid var(--text); outline-offset:-3px; }
+.scanbox{ width:24px; height:24px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--faint); border-radius:var(--r-1); color:var(--on-acc); font-size:var(--fs-2); font-weight:800; }
+.scanrow[aria-pressed="true"] .scanbox{ border-color:var(--acc-strong); background:var(--acc-strong); }
+.scantext{ display:flex; flex-direction:column; min-width:0; }
+.scantext b{ font-size:var(--fs-3); font-weight:700; }
+.scantext span{ margin-top:2px; font-size:var(--fs-2); color:var(--soft); }
+.scantext small{ margin-top:2px; font-size:var(--fs-1); color:var(--faint); }
+.scanp{ font-size:var(--fs-3); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.scanfoot{ margin:0 2px; font-size:var(--fs-1); color:var(--faint); }
 .qcsame{ display:flex; flex-direction:column; align-items:flex-start; gap:var(--sp-1); padding:var(--sp-2) var(--sp-3); border:1.5px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); text-align:left; cursor:pointer; }
 .qcsame b{ font-size:var(--fs-3); }
 .qcsame span{ color:var(--soft); }

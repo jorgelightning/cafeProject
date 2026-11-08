@@ -21,6 +21,7 @@ const SUITE = [
   ["drink-rows",       "a cafe with more than three drinks: full cards for the two or three had most, the rest as slim rows under Had once (Also had when not), each still opening its history"],
   ["search-clear",     "the List search has a round × while anything is typed: it empties the box, keeps the filters and the focus; Escape too; the box never changes size"],
   ["shortcuts-pace-price","the icon's long-press Log a cup, Near me and Want to try; Wrapped's year on pace; the quick cup's price among every like cup"],
+  ["scan-receipt",     "a photo is read on the phone and fills in the log sheet: one drink straight to the sheet, several ticked first, a total-only screen, unreadable, cancel; nothing saved until Save, nothing sent anywhere"],
   ["tips",             "reader tips: off without a reCAPTCHA key; a visitor's tip from Go or a search that found nothing, cleaned to the rule; the owner's inbox, Want to try and Dismiss"],
   ["visitor-view",     "a visitor gets Directions/Hours/Share up top, one word instead of a rank, =N ties, Stats in Jorge's name, one Cupertino"],
   ["go-filters",       "Go by kind and region, Best coffee, a no-match search that suggests, Near me refused offers regions"],

@@ -2210,7 +2210,7 @@ function saveForm() {
    one-handed. Now it is a sheet. Pick the drink (this cafe's, most ordered first, or something else), and "Same as
    last time" carries the size, milk, sweetness and ice of the last one; the price is the last price; 👍 😐 👎 if you
    like; Save. "More options" is the full form with that cup already in it. A new cafe still uses the form. */
-/** @type {{n:string, same:boolean, rv:string, other:boolean, keepPrice?:boolean, here?:number}|null} */
+/** @type {{n:string, same:boolean, rv:string, other:boolean, keepPrice?:boolean, here?:number, scan?:any}|null} */
 let _qc = null;
 /* ---------- Log, where you are ----------
    Day run, 27 Oct: a 13th Flat White at Kissaten HiFi took nine taps, because Log opened the new-cafe form unless
@@ -2287,6 +2287,17 @@ function _qcSource(c, n) {
 function _qcSpecText(o) {
   return orderOptsText(o);
 }
+/** What this cup starts with: last time's options, with anything printed on the receipt over them.
+    @param {Cafe} c @param {string} n @param {any} st */
+function _qcSpec(c, n, st) {
+  return Object.assign({}, _qcSource(c, n), st && st.scan ? st.scan.opts : null);
+}
+/** How many cups of `n` you have logged here. @param {Cafe} c @param {string} n */
+function _qcCups(c, n) {
+  const key = (n || "").trim().toLowerCase();
+  const d = (c.drinks || []).find(x => (x.n || "").trim().toLowerCase() === key);
+  return d ? drinkOrders(d).reduce((t, o) => t + orderQty(o), 0) : 0;
+}
 /** @param {string} [n] a drink to start on (from the drink's own ⋯) @param {number} [here] metres away, when Log
     picked this cafe from where you are (logHere) */
 function openQuickCup(n, here) {
@@ -2304,7 +2315,8 @@ function openQuickCup(n, here) {
 /* With a drink picked, the keyboard goes to its price; with none yet, to the sheet's title, never to a drink: a ring
    on Flat White as the sheet opened read as Flat White already chosen (design audit D8). */
 function _qcFocus() {
-  const p = $("qc-price") || $("qc-other");
+  /* a sheet the receipt filled in is there to be checked, so it does not open the keyboard */
+  const p = _qc && _qc.scan ? null : $("qc-price") || $("qc-other");
   if (p) {
     /** @type {HTMLElement} */ (p).focus({ preventScroll: true });
     return;
@@ -2334,13 +2346,16 @@ function _qcHTML(c) {
       return b.k - a.k;
     })
     .slice(0, 4);
+  /* the drink on the receipt is one of the chips, even one new here or outside your top four */
+  if (st.scan && st.n.trim() && !mine.some(x => x.n.toLowerCase() === st.n.trim().toLowerCase()))
+    mine.splice(Math.min(mine.length, 3), 1, { n: st.n.trim(), k: _qcCups(c, st.n) });
   const chips =
     mine
       .map(function (x) {
         const on = !st.other && st.n.toLowerCase() === x.n.toLowerCase();
         return (
           '<button type="button" class="dntag" aria-pressed="' + on + '" data-n="' + esc(x.n) + '"' + act("qcPick", ["$data.n"]) + '>' +
-          esc(x.n) + " <small>" + x.k + "</small></button>"
+          esc(x.n) + (x.k ? " <small>" + x.k + "</small>" : "") + "</button>"
         );
       })
       .join("") +
@@ -2353,11 +2368,18 @@ function _qcHTML(c) {
       '"' + act("qcName", ["$value"], "input") + '>';
   if (st.n.trim()) {
     const src = _qcSource(c, st.n),
-      spec = _qcSpecText(src);
+      spec = _qcSpecText(_qcSpec(c, st.n, st));
     const code = String(src.pc || ccyFor(c)).toUpperCase();
+    const got = st.scan ? Object.keys(st.scan.opts) : [];
+    const sameLab = !got.length
+      ? "Same as last time"
+      : ["size", "sweet", "ice", "milk"].every(k => !src[k] || got.includes(k))
+        ? "From the receipt"
+        : "From the receipt and last time";
     const last = code !== "USD" && src.pl != null ? src.pl : src.p;
     /* "5" as typed last time reads as "5.00", the way money reads everywhere else (day run) */
-    const lastNum = ccyNum(last),
+    const scanned = st.scan && st.scan.price != null ? st.scan.price : null;
+    const lastNum = st.scan && st.scan.other ? null : scanned != null ? scanned : ccyNum(last),
       lastTxt = lastNum == null ? "" : lastNum.toFixed(ccyMeta(code).dec);
     /* no last price here: a ghost guess instead, one tap to take (v122) */
     const ghost = lastTxt ? null : guessPrice(st.n, { id: c.id, code: code, at: latOf(c) != null ? { lat: latOf(c), lng: lngOf(c) } : null });
@@ -2365,7 +2387,7 @@ function _qcHTML(c) {
     if (spec)
       body +=
         '<button type="button" class="qcsame" aria-pressed="' + st.same + '"' + act("qcSame") + '><b>' +
-        (st.same ? "✓ " : "") + "Same as last time</b><span>" + esc(spec) + "</span></button>";
+        (st.same ? "✓ " : "") + sameLab + "</b><span>" + esc(spec) + "</span></button>";
     body +=
       '<label class="dnlab" for="qc-price">Price' + (code !== "USD" ? " (" + esc(code) + ")" : "") + "</label>" +
       '<input id="qc-price" class="dntext qcin" type="text" inputmode="decimal" autocomplete="off" placeholder="' +
@@ -2378,9 +2400,21 @@ function _qcHTML(c) {
       _verdictButtons(st.rv, true, "qcVerdict") +
       "</span></div>";
   }
+  const day = (st.scan && st.scan.date) || localToday();
+  const left = st.scan && st.scan.i + 1 < st.scan.rows.length;
   return (
     '<span class="dngrab" aria-hidden="true"></span>' +
-    '<div class="dnhead"><h2 id="dns-title">A cup at ' + esc(c.name) + "</h2><p>Today, " + esc(_noteDay(localToday())) + "</p></div>" +
+    '<div class="qctop"><div class="dnhead"><h2 id="dns-title">A cup at ' + esc(c.name) + "</h2><p>" +
+    (day === localToday() ? "Today, " : "") + esc(_noteDay(day)) + "</p></div>" +
+    (st.scan
+      ? st.scan.rows.length > 1
+        ? '<span class="qcof">Cup ' + (st.scan.i + 1) + " of " + st.scan.rows.length + "</span>"
+        : ""
+      : scanOn()
+        ? '<button type="button" class="btn ghost qcscan"' + act("scanStart") + ">" + ico("camera") + "Scan</button>"
+        : "") +
+    "</div>" +
+    (st.scan ? '<p class="qcfrom">' + ico("camera") + esc(st.scan.notice) + "</p>" : "") +
     (st.here != null
       ? '<p class="qchere">' + ico("pin") + "You’re here · " + esc(fmtDist(st.here / 1000)) +
         '<button type="button" class="qcnot"' + act("qcNotHere") + ">Not here?</button></p>"
@@ -2388,7 +2422,7 @@ function _qcHTML(c) {
     '<div class="dnq" role="group" aria-label="Which drink"><span class="dntags">' + chips + "</span></div>" +
     body +
     '<div class="dnact"><button type="button" class="btn ghost"' + act("qcMore") + '>More options</button>' +
-    '<button type="button" class="btn"' + act("qcSave") + (st.n.trim() ? ">Save cup" : " disabled>Pick a drink") + "</button></div>"
+    '<button type="button" class="btn"' + act("qcSave") + (st.n.trim() ? (left ? ">Save, next cup" : ">Save cup") : " disabled>Pick a drink") + "</button></div>"
   );
 }
 function _qcRedraw() {
@@ -2455,7 +2489,9 @@ function qcPriceCtx() {
   if (!host || !pin || !c || !_qc || !_qc.n.trim()) return;
   const kin = priceKin(_qc.n),
     known = kin.pts.length >= 4;
-  if (!known && !pin.dataset.ghost) {
+  /* while the box still holds what the receipt said, the line says where it came from */
+  const fromScan = _qc.scan && _qc.scan.say && (_qc.scan.other || _qc.scan.price == null ? !pin.value.trim() : ccyNum(pin.value) === _qc.scan.price) ? _qc.scan.say : "";
+  if (!known && !pin.dataset.ghost && !fromScan) {
     host.innerHTML = "";
     return;
   }
@@ -2468,6 +2504,7 @@ function qcPriceCtx() {
     strip = "";
   if (pin.dataset.ghost && !pin.value.trim())
     say = "≈ " + fmtLocal(+pin.dataset.ghost, code) + ", " + (pin.dataset.why || "") + ". " + GHOST_HOW;
+  if (fromScan) say = fromScan;
   if (known) {
     const ps = kin.pts.map(x => x.p).sort((a, b) => a - b),
       n = ps.length,
@@ -2724,8 +2761,9 @@ function qcSave() {
   const c = cafes.find(x => x.id === curId);
   if (!c || !_qc || !_qc.n.trim()) return;
   const n = _qc.n.trim();
-  const today = localToday();
-  const src = _qcSource(c, n);
+  const scan = _qc.scan;
+  const today = (scan && scan.date) || localToday();
+  const src = _qcSpec(c, n, _qc);
   const code = String(src.pc || ccyFor(c)).toUpperCase();
   const price = /** @type {HTMLInputElement|null} */ ($("qc-price"));
   /** @type {any} */
@@ -2761,23 +2799,30 @@ function qcSave() {
     warn("form.js quick cup", e);
   }
   toast("Logged " + n);
+  const nextCup = scan && scan.i + 1 < scan.rows.length;
+  /* the comparison waits for the last cup of a receipt */
   try {
-    chaserArm(c.id);
+    if (!nextCup) chaserArm(c.id);
   } catch (e) {
     _chaser = null;
     warn("form.js chaserArm", e);
   }
   openDetail(c.id);
+  if (nextCup) _scanCups(scan.rows, scan.i + 1, scan.date, scan.other);
 }
 /* the whole form, with this cup already in it, for anything the sheet does not have */
 function qcMore() {
   const c = cafes.find(x => x.id === curId);
   if (!c) return;
   const n = _qc ? _qc.n.trim() : "";
-  const src = n ? _qcSource(c, n) : {};
+  const scan = _qc && _qc.scan;
+  const src = n ? _qcSpec(c, n, _qc) : {};
   const price = /** @type {HTMLInputElement|null} */ ($("qc-price"));
   const amt = price ? price.value : "";
   const rv = _qc ? _qc.rv : "";
+  const day = (scan && scan.date) || localToday();
+  const ccy = String(src.pc || ccyFor(c)).toUpperCase();
+  const asLocal = /** @param {string} a */ a => (src.pc ? { pc: src.pc, pl: a } : scan && ccy !== "USD" ? { pc: ccy, pl: a } : null);
   closeSheet();
   if (!n) {
     logDrinkHere();
@@ -2790,7 +2835,13 @@ function qcMore() {
     syncMore(false);
   }
   setTimeout(function () {
-    const row = addDrinkRow(n, amt, localToday(), src.sweet, src.ice, src.size, rv, false, src.milk, 1, src.pc ? { pc: src.pc, pl: amt } : null);
+    const row = addDrinkRow(n, amt, day, src.sweet, src.ice, src.size, rv, false, src.milk, 1, asLocal(amt));
+    /* the rest of the receipt comes along, so leaving the sheet does not lose those cups */
+    if (scan)
+      scan.rows.slice(scan.i + 1).forEach(function (x) {
+        const a = x.price != null && !scan.other ? x.price.toFixed(ccyMeta(ccy).dec) : "";
+        addDrinkRow(x.n, a, day, x.sweet, x.ice, x.size, "", false, x.milk, 1, a ? asLocal(a) : null);
+      });
     activateDrinkRow(row);
     row.scrollIntoView({ block: "start" });
   }, 140);

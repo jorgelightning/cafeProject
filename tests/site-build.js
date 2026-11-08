@@ -49,6 +49,8 @@ const walk = (dir, pre) =>
      [false, true, ["core.js"]], "comments are gone from the published copy, and a source map beside each file leads back to the source");
   eq(fs.readFileSync(path.join(out, "vendor/markerclusterer-2.5.3.min.js"), "utf8") === fs.readFileSync(path.join(ROOT, "vendor/markerclusterer-2.5.3.min.js"), "utf8"), true,
      "the vendored library is published as it came");
+  eq(fs.readFileSync(path.join(out, "vendor/tesseract-7.0.0/eng.traineddata.gz")).equals(fs.readFileSync(path.join(ROOT, "vendor/tesseract-7.0.0/eng.traineddata.gz"))), true,
+     "…and so is the text reader's language data, byte for byte");
 
   /* ---- the data: checked before it goes out ---- */
   const why = list => { try { checkData(list); return "ok"; } catch (e) { return String(e.message); } };

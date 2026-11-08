@@ -30,6 +30,7 @@ not built.
 | `js/detail.js` | Cafe detail and order history |
 | `js/form.js` | Complete drink and cafe editor |
 | `js/tips.js` | Reader tips: the visitor's sheet and your inbox (Firestore, behind App Check) |
+| `js/scan.js`, `js/lib/scan.js` | Scan a receipt: the photo, the on-phone text reader, the tick list, filling in the log sheet, and working out what a receipt's text means |
 | `js/lib/` | Pure helpers as ES modules, unit-tested by Node: text, Elo, an order's words |
 | `js/boot.js` | Startup, updates and back navigation |
 | `sw.js` | Offline shell and data cache |
@@ -188,6 +189,17 @@ one. To turn them on, once:
 
 The App Check and Firestore scripts and reCAPTCHA load only when someone opens the tip sheet or you open the inbox,
 so a visitor who never does never loads them.
+
+## Scan a receipt
+
+The log sheet has a Scan button that fills itself in from a photo of a receipt, and you still press Save. It all runs on
+the phone: Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, reads the text and `parseReceipt` (`js/lib/scan.js`) works
+out what it means. It costs nothing, needs no account, and the photo never leaves the phone. The first scan downloads
+about 7 MB; nobody who doesn't scan ever fetches it. It reads English print only.
+
+It is a text reader, not something that understands receipts, so expect to correct it sometimes. A clear, flat photo
+works best. When the prices it read don't add up to the printed subtotal it says so. To teach it a shop's abbreviation,
+add a line to `WORDS` in `js/lib/scan.js`.
 
 ## Owner checklist (things the code cannot check for you)
 

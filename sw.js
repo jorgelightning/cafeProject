@@ -17,18 +17,19 @@
    CACHE_V would keep serving the old scripts. Anything cross-origin (Maps, Firebase, the FX
    endpoint) is deliberately not intercepted; those must fail normally so their own fallbacks
    run. */
-const CACHE_V = "cafemap-v126";
-const ASSET_V = "?v=126";
+const CACHE_V = "cafemap-v127";
+const ASSET_V = "?v=127";
 
 const SHELL = [
   "./", "./index.html", "./manifest.json", "./cafes.json",
   "./styles.css" + ASSET_V,
-  "./js/theme.js" + ASSET_V, "./js/lib/text.js" + ASSET_V, "./js/lib/elo.js" + ASSET_V, "./js/lib/order.js" + ASSET_V,
+  "./js/theme.js" + ASSET_V, "./js/lib/text.js" + ASSET_V, "./js/lib/elo.js" + ASSET_V, "./js/lib/order.js" + ASSET_V, "./js/lib/scan.js" + ASSET_V,
   "./js/config.js" + ASSET_V, "./js/core.js" + ASSET_V, "./js/storage.js" + ASSET_V,
   "./js/sync.js" + ASSET_V, "./js/nav.js" + ASSET_V, "./js/map.js" + ASSET_V, "./js/photos.js" + ASSET_V,
   "./js/list.js" + ASSET_V, "./js/stats.js" + ASSET_V, "./js/rank.js" + ASSET_V,
-  "./js/detail.js" + ASSET_V, "./js/form.js" + ASSET_V, "./js/tips.js" + ASSET_V, "./js/boot.js" + ASSET_V,
+  "./js/detail.js" + ASSET_V, "./js/form.js" + ASSET_V, "./js/tips.js" + ASSET_V, "./js/scan.js" + ASSET_V, "./js/boot.js" + ASSET_V,
   "./vendor/markerclusterer-2.5.3.min.js",
+  "./js/lib/text.js", /* js/lib/scan.js imports it by this name, without the ?v= */
   "./icon-180.png", "./icon-192.png", "./icon-512.png"
 ];
 
@@ -83,6 +84,13 @@ self.addEventListener("fetch", function(e){
                 .catch(function(){ return caches.match(key).then(function(hit){
                   return hit || (isData ? Response.error() : caches.match("./index.html")); }); })
     );
+    return;
+  }
+
+  /* The text reader's files are several megabytes and named for their version, so once fetched they stay put: refreshing
+     them on every scan would spend a phone's data for nothing. Not precached, since only the owner ever scans. */
+  if(/\/vendor\/tesseract-/.test(url.pathname)){
+    e.respondWith(caches.match(req).then(function(hit){ return hit || fetch(req).then(function(r){ return keep(req, r); }); }));
     return;
   }
 
