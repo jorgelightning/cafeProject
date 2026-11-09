@@ -34,7 +34,7 @@ const { eq, done } = checker();
   await reset();
   let s = await pg.evaluate(() => {
     openQuickCup();
-    const r = document.querySelector(".qcscan").getBoundingClientRect(), t = $("dns-title").getBoundingClientRect();
+    const r = document.querySelector("#dns-panel .qcscan").getBoundingClientRect(), t = $("dns-title").getBoundingClientRect();
     return { milks: JSON.stringify(MILKS) === JSON.stringify(SCAN_MILK), ice: JSON.stringify(STAT_ICE) === JSON.stringify(SCAN_ICE),
              tall: r.height >= 44, clear: r.left >= t.right - 1, small: r.width < 120, oneLine: t.height < 32, wide: document.documentElement.scrollWidth <= innerWidth };
   });
@@ -55,7 +55,7 @@ const { eq, done } = checker();
   };
   const sheet = () => pg.evaluate(() => {
     const t = sel => { const e = document.querySelector("#dns-panel " + sel); return e ? e.textContent.trim() : null; };
-    return { title: t("#dns-title"), from: t(".qcfrom"), same: t(".qcsame b"), spec: t(".qcsame span"), of: t(".qcof"), say: t("#qc-say"), scan: !!document.querySelector(".qcscan"),
+    return { title: t("#dns-title"), from: t(".qcfrom"), same: t(".qcsame b"), spec: t(".qcsame span"), of: t(".qcof"), say: t("#qc-say"), scan: !!document.querySelector("#dns-panel .qcscan"),
              on: [...document.querySelectorAll('#dns-panel .dntag[aria-pressed="true"]')].map(x => x.textContent.trim()),
              price: ($("qc-price") || {}).value, save: [...document.querySelectorAll("#dns-panel .dnact .btn")].pop().textContent.trim(), date: t(".dnhead p"), focus: document.activeElement.id };
   });
@@ -137,6 +137,54 @@ const { eq, done } = checker();
   await save();
   s = await sheet();
   eq(s.say, "Read from the receipt, but its prices don’t add up. Check this one.", "…on each cup's sheet too");
+
+  /* Log with no cafe open: Add a visit has Scan too */
+  const fromLog = async lines => {
+    await pg.evaluate(() => { if (app.dataset.view === "form") _formSnap = formSnapshot(); });
+    await reset();
+    await pg.evaluate(t => { userLoc = null; show("list"); window.__text = t; logTab(); }, lines.join("\n"));
+    await pg.setInputFiles("#scan-file", file());
+    await pg.waitForFunction(() => !document.querySelector(".scanr") || $("dnsheet").hidden);
+  };
+  const form = () => pg.evaluate(() => ({ view: app.dataset.view, name: $("f-name").value, sheet: !$("dnsheet").hidden, saved: cafes.length,
+    rows: [...document.querySelectorAll("#f-drinks .dr")].map(r => r.querySelector(".dn").value + " " + r.querySelector(".dp").value) }));
+  await pg.evaluate(() => { if (app.dataset.view === "form") _formSnap = formSnapshot(); });
+  await reset();
+  s = await pg.evaluate(() => { userLoc = null; show("list"); logTab(); const r = $("f-scan").getBoundingClientRect(), t = $("form-title").getBoundingClientRect(); return { view: app.dataset.view, shown: !$("f-scan").hidden, tall: r.height >= 44, right: r.right <= innerWidth - 8, oneLine: t.height < 40 }; });
+  eq(s, { view: "form", shown: true, tall: true, right: true, oneLine: true }, "Log with no cafe open goes to Add a visit, which has Scan in its header");
+  await pg.evaluate(() => { _formSnap = formSnapshot(); });
+  await fromLog(["NEW PLACE COFFEE", "12 OAK ST", "CORTADO 6.50", "TOTAL 7.00"]);
+  eq(await form(), { view: "form", name: "New Place Coffee", sheet: false, saved: 1, rows: ["Cortado 6.50"] }, "a receipt from a new place fills in the form: its name and a row for the cup, the blank row gone, nothing saved");
+  await fromLog(["NEW PLACE COFFEE", "ICD MTCHA LT 6.75", "HOJI LT 7.00", "CROISSANT 5.00", "TOTAL 18.75"]);
+  p = await pick();
+  eq(p.go, "Log 2 cups", "several items ask which were yours here too");
+  s = await pg.evaluate(() => document.querySelector(".dnhead p").textContent.startsWith("New Place Coffee · "));
+  eq(s, true, "…under the name on the receipt");
+  await save();
+  s = await form();
+  eq([s.view, s.name, s.rows], ["form", "New Place Coffee", ["Iced matcha latte 6.75", "Hojicha latte 7.00"]], "…and each cup becomes a row of the form");
+  await fromLog(["SAMPLE TEA BAR", "CORTADO 6.50", "TOTAL 7.00"]);
+  s = await sheet();
+  eq([await pg.evaluate(() => app.dataset.view), s.title, s.price, s.on], ["detail", "A cup at Sample Tea Bar", "6.50", ["Cortado 2"]], "a receipt naming a cafe on your list goes to that cafe's own sheet");
+  await pg.evaluate(() => closeSheet());
+  await fromLog(["~~ ;; ee"]);
+  await pg.click("#dns-panel .dnact .btn:first-child");
+  s = await form();
+  eq([s.view, s.sheet], ["form", false], "Type it in from the form goes back to the form");
+
+  /* always a way out */
+  await pg.evaluate(() => { _formSnap = formSnapshot(); });
+  await scan(["~~ ;; ee"]);
+  await pg.click("#dns-panel .ocx");
+  s = await pg.evaluate(() => ({ view: app.dataset.view, hidden: $("dnsheet").hidden, scan: _scan === null }));
+  eq(s, { view: "detail", hidden: true, scan: true }, "a failed scan has a close button that goes back to where you were");
+  await scan(["Cortado 5.00", "Drip 2.00", "TOTAL 7.00"]);
+  await pg.click("#dns-panel .ocx");
+  eq(await pg.evaluate(() => $("dnsheet").hidden), true, "…and so does the list to tick");
+  await scan(["~~ ;; ee"]);
+  await pg.evaluate(() => window.dispatchEvent(new PopStateEvent("popstate")));
+  s = await pg.evaluate(() => ({ view: app.dataset.view, hidden: $("dnsheet").hidden }));
+  eq(s, { view: "detail", hidden: true }, "the phone's back gesture puts the sheet away instead of leaving it on top");
 
   /* the reader failing */
   await pg.evaluate(() => { scanRead = () => Promise.reject(new Error("no wasm")); });

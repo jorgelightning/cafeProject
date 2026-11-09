@@ -339,6 +339,12 @@ window.addEventListener("popstate", () => {
     _rearmBack();
     return;
   }
+  /* back puts away a sheet first: it used to change the page underneath and leave the sheet on top of it */
+  if ($("dnsheet") && !$("dnsheet").hidden) {
+    closeSheet();
+    _rearmBack();
+    return;
+  }
   const v = app.dataset.view;
   if (v !== "map" && v !== "list") {
     if (v === "form") closeForm();

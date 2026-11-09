@@ -184,14 +184,28 @@ function matchKnown(name, known) {
   return best;
 }
 
+/** The shop's name: the first line at the top of the receipt that reads like one. @param {string[]} lines @param {number} dec */
+function findPlace(lines, dec) {
+  for (const line of lines.slice(0, 4)) {
+    if (splitPrice(line, dec)) break;
+    const clean = line.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9)']+$/g, "");
+    const letters = (clean.match(/[A-Za-z]/g) || []).length;
+    if (/\d/.test(clean) || NOT_ITEM.test(clean) || /\b(WELCOME|MERCHANT|COPY|CUSTOMER)\b/i.test(clean)) continue;
+    if (letters < 3 || letters / clean.replace(/\s/g, "").length < 0.75) continue;
+    return (/[a-z]/.test(clean) ? clean : clean.toLowerCase().replace(/(^|\s)[a-z]/g, c => c.toUpperCase())).slice(0, 80);
+  }
+  return "";
+}
+
 /** What a receipt's text says. `kind` is "receipt" (items to log), "total_only" (a payment screen: an amount and no
     drinks) or "unreadable". `other` is the receipt's currency when its symbols are not the cafe's: its prices are
     dropped, since a number in the wrong currency would look right and be wrong. `off` says the prices read do not add
-    up to the subtotal printed, which is how a 5 misread as a 3 gets noticed.
+    up to the subtotal printed, which is how a 5 misread as a 3 gets noticed. `place` is the shop's name, if the top
+    of the receipt has one.
     @param {string} text @param {{known?: string[], code?: string, dec?: number, today: string}} ctx the drinks you
     already log here, the cafe's currency, how many decimals it is written with, and today */
 export function parseReceipt(text, ctx) {
-  const none = { kind: "unreadable", date: null, total: null, other: "", off: false, items: [] };
+  const none = { kind: "unreadable", date: null, total: null, other: "", off: false, place: "", items: [] };
   if (typeof text !== "string") return none;
   const code = String(ctx.code || "USD").toUpperCase();
   const dec = ctx.dec == null ? 2 : ctx.dec;
@@ -277,6 +291,7 @@ export function parseReceipt(text, ctx) {
   const added = rows.reduce((t, r) => t + r.price * r.qty, 0);
   return {
     off: !other && subtotal != null && items.length > 0 && Math.abs(added - subtotal) > 0.011,
+    place: findPlace(lines, dec),
     kind: items.length ? "receipt" : "total_only",
     date: findDate(text.normalize("NFKC"), ctx.today, code === "USD"),
     total: other ? null : amount,

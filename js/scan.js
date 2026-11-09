@@ -10,7 +10,11 @@
 
    One drink on the receipt goes straight to the filled-in sheet. Several items ask which were yours first, and then
    the sheet comes up once for each. A payment screen often shows only a total, and says so. English print only:
-   other languages need their own, larger model. */
+   other languages need their own, larger model.
+
+   Log only opens the sheet on a cafe page or standing in a cafe; anywhere else it opens Add a visit, so Scan is there
+   too (v128). From there a receipt naming one cafe on your list goes to that cafe's sheet, and any other fills in the
+   form: the shop's name from the top of the receipt, and a row for each cup. */
 
 /** Needs WebAssembly and a way to decode the photo; every phone this app runs well on has both. */
 function scanOn() {
@@ -129,11 +133,12 @@ function _ocrLoad() {
     @param {HTMLCanvasElement} image @param {AbortSignal} signal @param {any} ctx for parseReceipt @param {(step: string) => void} [say] */
 async function _scanMake(image, signal, ctx, say) {
   const text = await scanRead(image, signal, say);
-  const res = parseReceipt(text, ctx);
+  const res = Object.assign(parseReceipt(text, ctx), { text: text });
   const lines = String(text).split("\n").filter(l => l.trim()).length;
   if (res.kind === "receipt" || (res.kind === "total_only" && lines <= 8)) return res;
   if (say) say("again");
-  const again = parseReceipt(await scanRead(_scanEven(image), signal, say), ctx);
+  const second = await scanRead(_scanEven(image), signal, say);
+  const again = Object.assign(parseReceipt(second, ctx), { text: second });
   return again.items.length > res.items.length || res.kind === "unreadable" ? again : res;
 }
 /** The text in the picture. Tests replace it. Its worker is a file of our own rather than a blob, because a worker
@@ -166,10 +171,11 @@ async function scanRead(image, signal, say) {
 }
 /** @param {File} file */
 async function _scanRun(file) {
-  const c = cafes.find(x => x.id === curId);
-  if (!c) return;
+  const form = app.dataset.view === "form";
+  const c = form ? cafes.find(x => x.id === editId) || null : cafes.find(x => x.id === curId);
+  if (!c && !form) return;
   _scanStop();
-  const run = { c: c, code: String(ccyFor(c)).toUpperCase(), ctl: new AbortController(), url: "", items: [], date: null };
+  const run = /** @type {any} */ ({ c: c, form: form, code: _scanCode(c), ctl: new AbortController(), url: "", items: [], date: null });
   _scan = run;
   _qc = null;
   if ($("dnsheet").hidden) openSheet("");
@@ -194,13 +200,20 @@ async function _scanRun(file) {
     }
     /* an abort stops the reader, which then never answers, so it has to end the wait too */
     const stopped = new Promise((_, no) => run.ctl.signal.addEventListener("abort", () => no(new DOMException("stopped", "AbortError"))));
-    const known = (c.drinks || []).map(d => d.n).filter(Boolean);
     const say = /** @param {string} step */ function (step) {
       const note = $("scan-note");
       if (note && _scan === run) note.textContent = step === "again" ? "That was hard to read. Taking a closer look." : "Looking for drinks and prices. The photo stays on your phone.";
     };
-    const res = await Promise.race([_scanMake(pic.image, run.ctl.signal, { known: known, code: run.code, dec: ccyMeta(run.code).dec, today: localToday() }, say), stopped]);
+    let res = await Promise.race([_scanMake(pic.image, run.ctl.signal, _scanCtx(run), say), stopped]);
     if (_scan !== run) return;
+    const here = run.form && !run.c && !$("f-name").value.trim() && !formDirty() ? _scanListed(res.place) : null;
+    if (here) {
+      run.c = here;
+      run.form = false;
+      run.code = _scanCode(here);
+      res = parseReceipt(res.text, _scanCtx(run));
+      openDetail(here.id);
+    }
     _scanRoute(run, res);
   } catch (e) {
     if (_scan !== run) return;
@@ -216,6 +229,27 @@ async function _scanRun(file) {
     clearTimeout(timer);
   }
 }
+/** The currency of a cafe, or of the form when there is none yet. @param {Cafe|null} c */
+function _scanCode(c) {
+  return String(ccyFor(c || { cc: formCC, ccy: formCcy })).toUpperCase();
+}
+/** What the parser needs to know: the drinks you log at this cafe or, with no cafe yet, all of them. @param {any} run */
+function _scanCtx(run) {
+  const known = run.c ? (run.c.drinks || []).map(d => d.n).filter(Boolean) : Object.values(drinkIndex()).map(e => e.n);
+  return { known: known, code: run.code, dec: ccyMeta(run.code).dec, today: localToday() };
+}
+/** The cafe on your list a receipt's name means, only when exactly one fits: a chain's branches are for you to choose.
+    @param {string} name */
+function _scanListed(name) {
+  const key = sameCafeKey(name || "");
+  if (key.length < 3) return null;
+  const hits = cafes.filter(c => sameCafeKey(c.name) === key);
+  return hits.length === 1 ? hits[0] : null;
+}
+/** A way out of any screen that is waiting on you. */
+function _scanClose() {
+  return '<button type="button" class="ocx" aria-label="Close"' + act("closeSheet") + ">" + ico("x") + "</button>";
+}
 /** @param {string} html */
 function _scanShow(html) {
   $("dns-panel").innerHTML = html;
@@ -228,26 +262,68 @@ function _scanShow(html) {
 /** @param {string} why */
 function _scanFail(why) {
   _scanShow(
-    '<span class="dngrab" aria-hidden="true"></span><div class="dnhead"><h2 id="dns-title">Couldn’t read that</h2><p>' + esc(why) + "</p></div>" +
+    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Couldn’t read that</h2><p>' + esc(why) + "</p></div>" + _scanClose() + "</div>" +
       '<div class="dnact"><button type="button" class="btn ghost"' + act("scanType") + ">Type it in</button>" +
       '<button type="button" class="btn"' + act("scanStart") + ">Retake</button></div>"
   );
 }
 function scanType() {
+  const form = _scan && _scan.form;
   _sheetOnClose = _scanStop;
   closeSheet();
-  openQuickCup();
+  if (!form) openQuickCup();
+}
+/** Add a visit, filled in: the shop's name if the box is empty, and a row for each cup. Nothing is saved until you do.
+    @param {any} run @param {any[]} rows */
+function _scanFill(run, rows) {
+  const date = run.date || localToday(),
+    code = run.code,
+    dec = ccyMeta(code).dec,
+    place = run.place,
+    off = run.off,
+    other = run.other;
+  _sheetOnClose = _scanStop;
+  closeSheet();
+  if ($("f-wish") && $("f-wish").checked) {
+    $("f-wish").checked = false;
+    syncWishMode();
+    syncMore(false);
+  }
+  if (place && !$("f-name").value.trim()) {
+    $("f-name").value = place;
+    autoBrand();
+  }
+  document.querySelectorAll("#f-drinks .dr").forEach(function (r) {
+    const name = /** @type {HTMLInputElement|null} */ (r.querySelector(".dn"));
+    if (name && !name.value.trim()) r.remove();
+  });
+  let first = null;
+  rows.forEach(function (x) {
+    const amt = x.price != null ? x.price.toFixed(dec) : "";
+    const row = addDrinkRow(x.n, amt, date, x.sweet, x.ice, x.size, "", false, x.milk, 1, amt && code !== "USD" ? { pc: code, pl: amt } : null);
+    first = first || row;
+  });
+  if (first) {
+    activateDrinkRow(first);
+    first.scrollIntoView({ block: "start" });
+  }
+  toast(other ? "Filled in. This receipt is in " + other + ", so add the prices." : off ? "Filled in, but the prices don’t add up. Check them." : rows[0].n ? "Filled in from your receipt. Check it and save." : "Only a total on this one. Add your drink.");
 }
 /** @param {any} run @param {any} res what parseReceipt made of the text */
 function _scanRoute(run, res) {
   run.date = res.date;
   run.other = res.other;
+  run.place = res.place;
   if (res.kind === "unreadable") {
     _scanFail("Try again with the receipt flat and in focus, or type it in.");
     return;
   }
   if (res.kind === "total_only") {
     const amount = res.total != null ? fmtLocal(res.total, run.code) : "";
+    if (run.form) {
+      _scanFill(run, [{ n: "", price: res.total, size: "", sweet: "", ice: "", milk: "" }]);
+      return;
+    }
     _scanCups(
       [{ n: "", isNew: false, price: res.total, size: "", sweet: "", ice: "", milk: "",
          notice: res.other ? "This screen is in " + res.other + " and shows no drinks. Pick yours and add the price."
@@ -259,22 +335,25 @@ function _scanRoute(run, res) {
   }
   run.off = res.off;
   run.items = res.items.map((x, i) => Object.assign({ i: i, on: x.drink, say: res.off ? "Read from the receipt, but its prices don’t add up. Check this one." : "" }, x));
-  if (run.items.length === 1 && run.items[0].drink) _scanCups(run.items, 0, res.date, res.other);
+  if (run.items.length === 1 && run.items[0].drink) {
+    if (run.form) _scanFill(run, run.items);
+    else _scanCups(run.items, 0, res.date, res.other);
+  }
   else _scanShow(_scanPickHTML(run));
 }
 /** "Oat milk · had 3× here". @param {any} run @param {any} x a row */
 function _scanMeta(run, x) {
-  const d = (run.c.drinks || []).find(y => (y.n || "").trim().toLowerCase() === x.n.trim().toLowerCase());
+  const d = ((run.c && run.c.drinks) || []).find(y => (y.n || "").trim().toLowerCase() === x.n.trim().toLowerCase());
   const cups = d ? drinkOrders(d).reduce((t, o) => t + orderQty(o), 0) : 0;
-  return [orderOptsText(x), !x.drink ? "Not a drink" : cups ? "had " + cups + "× here" : "new here"].filter(Boolean).join(" · ");
+  return [orderOptsText(x), !x.drink ? "Not a drink" : cups ? "had " + cups + "× here" : run.c ? "new here" : ""].filter(Boolean).join(" · ");
 }
 /** @param {any} run */
 function _scanPickHTML(run) {
   const n = run.items.filter(x => x.on).length;
   const day = run.date || localToday();
   return (
-    '<span class="dngrab" aria-hidden="true"></span><div class="dnhead"><h2 id="dns-title">Which ones were yours?</h2><p>' +
-    esc(run.c.name) + " · " + (day === localToday() ? "Today, " : "") + esc(_noteDay(day)) + "</p></div>" +
+    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Which ones were yours?</h2><p>' +
+    esc(run.c ? run.c.name : run.place || "Your receipt") + " · " + (day === localToday() ? "Today, " : "") + esc(_noteDay(day)) + "</p></div>" + _scanClose() + "</div>" +
     '<div class="scanlist">' +
     run.items
       .map(function (x) {
@@ -307,7 +386,9 @@ function scanTick(i) {
 function scanLog() {
   if (!_scan) return;
   const ticked = _scan.items.filter(x => x.on);
-  if (ticked.length) _scanCups(ticked, 0, _scan.date, _scan.other);
+  if (!ticked.length) return;
+  if (_scan.form) _scanFill(_scan, ticked);
+  else _scanCups(ticked, 0, _scan.date, _scan.other);
 }
 /** The quick cup, filled in with one row of the receipt; saving it brings up the next (form.js, qcSave).
     @param {any[]} rows @param {number} i @param {string|null} date @param {string} other a currency not the cafe's */

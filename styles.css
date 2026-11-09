@@ -1335,6 +1335,7 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 /* Scan a receipt (v127): one small button beside the sheet's title, and what the sheet looks like once it has read one */
 .qctop{ display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-3); }
 .qctop .dnhead{ flex:1; min-width:0; }
+.btn.qcscan[hidden]{ display:none; }
 .btn.qcscan{ flex:none; width:auto; min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-1); padding:0 var(--sp-3); font-size:var(--fs-2); }
 .qcscan .ico{ width:18px; height:18px; }
 .qcof{ flex:none; margin-top:2px; padding:3px 9px; border-radius:var(--r-2); background:var(--surface2); color:var(--soft); font-size:var(--fs-1); font-weight:600; font-variant-numeric:tabular-nums; }

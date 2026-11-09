@@ -2304,3 +2304,15 @@ coffee. What a receipt printed goes over last time's options, and the block says
 are two rows, since one may be a friend's. More options carries every remaining cup into the form. The file box has no
 `capture`, so a screenshot of an emailed receipt works too, at the cost of one more tap to reach the camera. English
 print only: other languages need their own, larger model. `tests/scan-receipt.js`, `tests/unit/scan.test.mjs`.
+
+## Scan from anywhere you log, and a way out (v128)
+
+The owner could not find Scan after tapping Log (8 Nov). Log opens the quick cup only on a cafe page or standing in a
+cafe; anywhere else it opens Add a visit, which had no Scan. Now it does. With no cafe chosen, a receipt whose top line
+names exactly one cafe on your list goes to that cafe's sheet; a chain's branches are left for you to pick, and any
+other receipt fills in the form with the shop's name and a row for each cup. The shop's name is read from the first line
+that looks like one, so it is a starting point, and it goes in the box only when the box is empty.
+
+A failed scan was hard to leave: its only exit was tapping outside the sheet. It now has a close button, as does the
+list to tick, and Type it in from the form goes back to the form. The phone's back gesture also changed the page under
+any open sheet and left the sheet on top, so back now puts the sheet away first, for every sheet.

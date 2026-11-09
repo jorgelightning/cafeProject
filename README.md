@@ -192,7 +192,7 @@ so a visitor who never does never loads them.
 
 ## Scan a receipt
 
-The log sheet has a Scan button that fills itself in from a photo of a receipt, and you still press Save. It all runs on
+The log sheet and Add a visit each have a Scan button that fills them in from a photo of a receipt, and you still press Save. It all runs on
 the phone: Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, reads the text and `parseReceipt` (`js/lib/scan.js`) works
 out what it means. It costs nothing, needs no account, and the photo never leaves the phone. The first scan downloads
 about 7 MB; nobody who doesn't scan ever fetches it. It reads English print only.

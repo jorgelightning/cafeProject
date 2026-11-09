@@ -162,6 +162,7 @@ function openForm(id) {
   renderTags();
   renderKind(c);
   renderDrinkRows(c ? c.drinks : null);
+  if ($("f-scan")) $("f-scan").hidden = !scanOn();
   syncBrandUI();
   renderUsuals();
   syncCafeDetails(false); /* Adding a cafe from the Want tab is almost always saving a place to try, and the

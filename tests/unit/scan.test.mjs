@@ -69,6 +69,16 @@ test("parseReceipt: two on one line are two cups at the unit price, within reaso
   assert.equal(read(Array.from({ length: 40 }, (_, i) => "Tea " + "abcdefghijklmnopqrstuvwxyzabcdefghijklmnop"[i] + "ee 3.00").concat("TOTAL 120.00")).items.length, SCAN_MAX_ROWS);
 });
 
+test("parseReceipt: the shop's name is the first line at the top that reads like one", () => {
+  const place = lines => read(lines.concat("Cortado 5.00", "TOTAL 5.00")).place;
+  assert.equal(place(["SAMPLE TEA BAR", "123 MAIN ST"]), "Sample Tea Bar");
+  assert.equal(place(["Peet's Coffee"]), "Peet's Coffee", "printed in mixed case: left as it is");
+  assert.equal(place(["WELCOME", "~ ee", "BLUE DOOR CAFE"]), "Blue Door Cafe", "past a greeting and a scrap");
+  assert.equal(place(["123 MAIN ST", "(415) 555-0100"]), "", "an address is not a name");
+  assert.equal(place([]), "", "the first priced line ends the search");
+  assert.equal(read(["Total", "$8.50"]).place, "", "a payment screen's Total is not a shop");
+});
+
 test("parseReceipt: prices that do not add up to the subtotal are flagged", () => {
   assert.equal(read(SAMPLE).off, false);
   assert.equal(read(["Cortado 3.25", "Drip 2.00", "SUBTOTAL 7.25", "TOTAL 7.25"]).off, true, "a 5 misread as a 3");
