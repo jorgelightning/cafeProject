@@ -192,7 +192,7 @@ so a visitor who never does never loads them.
 
 ## Scan a receipt
 
-The log sheet and Add a visit (once the cafe has a name) each have a Scan button that fills them in from a receipt. Every reading stops at a list to tick, showing what was printed, and you still press Save. Scan
+The log sheet and Add a visit (once the cafe has a name) each have a Scan button that fills them in from a receipt. A photo read in the app stops first at the photo and the text it read, to put right. Every reading then stops at a list to tick, showing what was printed and with each name editable, and you still press Save. Scan
 opens on a box for the receipt's text, which the phone's own reader fills: Scan Text from an iPhone's keyboard, or text
 copied out of Google Lens or the Photos app and pasted. `parseReceipt` (`js/lib/scan.js`) works out what the text means.
 It costs nothing, needs no account, and nothing leaves the phone.

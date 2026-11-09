@@ -2357,3 +2357,18 @@ longer presents it as a drink. Scraps in front of a name ("A 1 Hojicha latte") a
 **A name first.** On Add a visit, Scan shows only once the cafe has a name. That retires v128's guessing of the shop from
 the receipt's first line, which on a ticket was the customer's name, and the jump to a listed cafe with it: typing a
 listed cafe's name already opens that cafe.
+
+## See what it read, and put it right (v131)
+
+The owner could not see what a scan had read before it filled things in (8 Nov), and asked for the photo beside the
+reading, to edit and accept. Mocked on the canvas as two screens, then built.
+
+**The text, with the photo.** A photo read in the app now stops at "Check what it read": the photo, and under it the
+text the reader got, in a box. A misread word and a misunderstood line looked the same from the far end; here the first
+can be seen and fixed. Find the drinks reads the box, not the photo. Text pasted from the phone's own reader has no
+photo to show, since the app never sees it, and its box was already this screen.
+
+**The name, on the list.** Each drink's name on the list is a box. Putting a name right ticks its row, since naming it
+is saying it is yours, and a row with no name is not logged. The ticks and the button update in place, so typing keeps
+its cursor. Size, milk and the rest show as tags and are changed on the sheet that follows, which already does that.
+The list goes Back to the text, with the photo still there, and a failed reading's Try again does the same.

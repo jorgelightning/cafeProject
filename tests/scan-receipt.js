@@ -48,12 +48,15 @@ const { eq, done } = checker();
     scanRead = window.__stub;
   });
   /* every reading stops at the list to tick; with one row on it, the helpers press Log for the checks that come after */
+  /* a photo read in the app stops at the review first (v131); the helpers press Find the drinks */
+  const past = async () => { if (await pg.evaluate(() => !$("dnsheet").hidden && !!document.querySelector("#dns-panel .scanthumb"))) await pg.click("#scan-go"); };
   const one = async () => { if (await pg.evaluate(() => !$("dnsheet").hidden && document.querySelectorAll("#dns-panel .scanrow").length === 1)) await pg.click("#dns-panel .dnact .btn:last-child"); };
   const scan = async (lines, stay) => {
     await reset();
     await pg.evaluate(t => { window.__text = t; openQuickCup(); }, lines.join("\n"));
     await pg.setInputFiles("#scan-file", file());
     await pg.waitForFunction(() => !document.querySelector(".scanr"));
+    await past();
     if (!stay) await one();
   };
   const sheet = () => pg.evaluate(() => {
@@ -67,7 +70,7 @@ const { eq, done } = checker();
 
   /* one drink: the list first, as for several (v130), then the sheet */
   await scan(["SAMPLE TEA BAR", "CORTADO 6.50", "+ OAT MILK", "TAX 0.70", "TOTAL 7.20"], true);
-  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, rows: [...document.querySelectorAll(".scanrow")].map(x => x.getAttribute("aria-pressed") + " " + x.querySelector("b").textContent + " " + x.querySelector(".scanp").textContent),
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + x.querySelector(".scanp").textContent),
     printed: document.querySelector(".scantext small").textContent, go: [...document.querySelectorAll("#dns-panel .dnact .btn")].pop().textContent.trim(), saved: cafes[0].drinks[0].orders.length }));
   eq(s, { title: "Is this yours?", rows: ["true Cortado $6.50"], printed: "Printed: CORTADO + OAT MILK", go: "Log 1 cup", saved: 2 }, "one drink stops at the list too, showing what was printed beside what the app made of it");
   await one();
@@ -84,19 +87,54 @@ const { eq, done } = checker();
   let saved = (await orders("Cortado")).pop();
   eq([saved.p, saved.milk, saved.size, saved.sweet, await pg.evaluate(() => $("dnsheet").hidden)], ["6.50", "Oat", "8 oz", "0%", true], "Save logs the receipt's price and milk with last time's size and sweetness");
 
+  /* the review: your photo and what it read, to put right before anything is made of it (v131) */
+  await reset();
+  await pg.evaluate(() => { window.__text = "Xqzv 6.50\nTOTAL 6.50"; openQuickCup(); });
+  await pg.setInputFiles("#scan-file", file());
+  await pg.waitForFunction(() => { const i = document.querySelector("#dns-panel .scanthumb img"); return i && i.complete && i.naturalWidth > 0; });
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, text: $("scan-text").value, go: $("scan-go").textContent + ($("scan-go").disabled ? " off" : ""), back: document.querySelector("#dns-panel .dnact .btn").textContent,
+    close: !!document.querySelector("#dns-panel .ocx"), blob: document.querySelector(".scanthumb img").src.startsWith("blob:"), saved: cafes[0].drinks.length, wide: document.documentElement.scrollWidth <= innerWidth }));
+  eq(s, { title: "Check what it read", text: "Xqzv 6.50\nTOTAL 6.50", go: "Find the drinks", back: "Retake", close: true, blob: true, saved: 2, wide: true },
+     "a photo read in the app stops at your photo and the text it read, with nothing made of it yet");
+  await pg.click("#scan-go");
+  s = await pg.evaluate(() => ({ tick: document.querySelector(".scantick").getAttribute("aria-pressed"), note: document.querySelector(".scannote").textContent, go: $("scan-log").textContent + ($("scan-log").disabled ? " off" : "") }));
+  eq(s, { tick: "false", note: "Not sure it’s a drink", go: "Tick a drink off" }, "a line that names no drink comes to the list unticked");
+  await pg.fill("#dns-panel .scanname", "Flat white");
+  s = await pg.evaluate(() => ({ tick: document.querySelector(".scantick").getAttribute("aria-pressed"), go: $("scan-log").textContent, focus: document.activeElement.className, tall: document.querySelector(".scanname").getBoundingClientRect().height >= 44 }));
+  eq(s, { tick: "true", go: "Log 1 cup", focus: "scanname", tall: true }, "its name is a box: putting it right ticks the row, and the cursor stays in the box");
+  await pg.fill("#dns-panel .scanname", "  ");
+  eq(await pg.evaluate(() => $("scan-log").textContent + ($("scan-log").disabled ? " off" : "")), "Tick a drink off", "a row with no name is not logged");
+  await pg.click("#dns-panel .dnact .btn:first-child");
+  await pg.waitForFunction(() => { const i = document.querySelector("#dns-panel .scanthumb img"); return i && i.complete && i.naturalWidth > 0; });
+  eq(await pg.evaluate(() => [$("dns-title").textContent, $("scan-text").value]), ["Check what it read", "Xqzv 6.50\nTOTAL 6.50"], "Back to the text shows the photo and the text again");
+  await pg.fill("#scan-text", "Cortado 6.50\nTOTAL 6.50");
+  await pg.click("#scan-go");
+  s = await pg.evaluate(() => [document.querySelector(".scantick").getAttribute("aria-pressed"), document.querySelector(".scanname").value, document.querySelector(".scanp").textContent]);
+  eq(s, ["true", "Cortado", "$6.50"], "the text put right is what the drinks are found in");
+  await pg.fill("#dns-panel .scanname", "Cortado doppio");
+  await pg.click("#scan-log");
+  s = await sheet();
+  eq([s.on, s.price], [["Cortado doppio"], "6.50"], "…and a name put right on the list is the name on the sheet");
+  await save();
+  eq((await orders("Cortado doppio")).map(o => o.p), ["6.50"], "…and the name it is saved under");
+  await pg.evaluate(() => { window.__text = "  \n "; });
+  await scan([" ", " "]);
+  s = await pg.evaluate(() => [$("dns-title").textContent, document.querySelector(".dnhead p").textContent]);
+  eq(s, ["Couldn’t read that", "Try your phone’s text reader instead, or type it in."], "a photo with no text in it at all says so");
+
   /* several items: tick yours, then a sheet each, on the receipt's date */
   const earlier = await pg.evaluate(() => new Date(Date.parse(localToday()) - 3 * 864e5).toISOString().slice(0, 10));
   await scan([earlier, "ICD MTCHA LT 6.75", "+ OAT MILK 1.00", "HOJI LT 16OZ 7.00", "LESS ICE", "CROISSANT 5.00", "SUBTOTAL 19.75", "TAX 1.73", "TOTAL 24.48"]);
-  const pick = () => pg.evaluate(() => ({ title: $("dns-title").textContent, rows: [...document.querySelectorAll(".scanrow")].map(x => x.getAttribute("aria-pressed") + " " + x.querySelector("b").textContent + " " + x.querySelector(".scanp").textContent),
-    meta: [...document.querySelectorAll(".scantext span")].map(x => x.textContent), go: [...document.querySelectorAll("#dns-panel .dnact .btn")].pop().textContent.trim(), foot: document.querySelector(".scanfoot").textContent }));
+  const pick = () => pg.evaluate(() => ({ title: $("dns-title").textContent, rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + x.querySelector(".scanp").textContent),
+    meta: [...document.querySelectorAll(".scanrow")].map(x => [...x.querySelectorAll(".scantag, .scannote")].map(e => e.textContent).join(" · ")), go: [...document.querySelectorAll("#dns-panel .dnact .btn")].pop().textContent.trim(), foot: document.querySelector(".scanfoot").textContent }));
   let p = await pick();
   eq(p.rows, ["true Iced matcha latte $7.75", "true Hojicha latte $7.00", "false Croissant $5.00"], "several items ask which were yours: drinks ticked, food not");
   eq([p.title, p.go, p.foot], ["Which ones were yours?", "Log 2 cups", "Tax, tip and the total are left out."], "…and the button counts them");
   eq(p.meta, ["oat · had 1× here", "16 oz · less ice · new here", "Not a drink"], "…each row says what it knows");
-  await pg.click('.scanrow[data-i="1"]');
+  await pg.click('.scantick[data-i="1"]');
   p = await pick();
   eq([p.rows[1].startsWith("false"), p.go, await pg.evaluate(() => document.activeElement.dataset.i)], [true, "Log 1 cup", "1"], "a tick comes off, the count follows, and the keyboard stays on that row");
-  await pg.click('.scanrow[data-i="1"]');
+  await pg.click('.scantick[data-i="1"]');
   await save();
   s = await sheet();
   eq([s.of, s.save, s.on, s.price], ["Cup 1 of 2", "Save, next cup", ["Iced matcha latte 1"], "7.75"], "then the sheet, once for each cup");
@@ -132,7 +170,12 @@ const { eq, done } = checker();
   /* can't read it */
   await scan(["~~ ;; ee", "SAMPLE TEA BAR"]);
   s = await pg.evaluate(() => ({ title: $("dns-title").textContent, why: document.querySelector(".dnhead p").textContent, buttons: [...document.querySelectorAll("#dns-panel .dnact .btn")].map(x => x.textContent) }));
-  eq(s, { title: "Couldn’t read that", why: "Try your phone’s text reader instead, or type it in.", buttons: ["Type it in", "Try again"] }, "a photo it cannot read says so, points at the phone's reader, and offers both ways on");
+  eq(s, { title: "Couldn’t read that", why: "No drinks found in that text. Check that it all came across, or type it in.", buttons: ["Type it in", "Try again"] }, "text with no drinks in it says so and offers both ways on");
+  await pg.click("#dns-panel .dnact .btn:last-child");
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, text: $("scan-text").value, photo: !!document.querySelector(".scanthumb img") }));
+  eq(s, { title: "Check what it read", text: "~~ ;; ee\nSAMPLE TEA BAR", photo: true }, "…Try again goes back to the photo and its text");
+  await pg.evaluate(() => scanBack());
+  await pg.click("#scan-go");
   await pg.click("#dns-panel .dnact .btn:first-child");
   s = await sheet();
   eq([s.title, s.from, s.scan], ["A cup at Sample Tea Bar", null, true], "…Type it in is the ordinary sheet");
@@ -184,6 +227,7 @@ const { eq, done } = checker();
     await pg.evaluate(t => { userLoc = null; show("list"); window.__text = t; logTab(); $("f-name").value = "New Place Coffee"; nameTyped(); }, lines.join("\n"));
     await pg.setInputFiles("#scan-file", file());
     await pg.waitForFunction(() => !document.querySelector(".scanr") || $("dnsheet").hidden);
+    await past();
     await one();
   };
   const form = () => pg.evaluate(() => ({ view: app.dataset.view, name: $("f-name").value, sheet: !$("dnsheet").hidden, saved: cafes.length,
@@ -261,7 +305,7 @@ const { eq, done } = checker();
   await pg.evaluate(() => { scanRead = window.__stub; });
   await scan(["<img src=x onerror=alert(1)> 3.00", "Drip 2.00", "TOTAL 5.00"]);
   s = await pg.evaluate(() => ({ imgs: document.querySelectorAll(".scantext img").length, printed: document.querySelector(".scantext small").textContent,
-    first: document.querySelector(".scanrow").getAttribute("aria-pressed") + " " + document.querySelector(".scantext span").textContent }));
+    first: document.querySelector(".scantick").getAttribute("aria-pressed") + " " + document.querySelector(".scannote").textContent }));
   eq(s, { imgs: 0, printed: "Printed: <img src=x onerror=alert(1)>", first: "false Not sure it’s a drink" }, "text from a receipt is shown as text, never as markup, and a line that names no drink is listed unticked");
 
   /* the real reader, on a drawn receipt, under the real page */
@@ -280,6 +324,7 @@ const { eq, done } = checker();
   await pg.evaluate(() => { scanRead = window.__realRead; openQuickCup(); });
   await pg.setInputFiles("#scan-file", { name: "r.png", mimeType: "image/png", buffer: Buffer.from(receipt, "base64") });
   await pg.waitForFunction(() => !document.querySelector(".scanr"), null, { timeout: 90000 });
+  await past();
   p = await pick().catch(async () => ({ rows: await pg.evaluate(() => $("dns-panel").textContent) }));
   eq(p.rows, ["true Iced matcha latte $7.75", "true Cortado $5.25", "false Croissant $5.00"], "the real reader, on the page's own files, reads a receipt into cups");
   eq([sent.filter(u => /^(POST|PUT)/.test(u) || /jsdelivr|unpkg|tessdata/.test(u)), csp], [[], []], "…sending nothing anywhere, fetching nothing from elsewhere, and within the page's security policy");

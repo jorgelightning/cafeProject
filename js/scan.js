@@ -22,7 +22,11 @@
    cup becomes a row of the form.
 
    Since v130 every reading stops at the list to tick, one drink or five, so you see what was printed beside what
-   the app made of it before anything is filled in. */
+   the app made of it before anything is filled in.
+
+   Since v131 a photo read in the app stops one step earlier too: your photo with the text it read under it, in a box
+   to put right, because a misread word and a misunderstood line look the same from the far end. And a drink's name
+   on the list is a box of its own. The list goes back to the text, and the text goes on to the list. */
 
 function scanOn() {
   return isAdmin;
@@ -90,10 +94,38 @@ function scanText() {
   const text = box ? box.value : "";
   const run = text.trim() ? _scanNew() : null;
   if (!run) return;
-  run.typed = true;
+  /* the photo, if there is one, goes with the reading, so Back to the text can show it again */
+  const prev = _scan;
+  if (prev && prev.url) {
+    run.url = prev.url;
+    prev.url = "";
+  }
+  _scanStop();
+  run.text = text;
   _scan = run;
   _scanDraft = text;
-  _scanRoute(run, Object.assign(parseReceipt(text, _scanCtx(run)), { text: text }));
+  _scanRoute(run, parseReceipt(text, _scanCtx(run)));
+}
+/** Your photo and the text it read, to put right before anything is made of it. @param {any} run @param {string} text */
+function _scanReview(run, text) {
+  run.text = text;
+  _scanShow(
+    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Check what it read</h2><p>Fix anything it got wrong, then continue.</p></div>' + _scanClose() + "</div>" +
+      (run.url ? '<div class="scanthumb"><img src="' + esc(run.url) + '" alt="Your photo"></div>' : "") +
+      '<label class="dnlab" for="scan-text">Text it read</label>' +
+      '<textarea id="scan-text" class="dntext scantxt" rows="7" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"' + act("scanTyped", [], "input") + ">" + esc(text) + "</textarea>" +
+      '<div class="dnact"><button type="button" class="btn ghost"' + act("scanPhoto") + ">Retake</button>" +
+      '<button type="button" class="btn" id="scan-go"' + act("scanText") + (text.trim() ? "" : " disabled") + ">Find the drinks</button></div>"
+  );
+}
+/* From the list or a failed reading, back to the text it came from */
+function scanBack() {
+  if (_scan && _scan.url && _scan.text != null) {
+    _scanReview(_scan, _scan.text);
+    return;
+  }
+  if (_scan && _scan.text != null) _scanDraft = _scan.text;
+  scanStart();
 }
 function scanPhoto() {
   const f = /** @type {HTMLInputElement|null} */ ($("scan-file"));
@@ -279,7 +311,8 @@ async function _scanRun(file) {
     };
     const res = await Promise.race([_scanMake(pic.image, run.ctl.signal, _scanCtx(run), say), stopped]);
     if (_scan !== run) return;
-    _scanRoute(run, res);
+    if (!String(res.text || "").trim()) _scanFail("Try your phone’s text reader instead, or type it in.");
+    else _scanReview(run, res.text);
   } catch (e) {
     if (_scan !== run) return;
     warn("scan.js", e);
@@ -324,7 +357,7 @@ function _scanFail(why) {
   _scanShow(
     '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Couldn’t read that</h2><p>' + esc(why) + "</p></div>" + _scanClose() + "</div>" +
       '<div class="dnact"><button type="button" class="btn ghost"' + act("scanType") + ">Type it in</button>" +
-      '<button type="button" class="btn"' + act("scanStart") + ">Try again</button></div>"
+      '<button type="button" class="btn"' + act("scanBack") + ">Try again</button></div>"
   );
 }
 function scanType() {
@@ -369,7 +402,7 @@ function _scanRoute(run, res) {
   run.date = res.date;
   run.other = res.other;
   if (res.kind === "unreadable") {
-    _scanFail(run.typed ? "No drinks found in that text. Check that it all came across, or type it in." : "Try your phone’s text reader instead, or type it in.");
+    _scanFail("No drinks found in that text. Check that it all came across, or type it in.");
     return;
   }
   _scanDraft = "";
@@ -392,15 +425,24 @@ function _scanRoute(run, res) {
   run.items = res.items.map((x, i) => Object.assign({ i: i, on: x.drink, say: res.off ? "Read from the receipt, but its prices don’t add up. Check this one." : "" }, x));
   _scanShow(_scanPickHTML(run));
 }
-/** "Oat milk · had 3× here". @param {any} run @param {any} x a row */
-function _scanMeta(run, x) {
+/** What a row knows, as tags: "oat", "16 oz", and then "had 3× here". @param {any} run @param {any} x a row */
+function _scanTags(run, x) {
   const d = ((run.c && run.c.drinks) || []).find(y => (y.n || "").trim().toLowerCase() === x.n.trim().toLowerCase());
   const cups = d ? drinkOrders(d).reduce((t, o) => t + orderQty(o), 0) : 0;
-  return [orderOptsText(x), x.odd ? "Not sure it’s a drink" : !x.drink ? "Not a drink" : cups ? "had " + cups + "× here" : run.c ? "new here" : ""].filter(Boolean).join(" · ");
+  const note = x.odd ? "Not sure it’s a drink" : !x.drink ? "Not a drink" : cups ? "had " + cups + "× here" : run.c ? "new here" : "";
+  return (
+    orderOptsText(x).split(" · ").filter(Boolean).map(t => '<span class="scantag">' + esc(t) + "</span>").join("") +
+    (note ? '<span class="scannote">' + esc(note) + "</span>" : "")
+  );
+}
+/** "Log 2 cups", counting the ticked rows that have a name. @param {any} run */
+function _scanGo(run) {
+  const n = run.items.filter(x => x.on && x.n.trim()).length;
+  return n ? "Log " + n + (n === 1 ? " cup" : " cups") : "";
 }
 /** @param {any} run */
 function _scanPickHTML(run) {
-  const n = run.items.filter(x => x.on).length;
+  const go = _scanGo(run);
   const day = run.date || localToday();
   return (
     '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">' + (run.items.length === 1 ? "Is this yours?" : "Which ones were yours?") + "</h2><p>" +
@@ -409,20 +451,36 @@ function _scanPickHTML(run) {
     run.items
       .map(function (x) {
         return (
-          '<button type="button" class="scanrow" aria-pressed="' + x.on + '" data-i="' + x.i + '"' + act("scanTick", ["$data.i"]) + ">" +
-          '<span class="scanbox" aria-hidden="true">' + (x.on ? "✓" : "") + "</span>" +
-          '<span class="drinkicon" aria-hidden="true" style="background:' + drinkMarkBg(x.n) + '">' + drinkMarkSVG(x.n) + "</span>" +
-          '<span class="scantext"><b>' + esc(x.n) + "</b><span>" + esc(_scanMeta(run, x)) + "</span>" +
+          '<div class="scanrow"><button type="button" class="scantick" aria-label="Log this drink" aria-pressed="' + x.on + '" data-i="' + x.i + '"' + act("scanTick", ["$data.i"]) + ">" +
+          '<span class="scanbox" aria-hidden="true">' + (x.on ? "✓" : "") + "</span></button>" +
+          '<span class="scantext"><input class="scanname" type="text" aria-label="Drink name" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="80" data-i="' + x.i + '" value="' + esc(x.n) + '"' +
+          act("scanName", ["$data.i", "$value"], "input") + '><span class="scantags">' + _scanTags(run, x) + "</span>" +
           (x.printed ? "<small>Printed: " + esc(x.printed) + "</small>" : "") + "</span>" +
-          '<span class="scanp">' + esc(x.price != null ? fmtLocal(x.price, run.code) : "") + "</span></button>"
+          '<span class="scanp">' + esc(x.price != null ? fmtLocal(x.price, run.code) : "") + "</span></div>"
         );
       })
       .join("") +
     "</div>" +
     '<p class="scanfoot">' + (run.other ? "This receipt is in " + esc(run.other) + ", so add each price yourself." : run.off ? "These prices don’t add up to the receipt’s subtotal, so one may be misread." : "Tax, tip and the total are left out.") + "</p>" +
-    '<div class="dnact"><button type="button" class="btn ghost"' + act("scanStart") + ">Try again</button>" +
-    '<button type="button" class="btn"' + act("scanLog") + (n ? ">Log " + n + (n === 1 ? " cup" : " cups") : " disabled>Tick a drink") + "</button></div>"
+    '<div class="dnact"><button type="button" class="btn ghost"' + act("scanBack") + ">Back to the text</button>" +
+    '<button type="button" class="btn" id="scan-log"' + act("scanLog") + (go ? ">" + go : " disabled>Tick a drink") + "</button></div>"
   );
+}
+/* The ticks and the button, brought in line with the rows without drawing them again: a name being typed keeps its cursor */
+function _scanPickSync() {
+  if (!_scan) return;
+  _scan.items.forEach(function (x) {
+    const b = $("dns-panel").querySelector('.scantick[data-i="' + x.i + '"]');
+    if (!b) return;
+    b.setAttribute("aria-pressed", String(x.on));
+    b.querySelector(".scanbox").textContent = x.on ? "✓" : "";
+  });
+  const btn = /** @type {HTMLButtonElement|null} */ ($("scan-log")),
+    go = _scanGo(_scan);
+  if (btn) {
+    btn.disabled = !go;
+    btn.textContent = go || "Tick a drink";
+  }
 }
 /** @param {string} i */
 function scanTick(i) {
@@ -430,13 +488,20 @@ function scanTick(i) {
   const x = _scan.items[+i];
   if (!x) return;
   x.on = !x.on;
-  $("dns-panel").innerHTML = _scanPickHTML(_scan);
-  const b = /** @type {HTMLElement|null} */ ($("dns-panel").querySelector('.scanrow[data-i="' + x.i + '"]'));
-  if (b) b.focus();
+  _scanPickSync();
+}
+/** A name put right on the list. Naming a row is saying it is yours, so it ticks itself. @param {string} i @param {string} v */
+function scanName(i, v) {
+  if (!_scan) return;
+  const x = _scan.items[+i];
+  if (!x) return;
+  x.n = String(v).slice(0, 80);
+  if (x.n.trim()) x.on = true;
+  _scanPickSync();
 }
 function scanLog() {
   if (!_scan) return;
-  const ticked = _scan.items.filter(x => x.on);
+  const ticked = _scan.items.filter(x => x.on && x.n.trim()).map(x => Object.assign({}, x, { n: x.n.trim() }));
   if (!ticked.length) return;
   if (_scan.form) _scanFill(_scan, ticked);
   else _scanCups(ticked, 0, _scan.date, _scan.other);
