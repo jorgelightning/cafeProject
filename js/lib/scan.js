@@ -308,6 +308,60 @@ function ticketRows(lines) {
   return rows;
 }
 
+/** The text's lines as the rules see them: tidied, and each price back on its own line. @param {string} text @param {number} [dec] */
+export function receiptLines(text, dec) {
+  return joinColumns(
+    String(text)
+      .normalize("NFKC")
+      .split(/\r?\n/)
+      .map(l => l.replace(/[|_—–]/g, " ").replace(/\s+/g, " ").replace(/(\s+[;:!'"`.,~^])+$/, "").trim())
+      .filter(Boolean),
+    dec == null ? 2 : dec
+  );
+}
+/** The words of your own drinks: "einspanner" says drink as surely as "latte" does. @param {string[]} known */
+const ownWords = known => new Set(known.flatMap(k => words(k)).filter(w => w.length >= 4 && !SOFT.has(w)));
+
+/** One line taken as a drink because you said so (Tap your drink's line, v133): its name, a price if it ends in one,
+    and how it was made, from the line itself and any lines right under it that say only that.
+    @param {string[]} lines from receiptLines @param {number} i @param {{known?: string[], code?: string, dec?: number}} ctx */
+export function lineItem(lines, i, ctx) {
+  const code = String(ctx.code || "USD").toUpperCase();
+  const dec = ctx.dec == null ? 2 : ctx.dec;
+  const known = (ctx.known || []).map(String);
+  const body = l => {
+    const h = splitPrice(l, dec);
+    return h && /[A-Za-z]{2}/.test(h.name) ? h : { name: l, price: null, neg: false, sym: "" };
+  };
+  const hit = body(lines[i] || "");
+  const p = pullOptions(hit.name, false);
+  const q = /^(\d{1,2})\s*[x×*]?\s+(?=\D)/i.exec(p.rest);
+  const o = p.o;
+  const printed = [hit.name];
+  for (let k = i + 1; k < lines.length && k <= i + 4; k++) {
+    const b = body(lines[k]).name;
+    const more = pullOptions(b, true);
+    if (!hasOpt(more.o) || !isModifier(b, more.rest, more.o)) break;
+    Object.assign(o, Object.fromEntries(Object.entries(more.o).filter(e => e[1])));
+    printed.push(b);
+  }
+  const plain = plainName(q ? p.rest.slice(q[0].length) : p.rest, ownWords(known));
+  const mine = matchKnown(plain, known);
+  const foreign = !!hit.sym && hit.sym !== "$" && (hit.sym === "¥" ? "JPY" : SYMBOLS[hit.sym]) !== code && !(hit.sym === "¥" && code === "CNY");
+  return {
+    n: (mine || plain).slice(0, 80),
+    isNew: !mine,
+    printed: printed.join(" + ").slice(0, 80),
+    drink: true,
+    odd: false,
+    price: hit.price == null || hit.neg || foreign ? null : Math.round(hit.price * 100) / 100,
+    size: o.size,
+    sweet: o.sweet,
+    ice: o.ice,
+    milk: o.milk,
+  };
+}
+
 /** What a receipt's text says. `kind` is "receipt" (items to log), "total_only" (a payment screen: an amount and no
     drinks) or "unreadable". `other` is the receipt's currency when its symbols are not the cafe's: its prices are
     dropped, since a number in the wrong currency would look right and be wrong. `off` says the prices read do not add
@@ -321,16 +375,8 @@ export function parseReceipt(text, ctx) {
   const code = String(ctx.code || "USD").toUpperCase();
   const dec = ctx.dec == null ? 2 : ctx.dec;
   const known = (ctx.known || []).map(String);
-  /* the words of your own drinks: "einspanner" says drink as surely as "latte" does */
-  const own = new Set(known.flatMap(k => words(k)).filter(w => w.length >= 4 && !SOFT.has(w)));
-  const lines = joinColumns(
-    text
-      .normalize("NFKC")
-      .split(/\r?\n/)
-      .map(l => l.replace(/[|_—–]/g, " ").replace(/\s+/g, " ").replace(/(\s+[;:!'"`.,~^])+$/, "").trim())
-      .filter(Boolean),
-    dec
-  );
+  const own = ownWords(known);
+  const lines = receiptLines(text, dec);
 
   /** @type {any[]} */
   const rows = [];
@@ -410,7 +456,8 @@ export function parseReceipt(text, ctx) {
       });
   });
   const amount = total != null ? total : loose;
-  if (!items.length && amount == null) return none;
+  /* nothing to log, but the day may still be on it, for a line you pick yourself */
+  if (!items.length && amount == null) return Object.assign({}, none, { date: findDate(text.normalize("NFKC"), ctx.today, code === "USD") });
   const added = rows.reduce((t, r) => t + r.price * r.qty, 0);
   return {
     off: !other && subtotal != null && items.length > 0 && Math.abs(added - subtotal) > 0.011,
@@ -422,4 +469,4 @@ export function parseReceipt(text, ctx) {
   };
 }
 
-if (typeof window !== "undefined") Object.assign(window, { SCAN_ICE, SCAN_MILK, SCAN_MAX_ROWS, parseReceipt });
+if (typeof window !== "undefined") Object.assign(window, { SCAN_ICE, SCAN_MILK, SCAN_MAX_ROWS, parseReceipt, receiptLines, lineItem });

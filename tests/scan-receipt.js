@@ -5,7 +5,9 @@
    a photo it cannot read says so. Nothing is saved until you press Save, and nothing is sent anywhere. Most checks
    replace the text reader with the text it would have read; the last runs the real one on a drawn receipt, under the
    page's real Content Security Policy. What the parser makes of a receipt's text is tests/unit/scan.test.mjs. */
-const { serve, launch, checker, ready } = require("./harness");
+const { serve, launch, checker, ready, ROOT } = require("./harness");
+const fs = require("fs");
+const path = require("path");
 const { eq, done } = checker();
 
 (async () => {
@@ -171,12 +173,12 @@ const { eq, done } = checker();
   eq([s.price, s.say], ["", "The receipt is in TWD, so the price is yours to fill in."], "a receipt in another currency leaves the price for you");
 
   /* can't read it */
-  await scan(["~~ ;; ee", "SAMPLE TEA BAR"]);
+  await scan(["~~ ;; 12", "34 56"]);
   s = await pg.evaluate(() => ({ title: $("dns-title").textContent, why: document.querySelector(".dnhead p").textContent, buttons: [...document.querySelectorAll("#dns-panel .dnact .btn")].map(x => x.textContent) }));
   eq(s, { title: "Couldn’t read that", why: "No drinks found in that text. Check that it all came across, or type it in.", buttons: ["Type it in", "Try again"] }, "text with no drinks in it says so and offers both ways on");
   await pg.click("#dns-panel .dnact .btn:last-child");
   s = await pg.evaluate(() => ({ title: $("dns-title").textContent, text: $("scan-text").value, photo: !!document.querySelector(".scanthumb img") }));
-  eq(s, { title: "Check what it read", text: "~~ ;; ee\nSAMPLE TEA BAR", photo: true }, "…Try again goes back to the photo and its text");
+  eq(s, { title: "Check what it read", text: "~~ ;; 12\n34 56", photo: true }, "…Try again goes back to the photo and its text");
   await pg.evaluate(() => scanBack());
   await pg.click("#scan-go");
   await pg.click("#dns-panel .dnact .btn:first-child");
@@ -200,13 +202,13 @@ const { eq, done } = checker();
     focus: document.activeElement.id, tall: $("scan-go").getBoundingClientRect().height >= 44 && document.querySelector(".scanalt").getBoundingClientRect().height >= 44, wide: document.documentElement.scrollWidth <= innerWidth }));
   eq(s, { title: "Scan a receipt", box: true, go: true, photo: "Or read a photo in the app", close: true, focus: "dns-title", tall: true, wide: true },
      "Scan opens on a box for the receipt's text, with Read it off until there is some and the photo as the second choice");
-  await pg.fill("#scan-text", "nothing useful here");
+  await pg.fill("#scan-text", "12 34 ;;");
   eq(await pg.evaluate(() => $("scan-go").disabled), false, "typing or pasting turns Read it on");
   await pg.click("#scan-go");
   s = await pg.evaluate(() => document.querySelector(".dnhead p").textContent);
   eq(s, "No drinks found in that text. Check that it all came across, or type it in.", "text with no drinks in it says so");
   await pg.click("#dns-panel .dnact .btn:last-child");
-  eq(await pg.evaluate(() => $("scan-text").value), "nothing useful here", "…and Try again brings the text back to fix");
+  eq(await pg.evaluate(() => $("scan-text").value), "12 34 ;;", "…and Try again brings the text back to fix");
   await pg.evaluate(t => { Object.defineProperty(navigator, "clipboard", { configurable: true, value: { readText: async () => t } }); }, ticket);
   await pg.click("#dns-panel .dnact .btn:first-child");
   await pg.waitForFunction(t => $("scan-text").value === t, ticket);
@@ -256,7 +258,7 @@ const { eq, done } = checker();
   await save();
   s = await form();
   eq([s.view, s.name, s.rows], ["form", "New Place Coffee", ["Iced matcha latte 6.75", "Hojicha latte 7.00"]], "…and each cup becomes a row of the form");
-  await fromLog(["~~ ;; ee"]);
+  await fromLog(["~~ ;; 12"]);
   await pg.click("#dns-panel .dnact .btn:first-child");
   s = await form();
   eq([s.view, s.sheet], ["form", false], "Type it in from the form goes back to the form");
@@ -273,17 +275,87 @@ const { eq, done } = checker();
 
   /* always a way out */
   await pg.evaluate(() => { _formSnap = formSnapshot(); });
-  await scan(["~~ ;; ee"]);
+  await scan(["~~ ;; 12"]);
   await pg.click("#dns-panel .ocx");
   s = await pg.evaluate(() => ({ view: app.dataset.view, hidden: $("dnsheet").hidden, scan: _scan === null }));
   eq(s, { view: "detail", hidden: true, scan: true }, "a failed scan has a close button that goes back to where you were");
   await scan(["Cortado 5.00", "Drip 2.00", "TOTAL 7.00"]);
   await pg.click("#dns-panel .ocx");
   eq(await pg.evaluate(() => $("dnsheet").hidden), true, "…and so does the list to tick");
-  await scan(["~~ ;; ee"]);
+  await scan(["~~ ;; 12"]);
   await pg.evaluate(() => window.dispatchEvent(new PopStateEvent("popstate")));
   s = await pg.evaluate(() => ({ view: app.dataset.view, hidden: $("dnsheet").hidden }));
   eq(s, { view: "detail", hidden: true }, "the phone's back gesture puts the sheet away instead of leaving it on top");
+
+  /* a layout the rules do not know: tap your drink's line (v133) */
+  await scan(["ORDER 0417", "Yuzu Sparkle", "Light ice", "PAID 7.50", "Thank you"]);
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, why: document.querySelector(".dnhead p").textContent, lines: [...document.querySelectorAll(".scanln")].map(x => x.textContent),
+    go: $("scan-log").textContent + ($("scan-log").disabled ? " off" : ""), photo: !!document.querySelector("#dns-panel .scanthumb img"), close: !!document.querySelector("#dns-panel .ocx"),
+    tall: [...document.querySelectorAll(".scanln")].every(x => x.getBoundingClientRect().height >= 44), wide: document.documentElement.scrollWidth <= innerWidth }));
+  eq(s, { title: "Which line is your drink?", why: "It couldn’t find a drink in this layout. Tap the line that names yours.", lines: ["ORDER 0417", "Yuzu Sparkle", "Light ice", "PAID 7.50", "Thank you"],
+          go: "Tap a line off", photo: true, close: true, tall: true, wide: true }, "a layout the rules do not know lists the text's lines to tap, under your photo");
+  await pg.click('.scanln[data-i="3"]');
+  eq(await pg.evaluate(() => [$("scan-linename").value, _scan.items[0].price]), ["Paid", 7.5], "a tapped line that ends in a price brings the price");
+  await pg.click('.scanln[data-i="1"]');
+  s = await pg.evaluate(() => ({ on: [...document.querySelectorAll('.scanln[aria-pressed="true"]')].map(x => x.textContent), name: $("scan-linename").value, go: $("scan-log").textContent + ($("scan-log").disabled ? " off" : ""), ice: _scan.items[0].ice }));
+  eq(s, { on: ["Yuzu Sparkle"], name: "Yuzu Sparkle", go: "Log 1 cup", ice: "Less ice" }, "tapping a line makes it the drink, with how it was made from the line under it");
+  await pg.fill("#scan-linename", "Yuzu sparkle soda");
+  await pg.click("#scan-log");
+  s = await sheet();
+  eq([s.on, s.same, s.spec], [["Yuzu sparkle soda"], "✓ From the receipt", "less ice"], "…and the name, put right in its box, goes on to the sheet");
+  await save();
+  eq((await orders("Yuzu sparkle soda")).map(o => o.ice), ["Less ice"], "…and is saved");
+  await scan(["Cortado 5.00", "Drip 2.00", "TOTAL 7.00"]);
+  await pg.click("#dns-panel .scanalt");
+  s = await pg.evaluate(() => [$("dns-title").textContent, document.querySelector(".dnhead p").textContent, document.querySelectorAll(".scanln").length]);
+  eq(s, ["Which line is your drink?", "Tap the line that names your drink.", 3], "the list offers the same: My drink isn’t here");
+  await pg.fill("#scan-linename", "Mystery drink");
+  eq(await pg.evaluate(() => $("scan-log").textContent + ($("scan-log").disabled ? " off" : "")), "Log 1 cup", "…and a name can be typed outright, with no line tapped");
+  await pg.click("#dns-panel .dnact .btn:first-child");
+  eq(await pg.evaluate(() => $("dns-title").textContent), "Check what it read", "…Back to the text still goes back");
+  await pg.evaluate(() => closeSheet());
+
+  /* shared to the app from the phone's share sheet (v133) */
+  const man = JSON.parse(fs.readFileSync(path.join(ROOT, "manifest.json"), "utf8"));
+  eq(man.share_target, { action: "./share", method: "POST", enctype: "multipart/form-data", params: { title: "title", text: "text", url: "url", files: [{ name: "photo", accept: ["image/*"] }] } },
+     "the installed app is in the share sheet, for text and for photos, as a POST so nothing shared is in an address");
+  const share = (text, withPhoto) => pg.evaluate(async a => {
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) await new Promise(ok => navigator.serviceWorker.addEventListener("controllerchange", ok, { once: true }));
+    const fd = new FormData();
+    if (a.text) fd.append("text", a.text);
+    if (a.photo) fd.append("photo", new Blob([Uint8Array.from(atob(a.photo), c => c.charCodeAt(0))], { type: "image/png" }), "r.png");
+    const res = await fetch("./share", { method: "POST", body: fd });
+    const c = await caches.open("cafemap-share");
+    const t = await c.match("./__share/text"), p = await c.match("./__share/photo");
+    return { to: new URL(res.url).search, ok: res.ok, text: t ? (await t.text()).split("\r").join("") : null, photo: p ? (await p.blob()).type : null };
+  }, { text, photo: withPhoto ? photo : "" });
+  s = await share("CORTADO 6.50\nTOTAL 6.50", false);
+  eq(s, { to: "?do=scan", ok: true, text: "CORTADO 6.50\nTOTAL 6.50", photo: null }, "the service worker keeps what was shared on the phone and opens the app on ?do=scan");
+  await pg.evaluate(() => { if (app.dataset.view === "form") _formSnap = formSnapshot(); });
+  await reset();
+  await pg.evaluate(() => { userLoc = null; show("list"); return scanShared(); });
+  await pg.waitForFunction(() => app.dataset.view === "form", null, { timeout: 15000 });
+  s = await pg.evaluate(async () => ({ scan: !$("f-scan").hidden, kept: (await caches.keys()).includes("cafemap-share"), sheet: !$("dnsheet").hidden }));
+  eq(s, { scan: false, kept: false, sheet: false }, "with no cafe to hand it opens Add a visit and waits for the cafe's name, and the stored copy is gone");
+  await pg.fill("#f-name", "New Place Coffee");
+  await pg.click("#f-scan");
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, name: document.querySelector(".scanname").value, price: document.querySelector(".scanp").textContent }));
+  eq(s, { title: "Is this yours?", name: "Cortado", price: "$6.50" }, "…then Scan reads what was shared, with no box to paste into");
+  await pg.evaluate(() => { closeSheet(); scanStart(); });
+  eq(await pg.evaluate(() => $("dns-title").textContent), "Scan a receipt", "…once: the next Scan is an ordinary one");
+  await pg.evaluate(() => { closeSheet(); _formSnap = formSnapshot(); });
+  s = await share("", true);
+  eq([s.text, s.photo], ["", "image/png"], "a shared photo is kept the same way");
+  await reset();
+  await pg.evaluate(() => { window.__text = "CORTADO 6.50\nTOTAL 6.50"; scanRead = window.__stub; userLoc = { lat: 37.77, lng: -122.4 }; userLocAt = Date.now(); show("list"); return scanShared(); });
+  await pg.waitForFunction(() => { const i = document.querySelector("#dns-panel .scanthumb img"); return !!$("scan-text") && i && i.complete && i.naturalWidth > 0; });
+  s = await pg.evaluate(() => ({ view: app.dataset.view, cafe: curId, title: $("dns-title").textContent, text: $("scan-text").value }));
+  eq(s, { view: "detail", cafe: "c1", title: "Check what it read", text: "CORTADO 6.50\nTOTAL 6.50" }, "standing in a cafe on your list, a shared photo is read for that cafe at once");
+  await pg.evaluate(() => { closeSheet(); userLoc = null; isAdmin = false; });
+  await share("CORTADO 6.50", false);
+  s = await pg.evaluate(async () => { await scanShared(); const kept = (await caches.keys()).includes("cafemap-share"); await caches.delete("cafemap-share"); isAdmin = true; return { kept, view: app.dataset.view, sheet: !$("dnsheet").hidden }; });
+  eq(s, { kept: true, view: "detail", sheet: false }, "a visitor's share does nothing");
 
   /* the reader failing */
   await pg.evaluate(() => { scanRead = () => Promise.reject(new Error("no wasm")); });

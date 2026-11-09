@@ -2,7 +2,7 @@
    The suite (tests/run.js) runs these through tests/unit.js. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseReceipt, SCAN_MAX_ROWS } from "../../js/lib/scan.js";
+import { parseReceipt, receiptLines, lineItem, SCAN_MAX_ROWS } from "../../js/lib/scan.js";
 
 const ctx = { known: ["Iced matcha latte", "Cortado", "Black matcha latte", "Hojicha latte"], code: "USD", dec: 2, today: "2026-11-08" };
 const read = (lines, over) => parseReceipt(lines.join("\n"), Object.assign({}, ctx, over));
@@ -102,6 +102,22 @@ test("parseReceipt: a name is a real drink's, not one made up from scraps", () =
   assert.deepEqual([one("Uji Einspanner", { known: ["Black matcha Einspanner"] }).drink, one("Qwerty Zxcv").odd], [true, true], "a word from your own drinks says drink too");
   assert.deepEqual([one("CROISSANT").drink, one("CROISSANT").odd], [false, false], "food is food, not a maybe");
   assert.equal(one("Latte", { known: ["Cortado", "Vanilla latte", "Latte"] }).n, "Latte", "of your names, the closest wins");
+});
+
+test("lineItem: a line you point at is the drink, with its price and the options under it", () => {
+  const text = ["ORDER 0417", "Oct 30", "2 x Yuzu Sparkle (16oz)", "Light ice", "Oat milk", "Seasonal special", "Cortadd 5.25", "Tea €4.00", "PAID 7.50"].join("\n");
+  assert.equal(read(text.split("\n")).kind, "receipt", "(this one the rules can read; the lines are what matter here)");
+  const lines = receiptLines(text);
+  const at = (t, over) => lineItem(lines, lines.indexOf(t), Object.assign({}, ctx, over));
+  const yuzu = at("2 x Yuzu Sparkle (16oz)");
+  assert.deepEqual([yuzu.n, yuzu.price, yuzu.size, yuzu.ice, yuzu.milk, yuzu.drink, yuzu.odd], ["Yuzu Sparkle", null, "16 oz", "Less ice", "Oat", true, false], "you said it is a drink, so it is one");
+  assert.equal(yuzu.printed, "2 x Yuzu Sparkle (16oz) + Light ice + Oat milk");
+  assert.deepEqual([at("Cortadd 5.25").n, at("Cortadd 5.25").price, at("Cortadd 5.25").isNew], ["Cortado", 5.25, false], "a price on the line comes with it, and the name is yours when it matches");
+  assert.equal(at("Seasonal special").ice, "", "options stop at the first line that is not one");
+  assert.equal(at("Tea €4.00").price, null, "a price in another currency is left out");
+  assert.equal(at("Tea €4.00", { code: "EUR" }).price, 4);
+  assert.deepEqual(receiptLines("Cortado\n$5.25\nDrip\n$3.00"), ["Cortado $5.25", "Drip $3.00"], "the lines are shown with each price back beside its name");
+  assert.equal(parseReceipt("Oct 30\nYuzu Sparkle\nLight ice", ctx).date, "2026-10-30", "a text with no drinks found still gives its date");
 });
 
 test("parseReceipt: prices that do not add up to the subtotal are flagged", () => {

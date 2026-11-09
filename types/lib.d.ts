@@ -27,3 +27,5 @@ declare const orderLines: typeof import("../js/lib/order.js").orderLines;
 declare const orderLangFor: typeof import("../js/lib/order.js").orderLangFor;
 
 declare const parseReceipt: typeof import("../js/lib/scan.js").parseReceipt;
+declare const receiptLines: typeof import("../js/lib/scan.js").receiptLines;
+declare const lineItem: typeof import("../js/lib/scan.js").lineItem;

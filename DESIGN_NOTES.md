@@ -2375,3 +2375,24 @@ The list goes Back to the text, with the photo still there, and a failed reading
 
 **The photo stays (v132).** The owner checked the text against the photo, pressed Find the drinks, and the photo was
 gone just when the names needed checking (8 Nov). It now sits above the list as well.
+
+## Tap your drink's line, and share to the app (v133)
+
+Five improvements were mocked on the canvas (8 Nov); the owner chose these two.
+
+**Tap your drink's line.** The rules read the layouts they were written for, and the owner had asked what happens with
+the rest. Now a text with no drinks found is not a dead end: its lines come up, under the photo if there is one, and you
+tap the one that names your drink. That line becomes the drink (`lineItem`, js/lib/scan.js): its name, put through the
+same checks as any other, a price if the line ends in one, and options from the lines right under it that say only how
+it was made. You said it is a drink, so it is not second-guessed. The name sits in a box to put right, or to type
+outright. The list offers the same door, "My drink isn't here", for when the rules found the wrong things. Only a text
+with no words in it at all still ends at "Couldn't read that".
+
+**Share to the app.** Copying text out of Google Lens and pasting it in was four steps. On Android an installed web
+app can be in the share sheet (`share_target` in manifest.json), so Lens's Share, or a photo's, goes straight to the
+app. It is a POST answered by the service worker, which puts the text or photo in a cache of its own and opens
+`./?do=scan`: a GET would have put the receipt's text in an address, and so in the host's logs. scan.js reads the copy
+and deletes it. Then it goes where Log goes: standing in a cafe on your list, the reading starts for that cafe; anywhere
+else Add a visit opens and the receipt waits for the cafe's name and the Scan button, for ten minutes and one use.
+iPhones do not offer share targets to web apps. Tested by posting to the real service worker; the share sheet itself
+can only be tried on the phone.

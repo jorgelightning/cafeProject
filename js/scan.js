@@ -26,7 +26,12 @@
 
    Since v131 a photo read in the app stops one step earlier too: your photo with the text it read under it, in a box
    to put right, because a misread word and a misunderstood line look the same from the far end. And a drink's name
-   on the list is a box of its own. The list goes back to the text, and the text goes on to the list. */
+   on the list is a box of its own. The list goes back to the text, and the text goes on to the list.
+
+   Since v133 a layout the rules do not know is not a dead end: the text's lines come up, and you tap the one that names
+   your drink. The list offers the same ("My drink isn't here"). And on Android the installed app is in the share sheet:
+   text shared from Google Lens, or a photo from Photos, arrives here with no copy and paste (sw.js keeps it on the
+   phone; scanShared picks it up). */
 
 function scanOn() {
   return isAdmin;
@@ -44,9 +49,60 @@ let _scan = null;
 /* text that found no drinks, kept so Try again does not start from an empty box */
 let _scanDraft = "";
 
+/** A receipt shared to the app and not read yet. @type {{text: string, photo: Blob|null, at: number}|null} */
+let _scanShare = null;
+const SHARE_FRESH_MS = 600000;
+/* The share sheet's way in (manifest.json share_target; sw.js stores what was shared and opens ./?do=scan). It goes
+   where Log goes: standing in a cafe on your list, that cafe's reading starts at once; anywhere else it is Add a
+   visit, and the receipt waits for the cafe's name and the Scan button. */
+async function scanShared() {
+  if (!scanOn()) return;
+  let text = "",
+    photo = null;
+  try {
+    const c = await caches.open("cafemap-share");
+    const t = await c.match("./__share/text"),
+      p = await c.match("./__share/photo");
+    if (t) text = await t.text();
+    if (p) photo = await p.blob();
+    await caches.delete("cafemap-share");
+  } catch (e) {
+    warn("scan.js share", e);
+  }
+  if (!text.trim() && !photo) return;
+  _scanShare = { text: text, photo: photo, at: Date.now() };
+  let asked = false;
+  ifLocationAlreadyAllowed(function () {
+    asked = true;
+    showUserLocation(false);
+  });
+  /* up to six seconds for a fix, as the Log shortcut waits; none is coming if location was never allowed */
+  const go = /** @param {number} left */ function (left) {
+    const fresh = userLoc && Date.now() - userLocAt < HERE_FRESH_MS;
+    if (!fresh && left > 0 && (asked || left > 10)) {
+      setTimeout(() => go(left - 1), 500);
+      return;
+    }
+    if (logHere()) scanStart();
+    else {
+      openForm();
+      toast("Add the cafe’s name, then tap Scan. Your receipt is waiting.");
+    }
+  };
+  go(12);
+}
 /** Scan opens on a box for the receipt's text. */
 function scanStart() {
   if (!scanOn()) return;
+  /* a receipt shared to the app is what Scan reads, without asking again */
+  if (_scanShare && Date.now() - _scanShare.at < SHARE_FRESH_MS) {
+    const s = _scanShare;
+    _scanShare = null;
+    if (s.photo) _scanRun(s.photo);
+    else _scanTextRun(s.text);
+    return;
+  }
+  _scanShare = null;
   _scanStop();
   _qc = null;
   if ($("dnsheet").hidden) openSheet("");
@@ -91,7 +147,10 @@ async function scanPaste() {
 /** The box's text, read as a receipt. */
 function scanText() {
   const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text"));
-  const text = box ? box.value : "";
+  _scanTextRun(box ? box.value : "");
+}
+/** @param {string} text */
+function _scanTextRun(text) {
   const run = text.trim() ? _scanNew() : null;
   if (!run) return;
   /* the photo, if there is one, goes with the reading, so Back to the text can show it again */
@@ -101,10 +160,61 @@ function scanText() {
     prev.url = "";
   }
   _scanStop();
+  _qc = null;
+  if ($("dnsheet").hidden) openSheet("");
+  _sheetOnClose = _scanStop;
   run.text = text;
   _scan = run;
   _scanDraft = text;
   _scanRoute(run, parseReceipt(text, _scanCtx(run)));
+}
+/** The lines a drink could be picked from: the ones with words in them. @param {any} run */
+function _scanLinesOf(run) {
+  return receiptLines(run.text || "", ccyMeta(run.code).dec).filter(l => /[A-Za-z].*[A-Za-z]/.test(l)).slice(0, 40);
+}
+/** A layout the rules do not know: the text's lines, to tap the one that names your drink. @param {any} run @param {boolean} fromList */
+function _scanLines(run, fromList) {
+  run.lines = _scanLinesOf(run);
+  run.items = [];
+  _scanShow(
+    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Which line is your drink?</h2><p>' +
+      (fromList ? "Tap the line that names your drink." : "It couldn’t find a drink in this layout. Tap the line that names yours.") + "</p></div>" + _scanClose() + "</div>" +
+      _scanThumb(run) +
+      '<div class="scanlines">' +
+      run.lines.map((l, i) => '<button type="button" class="scanln" aria-pressed="false" data-i="' + i + '"' + act("scanLine", ["$data.i"]) + ">" + esc(l) + "</button>").join("") +
+      "</div>" +
+      '<label class="dnlab" for="scan-linename">Drink</label>' +
+      '<input id="scan-linename" class="scanname" type="text" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="80" placeholder="Tap a line above"' + act("scanLineName", ["$value"], "input") + ">" +
+      '<div class="dnact"><button type="button" class="btn ghost"' + act("scanBack") + ">Back to the text</button>" +
+      '<button type="button" class="btn" id="scan-log"' + act("scanLog") + " disabled>Tap a line</button></div>"
+  );
+}
+function _scanLineSync() {
+  const btn = /** @type {HTMLButtonElement|null} */ ($("scan-log"));
+  const named = !!(_scan && _scan.items[0] && _scan.items[0].n.trim());
+  if (btn) {
+    btn.disabled = !named;
+    btn.textContent = named ? "Log 1 cup" : "Tap a line";
+  }
+}
+/** @param {string} i */
+function scanLine(i) {
+  if (!_scan || !_scan.lines || !_scan.lines[+i]) return;
+  _scan.items = [Object.assign({ i: 0, on: true, say: "" }, lineItem(_scan.lines, +i, _scanCtx(_scan)))];
+  $("dns-panel").querySelectorAll(".scanln").forEach(b => b.setAttribute("aria-pressed", String(/** @type {HTMLElement} */ (b).dataset.i === String(i))));
+  const box = /** @type {HTMLInputElement|null} */ ($("scan-linename"));
+  if (box) box.value = _scan.items[0].n;
+  _scanLineSync();
+}
+/** The name, put right or typed outright. @param {string} v */
+function scanLineName(v) {
+  if (!_scan) return;
+  if (!_scan.items.length) _scan.items = [{ i: 0, on: true, say: "", n: "", isNew: true, printed: "", drink: true, odd: false, price: null, size: "", sweet: "", ice: "", milk: "" }];
+  _scan.items[0].n = String(v).slice(0, 80);
+  _scanLineSync();
+}
+function scanPickLine() {
+  if (_scan) _scanLines(_scan, true);
 }
 /** Your photo and the text it read, to put right before anything is made of it. @param {any} run @param {string} text */
 function _scanReview(run, text) {
@@ -280,7 +390,7 @@ async function scanRead(image, signal, say) {
     worker.terminate();
   }
 }
-/** @param {File} file */
+/** @param {Blob} file a photo from the file box, or one shared to the app */
 async function _scanRun(file) {
   _scanStop();
   const run = _scanNew();
@@ -406,7 +516,8 @@ function _scanRoute(run, res) {
   run.date = res.date;
   run.other = res.other;
   if (res.kind === "unreadable") {
-    _scanFail("No drinks found in that text. Check that it all came across, or type it in.");
+    if (_scanLinesOf(run).length) _scanLines(run, false);
+    else _scanFail("No drinks found in that text. Check that it all came across, or type it in.");
     return;
   }
   _scanDraft = "";
@@ -466,6 +577,7 @@ function _scanPickHTML(run) {
       })
       .join("") +
     "</div>" +
+    (_scanLinesOf(run).length ? '<button type="button" class="scanalt"' + act("scanPickLine") + ">My drink isn’t here</button>" : "") +
     '<p class="scanfoot">' + (run.other ? "This receipt is in " + esc(run.other) + ", so add each price yourself." : run.off ? "These prices don’t add up to the receipt’s subtotal, so one may be misread." : "Tax, tip and the total are left out.") + "</p>" +
     '<div class="dnact"><button type="button" class="btn ghost"' + act("scanBack") + ">Back to the text</button>" +
     '<button type="button" class="btn" id="scan-log"' + act("scanLog") + (go ? ">" + go : " disabled>Tick a drink") + "</button></div>"

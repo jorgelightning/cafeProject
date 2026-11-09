@@ -86,6 +86,11 @@ function runShortcut(what, tries) {
     setListTab("want");
     return;
   }
+  /* a receipt shared to the app from the phone's share sheet (scan.js scanShared, v133) */
+  if (what === "scan") {
+    if (isAdmin && typeof scanShared === "function") scanShared();
+    return;
+  }
   if (what === "log" && isAdmin) {
     if (tries === undefined && typeof ifLocationAlreadyAllowed === "function")
       ifLocationAlreadyAllowed(function () {

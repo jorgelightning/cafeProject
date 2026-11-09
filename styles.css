@@ -1376,6 +1376,12 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .scantxt{ min-height:132px; font-size:var(--fs-2); line-height:1.45; }
 .scanalt{ align-self:center; min-height:44px; padding:0 var(--sp-3); border:0; background:none; color:var(--soft); font:inherit; font-size:var(--fs-2); font-weight:600; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
 .scanalt:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
+/* Tap your drink's line (v133): the receipt's text as rows to tap */
+.scanlines{ max-height:36vh; overflow-y:auto; border:1px solid var(--border); border-radius:var(--r-3); }
+.scanln{ display:block; width:100%; min-height:44px; padding:var(--sp-2) var(--sp-3); border:0; border-top:1px solid var(--border); background:none; color:var(--soft); font:inherit; font-size:var(--fs-2); text-align:left; cursor:pointer; }
+.scanln:first-child{ border-top:0; }
+.scanln[aria-pressed="true"]{ background:color-mix(in srgb,var(--acc) 16%,transparent); color:var(--text); font-weight:700; }
+.scanln:focus-visible{ outline:2px solid var(--text); outline-offset:-3px; }
 .scanfoot{ margin:0 2px; font-size:var(--fs-1); color:var(--faint); }
 .qcsame{ display:flex; flex-direction:column; align-items:flex-start; gap:var(--sp-1); padding:var(--sp-2) var(--sp-3); border:1.5px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); text-align:left; cursor:pointer; }
 .qcsame b{ font-size:var(--fs-3); }

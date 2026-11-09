@@ -197,11 +197,15 @@ opens on a box for the receipt's text, which the phone's own reader fills: Scan 
 copied out of Google Lens or the Photos app and pasted. `parseReceipt` (`js/lib/scan.js`) works out what the text means.
 It costs nothing, needs no account, and nothing leaves the phone.
 
+On Android, with the app installed to the home screen, it is also in the share sheet: share the text from Google Lens,
+or a photo from Photos, to the app and it is read with no copy and paste (`share_target` in `manifest.json`, answered
+by `sw.js` so nothing shared leaves the phone). iPhones do not offer this to web apps.
+
 "Or read a photo in the app" is the second choice: Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, about 7 MB on
 first use. It reads clean print and does poorly on real phone photos.
 
 The rules know priced receipts, names and prices handed back as separate columns, and a cup's order ticket with no
-prices. A layout they do not know comes back as "No drinks found". To teach it a shop's abbreviation, add a line to
+prices. A layout they do not know lists the text's lines, and you tap the one that names your drink. To teach it a shop's abbreviation, add a line to
 `WORDS` in `js/lib/scan.js`; a new layout is a new rule and a test in `tests/unit/scan.test.mjs`.
 
 ## Owner checklist (things the code cannot check for you)

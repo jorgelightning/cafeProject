@@ -17,8 +17,8 @@
    CACHE_V would keep serving the old scripts. Anything cross-origin (Maps, Firebase, the FX
    endpoint) is deliberately not intercepted; those must fail normally so their own fallbacks
    run. */
-const CACHE_V = "cafemap-v132";
-const ASSET_V = "?v=132";
+const CACHE_V = "cafemap-v133";
+const ASSET_V = "?v=133";
 
 const SHELL = [
   "./", "./index.html", "./manifest.json", "./cafes.json",
@@ -42,10 +42,30 @@ self.addEventListener("install", function(e){
 
 self.addEventListener("activate", function(e){
   e.waitUntil(caches.keys().then(function(keys){
-    return Promise.all(keys.filter(function(k){ return k !== CACHE_V; })
+    return Promise.all(keys.filter(function(k){ return k !== CACHE_V && k !== SHARE_CACHE; })
                            .map(function(k){ return caches.delete(k); }));
   }).then(function(){ return self.clients.claim(); }));
 });
+
+/* A receipt shared to the app from the phone's share sheet (manifest.json share_target, v133). The text or photo is put
+   in a cache of its own and the app is opened on ./?do=scan, where scan.js reads it and deletes it. It is answered
+   here, so what was shared never leaves the phone, and nothing of it is in the address. */
+const SHARE_CACHE = "cafemap-share";
+function takeShare(req){
+  return req.formData().then(function(form){
+    const text = form.get("text") || form.get("title") || form.get("url") || "";
+    const photo = form.get("photo");
+    return caches.open(SHARE_CACHE).then(function(c){
+      return Promise.all([
+        c.put("__share/text", new Response(String(text), { headers: { "Content-Type": "text/plain;charset=utf-8" } })),
+        photo && photo.size ? c.put("__share/photo", new Response(photo, { headers: { "Content-Type": photo.type || "image/jpeg" } }))
+                            : c.delete("__share/photo")
+      ]);
+    });
+  }).catch(function(){}).then(function(){
+    return Response.redirect(new URL("./?do=scan", self.registration.scope).href, 303);
+  });
+}
 
 function keep(req, res){
   if(res && res.ok){
@@ -57,6 +77,10 @@ function keep(req, res){
 
 self.addEventListener("fetch", function(e){
   const req = e.request;
+  if(req.method === "POST" && /\/share$/.test(new URL(req.url).pathname)){
+    e.respondWith(takeShare(req));
+    return;
+  }
   if(req.method !== "GET") return;
 
   let url;
