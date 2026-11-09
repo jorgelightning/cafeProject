@@ -73,7 +73,7 @@ test("parseReceipt: an order ticket has no prices: each drink starts 1 ×, and i
   const r = read(["1 of 2", "Alex", "May 29, 2026 Sam", "9:55:55 AM", "FOR HERE", "1 × Matcha Guava Cream", "Top (16oz)", "Lactose Free Whole", "Milk", "No Sweet"]);
   assert.equal(r.kind, "receipt");
   assert.deepEqual(r.items.map(x => [x.n, x.price, x.size, x.milk, x.sweet, x.isNew, x.drink]), [["Matcha Guava Cream Top", null, "16 oz", "Lactose-free", "0%", true, true]]);
-  assert.deepEqual([r.date, r.place, r.off, r.total], ["2026-05-29", "", false, null], "the name at the top is the customer's, not the shop's");
+  assert.deepEqual([r.date, r.off, r.total], ["2026-05-29", false, null]);
   const two = read(["2x Cortado", "1 x Iced Latte 12oz", "Oat Milk", "Less Ice", "Extra Shot", "1 X Croissant"]);
   assert.deepEqual(two.items.map(x => [x.n, x.size, x.milk, x.ice].join("|")), ["Cortado|||", "Cortado|||", "Iced Latte|12 oz|Oat|Less ice", "Croissant|||"], "several drinks, quantities, and a modifier it does not know left out of the name");
   assert.equal(two.items[3].drink, false);
@@ -84,20 +84,24 @@ test("parseReceipt: an order ticket has no prices: each drink starts 1 ×, and i
 test("parseReceipt: names and prices handed back as separate columns are put back together", () => {
   const cols = read(["SAMPLE TEA BAR", "123 MAIN ST", "Order #4417", "1 ICD MTCHA LT", "+ OAT MILK", "1 HOJI LT 16OZ", "LESS ICE", "1 CROISSANT", "SUBTOTAL", "TAX", "TOTAL", "VISA 1234", "6.75", "1.00", "7.00", "5.00", "19.75", "1.73", "21.48", "THANK YOU"]);
   assert.deepEqual(cols.items.map(x => [x.n, x.price, x.milk, x.ice].join("|")), ["Iced matcha latte|7.75|Oat|", "Hojicha latte|7|Less ice".replace("7|", "7||"), "Croissant|5||"]);
-  assert.deepEqual([cols.total, cols.off, cols.place], [21.48, false, "Sample Tea Bar"]);
+  assert.deepEqual([cols.total, cols.off], [21.48, false]);
   const under = read(["Cortado", "$5.25", "Drip coffee", "$3.00", "Total", "$8.25"]);
   assert.deepEqual([names(under), under.items.map(x => x.price), under.total], [["Cortado", "Drip coffee"], [5.25, 3], 8.25], "each price on the line under its name");
   assert.equal(read(["Sample Tea Bar", "$8.50", "Add a tip"]).kind, "total_only", "one loose amount under a name is a payment screen, not an item");
 });
 
-test("parseReceipt: the shop's name is the first line at the top that reads like one", () => {
-  const place = lines => read(lines.concat("Cortado 5.00", "TOTAL 5.00")).place;
-  assert.equal(place(["SAMPLE TEA BAR", "123 MAIN ST"]), "Sample Tea Bar");
-  assert.equal(place(["Peet's Coffee"]), "Peet's Coffee", "printed in mixed case: left as it is");
-  assert.equal(place(["WELCOME", "~ ee", "BLUE DOOR CAFE"]), "Blue Door Cafe", "past a greeting and a scrap");
-  assert.equal(place(["123 MAIN ST", "(415) 555-0100"]), "", "an address is not a name");
-  assert.equal(place([]), "", "the first priced line ends the search");
-  assert.equal(read(["Total", "$8.50"]).place, "", "a payment screen's Total is not a shop");
+test("parseReceipt: a name is a real drink's, not one made up from scraps", () => {
+  const one = (line, over) => read([line + " 6.00", "TOTAL 6.00"], Object.assign({ known: [] }, over)).items[0];
+  assert.equal(one("Matcba Latte").n, "Matcha Latte", "a misread word is put right against the words drinks are made of");
+  assert.equal(one("STRAWBERY LEMONADE").n, "Strawberry lemonade");
+  assert.equal(one("Mocha").n, "Mocha", "a real word is never turned into its neighbour");
+  assert.equal(one("Samidorl Matcha", { known: ["Matcha latte - Samidori"] }).n, "Samidori Matcha", "…and against your own drinks' words");
+  assert.equal(one("A 1 Hojicha Latte").n, "Hojicha Latte", "scraps in front of a name go");
+  assert.deepEqual([one("Flat White").drink, one("Flat White").odd], [false, true], "nothing in it says drink: listed, unticked, and not sure");
+  assert.deepEqual([one("Flat White", { known: ["Flat White"] }).drink, one("Flat White", { known: ["Flat White"] }).odd], [true, false], "unless it is one of yours");
+  assert.deepEqual([one("Uji Einspanner", { known: ["Black matcha Einspanner"] }).drink, one("Qwerty Zxcv").odd], [true, true], "a word from your own drinks says drink too");
+  assert.deepEqual([one("CROISSANT").drink, one("CROISSANT").odd], [false, false], "food is food, not a maybe");
+  assert.equal(one("Latte", { known: ["Cortado", "Vanilla latte", "Latte"] }).n, "Latte", "of your names, the closest wins");
 });
 
 test("parseReceipt: prices that do not add up to the subtotal are flagged", () => {

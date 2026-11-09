@@ -35,6 +35,17 @@ const WORDS = {
   CHOC: "Chocolate", VAN: "Vanilla", VNL: "Vanilla", CRML: "Caramel", CARM: "Caramel", DRP: "Drip", COF: "Coffee", CFE: "Coffee", OOL: "Oolong",
   GRN: "Green", BLK: "Black", DBL: "Double", SGL: "Single", JCE: "Juice",
 };
+/* What makes a line a drink: one of these words in it, or a word from a drink you have logged. A line with neither is
+   shown unticked, as something the app is not sure of, never as a drink it made up. */
+const DRINK = new Set(
+  ("latte matcha hojicha espresso americano cappuccino cortado macchiato mocha coffee tea chai oolong sencha genmaicha jasmine einspanner affogato " +
+    "frappe frappuccino smoothie lemonade juice soda boba cocoa chocolate brew drip tonic milk kombucha shake float spritz refresher cider mate pourover").split(" ")
+);
+/* Words a drink's name is often made with. Together with DRINK and your own drinks' words, they are what a misread
+   word is put right against: "Matcba" is Matcha. */
+const FLAVOR =
+  "iced cream black green white vanilla caramel honey lavender sesame coconut cinnamon pistachio strawberry mango guava yuzu peach lemon brown sugar almond double single cloud".split(" ");
+const VOCAB = [...DRINK].concat(FLAVOR);
 /* words a menu can add or drop without it being another drink */
 const SOFT = new Set(["iced", "ice", "hot", "w", "with", "and", "the", "milk", "oat", "almond", "soy"]);
 const SYMBOLS = { "€": "EUR", "£": "GBP", "₩": "KRW", NT$: "TWD", HK$: "HKD", S$: "SGD", A$: "AUD", CA$: "CAD" };
@@ -142,15 +153,36 @@ function isModifier(name, rest, o) {
   return !!(o.size || o.sweet || o.ice || o.milk) && !/[A-Za-z]{2}/.test(rest.replace(/\bMILK\b/i, ""));
 }
 
-/** A printed name in plain words: "ICD MTCHA LT" is "Iced matcha latte". A name printed in mixed case is left as it is.
-    @param {string} s */
-function plainName(s) {
-  const clean = s.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9)]+$/g, "");
+/** A misread word put right: the one word, of the drink words and your own, within a letter of it (two for a long word).
+    A word that is already one of them, or short, or near two of them, is left alone. @param {string} w @param {Set<string>} own */
+function fixWord(w, own) {
+  const lw = w.toLowerCase();
+  if (lw.length < 5 || !/^[a-z]+$/.test(lw) || DRINK.has(lw) || FLAVOR.includes(lw) || own.has(lw)) return w;
+  const max = lw.length >= 8 ? 2 : 1;
+  let best = "",
+    bestD = max + 1,
+    tie = false;
+  VOCAB.concat([...own].filter(x => x.length >= 5)).forEach(function (v) {
+    const d = editDistance(lw, v, max);
+    if (d < bestD) {
+      best = v;
+      bestD = d;
+      tie = false;
+    } else if (d === bestD && d <= max && v !== best) tie = true;
+  });
+  if (!best || tie) return w;
+  return /^[A-Z]/.test(w) ? best.charAt(0).toUpperCase() + best.slice(1) : best;
+}
+/** A printed name in plain words: "ICD MTCHA LT" is "Iced matcha latte". A name printed in mixed case keeps its case.
+    Scraps in front of it go ("A 1 Croissant"), and a misread word is put right. @param {string} s @param {Set<string>} own */
+function plainName(s, own) {
+  const toks = s.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9)]+$/g, "").split(" ").filter(Boolean);
+  while (toks.length > 1 && /^(\d+|[A-Za-z])$/.test(toks[0])) toks.shift();
+  const clean = toks.join(" ");
   /* a stray small letter among capitals is the reader, not the receipt */
-  if ((clean.match(/[a-z]/g) || []).length > clean.replace(/[^A-Za-z]/g, "").length * 0.25) return clean;
-  const out = clean
-    .split(" ")
-    .map(w => WORDS[w] || w)
+  if ((clean.match(/[a-z]/g) || []).length > clean.replace(/[^A-Za-z]/g, "").length * 0.25) return toks.map(w => fixWord(w, own)).join(" ");
+  const out = toks
+    .map(w => fixWord(WORDS[w] || w, own))
     .join(" ")
     .toLowerCase();
   return out.charAt(0).toUpperCase() + out.slice(1);
@@ -276,32 +308,21 @@ function ticketRows(lines) {
   return rows;
 }
 
-/** The shop's name: the first line at the top of the receipt that reads like one. @param {string[]} lines @param {number} dec */
-function findPlace(lines, dec) {
-  for (const line of lines.slice(0, 4)) {
-    if (splitPrice(line, dec)) break;
-    const clean = line.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9)']+$/g, "");
-    const letters = (clean.match(/[A-Za-z]/g) || []).length;
-    if (/\d/.test(clean) || NOT_ITEM.test(clean) || /\b(WELCOME|MERCHANT|COPY|CUSTOMER)\b/i.test(clean)) continue;
-    if (letters < 3 || letters / clean.replace(/\s/g, "").length < 0.75) continue;
-    return (/[a-z]/.test(clean) ? clean : clean.toLowerCase().replace(/(^|\s)[a-z]/g, c => c.toUpperCase())).slice(0, 80);
-  }
-  return "";
-}
-
 /** What a receipt's text says. `kind` is "receipt" (items to log), "total_only" (a payment screen: an amount and no
     drinks) or "unreadable". `other` is the receipt's currency when its symbols are not the cafe's: its prices are
     dropped, since a number in the wrong currency would look right and be wrong. `off` says the prices read do not add
-    up to the subtotal printed, which is how a 5 misread as a 3 gets noticed. `place` is the shop's name, if the top
-    of the receipt has one.
+    up to the subtotal printed, which is how a 5 misread as a 3 gets noticed. `odd` on an item means nothing in its
+    name says it is a drink.
     @param {string} text @param {{known?: string[], code?: string, dec?: number, today: string}} ctx the drinks you
     already log here, the cafe's currency, how many decimals it is written with, and today */
 export function parseReceipt(text, ctx) {
-  const none = { kind: "unreadable", date: null, total: null, other: "", off: false, place: "", items: [] };
+  const none = { kind: "unreadable", date: null, total: null, other: "", off: false, items: [] };
   if (typeof text !== "string") return none;
   const code = String(ctx.code || "USD").toUpperCase();
   const dec = ctx.dec == null ? 2 : ctx.dec;
   const known = (ctx.known || []).map(String);
+  /* the words of your own drinks: "einspanner" says drink as surely as "latte" does */
+  const own = new Set(known.flatMap(k => words(k)).filter(w => w.length >= 4 && !SOFT.has(w)));
   const lines = joinColumns(
     text
       .normalize("NFKC")
@@ -370,14 +391,17 @@ export function parseReceipt(text, ctx) {
   /** @type {any[]} */
   const items = [];
   rows.forEach(function (r) {
-    const plain = plainName(r.name);
+    const plain = plainName(r.name, own);
     const mine = matchKnown(plain, known);
+    const food = FOOD.test(r.name);
+    const named = words(plain).some(w => DRINK.has(w) || own.has(w));
     for (let i = 0; i < r.qty && items.length < SCAN_MAX_ROWS; i++)
       items.push({
         n: (mine || plain).slice(0, 80),
         isNew: !mine,
         printed: r.printed.slice(0, 80),
-        drink: !!mine || !FOOD.test(r.name),
+        drink: !!mine || (!food && named),
+        odd: !mine && !food && !named,
         price: other || r.price == null ? null : Math.round(r.price * 100) / 100,
         size: r.o.size,
         sweet: r.o.sweet,
@@ -390,8 +414,6 @@ export function parseReceipt(text, ctx) {
   const added = rows.reduce((t, r) => t + r.price * r.qty, 0);
   return {
     off: !other && subtotal != null && items.length > 0 && Math.abs(added - subtotal) > 0.011,
-    /* the name at the top of a ticket is the customer's, not the shop's */
-    place: ticket && items.length ? "" : findPlace(lines, dec),
     kind: items.length ? "receipt" : "total_only",
     date: findDate(text.normalize("NFKC"), ctx.today, code === "USD"),
     total: other ? null : amount,

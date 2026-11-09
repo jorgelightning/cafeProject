@@ -47,11 +47,14 @@ const { eq, done } = checker();
     window.__stub = image => { window.__image = image; return Promise.resolve(window.__text); };
     scanRead = window.__stub;
   });
-  const scan = async lines => {
+  /* every reading stops at the list to tick; with one row on it, the helpers press Log for the checks that come after */
+  const one = async () => { if (await pg.evaluate(() => !$("dnsheet").hidden && document.querySelectorAll("#dns-panel .scanrow").length === 1)) await pg.click("#dns-panel .dnact .btn:last-child"); };
+  const scan = async (lines, stay) => {
     await reset();
     await pg.evaluate(t => { window.__text = t; openQuickCup(); }, lines.join("\n"));
     await pg.setInputFiles("#scan-file", file());
     await pg.waitForFunction(() => !document.querySelector(".scanr"));
+    if (!stay) await one();
   };
   const sheet = () => pg.evaluate(() => {
     const t = sel => { const e = document.querySelector("#dns-panel " + sel); return e ? e.textContent.trim() : null; };
@@ -62,12 +65,16 @@ const { eq, done } = checker();
   const orders = n => pg.evaluate(n => { const d = cafes[0].drinks.find(x => x.n === n); return d ? drinkOrders(d) : null; }, n);
   const save = () => pg.click("#dns-panel .dnact .btn:last-child");
 
-  /* one drink: straight to the sheet */
-  await scan(["SAMPLE TEA BAR", "CORTADO 6.50", "+ OAT MILK", "TAX 0.70", "TOTAL 7.20"]);
+  /* one drink: the list first, as for several (v130), then the sheet */
+  await scan(["SAMPLE TEA BAR", "CORTADO 6.50", "+ OAT MILK", "TAX 0.70", "TOTAL 7.20"], true);
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, rows: [...document.querySelectorAll(".scanrow")].map(x => x.getAttribute("aria-pressed") + " " + x.querySelector("b").textContent + " " + x.querySelector(".scanp").textContent),
+    printed: document.querySelector(".scantext small").textContent, go: [...document.querySelectorAll("#dns-panel .dnact .btn")].pop().textContent.trim(), saved: cafes[0].drinks[0].orders.length }));
+  eq(s, { title: "Is this yours?", rows: ["true Cortado $6.50"], printed: "Printed: CORTADO + OAT MILK", go: "Log 1 cup", saved: 2 }, "one drink stops at the list too, showing what was printed beside what the app made of it");
+  await one();
   s = await sheet();
   eq([s.title, s.from, s.on, s.price, s.say, s.scan, s.of, s.save],
      ["A cup at Sample Tea Bar", "Filled in from your receipt. Change anything.", ["Cortado 2"], "6.50", "From the receipt, before tax and tip.", false, null, "Save cup"],
-     "one drink goes straight to the sheet, filled in, with the price and where it came from");
+     "Log 1 cup brings up the sheet, filled in, with the price and where it came from");
   eq([s.same, s.spec.includes("oat"), s.spec.includes("8 oz")], ["✓ From the receipt and last time", true, true], "…options printed on the receipt, last time's for the rest, and it says so");
   eq(s.focus, "dns-title", "…and it does not open the keyboard, since it is there to be checked");
   const pic = await pg.evaluate(() => { const c = window.__image, p = c.getContext("2d").getImageData(1000, 800, 1, 1).data; return { w: c.width, h: c.height, grey: p[0] === p[1] && p[1] === p[2] }; });
@@ -159,6 +166,7 @@ const { eq, done } = checker();
   await pg.waitForFunction(t => $("scan-text").value === t, ticket);
   eq(await pg.evaluate(() => $("scan-go").disabled), false, "Paste fills the box from the clipboard");
   await pg.click("#scan-go");
+  await one();
   s = await sheet();
   eq([s.title, s.on, s.same, s.spec, s.price, s.date.includes("Today")], ["A cup at Sample Tea Bar", ["Matcha Guava Cream Top"], "✓ From the receipt", "16 oz · lactose-free · no sugar", "", false],
      "an order ticket with no prices fills in the drink, its wrapped name, size, milk and sweetness, on the ticket's date");
@@ -173,31 +181,33 @@ const { eq, done } = checker();
   const fromLog = async lines => {
     await pg.evaluate(() => { if (app.dataset.view === "form") _formSnap = formSnapshot(); });
     await reset();
-    await pg.evaluate(t => { userLoc = null; show("list"); window.__text = t; logTab(); }, lines.join("\n"));
+    await pg.evaluate(t => { userLoc = null; show("list"); window.__text = t; logTab(); $("f-name").value = "New Place Coffee"; nameTyped(); }, lines.join("\n"));
     await pg.setInputFiles("#scan-file", file());
     await pg.waitForFunction(() => !document.querySelector(".scanr") || $("dnsheet").hidden);
+    await one();
   };
   const form = () => pg.evaluate(() => ({ view: app.dataset.view, name: $("f-name").value, sheet: !$("dnsheet").hidden, saved: cafes.length,
     rows: [...document.querySelectorAll("#f-drinks .dr")].map(r => r.querySelector(".dn").value + " " + r.querySelector(".dp").value) }));
   await pg.evaluate(() => { if (app.dataset.view === "form") _formSnap = formSnapshot(); });
   await reset();
-  s = await pg.evaluate(() => { userLoc = null; show("list"); logTab(); const r = $("f-scan").getBoundingClientRect(), t = $("form-title").getBoundingClientRect(); return { view: app.dataset.view, shown: !$("f-scan").hidden, tall: r.height >= 44, right: r.right <= innerWidth - 8, oneLine: t.height < 40 }; });
-  eq(s, { view: "form", shown: true, tall: true, right: true, oneLine: true }, "Log with no cafe open goes to Add a visit, which has Scan in its header");
+  s = await pg.evaluate(() => { userLoc = null; show("list"); logTab(); return { view: app.dataset.view, shown: !$("f-scan").hidden }; });
+  eq(s, { view: "form", shown: false }, "Log with no cafe open goes to Add a visit, where Scan waits for the cafe's name");
+  await pg.fill("#f-name", "New Place Coffee");
+  s = await pg.evaluate(() => { const r = $("f-scan").getBoundingClientRect(), t = $("form-title").getBoundingClientRect(); return { shown: !$("f-scan").hidden, tall: r.height >= 44, right: r.right <= innerWidth - 8, oneLine: t.height < 40 }; });
+  eq(s, { shown: true, tall: true, right: true, oneLine: true }, "…and shows in the header once there is one");
+  await pg.fill("#f-name", "");
+  eq(await pg.evaluate(() => $("f-scan").hidden), true, "…and goes again if the name is cleared");
   await pg.evaluate(() => { _formSnap = formSnapshot(); });
   await fromLog(["NEW PLACE COFFEE", "12 OAK ST", "CORTADO 6.50", "TOTAL 7.00"]);
-  eq(await form(), { view: "form", name: "New Place Coffee", sheet: false, saved: 1, rows: ["Cortado 6.50"] }, "a receipt from a new place fills in the form: its name and a row for the cup, the blank row gone, nothing saved");
+  eq(await form(), { view: "form", name: "New Place Coffee", sheet: false, saved: 1, rows: ["Cortado 6.50"] }, "a receipt scanned from Add a visit adds a row for the cup, the blank row gone, the name as you typed it, nothing saved");
   await fromLog(["NEW PLACE COFFEE", "ICD MTCHA LT 6.75", "HOJI LT 7.00", "CROISSANT 5.00", "TOTAL 18.75"]);
   p = await pick();
   eq(p.go, "Log 2 cups", "several items ask which were yours here too");
   s = await pg.evaluate(() => document.querySelector(".dnhead p").textContent.startsWith("New Place Coffee · "));
-  eq(s, true, "…under the name on the receipt");
+  eq(s, true, "…under the name you typed");
   await save();
   s = await form();
   eq([s.view, s.name, s.rows], ["form", "New Place Coffee", ["Iced matcha latte 6.75", "Hojicha latte 7.00"]], "…and each cup becomes a row of the form");
-  await fromLog(["SAMPLE TEA BAR", "CORTADO 6.50", "TOTAL 7.00"]);
-  s = await sheet();
-  eq([await pg.evaluate(() => app.dataset.view), s.title, s.price, s.on], ["detail", "A cup at Sample Tea Bar", "6.50", ["Cortado 2"]], "a receipt naming a cafe on your list goes to that cafe's own sheet");
-  await pg.evaluate(() => closeSheet());
   await fromLog(["~~ ;; ee"]);
   await pg.click("#dns-panel .dnact .btn:first-child");
   s = await form();
@@ -205,11 +215,13 @@ const { eq, done } = checker();
   await pg.evaluate(() => { _formSnap = formSnapshot(); });
   await reset();
   await pg.evaluate(() => { userLoc = null; show("list"); logTab(); });
+  await pg.fill("#f-name", "New Place Coffee");
   await pg.click("#f-scan");
   await pg.fill("#scan-text", ticket);
   await pg.click("#scan-go");
+  await one();
   s = await form();
-  eq([s.view, s.name, s.rows, s.sheet], ["form", "", ["Matcha Guava Cream Top "], false], "a ticket pasted into Add a visit adds the drink and leaves the cafe's name to you: the name on a ticket is the customer's");
+  eq([s.view, s.name, s.rows, s.sheet], ["form", "New Place Coffee", ["Matcha Guava Cream Top "], false], "a ticket pasted into Add a visit adds the drink and leaves the cafe's name as you typed it");
 
   /* always a way out */
   await pg.evaluate(() => { _formSnap = formSnapshot(); });
@@ -248,8 +260,9 @@ const { eq, done } = checker();
   /* what the receipt says is only ever text */
   await pg.evaluate(() => { scanRead = window.__stub; });
   await scan(["<img src=x onerror=alert(1)> 3.00", "Drip 2.00", "TOTAL 5.00"]);
-  s = await pg.evaluate(() => ({ imgs: document.querySelectorAll(".scantext img").length, printed: document.querySelector(".scantext small").textContent }));
-  eq(s, { imgs: 0, printed: "Printed: <img src=x onerror=alert(1)>" }, "text from a receipt is shown as text, never as markup");
+  s = await pg.evaluate(() => ({ imgs: document.querySelectorAll(".scantext img").length, printed: document.querySelector(".scantext small").textContent,
+    first: document.querySelector(".scanrow").getAttribute("aria-pressed") + " " + document.querySelector(".scantext span").textContent }));
+  eq(s, { imgs: 0, printed: "Printed: <img src=x onerror=alert(1)>", first: "false Not sure it’s a drink" }, "text from a receipt is shown as text, never as markup, and a line that names no drink is listed unticked");
 
   /* the real reader, on a drawn receipt, under the real page */
   const receipt = await pg.evaluate(() => {

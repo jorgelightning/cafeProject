@@ -2338,3 +2338,22 @@ screen. This is written from how these readers are known to behave, not yet from
 
 **What rules cannot do.** They read the layouts they were written for. An unknown one comes back as "No drinks found",
 with the text kept in the box to fix. Understanding any layout is what a model does, and that was the road not taken.
+
+## Real names, one list, and a name first (v130)
+
+Three asks from the owner's first scans with the phone's reader (8 Nov).
+
+**The list, always.** One drink used to skip "Which ones were yours?" and go straight to the filled-in sheet. The owner
+liked the list, so one drink stops there too ("Is this yours?"): it is where what was printed sits beside what the app
+made of it, before anything is filled in.
+
+**No made-up names.** A drink name could be whatever a line said, scraps included. Now a name is put through three
+checks. It becomes one of your own names when every word pairs up, looking at this cafe's drinks first and then every
+drink you have logged anywhere. A misread word is put right against the words drinks are made of, and your own drinks'
+words ("Matcba" is Matcha), only when exactly one is within a letter of it. And a line with no drink word in it, yours
+or the list's in `DRINK` (js/lib/scan.js), is still shown, but unticked and marked "Not sure it's a drink": the app no
+longer presents it as a drink. Scraps in front of a name ("A 1 Hojicha latte") are dropped.
+
+**A name first.** On Add a visit, Scan shows only once the cafe has a name. That retires v128's guessing of the shop from
+the receipt's first line, which on a ticket was the customer's name, and the jump to a listed cafe with it: typing a
+listed cafe's name already opens that cafe.

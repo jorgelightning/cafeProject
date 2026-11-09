@@ -18,8 +18,11 @@
    the Photos app and pasted. Reading a photo in the app is still there, as the second choice.
 
    Log only opens the sheet on a cafe page or standing in a cafe; anywhere else it opens Add a visit, so Scan is there
-   too (v128). From there a receipt naming one cafe on your list goes to that cafe's sheet, and any other fills in the
-   form: the shop's name from the top of the receipt, and a row for each cup. */
+   too (v128), once the cafe has a name (v130): a scan then always knows whose drinks it is reading. From there each
+   cup becomes a row of the form.
+
+   Since v130 every reading stops at the list to tick, one drink or five, so you see what was printed beside what
+   the app made of it before anything is filled in. */
 
 function scanOn() {
   return isAdmin;
@@ -90,7 +93,7 @@ function scanText() {
   run.typed = true;
   _scan = run;
   _scanDraft = text;
-  _scanLand(run, Object.assign(parseReceipt(text, _scanCtx(run)), { text: text }));
+  _scanRoute(run, Object.assign(parseReceipt(text, _scanCtx(run)), { text: text }));
 }
 function scanPhoto() {
   const f = /** @type {HTMLInputElement|null} */ ($("scan-file"));
@@ -105,18 +108,6 @@ function _scanNew() {
   const c = form ? cafes.find(x => x.id === editId) || null : cafes.find(x => x.id === curId);
   if (!c && !form) return null;
   return { c: c, form: form, code: _scanCode(c), ctl: new AbortController(), url: "", items: [], date: null };
-}
-/** Where a reading goes: from Add a visit, a receipt naming one cafe on your list is that cafe's. @param {any} run @param {any} res */
-function _scanLand(run, res) {
-  const here = run.form && !run.c && !$("f-name").value.trim() && !formDirty() ? _scanListed(res.place) : null;
-  if (here) {
-    run.c = here;
-    run.form = false;
-    run.code = _scanCode(here);
-    res = parseReceipt(res.text, _scanCtx(run));
-    openDetail(here.id);
-  }
-  _scanRoute(run, res);
 }
 /** @param {HTMLInputElement} el */
 function scanPicked(el) {
@@ -288,7 +279,7 @@ async function _scanRun(file) {
     };
     const res = await Promise.race([_scanMake(pic.image, run.ctl.signal, _scanCtx(run), say), stopped]);
     if (_scan !== run) return;
-    _scanLand(run, res);
+    _scanRoute(run, res);
   } catch (e) {
     if (_scan !== run) return;
     warn("scan.js", e);
@@ -307,18 +298,13 @@ async function _scanRun(file) {
 function _scanCode(c) {
   return String(ccyFor(c || { cc: formCC, ccy: formCcy })).toUpperCase();
 }
-/** What the parser needs to know: the drinks you log at this cafe or, with no cafe yet, all of them. @param {any} run */
+/** What the parser needs to know. Your drinks at this cafe come first, then everywhere else, so a name on a receipt
+    becomes the name you already use for it. @param {any} run */
 function _scanCtx(run) {
-  const known = run.c ? (run.c.drinks || []).map(d => d.n).filter(Boolean) : Object.values(drinkIndex()).map(e => e.n);
-  return { known: known, code: run.code, dec: ccyMeta(run.code).dec, today: localToday() };
-}
-/** The cafe on your list a receipt's name means, only when exactly one fits: a chain's branches are for you to choose.
-    @param {string} name */
-function _scanListed(name) {
-  const key = sameCafeKey(name || "");
-  if (key.length < 3) return null;
-  const hits = cafes.filter(c => sameCafeKey(c.name) === key);
-  return hits.length === 1 ? hits[0] : null;
+  const here = ((run.c && run.c.drinks) || []).map(d => d.n).filter(Boolean);
+  const seen = new Set(here.map(n => n.toLowerCase()));
+  const rest = Object.values(drinkIndex()).map(e => e.n).filter(n => !seen.has(n.toLowerCase()));
+  return { known: here.concat(rest), code: run.code, dec: ccyMeta(run.code).dec, today: localToday() };
 }
 /** A way out of any screen that is waiting on you. */
 function _scanClose() {
@@ -353,7 +339,6 @@ function _scanFill(run, rows) {
   const date = run.date || localToday(),
     code = run.code,
     dec = ccyMeta(code).dec,
-    place = run.place,
     off = run.off,
     other = run.other;
   _sheetOnClose = _scanStop;
@@ -362,10 +347,6 @@ function _scanFill(run, rows) {
     $("f-wish").checked = false;
     syncWishMode();
     syncMore(false);
-  }
-  if (place && !$("f-name").value.trim()) {
-    $("f-name").value = place;
-    autoBrand();
   }
   document.querySelectorAll("#f-drinks .dr").forEach(function (r) {
     const name = /** @type {HTMLInputElement|null} */ (r.querySelector(".dn"));
@@ -387,7 +368,6 @@ function _scanFill(run, rows) {
 function _scanRoute(run, res) {
   run.date = res.date;
   run.other = res.other;
-  run.place = res.place;
   if (res.kind === "unreadable") {
     _scanFail(run.typed ? "No drinks found in that text. Check that it all came across, or type it in." : "Try your phone’s text reader instead, or type it in.");
     return;
@@ -410,25 +390,21 @@ function _scanRoute(run, res) {
   }
   run.off = res.off;
   run.items = res.items.map((x, i) => Object.assign({ i: i, on: x.drink, say: res.off ? "Read from the receipt, but its prices don’t add up. Check this one." : "" }, x));
-  if (run.items.length === 1 && run.items[0].drink) {
-    if (run.form) _scanFill(run, run.items);
-    else _scanCups(run.items, 0, res.date, res.other);
-  }
-  else _scanShow(_scanPickHTML(run));
+  _scanShow(_scanPickHTML(run));
 }
 /** "Oat milk · had 3× here". @param {any} run @param {any} x a row */
 function _scanMeta(run, x) {
   const d = ((run.c && run.c.drinks) || []).find(y => (y.n || "").trim().toLowerCase() === x.n.trim().toLowerCase());
   const cups = d ? drinkOrders(d).reduce((t, o) => t + orderQty(o), 0) : 0;
-  return [orderOptsText(x), !x.drink ? "Not a drink" : cups ? "had " + cups + "× here" : run.c ? "new here" : ""].filter(Boolean).join(" · ");
+  return [orderOptsText(x), x.odd ? "Not sure it’s a drink" : !x.drink ? "Not a drink" : cups ? "had " + cups + "× here" : run.c ? "new here" : ""].filter(Boolean).join(" · ");
 }
 /** @param {any} run */
 function _scanPickHTML(run) {
   const n = run.items.filter(x => x.on).length;
   const day = run.date || localToday();
   return (
-    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Which ones were yours?</h2><p>' +
-    esc(run.c ? run.c.name : run.place || "Your receipt") + " · " + (day === localToday() ? "Today, " : "") + esc(_noteDay(day)) + "</p></div>" + _scanClose() + "</div>" +
+    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">' + (run.items.length === 1 ? "Is this yours?" : "Which ones were yours?") + "</h2><p>" +
+    esc(run.c ? run.c.name : $("f-name").value.trim() || "Your receipt") + " · " + (day === localToday() ? "Today, " : "") + esc(_noteDay(day)) + "</p></div>" + _scanClose() + "</div>" +
     '<div class="scanlist">' +
     run.items
       .map(function (x) {

@@ -87,6 +87,15 @@ function relinkBrand() {
   syncMoreSum();
   renderUsuals();
 }
+/* Scan on Add a visit waits for the cafe's name (v130): the owner's ask, and a scan then knows whose drinks it reads */
+function syncFormScan() {
+  const b = $("f-scan");
+  if (b) b.hidden = !scanOn() || !$("f-name").value.trim();
+}
+function nameTyped() {
+  autoBrand();
+  syncFormScan();
+}
 function autoBrand() {
   const f = $("f-brand"),
     n = $("f-name");
@@ -162,7 +171,7 @@ function openForm(id) {
   renderTags();
   renderKind(c);
   renderDrinkRows(c ? c.drinks : null);
-  if ($("f-scan")) $("f-scan").hidden = !scanOn();
+  syncFormScan();
   syncBrandUI();
   renderUsuals();
   syncCafeDetails(false); /* Adding a cafe from the Want tab is almost always saving a place to try, and the
@@ -285,6 +294,7 @@ function formPlacePicked(p) {
     _moved = !_wasAt || Math.abs(_wasAt.lat - picked.lat) > 0.0004 || Math.abs(_wasAt.lng - picked.lng) > 0.0004;
   }
   if (p.name) $("f-name").value = p.name;
+  syncFormScan();
   /* The one piece of the answer that is not a guess. Every Places record has a unique id,
     and this response already contains it — the app used to throw it away and then go
     looking for the place again by name, which is how a cafe ends up wearing another
