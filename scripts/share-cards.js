@@ -63,6 +63,7 @@ function posterHTML(c) {
     "#p+#n{margin-top:36px}" +
     "#a{margin-top:16px;font-size:42px;font-weight:600;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
     "#d{margin-top:auto;font-size:38px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}" +
+    "#d.cut{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}" +
     "</style>" +
     '<div id="c" data-k="' + kind + '">' +
     (PALE.has(kind) ? '<div id="sc"></div>' : "") +
@@ -77,7 +78,7 @@ function posterHTML(c) {
   );
 }
 /** Puts one poster on `pg` and fits it: the drink line to two lines, then the name down until everything has room.
-    @returns {Promise<{fits: boolean}>} whether all of it fits without being cut */
+    @returns {Promise<{fits: boolean, cut: boolean}>} whether everything has room, and whether the drink ended in an ellipsis */
 async function setPoster(pg, c) {
   await pg.setContent(posterHTML(c), { waitUntil: "load" });
   return pg.evaluate(() => {
@@ -91,6 +92,8 @@ async function setPoster(pg, c) {
       const tall = () => d.scrollHeight > Math.ceil(size(d) * 1.2 * 2) + 1;
       while (tall() && size(d) > 28) d.style.fontSize = size(d) - 2 + "px";
       drinkFits = !tall();
+      /* too long even at its smallest: two lines and an ellipsis, rather than taking the name's room */
+      if (!drinkFits) d.classList.add("cut");
     }
     const room = () => {
       const above = ($("a") || n).getBoundingClientRect().bottom;
@@ -101,7 +104,7 @@ async function setPoster(pg, c) {
     while (over() && size(n) > 44) n.style.fontSize = size(n) - 2 + "px";
     const nameFits = !over();
     n.style.overflowWrap = "anywhere";
-    return { fits: nameFits && drinkFits };
+    return { fits: nameFits, cut: !drinkFits };
   });
 }
 /** Draws a poster for every public cafe into `dir`. @param {any[]} cafes @param {string} dir @param {string} [fallback] a
