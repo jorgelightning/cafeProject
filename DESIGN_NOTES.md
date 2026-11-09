@@ -2372,3 +2372,6 @@ photo to show, since the app never sees it, and its box was already this screen.
 is saying it is yours, and a row with no name is not logged. The ticks and the button update in place, so typing keeps
 its cursor. Size, milk and the rest show as tags and are changed on the sheet that follows, which already does that.
 The list goes Back to the text, with the photo still there, and a failed reading's Try again does the same.
+
+**The photo stays (v132).** The owner checked the text against the photo, pressed Find the drinks, and the photo was
+gone just when the names needed checking (8 Nov). It now sits above the list as well.

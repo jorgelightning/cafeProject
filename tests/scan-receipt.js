@@ -49,7 +49,7 @@ const { eq, done } = checker();
   });
   /* every reading stops at the list to tick; with one row on it, the helpers press Log for the checks that come after */
   /* a photo read in the app stops at the review first (v131); the helpers press Find the drinks */
-  const past = async () => { if (await pg.evaluate(() => !$("dnsheet").hidden && !!document.querySelector("#dns-panel .scanthumb"))) await pg.click("#scan-go"); };
+  const past = async () => { if (await pg.evaluate(() => !$("dnsheet").hidden && !!document.querySelector("#dns-panel .scanthumb") && !!$("scan-text"))) await pg.click("#scan-go"); };
   const one = async () => { if (await pg.evaluate(() => !$("dnsheet").hidden && document.querySelectorAll("#dns-panel .scanrow").length === 1)) await pg.click("#dns-panel .dnact .btn:last-child"); };
   const scan = async (lines, stay) => {
     await reset();
@@ -97,8 +97,11 @@ const { eq, done } = checker();
   eq(s, { title: "Check what it read", text: "Xqzv 6.50\nTOTAL 6.50", go: "Find the drinks", back: "Retake", close: true, blob: true, saved: 2, wide: true },
      "a photo read in the app stops at your photo and the text it read, with nothing made of it yet");
   await pg.click("#scan-go");
-  s = await pg.evaluate(() => ({ tick: document.querySelector(".scantick").getAttribute("aria-pressed"), note: document.querySelector(".scannote").textContent, go: $("scan-log").textContent + ($("scan-log").disabled ? " off" : "") }));
-  eq(s, { tick: "false", note: "Not sure it’s a drink", go: "Tick a drink off" }, "a line that names no drink comes to the list unticked");
+  await pg.waitForFunction(() => { const i = document.querySelector("#dns-panel .scanthumb img"); return !$("scan-text") && i && i.complete && i.naturalWidth > 0; });
+  s = await pg.evaluate(() => ({ tick: document.querySelector(".scantick").getAttribute("aria-pressed"), note: document.querySelector(".scannote").textContent, go: $("scan-log").textContent + ($("scan-log").disabled ? " off" : ""),
+    above: document.querySelector("#dns-panel .scanthumb").getBoundingClientRect().bottom <= document.querySelector(".scanlist").getBoundingClientRect().top,
+    reach: $("scan-log").getBoundingClientRect().bottom <= innerHeight }));
+  eq(s, { tick: "false", note: "Not sure it’s a drink", go: "Tick a drink off", above: true, reach: true }, "a line that names no drink comes to the list unticked, with your photo still above the list to check against (v132)");
   await pg.fill("#dns-panel .scanname", "Flat white");
   s = await pg.evaluate(() => ({ tick: document.querySelector(".scantick").getAttribute("aria-pressed"), go: $("scan-log").textContent, focus: document.activeElement.className, tall: document.querySelector(".scanname").getBoundingClientRect().height >= 44 }));
   eq(s, { tick: "true", go: "Log 1 cup", focus: "scanname", tall: true }, "its name is a box: putting it right ticks the row, and the cursor stays in the box");
@@ -209,6 +212,7 @@ const { eq, done } = checker();
   await pg.waitForFunction(t => $("scan-text").value === t, ticket);
   eq(await pg.evaluate(() => $("scan-go").disabled), false, "Paste fills the box from the clipboard");
   await pg.click("#scan-go");
+  eq(await pg.evaluate(() => [document.querySelectorAll("#dns-panel .scanrow").length, document.querySelectorAll("#dns-panel .scanthumb").length]), [1, 0], "pasted text has no photo to show on the list");
   await one();
   s = await sheet();
   eq([s.title, s.on, s.same, s.spec, s.price, s.date.includes("Today")], ["A cup at Sample Tea Bar", ["Matcha Guava Cream Top"], "✓ From the receipt", "16 oz · lactose-free · no sugar", "", false],

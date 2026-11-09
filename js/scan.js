@@ -111,12 +111,16 @@ function _scanReview(run, text) {
   run.text = text;
   _scanShow(
     '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Check what it read</h2><p>Fix anything it got wrong, then continue.</p></div>' + _scanClose() + "</div>" +
-      (run.url ? '<div class="scanthumb"><img src="' + esc(run.url) + '" alt="Your photo"></div>' : "") +
+      _scanThumb(run) +
       '<label class="dnlab" for="scan-text">Text it read</label>' +
       '<textarea id="scan-text" class="dntext scantxt" rows="7" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"' + act("scanTyped", [], "input") + ">" + esc(text) + "</textarea>" +
       '<div class="dnact"><button type="button" class="btn ghost"' + act("scanPhoto") + ">Retake</button>" +
       '<button type="button" class="btn" id="scan-go"' + act("scanText") + (text.trim() ? "" : " disabled") + ">Find the drinks</button></div>"
   );
+}
+/** Your photo, on the text and again on the list (v132): the names are checked against it, so it has to be in view. @param {any} run */
+function _scanThumb(run) {
+  return run.url ? '<div class="scanthumb"><img src="' + esc(run.url) + '" alt="Your photo"></div>' : "";
 }
 /* From the list or a failed reading, back to the text it came from */
 function scanBack() {
@@ -447,6 +451,7 @@ function _scanPickHTML(run) {
   return (
     '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">' + (run.items.length === 1 ? "Is this yours?" : "Which ones were yours?") + "</h2><p>" +
     esc(run.c ? run.c.name : $("f-name").value.trim() || "Your receipt") + " · " + (day === localToday() ? "Today, " : "") + esc(_noteDay(day)) + "</p></div>" + _scanClose() + "</div>" +
+    _scanThumb(run) +
     '<div class="scanlist">' +
     run.items
       .map(function (x) {
