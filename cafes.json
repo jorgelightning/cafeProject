@@ -2226,13 +2226,13 @@
         "reorder": "yes"
       }
     ],
-    "elo": 1579,
+    "elo": 1585,
     "emoji": "☕",
     "fav": true,
     "id": "msu1xc32ec38",
     "lat": 37.33282,
     "lng": -121.90455,
-    "matches": 7,
+    "matches": 8,
     "name": "Kasama Cà Phê",
     "rating": 5,
     "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
@@ -2452,13 +2452,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1560,
+    "elo": 1568,
     "emoji": "☕",
     "fav": false,
     "id": "mt6wojizh8ca",
     "lat": 49.28251,
     "lng": -123.11126,
-    "matches": 7,
+    "matches": 8,
     "name": "Saunter Coffee",
     "rating": 5,
     "review": "Great atmosphere to work in the front and there is something on the back for more of a quiet experience. The flat white is so good, strong espresso and the matcha has a good strong matcha taste too!",
@@ -3865,6 +3865,49 @@
     "wish": false
   },
   {
+    "area": "SoMa",
+    "brand": "Q Specialty Coffee",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-11-09"
+        ],
+        "ice": "Less ice",
+        "n": "Coco Drop Ube Cloud",
+        "orders": [
+          {
+            "date": "2026-11-09",
+            "ice": "Less ice",
+            "id": "mw9mmp90hjd7",
+            "p": "7.95",
+            "reorder": "yes",
+            "size": "14 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.95",
+        "reorder": "yes",
+        "size": "14 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1422,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mw9mnsuz8lmg",
+    "lat": 37.78861,
+    "lng": -122.39538,
+    "matches": 2,
+    "name": "Q Specialty Coffee",
+    "pid": "ChIJw2NiLQCBhYARCRc2ms4E6t8",
+    "rating": 0,
+    "review": "The vibes are cool, a lot people studying or working. People from tech coming to grab their tea and go! Not many drinks sugar was customizable tho. Drinks so far is good!",
+    "updated": "2026-11-09T19:45:52.218Z",
+    "wish": false
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
@@ -4144,6 +4187,174 @@
     "custom": false,
     "drinks": [
       {
+        "count": 14,
+        "dates": [
+          "2026-03-24",
+          "2026-07-09",
+          "2026-07-27",
+          "2026-09-08",
+          "2026-09-09",
+          "2026-09-15",
+          "2026-09-18",
+          "2026-09-24",
+          "2026-10-07",
+          "2026-10-14",
+          "2026-10-15",
+          "2026-10-17",
+          "2026-10-28",
+          "2026-11-08"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Flat White",
+        "orders": [
+          {
+            "date": "2026-03-24",
+            "ice": "Warm",
+            "id": "mtvs2elobsr6",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-09",
+            "ice": "Warm",
+            "id": "mtvs2elnvxe0",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-07-27",
+            "ice": "Warm",
+            "id": "mtvs2elmn0g5",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-08",
+            "ice": "Warm",
+            "id": "mtvs2ell0gxx",
+            "milk": "Oat",
+            "p": "4.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-09",
+            "ice": "Warm",
+            "id": "mtvs2eqp5azy",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-15",
+            "ice": "Warm",
+            "id": "mu34ylftx36w",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-18",
+            "ice": "Warm",
+            "id": "mu7boi2nzdul",
+            "milk": "Oat",
+            "p": "4.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-09-24",
+            "ice": "Warm",
+            "id": "mufx9yuhrhf8",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-07",
+            "ice": "Warm",
+            "id": "muyz7cdju6n6",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-14",
+            "ice": "Warm",
+            "id": "mv8ts4lr2rvo",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-15",
+            "ice": "Warm",
+            "id": "mv9wwgzcjgu5",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-17",
+            "ice": "Warm",
+            "id": "mved46znxltj",
+            "milk": "Oat",
+            "p": "5",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-10-28",
+            "ice": "Warm",
+            "id": "mvtufa7rmr3o",
+            "milk": "Whole",
+            "note": "The person who was making it doesn't seems to care or listen lol. It was decent tho.",
+            "p": "5",
+            "reorder": "neutral",
+            "size": "8 oz",
+            "sweet": "0%"
+          },
+          {
+            "date": "2026-11-08",
+            "ice": "Warm",
+            "id": "mw8uexncbgh7",
+            "milk": "Oat",
+            "note": "Aaron made it, art is good and taste amazing!",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      },
+      {
         "count": 13,
         "dates": [
           "2026-03-22",
@@ -4302,164 +4513,6 @@
         "sweet": "0%"
       },
       {
-        "count": 13,
-        "dates": [
-          "2026-03-24",
-          "2026-07-09",
-          "2026-07-27",
-          "2026-09-08",
-          "2026-09-09",
-          "2026-09-15",
-          "2026-09-18",
-          "2026-09-24",
-          "2026-10-07",
-          "2026-10-14",
-          "2026-10-15",
-          "2026-10-17",
-          "2026-10-28"
-        ],
-        "ice": "Warm",
-        "milk": "Whole",
-        "n": "Flat White",
-        "orders": [
-          {
-            "date": "2026-03-24",
-            "ice": "Warm",
-            "id": "mtvs2elobsr6",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-09",
-            "ice": "Warm",
-            "id": "mtvs2elnvxe0",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-07-27",
-            "ice": "Warm",
-            "id": "mtvs2elmn0g5",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-08",
-            "ice": "Warm",
-            "id": "mtvs2ell0gxx",
-            "milk": "Oat",
-            "p": "4.25",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-09",
-            "ice": "Warm",
-            "id": "mtvs2eqp5azy",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-15",
-            "ice": "Warm",
-            "id": "mu34ylftx36w",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-18",
-            "ice": "Warm",
-            "id": "mu7boi2nzdul",
-            "milk": "Oat",
-            "p": "4.25",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-09-24",
-            "ice": "Warm",
-            "id": "mufx9yuhrhf8",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-10-07",
-            "ice": "Warm",
-            "id": "muyz7cdju6n6",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-10-14",
-            "ice": "Warm",
-            "id": "mv8ts4lr2rvo",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-10-15",
-            "ice": "Warm",
-            "id": "mv9wwgzcjgu5",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-10-17",
-            "ice": "Warm",
-            "id": "mved46znxltj",
-            "milk": "Oat",
-            "p": "5",
-            "reorder": "yes",
-            "size": "8 oz",
-            "sweet": "0%"
-          },
-          {
-            "date": "2026-10-28",
-            "ice": "Warm",
-            "id": "mvtufa7rmr3o",
-            "milk": "Whole",
-            "note": "The person who was making it doesn't seems to care or listen lol. It was decent tho.",
-            "p": "5",
-            "reorder": "neutral",
-            "size": "8 oz",
-            "sweet": "0%"
-          }
-        ],
-        "p": "5",
-        "reorder": "neutral",
-        "size": "8 oz",
-        "sweet": "0%"
-      },
-      {
         "dates": [
           "2026-10-22"
         ],
@@ -4556,7 +4609,7 @@
     "tags": [
       "specialty"
     ],
-    "updated": "2026-11-03T21:47:57.055Z",
+    "updated": "2026-11-09T05:51:42.356Z",
     "wish": false
   },
   {
