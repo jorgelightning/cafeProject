@@ -56,6 +56,9 @@ jobs:
           path: _data
       - name: Build the site
         run: node scripts/build-site.js --data _data --out _site
+      # the picture each shared link previews with; it needs the browser installed above
+      - name: Draw the share pictures
+        run: node scripts/share-cards.js --site _site
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

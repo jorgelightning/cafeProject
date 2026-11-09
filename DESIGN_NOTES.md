@@ -2396,3 +2396,26 @@ and deletes it. Then it goes where Log goes: standing in a cafe on your list, th
 else Add a visit opens and the receipt waits for the cafe's name and the Scan button, for ten minutes and one use.
 iPhones do not offer share targets to web apps. Tested by posting to the real service worker; the share sheet itself
 can only be tried on the phone.
+
+## A picture for every shared link (9 Nov)
+
+A shared link previewed with the app's icon, so a link to one cafe looked like a link to any other, and the owner found
+it only okay. Four designs were drawn at chat size (the cafe's poster, an order ticket, what to order, the rank). The
+ticket was built first, then the owner chose the poster: the colour, rings and drawing of the top of the cafe page, with
+the name large, the verdict, the area and what to get.
+
+`scripts/share-cards.js` draws one 1200×630 JPEG per public cafe (as PNG the colour fades came to about 420 KB each, which some chat apps drop) with the browser the deploy already installs, as a step
+of its own after the site is built, because the build itself is synchronous and runs inside tests that should not draw
+a hundred pictures. The colours, drawings, kind rules and the drink to recommend are cut out of the app's scripts by
+`scripts/app-rules.js` rather than copied, so a poster cannot disagree with the cafe page. A first copy called one cafe
+tea that the app draws as boba, and the share page's own older pick could name a drink given a thumbs down, so it uses
+the app's pick now too. The test compares every cafe against the running app. A preview is about 300px
+wide, so the type is large and only a long name shrinks. Four of the kinds start too pale for cream type, so those get a
+soft dark fade behind the words. A cafe rated below "It was fine" says "Tried the" rather than "Get the", on the picture
+and in the words under it.
+
+It uses only what the share page already publishes, and a private spot gets neither. Nothing changes in the app, so no
+version bump: posters come with each deploy, so a new cafe gets one with the nightly backup, and until then its link
+still opens the app, with no picture. A poster that cannot be drawn falls back to the icon. Chat apps remember a link's
+picture, so an old link can keep the old one.
+`tests/share-pages.js`.

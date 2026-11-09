@@ -15,6 +15,7 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const SITE = "https://jorgelightning.github.io/cafeProject/";
+const { topDrinkAt } = require("./app-rules.js");
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 /** @param {any} s */
@@ -29,20 +30,15 @@ function verdict(c) {
 }
 /** The drink ordered most there. @param {any} c */
 function topDrink(c) {
-  let best = null,
-    bn = 0;
-  (c.drinks || []).forEach(d => {
-    const name = String(d.n || "").trim();
-    if (!name) return;
-    const n = Array.isArray(d.orders) && d.orders.length
-      ? d.orders.reduce((t, o) => t + Math.max(1, parseInt(o.qty, 10) || 1), 0)
-      : Math.max(parseInt(d.count, 10) || 0, (d.dates || []).length, 1);
-    if (n > bn || (n === bn && best && name.localeCompare(best) < 0)) {
-      bn = n;
-      best = name;
-    }
-  });
-  return best;
+  const top = topDrinkAt(c);
+  return top ? String(top.d.n).trim() : null;
+}
+/** What the page and its picture say to order, or "". A cafe that was not for you is not a recommendation. @param {any} c */
+function orderLine(c) {
+  const top = topDrink(c);
+  if (!top || c.wish) return "";
+  const r = c.rating || 0;
+  return (r >= 1 && r < 3 ? "Tried the " : "Get the ") + top;
 }
 /** The page for one cafe, or null when it must not have one. @param {any} c */
 function page(c) {
@@ -51,8 +47,7 @@ function page(c) {
   if (!name) return null;
   const area = String(c.area || "").trim();
   const title = name + (area ? " · " + area : "");
-  const top = topDrink(c);
-  const desc = [verdict(c), top && !c.wish ? "Get the " + top : ""].filter(Boolean).concat("JL Cafe Project").join(" · ");
+  const desc = [verdict(c), orderLine(c)].filter(Boolean).concat("JL Cafe Project").join(" · ");
   const app = "../?cafe=" + c.id;
   const url = SITE + "c/" + c.id;
   return (
@@ -68,8 +63,12 @@ function page(c) {
     '<meta property="og:title" content="' + esc(title) + '">\n' +
     '<meta property="og:description" content="' + esc(desc) + '">\n' +
     '<meta property="og:url" content="' + esc(url) + '">\n' +
-    '<meta property="og:image" content="' + SITE + 'icon-512.png">\n' +
-    '<meta name="twitter:card" content="summary">\n' +
+    /* its own picture, a poster drawn at deploy (scripts/share-cards.js) */
+    '<meta property="og:image" content="' + SITE + "c/" + c.id + '.jpg">\n' +
+    '<meta property="og:image:width" content="1200">\n' +
+    '<meta property="og:image:height" content="630">\n' +
+    '<meta property="og:image:alt" content="' + esc("A poster for " + name) + '">\n' +
+    '<meta name="twitter:card" content="summary_large_image">\n' +
     '<meta http-equiv="refresh" content="0; url=' + esc(app) + '">\n' +
     "</head><body>\n" +
     "<script>location.replace(" + JSON.stringify(app) + ");</script>\n" +
@@ -96,7 +95,7 @@ function build(cafes, dir) {
   return keep.size;
 }
 
-module.exports = { build, page, verdict, topDrink };
+module.exports = { build, page, verdict, topDrink, orderLine };
 
 if (require.main === module) {
   const cafes = JSON.parse(fs.readFileSync(path.join(ROOT, "cafes.json"), "utf8"));
