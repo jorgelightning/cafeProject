@@ -125,7 +125,7 @@ const { eq, done } = checker();
   /* can't read it */
   await scan(["~~ ;; ee", "SAMPLE TEA BAR"]);
   s = await pg.evaluate(() => ({ title: $("dns-title").textContent, why: document.querySelector(".dnhead p").textContent, buttons: [...document.querySelectorAll("#dns-panel .dnact .btn")].map(x => x.textContent) }));
-  eq(s, { title: "Couldn’t read that", why: "Try again with the receipt flat and in focus, or type it in.", buttons: ["Type it in", "Retake"] }, "a photo it cannot read says so and offers both ways on");
+  eq(s, { title: "Couldn’t read that", why: "Try your phone’s text reader instead, or type it in.", buttons: ["Type it in", "Try again"] }, "a photo it cannot read says so, points at the phone's reader, and offers both ways on");
   await pg.click("#dns-panel .dnact .btn:first-child");
   s = await sheet();
   eq([s.title, s.from, s.scan], ["A cup at Sample Tea Bar", null, true], "…Type it in is the ordinary sheet");
@@ -137,6 +137,37 @@ const { eq, done } = checker();
   await save();
   s = await sheet();
   eq(s.say, "Read from the receipt, but its prices don’t add up. Check this one.", "…on each cup's sheet too");
+
+  /* Scan opens on a box for the phone's own reader (v129) */
+  const ticket = [earlier, "Alex", "FOR HERE", "1 × Matcha Guava Cream", "Top (16oz)", "Lactose Free Whole", "Milk", "No Sweet"].join("\n");
+  await reset();
+  await pg.evaluate(() => openQuickCup());
+  await pg.click("#dns-panel .qcscan");
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, box: !!$("scan-text"), go: $("scan-go").disabled, photo: (document.querySelector(".scanalt") || {}).textContent, close: !!document.querySelector("#dns-panel .ocx"),
+    focus: document.activeElement.id, tall: $("scan-go").getBoundingClientRect().height >= 44 && document.querySelector(".scanalt").getBoundingClientRect().height >= 44, wide: document.documentElement.scrollWidth <= innerWidth }));
+  eq(s, { title: "Scan a receipt", box: true, go: true, photo: "Or read a photo in the app", close: true, focus: "dns-title", tall: true, wide: true },
+     "Scan opens on a box for the receipt's text, with Read it off until there is some and the photo as the second choice");
+  await pg.fill("#scan-text", "nothing useful here");
+  eq(await pg.evaluate(() => $("scan-go").disabled), false, "typing or pasting turns Read it on");
+  await pg.click("#scan-go");
+  s = await pg.evaluate(() => document.querySelector(".dnhead p").textContent);
+  eq(s, "No drinks found in that text. Check that it all came across, or type it in.", "text with no drinks in it says so");
+  await pg.click("#dns-panel .dnact .btn:last-child");
+  eq(await pg.evaluate(() => $("scan-text").value), "nothing useful here", "…and Try again brings the text back to fix");
+  await pg.evaluate(t => { Object.defineProperty(navigator, "clipboard", { configurable: true, value: { readText: async () => t } }); }, ticket);
+  await pg.click("#dns-panel .dnact .btn:first-child");
+  await pg.waitForFunction(t => $("scan-text").value === t, ticket);
+  eq(await pg.evaluate(() => $("scan-go").disabled), false, "Paste fills the box from the clipboard");
+  await pg.click("#scan-go");
+  s = await sheet();
+  eq([s.title, s.on, s.same, s.spec, s.price, s.date.includes("Today")], ["A cup at Sample Tea Bar", ["Matcha Guava Cream Top"], "✓ From the receipt", "16 oz · lactose-free · no sugar", "", false],
+     "an order ticket with no prices fills in the drink, its wrapped name, size, milk and sweetness, on the ticket's date");
+  await save();
+  saved = (await orders("Matcha Guava Cream Top")).pop();
+  eq([saved.date, saved.size, saved.milk, saved.sweet, saved.p], [earlier, "16 oz", "Lactose-free", "0%", undefined], "…and saves it with no price, since the ticket had none");
+  await pg.evaluate(() => { openQuickCup(); scanStart(); });
+  eq(await pg.evaluate(() => $("scan-text").value), "", "a reading that worked leaves the box empty next time");
+  await pg.evaluate(() => closeSheet());
 
   /* Log with no cafe open: Add a visit has Scan too */
   const fromLog = async lines => {
@@ -171,6 +202,14 @@ const { eq, done } = checker();
   await pg.click("#dns-panel .dnact .btn:first-child");
   s = await form();
   eq([s.view, s.sheet], ["form", false], "Type it in from the form goes back to the form");
+  await pg.evaluate(() => { _formSnap = formSnapshot(); });
+  await reset();
+  await pg.evaluate(() => { userLoc = null; show("list"); logTab(); });
+  await pg.click("#f-scan");
+  await pg.fill("#scan-text", ticket);
+  await pg.click("#scan-go");
+  s = await form();
+  eq([s.view, s.name, s.rows, s.sheet], ["form", "", ["Matcha Guava Cream Top "], false], "a ticket pasted into Add a visit adds the drink and leaves the cafe's name to you: the name on a ticket is the customer's");
 
   /* always a way out */
   await pg.evaluate(() => { _formSnap = formSnapshot(); });

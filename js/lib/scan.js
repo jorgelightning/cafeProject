@@ -97,7 +97,7 @@ function splitPrice(line, dec) {
     is this a modifier line of its own, where a bare "HOT" means the drink and not its name */
 function pullOptions(text, wholeLine) {
   const o = { size: "", sweet: "", ice: "", milk: "" };
-  let s = " " + text + " ";
+  let s = " " + text.replace(/[()[\]]/g, " ") + " ";
   const take = (re, fn) => {
     s = s.replace(re, function () {
       fn.apply(null, arguments);
@@ -121,6 +121,7 @@ function pullOptions(text, wholeLine) {
   take(/\s(SMALL|SM)\s/i, () => (o.size = o.size || "Small"));
   take(/\s(MEDIUM|MED|MD)\s/i, () => (o.size = o.size || "Medium"));
   take(/\s(LARGE|LRG|LG)\s/i, () => (o.size = o.size || "Large"));
+  take(/\sLACTOSE[\s-]?FREE(\s+WHOLE)?(\s+MILK)?\s/i, () => (o.milk = "Lactose-free"));
   take(/\s(OAT(LY)?)(\s+MILK)?\s/i, () => (o.milk = "Oat"));
   take(/\s(ALMOND|ALM)(\s+MILK)?\s/i, () => (o.milk = "Almond"));
   take(/\sSOY(\s+MILK)?\s/i, () => (o.milk = "Soy"));
@@ -184,6 +185,97 @@ function matchKnown(name, known) {
   return best;
 }
 
+/** A phone's text reader often hands back a receipt's names and its prices as two separate runs of lines, or each price
+    on the line under its name. This puts each price back on its line, so the rest can read it as printed.
+    @param {string[]} lines @param {number} dec */
+function joinColumns(lines, dec) {
+  const info = lines.map(function (l) {
+    const h = splitPrice(l, dec);
+    return { l: l, priced: !!h, bare: !!h && !/[A-Za-z]/.test(h.name) && !/%/.test(l) };
+  });
+  const singles = info.filter((x, i) => x.bare && !(info[i - 1] && info[i - 1].bare) && !(info[i + 1] && info[i + 1].bare)).length;
+  /* lines that never carry a price: a card number, a date, a thank-you */
+  const NEVER = /\b(THANK|AUTH|APPROV\w*|SERVER|CASHIER|TABLE|GUEST|ORDER|TEL|PHONE)\b|\d{4,}/i;
+  /** @type {string[]} */
+  const out = [];
+  /** @type {number[]} */
+  let labels = [];
+  for (let i = 0; i < info.length; ) {
+    if (!info[i].bare) {
+      out.push(info[i].l);
+      if (info[i].priced) labels = [];
+      else if (!NEVER.test(info[i].l)) labels.push(out.length - 1);
+      i++;
+      continue;
+    }
+    let j = i;
+    while (j < info.length && info[j].bare) j++;
+    const prices = info.slice(i, j).map(x => x.l);
+    /* a line that only says how a drink was made ("LESS ICE") has no price of its own */
+    const priced = labels.filter(function (k) {
+      const p = pullOptions(out[k], true);
+      return /^\+/.test(out[k]) || !(Object.values(p.o).some(Boolean) && !/[A-Za-z]{2}/.test(p.rest.replace(/\bMILK\b/i, "")));
+    });
+    const pool = priced.length >= prices.length ? priced : labels;
+    const one = prices.length === 1;
+    if (pool.length >= prices.length && (!one || singles >= 2 || /\b(TOTAL|AMOUNT|DUE|BALANCE|TAX)\b/i.test(out[pool[pool.length - 1]]))) {
+      pool.slice(-prices.length).forEach((k, n) => (out[k] += " " + prices[n]));
+    } else prices.forEach(p => out.push(p));
+    labels = [];
+    i = j;
+  }
+  return out;
+}
+const hasOpt = o => Object.values(o).some(Boolean);
+const QTY = /^(\d{1,2})\s*[x×*]\s+(?=\S)/i;
+/** An order ticket, the slip stuck to the cup: no prices, each drink starting "1 ×", and under it the rest of its name
+    and how it was made, wrapped over as many lines as the paper needs. @param {string[]} lines */
+function ticketRows(lines) {
+  /** @type {any[]} */
+  const rows = [];
+  /** @type {any} */
+  let cur = null;
+  let nameOpen = false,
+    made = [];
+  const close = function () {
+    if (!cur) return;
+    Object.assign(cur.o, Object.fromEntries(Object.entries(pullOptions(made.join(" "), true).o).filter(e => e[1])));
+    if (/[A-Za-z]{2}/.test(cur.name)) rows.push(cur);
+    cur = null;
+    made = [];
+  };
+  lines.forEach(function (line) {
+    const q = QTY.exec(line);
+    if (q) {
+      close();
+      const p = pullOptions(line.slice(q[0].length), false);
+      cur = { name: p.rest, qty: Math.max(1, Math.min(+q[1], MAX_QTY)), price: null, o: p.o, printed: line.slice(q[0].length) };
+      nameOpen = !hasOpt(p.o);
+      return;
+    }
+    if (!cur) return;
+    if (NOT_ITEM.test(line) || !/[A-Za-z0-9]/.test(line)) {
+      close();
+      return;
+    }
+    cur.printed += " " + line;
+    const p = pullOptions(line, false);
+    /* the name runs on until a line says how the drink was made */
+    if (nameOpen && !isModifier(line, pullOptions(line, true).rest, p.o)) {
+      if (p.rest) cur.name += " " + p.rest;
+      if (hasOpt(p.o)) {
+        Object.assign(cur.o, Object.fromEntries(Object.entries(p.o).filter(e => e[1])));
+        nameOpen = false;
+      }
+    } else {
+      nameOpen = false;
+      made.push(line);
+    }
+  });
+  close();
+  return rows;
+}
+
 /** The shop's name: the first line at the top of the receipt that reads like one. @param {string[]} lines @param {number} dec */
 function findPlace(lines, dec) {
   for (const line of lines.slice(0, 4)) {
@@ -210,11 +302,14 @@ export function parseReceipt(text, ctx) {
   const code = String(ctx.code || "USD").toUpperCase();
   const dec = ctx.dec == null ? 2 : ctx.dec;
   const known = (ctx.known || []).map(String);
-  const lines = text
-    .normalize("NFKC")
-    .split(/\r?\n/)
-    .map(l => l.replace(/[|_—–]/g, " ").replace(/\s+/g, " ").replace(/(\s+[;:!'"`.,~^])+$/, "").trim())
-    .filter(Boolean);
+  const lines = joinColumns(
+    text
+      .normalize("NFKC")
+      .split(/\r?\n/)
+      .map(l => l.replace(/[|_—–]/g, " ").replace(/\s+/g, " ").replace(/(\s+[;:!'"`.,~^])+$/, "").trim())
+      .filter(Boolean),
+    dec
+  );
 
   /** @type {any[]} */
   const rows = [];
@@ -268,6 +363,10 @@ export function parseReceipt(text, ctx) {
     rows.push({ name: name, qty: qty, price: q && +q[1] > 1 ? hit.price / +q[1] : hit.price, o: p.o, printed: hit.name });
   });
 
+  /* nothing with a price: perhaps the slip from the cup, which has none */
+  const ticket = !rows.length;
+  if (ticket) ticketRows(lines).forEach(r => rows.push(r));
+
   /** @type {any[]} */
   const items = [];
   rows.forEach(function (r) {
@@ -279,7 +378,7 @@ export function parseReceipt(text, ctx) {
         isNew: !mine,
         printed: r.printed.slice(0, 80),
         drink: !!mine || !FOOD.test(r.name),
-        price: other ? null : Math.round(r.price * 100) / 100,
+        price: other || r.price == null ? null : Math.round(r.price * 100) / 100,
         size: r.o.size,
         sweet: r.o.sweet,
         ice: r.o.ice,
@@ -291,7 +390,8 @@ export function parseReceipt(text, ctx) {
   const added = rows.reduce((t, r) => t + r.price * r.qty, 0);
   return {
     off: !other && subtotal != null && items.length > 0 && Math.abs(added - subtotal) > 0.011,
-    place: findPlace(lines, dec),
+    /* the name at the top of a ticket is the customer's, not the shop's */
+    place: ticket && items.length ? "" : findPlace(lines, dec),
     kind: items.length ? "receipt" : "total_only",
     date: findDate(text.normalize("NFKC"), ctx.today, code === "USD"),
     total: other ? null : amount,

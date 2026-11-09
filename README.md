@@ -192,14 +192,17 @@ so a visitor who never does never loads them.
 
 ## Scan a receipt
 
-The log sheet and Add a visit each have a Scan button that fills them in from a photo of a receipt, and you still press Save. It all runs on
-the phone: Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, reads the text and `parseReceipt` (`js/lib/scan.js`) works
-out what it means. It costs nothing, needs no account, and the photo never leaves the phone. The first scan downloads
-about 7 MB; nobody who doesn't scan ever fetches it. It reads English print only.
+The log sheet and Add a visit each have a Scan button that fills them in from a receipt, and you still press Save. Scan
+opens on a box for the receipt's text, which the phone's own reader fills: Scan Text from an iPhone's keyboard, or text
+copied out of Google Lens or the Photos app and pasted. `parseReceipt` (`js/lib/scan.js`) works out what the text means.
+It costs nothing, needs no account, and nothing leaves the phone.
 
-It is a text reader, not something that understands receipts, so expect to correct it sometimes. A clear, flat photo
-works best. When the prices it read don't add up to the printed subtotal it says so. To teach it a shop's abbreviation,
-add a line to `WORDS` in `js/lib/scan.js`.
+"Or read a photo in the app" is the second choice: Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, about 7 MB on
+first use. It reads clean print and does poorly on real phone photos.
+
+The rules know priced receipts, names and prices handed back as separate columns, and a cup's order ticket with no
+prices. A layout they do not know comes back as "No drinks found". To teach it a shop's abbreviation, add a line to
+`WORDS` in `js/lib/scan.js`; a new layout is a new rule and a test in `tests/unit/scan.test.mjs`.
 
 ## Owner checklist (things the code cannot check for you)
 

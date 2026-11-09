@@ -2316,3 +2316,25 @@ that looks like one, so it is a starting point, and it goes in the box only when
 A failed scan was hard to leave: its only exit was tapping outside the sheet. It now has a close button, as does the
 list to tick, and Type it in from the form goes back to the form. The phone's back gesture also changed the page under
 any open sheet and left the sheet on top, so back now puts the sheet away first, for every sheet.
+
+## The phone's own reader (v129)
+
+On real receipts Tesseract did a poor job (owner, 8 Nov). It was built for flat scanned pages, and my trial images were
+receipts I had drawn. Of three ways on (tune it, use the phone's reader, bring back a vision model) the owner chose the
+phone's reader: free, private, and far better at photos than anything a page can load. A site cannot call it, so Scan
+now opens on a box for the receipt's text: an iPhone's keyboard offers Scan Text into it, and anywhere else the text is
+copied out of Google Lens or Photos and pasted. Reading a photo in the app stays as the second choice.
+
+**The first real receipt was not a receipt.** It was the order ticket from the cup: no prices, "1 × Matcha Guava Cream"
+with "Top (16oz)" wrapped under it, then "Lactose Free Whole / Milk" and "No Sweet". The rules only knew lines ending in
+a price, so a perfect reading would still have failed. Now, when nothing is priced, a line starting "1 ×" opens a drink;
+its name runs on until a line says how it was made, and the rest are options. The name at the top of a ticket is the
+customer's, so it is never offered as the cafe's. A ticket's cup saves with no price, or last time's.
+
+**Columns.** A phone's reader may hand back the names and then the prices, or each price under its name. `joinColumns`
+puts each price back on its line first: a run of bare prices goes to the lines above it, counted from the bottom, where
+the totals are, skipping lines that only say how a drink was made. One loose amount under a name is still a payment
+screen. This is written from how these readers are known to behave, not yet from the owner's phone.
+
+**What rules cannot do.** They read the layouts they were written for. An unknown one comes back as "No drinks found",
+with the text kept in the box to fix. Understanding any layout is what a model does, and that was the road not taken.

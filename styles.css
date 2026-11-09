@@ -1366,6 +1366,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .scantext span{ margin-top:2px; font-size:var(--fs-2); color:var(--soft); }
 .scantext small{ margin-top:2px; font-size:var(--fs-1); color:var(--faint); }
 .scanp{ font-size:var(--fs-3); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.scantxt{ min-height:132px; font-size:var(--fs-2); line-height:1.45; }
+.scanalt{ align-self:center; min-height:44px; padding:0 var(--sp-3); border:0; background:none; color:var(--soft); font:inherit; font-size:var(--fs-2); font-weight:600; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.scanalt:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
 .scanfoot{ margin:0 2px; font-size:var(--fs-1); color:var(--faint); }
 .qcsame{ display:flex; flex-direction:column; align-items:flex-start; gap:var(--sp-1); padding:var(--sp-2) var(--sp-3); border:1.5px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-2); text-align:left; cursor:pointer; }
 .qcsame b{ font-size:var(--fs-3); }

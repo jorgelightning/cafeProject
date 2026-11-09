@@ -12,13 +12,21 @@
    the sheet comes up once for each. A payment screen often shows only a total, and says so. English print only:
    other languages need their own, larger model.
 
+   Tesseract turned out poor on real phone photos (v129), and the owner's first real receipt was a cup's order ticket
+   with no prices at all. So Scan now opens on a box for the receipt's text, which the phone's own reader fills far
+   better than anything a page can load: Scan Text from an iPhone's keyboard, or text copied out of Google Lens or
+   the Photos app and pasted. Reading a photo in the app is still there, as the second choice.
+
    Log only opens the sheet on a cafe page or standing in a cafe; anywhere else it opens Add a visit, so Scan is there
    too (v128). From there a receipt naming one cafe on your list goes to that cafe's sheet, and any other fills in the
    form: the shop's name from the top of the receipt, and a row for each cup. */
 
-/** Needs WebAssembly and a way to decode the photo; every phone this app runs well on has both. */
 function scanOn() {
-  return isAdmin && typeof WebAssembly === "object" && typeof createImageBitmap === "function";
+  return isAdmin;
+}
+/** Reading a photo in the app needs WebAssembly and a way to decode the photo. */
+function _scanCanRead() {
+  return typeof WebAssembly === "object" && typeof createImageBitmap === "function";
 }
 const SCAN_WAIT_MS = 90000;
 /* Enough for small receipt print to be read, and no more: every extra pixel is time on a phone */
@@ -26,13 +34,89 @@ const SCAN_SIDE = 2400;
 const OCR_DIR = "vendor/tesseract-7.0.0/";
 /** The scan in progress: what the sheet is showing while it is not the quick cup. @type {any} */
 let _scan = null;
+/* text that found no drinks, kept so Try again does not start from an empty box */
+let _scanDraft = "";
 
+/** Scan opens on a box for the receipt's text. */
 function scanStart() {
+  if (!scanOn()) return;
+  _scanStop();
+  _qc = null;
+  if ($("dnsheet").hidden) openSheet("");
+  _sheetOnClose = _scanStop;
+  const ua = navigator.userAgent || "";
+  const how = /iPhone|iPad|iPod/.test(ua)
+    ? "Tap the box and choose Scan Text (it may be under AutoFill), then point the camera at the receipt. Or paste text copied from a photo."
+    : /Android/.test(ua)
+      ? "Open the receipt in Google Lens or your Photos app, copy its text, then paste it here."
+      : "Copy the receipt’s text with your phone’s text reader, then paste it here.";
+  const canPaste = !!(navigator.clipboard && navigator.clipboard.readText);
+  _scanShow(
+    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Scan a receipt</h2><p>' + esc(how) + "</p></div>" + _scanClose() + "</div>" +
+      '<label class="dnlab" for="scan-text">Receipt text</label>' +
+      '<textarea id="scan-text" class="dntext scantxt" rows="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Paste or scan the text here"' +
+      act("scanTyped", [], "input") + ">" + esc(_scanDraft) + "</textarea>" +
+      '<div class="dnact">' + (canPaste ? '<button type="button" class="btn ghost"' + act("scanPaste") + ">Paste</button>" : "") +
+      '<button type="button" class="btn" id="scan-go"' + act("scanText") + (_scanDraft.trim() ? "" : " disabled") + ">Read it</button></div>" +
+      (_scanCanRead() ? '<button type="button" class="scanalt"' + act("scanPhoto") + ">Or read a photo in the app</button>" : "")
+  );
+}
+function scanTyped() {
+  const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text")),
+    go = /** @type {HTMLButtonElement|null} */ ($("scan-go"));
+  if (box && go) go.disabled = !box.value.trim();
+}
+async function scanPaste() {
+  const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text"));
+  if (!box) return;
+  try {
+    const t = await navigator.clipboard.readText();
+    if (!t.trim()) {
+      toast("Nothing copied yet");
+      return;
+    }
+    box.value = t;
+    scanTyped();
+  } catch (e) {
+    toast("Couldn’t paste. Press and hold the box, then choose Paste.");
+  }
+}
+/** The box's text, read as a receipt. */
+function scanText() {
+  const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text"));
+  const text = box ? box.value : "";
+  const run = text.trim() ? _scanNew() : null;
+  if (!run) return;
+  run.typed = true;
+  _scan = run;
+  _scanDraft = text;
+  _scanLand(run, Object.assign(parseReceipt(text, _scanCtx(run)), { text: text }));
+}
+function scanPhoto() {
   const f = /** @type {HTMLInputElement|null} */ ($("scan-file"));
   if (!f || !scanOn()) return;
   /* so choosing the same photo again still counts as a change */
   f.value = "";
   f.click();
+}
+/** A scan of the cafe you are on, or of Add a visit. @returns {any} */
+function _scanNew() {
+  const form = app.dataset.view === "form";
+  const c = form ? cafes.find(x => x.id === editId) || null : cafes.find(x => x.id === curId);
+  if (!c && !form) return null;
+  return { c: c, form: form, code: _scanCode(c), ctl: new AbortController(), url: "", items: [], date: null };
+}
+/** Where a reading goes: from Add a visit, a receipt naming one cafe on your list is that cafe's. @param {any} run @param {any} res */
+function _scanLand(run, res) {
+  const here = run.form && !run.c && !$("f-name").value.trim() && !formDirty() ? _scanListed(res.place) : null;
+  if (here) {
+    run.c = here;
+    run.form = false;
+    run.code = _scanCode(here);
+    res = parseReceipt(res.text, _scanCtx(run));
+    openDetail(here.id);
+  }
+  _scanRoute(run, res);
 }
 /** @param {HTMLInputElement} el */
 function scanPicked(el) {
@@ -171,11 +255,9 @@ async function scanRead(image, signal, say) {
 }
 /** @param {File} file */
 async function _scanRun(file) {
-  const form = app.dataset.view === "form";
-  const c = form ? cafes.find(x => x.id === editId) || null : cafes.find(x => x.id === curId);
-  if (!c && !form) return;
   _scanStop();
-  const run = /** @type {any} */ ({ c: c, form: form, code: _scanCode(c), ctl: new AbortController(), url: "", items: [], date: null });
+  const run = _scanNew();
+  if (!run) return;
   _scan = run;
   _qc = null;
   if ($("dnsheet").hidden) openSheet("");
@@ -204,23 +286,15 @@ async function _scanRun(file) {
       const note = $("scan-note");
       if (note && _scan === run) note.textContent = step === "again" ? "That was hard to read. Taking a closer look." : "Looking for drinks and prices. The photo stays on your phone.";
     };
-    let res = await Promise.race([_scanMake(pic.image, run.ctl.signal, _scanCtx(run), say), stopped]);
+    const res = await Promise.race([_scanMake(pic.image, run.ctl.signal, _scanCtx(run), say), stopped]);
     if (_scan !== run) return;
-    const here = run.form && !run.c && !$("f-name").value.trim() && !formDirty() ? _scanListed(res.place) : null;
-    if (here) {
-      run.c = here;
-      run.form = false;
-      run.code = _scanCode(here);
-      res = parseReceipt(res.text, _scanCtx(run));
-      openDetail(here.id);
-    }
-    _scanRoute(run, res);
+    _scanLand(run, res);
   } catch (e) {
     if (_scan !== run) return;
     warn("scan.js", e);
     _scanFail(
       e && e.name === "AbortError"
-        ? "That took too long. Try a closer photo, or type it in."
+        ? "That took too long. Try your phone’s text reader instead, or type it in."
         : navigator.onLine === false
           ? "The reader needs a connection the first time you scan."
           : "Something went wrong reading that. Try again, or type it in."
@@ -264,7 +338,7 @@ function _scanFail(why) {
   _scanShow(
     '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Couldn’t read that</h2><p>' + esc(why) + "</p></div>" + _scanClose() + "</div>" +
       '<div class="dnact"><button type="button" class="btn ghost"' + act("scanType") + ">Type it in</button>" +
-      '<button type="button" class="btn"' + act("scanStart") + ">Retake</button></div>"
+      '<button type="button" class="btn"' + act("scanStart") + ">Try again</button></div>"
   );
 }
 function scanType() {
@@ -315,9 +389,10 @@ function _scanRoute(run, res) {
   run.other = res.other;
   run.place = res.place;
   if (res.kind === "unreadable") {
-    _scanFail("Try again with the receipt flat and in focus, or type it in.");
+    _scanFail(run.typed ? "No drinks found in that text. Check that it all came across, or type it in." : "Try your phone’s text reader instead, or type it in.");
     return;
   }
+  _scanDraft = "";
   if (res.kind === "total_only") {
     const amount = res.total != null ? fmtLocal(res.total, run.code) : "";
     if (run.form) {
@@ -369,7 +444,7 @@ function _scanPickHTML(run) {
       .join("") +
     "</div>" +
     '<p class="scanfoot">' + (run.other ? "This receipt is in " + esc(run.other) + ", so add each price yourself." : run.off ? "These prices don’t add up to the receipt’s subtotal, so one may be misread." : "Tax, tip and the total are left out.") + "</p>" +
-    '<div class="dnact"><button type="button" class="btn ghost"' + act("scanStart") + ">Retake</button>" +
+    '<div class="dnact"><button type="button" class="btn ghost"' + act("scanStart") + ">Try again</button>" +
     '<button type="button" class="btn"' + act("scanLog") + (n ? ">Log " + n + (n === 1 ? " cup" : " cups") : " disabled>Tick a drink") + "</button></div>"
   );
 }
