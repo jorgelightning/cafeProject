@@ -2226,13 +2226,13 @@
         "reorder": "yes"
       }
     ],
-    "elo": 1585,
+    "elo": 1589,
     "emoji": "☕",
     "fav": true,
     "id": "msu1xc32ec38",
     "lat": 37.33282,
     "lng": -121.90455,
-    "matches": 8,
+    "matches": 9,
     "name": "Kasama Cà Phê",
     "rating": 5,
     "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
@@ -3881,6 +3881,7 @@
             "date": "2026-11-09",
             "ice": "Less ice",
             "id": "mw9mmp90hjd7",
+            "note": "Ube was really good, a bit sweet for me. The coconut water bring it together really well!",
             "p": "7.95",
             "reorder": "yes",
             "size": "14 oz",
@@ -3893,18 +3894,18 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1422,
+    "elo": 1569,
     "emoji": "☕",
     "fav": false,
     "id": "mw9mnsuz8lmg",
     "lat": 37.78861,
     "lng": -122.39538,
-    "matches": 2,
+    "matches": 3,
     "name": "Q Specialty Coffee",
     "pid": "ChIJw2NiLQCBhYARCRc2ms4E6t8",
     "rating": 0,
-    "review": "The vibes are cool, a lot people studying or working. People from tech coming to grab their tea and go! Not many drinks sugar was customizable tho. Drinks so far is good!",
-    "updated": "2026-11-09T19:45:52.218Z",
+    "review": "The vibes are cool, a lot people studying or working. People from working coming to grab their tea and go! Not many drinks sugar was customizable tho. Drinks so far is good!",
+    "updated": "2026-11-09T20:05:11.237Z",
     "wish": false
   },
   {
