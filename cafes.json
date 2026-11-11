@@ -2226,13 +2226,13 @@
         "reorder": "yes"
       }
     ],
-    "elo": 1589,
+    "elo": 1595,
     "emoji": "☕",
     "fav": true,
     "id": "msu1xc32ec38",
     "lat": 37.33282,
     "lng": -121.90455,
-    "matches": 9,
+    "matches": 10,
     "name": "Kasama Cà Phê",
     "rating": 5,
     "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
@@ -3906,6 +3906,52 @@
     "rating": 0,
     "review": "The vibes are cool, a lot people studying or working. People from working coming to grab their tea and go! Not many drinks sugar was customizable tho. Drinks so far is good!",
     "updated": "2026-11-09T20:05:11.237Z",
+    "wish": false
+  },
+  {
+    "area": "Outer Richmond",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-11-10"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Flat White",
+        "orders": [
+          {
+            "date": "2026-11-10",
+            "ice": "Warm",
+            "id": "mwba5q7g00eq",
+            "milk": "Oat",
+            "note": "Good taste between oak milk and espresso",
+            "p": "6.25",
+            "reorder": "yes",
+            "size": "8 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "6.25",
+        "reorder": "yes",
+        "size": "8 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1568,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mwba7g0lwrk3",
+    "lat": 37.77277,
+    "lng": -122.5107,
+    "matches": 1,
+    "name": "Andytown Coffee Roasters",
+    "pid": "ChIJIWto0vGHhYAR1koqXLM7-Io",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-11-10T22:48:36.305Z",
     "wish": false
   },
   {
