@@ -2455,3 +2455,33 @@ how a drink is made, since "2% Milk" is milk.
 Not fixed: pale small print (a ticket's date and time) is mostly not read even from a perfect cut, and a hard shadow
 still loses what is under it. Only one photo was real, and no phone was timed.
 `tests/unit/crop.test.mjs`, `tests/unit/scan.test.mjs`, `tests/scan-receipt.js`.
+
+## The cut is yours (v135)
+
+A day with v134 and the owner asked for the other thing: "can you have it so I have to crop it myself, so it's super
+refine where the receipt is". This was the third of the three mockups, turned down the first time for adding a step to
+every scan; a step you want is not a cost.
+
+So every photo stops at a box over it, **Where's the receipt?**, and nothing is read until you say. The box starts on
+the receipt v134's finder found, because starting right is most of the work, and a little in from the photo's edges
+when it found none. Each of its four corners is dragged on its own.
+
+**Four free corners, not a box with a lean.** A receipt photographed from an angle is a trapezium. Four corners say
+that, and `flatten` (js/lib/crop.js) pulls what is inside them square through the one projection that takes a square's
+corners to the box's, so the tilt and the angle both go. The cut is taken from the photo's own pixels before anything
+is shrunk.
+
+**The finger is on top of what it is placing.** So a magnifier shows the photo around the corner being dragged, with
+the box's two edges and a ring on the corner, in whichever top corner of the photo the finger is not. A corner moves
+from wherever on it the finger took hold, without jumping to the finger. It cannot be dragged past a neighbour or off
+the photo: a move that would stop the box being a box is simply not taken. The arrow keys move a corner too. The sheet
+takes the whole screen for this, as it does while reading, so the photo is as large as the phone allows.
+
+**What went.** v134's chip swapped between the receipt and the whole photo, and the scan took a second look at the
+whole photo by itself when the paper it found had no drink. Both were ways round a guess, and there is no guess to get
+round now. The chip is **Adjust crop**, back to the box; **Whole photo** is a button beside Read this part. A box left
+as it was is not read twice, and what you fixed in the text is still there; a moved box is read again. A part that
+would not read goes back to its box on Try again, where the old Try again went back to the start.
+
+Not measured: a real phone. The magnifier and the drag are tested with a mouse in the suite's browser.
+`tests/unit/crop.test.mjs`, `tests/scan-receipt.js`.

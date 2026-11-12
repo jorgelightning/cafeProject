@@ -2,7 +2,7 @@
    The suite (tests/run.js) runs these through tests/unit.js. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { findReceipt, CROP_SMALL, CROP_MID } from "../../js/lib/crop.js";
+import { findReceipt, foundCorners, quadOk, quadSize, flatten, CROP_SMALL, CROP_MID } from "../../js/lib/crop.js";
 
 /** A photo 3 wide by 4 tall at `side` on its long side: a background, then papers. A paper is where its middle is and
     how big it is, as fractions of the photo's width, with its lean in degrees; rows of dark print unless it is blank. */
@@ -90,4 +90,67 @@ test("findReceipt: of two papers, the one nearer the middle", () => {
 test("findReceipt: pictures too small or cut short are refused, not read past their end", () => {
   assert.equal(findReceipt({ Y: new Uint8Array(16), w: 4, h: 4 }, photo(CROP_MID, 40, [])), null);
   assert.equal(findReceipt({ Y: new Uint8Array(10), w: 100, h: 100 }, photo(CROP_MID, 40, [])), null);
+});
+
+test("foundCorners: a found receipt as four corners, clockwise from the top left", () => {
+  assert.deepEqual(foundCorners({ cx: 50, cy: 80, w: 40, h: 60, angle: 0 }), [[30, 50], [70, 50], [70, 110], [30, 110]]);
+  const q = foundCorners({ cx: 0, cy: 0, w: 40, h: 60, angle: 90 });
+  near(q[0][0], 30, 1e-9, "a quarter turn clockwise takes the top left to the top right");
+  near(q[0][1], -20, 1e-9, "…and up");
+  assert.equal(quadOk(foundCorners({ cx: 50, cy: 80, w: 40, h: 60, angle: 12 }), 5), true, "leaning, it is still a box");
+});
+
+test("quadOk: a box whose corners have crossed, folded in or closed up is not one", () => {
+  const box = [[10, 10], [90, 10], [90, 150], [10, 150]];
+  assert.equal(quadOk(box, 5), true);
+  assert.equal(quadOk([[10, 10], [90, 30], [80, 150], [20, 140]], 5), true, "any four-sided shape that does not fold");
+  assert.equal(quadOk([[95, 10], [90, 10], [90, 150], [10, 150]], 5), false, "the top left dragged past the top right");
+  assert.equal(quadOk([[10, 10], [90, 10], [40, 60], [10, 150]], 5), false, "a corner folded inward");
+  assert.equal(quadOk([[10, 10], [13, 10], [90, 150], [10, 150]], 5), false, "a side too short to hold anything");
+  assert.equal(quadOk(box.slice().reverse(), 5), false, "the same corners the other way round");
+  assert.equal(quadOk([[10, 10], [90, 10], [90, NaN], [10, 150]], 5), false);
+  assert.equal(quadOk(box.slice(0, 3), 5), false);
+});
+
+test("quadSize: opposite sides averaged, so a trapezium flattens to a size between its ends", () => {
+  assert.deepEqual(quadSize([[0, 0], [40, 0], [40, 60], [0, 60]]), { w: 40, h: 60 });
+  assert.deepEqual(quadSize([[10, 0], [30, 0], [40, 60], [0, 60]]).w, 30);
+});
+
+/** A picture where each pixel's red is its column and green its row, so a flattened pixel says where it came from. */
+function ramp(w, h) {
+  const d = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) d.set([x, y, 7, 255], (y * w + x) * 4);
+  return d;
+}
+const at = (out, ow, x, y) => [out[(y * ow + x) * 4], out[(y * ow + x) * 4 + 1]];
+
+test("flatten: an upright box is a plain cut, pixel for pixel", () => {
+  const out = flatten(ramp(100, 120), 100, 120, [[20, 30], [60, 30], [60, 90], [20, 90]], 40, 60);
+  assert.equal(out.length, 40 * 60 * 4);
+  assert.deepEqual([at(out, 40, 0, 0), at(out, 40, 39, 0), at(out, 40, 39, 59), at(out, 40, 0, 59), at(out, 40, 17, 31)], [[20, 30], [59, 30], [59, 89], [20, 89], [37, 61]]);
+  assert.deepEqual([out[2], out[3]], [7, 255], "the other colours come too, and it is solid");
+});
+
+test("flatten: a leaning box and a trapezium are pulled square, each corner to its own corner", () => {
+  for (const q of [foundCorners({ cx: 50, cy: 60, w: 40, h: 60, angle: 15 }), [[30, 20], [70, 26], [84, 100], [14, 92]]]) {
+    const out = flatten(ramp(100, 120), 100, 120, q, 80, 120);
+    [[0, 0], [79, 0], [79, 119], [0, 119]].forEach((c, i) => {
+      const got = at(out, 80, c[0], c[1]);
+      near(got[0], q[i][0], 1.5, "corner " + i + " across");
+      near(got[1], q[i][1], 1.5, "corner " + i + " down");
+    });
+    /* in perspective the middle of the flat picture is where the box's diagonals cross, not the average of its corners */
+    const [p0, p1, p2, p3] = q;
+    const den = (p2[0] - p0[0]) * (p3[1] - p1[1]) - (p2[1] - p0[1]) * (p3[0] - p1[0]);
+    const t = ((p1[0] - p0[0]) * (p3[1] - p1[1]) - (p1[1] - p0[1]) * (p3[0] - p1[0])) / den;
+    const mid = at(out, 80, 40, 60);
+    near(mid[0], p0[0] + t * (p2[0] - p0[0]), 1.5, "its middle is where the diagonals cross");
+    near(mid[1], p0[1] + t * (p2[1] - p0[1]), 1.5, "…down too");
+  }
+});
+
+test("flatten: corners at or past the photo's edge read its edge, not past its end", () => {
+  const out = flatten(ramp(50, 50), 50, 50, [[-10, -10], [60, -10], [60, 60], [-10, 60]], 20, 20);
+  assert.deepEqual([at(out, 20, 0, 0), at(out, 20, 19, 19)], [[0, 0], [49, 49]]);
 });

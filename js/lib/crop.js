@@ -15,6 +15,11 @@
    receipt, a dark screen) or when the paper already fills the photo. The caller then reads the whole photo, as before.
 
    It works on brightness alone, as plain arrays, so it knows nothing of canvases and Node can test it.
+
+   Since v135 the owner sets the cut: "so I have to crop it myself". What is found here is only where the box starts
+   (foundCorners); its four corners are dragged onto the receipt's, each on its own, and flatten pulls what is inside
+   them square. Four free corners say more than a box and a lean: a receipt photographed from an angle is a
+   trapezium, and flattening undoes that as well as the tilt.
    Like the other lib files, the app gets these as globals. */
 
 /* the long side, in pixels, of the two pictures findReceipt wants: one to find the paper, a finer one to see print */
@@ -228,4 +233,85 @@ export function findReceipt(small, mid) {
   return { cx: best.cx + 0.5, cy: best.cy + 0.5, w: best.w + 2 * pad, h: best.h + 2 * pad, angle: best.angle };
 }
 
-if (typeof window !== "undefined") Object.assign(window, { CROP_SMALL, CROP_MID, findReceipt });
+/** A box's four corners, clockwise from the top left as you look at it, each [x, y]. @typedef {number[][]} Quad */
+
+/** The corners of what findReceipt found: where the box starts. @param {Found} f @returns {Quad} */
+export function foundCorners(f) {
+  const a = (f.angle * Math.PI) / 180,
+    c = Math.cos(a),
+    s = Math.sin(a),
+    hw = f.w / 2,
+    hh = f.h / 2;
+  return [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]].map(p => [f.cx + p[0] * c - p[1] * s, f.cy + p[0] * s + p[1] * c]);
+}
+/** Could a receipt be in this box? Its corners still go round clockwise with none folded inward, and no side is
+    shorter than `least`. A corner dragged past another fails, so the drag is not taken. @param {Quad} q @param {number} least */
+export function quadOk(q, least) {
+  if (!Array.isArray(q) || q.length !== 4 || q.some(p => !Array.isArray(p) || !Number.isFinite(p[0]) || !Number.isFinite(p[1]))) return false;
+  for (let i = 0; i < 4; i++) {
+    const a = q[i],
+      b = q[(i + 1) % 4],
+      c = q[(i + 2) % 4];
+    if (Math.hypot(b[0] - a[0], b[1] - a[1]) < least) return false;
+    /* down is positive y, so a clockwise turn is a positive cross product */
+    if ((b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]) <= 0) return false;
+  }
+  return true;
+}
+/** The size of the upright picture a box flattens to: each pair of opposite sides, averaged. @param {Quad} q */
+export function quadSize(q) {
+  /** @param {number} i @param {number} j */
+  const d = (i, j) => Math.hypot(q[j][0] - q[i][0], q[j][1] - q[i][1]);
+  return { w: (d(0, 1) + d(3, 2)) / 2, h: (d(0, 3) + d(1, 2)) / 2 };
+}
+/** Pulls the box square: the picture inside four corners, as an upright ow by oh picture. Each point of the answer is
+    looked up in the photo through the one projection that takes a square's corners to the box's (Heckbert, 1989), and
+    takes the blend of the four pixels around where it lands.
+    @param {Uint8ClampedArray|Uint8Array} src the photo, four numbers a pixel @param {number} sw @param {number} sh
+    @param {Quad} q in the photo's pixels @param {number} ow @param {number} oh @returns {Uint8ClampedArray} */
+export function flatten(src, sw, sh, q, ow, oh) {
+  const out = new Uint8ClampedArray(ow * oh * 4);
+  const x0 = q[0][0],
+    y0 = q[0][1],
+    x1 = q[1][0],
+    y1 = q[1][1],
+    x2 = q[2][0],
+    y2 = q[2][1],
+    x3 = q[3][0],
+    y3 = q[3][1];
+  const dx1 = x1 - x2,
+    dx2 = x3 - x2,
+    dy1 = y1 - y2,
+    dy2 = y3 - y2,
+    sx = x0 - x1 + x2 - x3,
+    sy = y0 - y1 + y2 - y3;
+  const den = dx1 * dy2 - dx2 * dy1;
+  const g = den ? (sx * dy2 - dx2 * sy) / den : 0,
+    h = den ? (dx1 * sy - sx * dy1) / den : 0;
+  const a = x1 - x0 + g * x1,
+    b = x3 - x0 + h * x3,
+    d = y1 - y0 + g * y1,
+    e = y3 - y0 + h * y3;
+  for (let oy = 0, o = 0; oy < oh; oy++) {
+    const v = (oy + 0.5) / oh;
+    for (let ox = 0; ox < ow; ox++, o += 4) {
+      const u = (ox + 0.5) / ow;
+      const z = g * u + h * v + 1;
+      /* a pixel's colour sits at its middle, hence the halves */
+      const x = Math.min(sw - 1, Math.max(0, (a * u + b * v + x0) / z - 0.5)),
+        y = Math.min(sh - 1, Math.max(0, (d * u + e * v + y0) / z - 0.5));
+      const xi = Math.min(sw - 2, Math.floor(x)),
+        yi = Math.min(sh - 2, Math.floor(y));
+      const fx = x - xi,
+        fy = y - yi;
+      const p = (yi * sw + xi) * 4,
+        r = p + sw * 4;
+      for (let ch = 0; ch < 3; ch++)
+        out[o + ch] = (src[p + ch] * (1 - fx) + src[p + 4 + ch] * fx) * (1 - fy) + (src[r + ch] * (1 - fx) + src[r + 4 + ch] * fx) * fy;
+      out[o + 3] = 255;
+    }
+  }
+  return out;
+}
+
+if (typeof window !== "undefined") Object.assign(window, { CROP_SMALL, CROP_MID, findReceipt, foundCorners, quadOk, quadSize, flatten });

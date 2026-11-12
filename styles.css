@@ -1372,11 +1372,31 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .scantext small{ margin-top:var(--sp-1); font-size:var(--fs-1); color:var(--faint); }
 .scanp{ min-height:44px; display:flex; align-items:center; font-size:var(--fs-3); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .scanthumb{ position:relative; display:flex; justify-content:center; border-radius:var(--r-2); background:var(--surface2); overflow:hidden; }
-/* Whole photo / Just the receipt (v134): a small pill to look at, inside a 44px button to tap */
+/* Adjust crop (v135; Whole photo in v134): a small pill to look at, inside a 44px button to tap */
 .scanview{ position:absolute; right:0; bottom:0; min-height:44px; padding:var(--sp-2); display:flex; align-items:flex-end; border:0; background:none; font:inherit; cursor:pointer; }
 .scanview span{ padding:var(--sp-1) var(--sp-3); border-radius:var(--r-pill); background:var(--surface); color:var(--text); font-size:var(--fs-1); font-weight:600; box-shadow:0 0 0 1px var(--border); }
 .scanview:focus-visible{ outline:none; }
 .scanview:focus-visible span{ outline:2px solid var(--text); outline-offset:2px; }
+/* Where's the receipt? (v135): the photo, a box over it, and a corner to drag at each of the box's corners. The sheet
+   takes the whole screen, as it does while reading, so the photo is as large as the phone allows; the photo sits half a
+   corner in from the sheet's edge, so a corner at the photo's edge is still all there to take hold of. */
+.dnpanel:has(> .scancropwrap){ max-width:none; max-height:none; height:100%; border-radius:0; padding-top:calc(var(--sp-3) + env(safe-area-inset-top, 0px)); }
+@media (min-width:900px){ .dnpanel:has(> .scancropwrap){ max-width:520px; height:auto; max-height:92%; border-radius:var(--r-4); } }
+.scancropwrap{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; padding:6px; }
+.scancrop{ position:relative; line-height:0; touch-action:none; user-select:none; -webkit-user-select:none; }
+.scancrop img{ display:block; max-width:100%; max-height:56vh; -webkit-user-drag:none; }
+.scanquad{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.scanquad path{ fill:rgba(0,0,0,.55); }
+.scanquad polygon{ fill:none; stroke:#fff; stroke-width:2px; vector-effect:non-scaling-stroke; }
+.scanhd{ position:absolute; width:44px; height:44px; margin:-22px 0 0 -22px; padding:0; border:0; background:none; touch-action:none; cursor:grab; }
+.scanhd::after{ content:""; position:absolute; inset:11px; box-sizing:border-box; border:3px solid var(--acc); border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.55); }
+.scanhd[data-drag]{ cursor:grabbing; }
+.scanhd[data-drag]::after{ inset:15px; }
+.scanhd:focus-visible{ outline:none; }
+.scanhd:focus-visible::after{ outline:2px solid #fff; outline-offset:3px; }
+.scanloupe{ position:absolute; left:8px; top:8px; width:104px; height:104px; border:2px solid #fff; border-radius:50%; box-shadow:0 2px 10px rgba(0,0,0,.6); pointer-events:none; }
+.scanloupe.r{ left:auto; right:8px; }
+.scanloupe[hidden]{ display:none; }
 .scanthumb img{ display:block; max-width:100%; max-height:30vh; }
 .scantxt{ min-height:132px; font-size:var(--fs-2); line-height:1.45; }
 .scanalt{ align-self:center; min-height:44px; padding:0 var(--sp-3); border:0; background:none; color:var(--soft); font:inherit; font-size:var(--fs-2); font-weight:600; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }

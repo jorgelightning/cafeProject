@@ -202,10 +202,10 @@ or a photo from Photos, to the app and it is read with no copy and paste (`share
 by `sw.js` so nothing shared leaves the phone). iPhones do not offer this to web apps.
 
 "Or read a photo in the app" is the second choice: Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, about 7 MB on
-first use. It reads clean print and does poorly on real phone photos. Since v134 the photo is cut down to its receipt
-and stood upright first (`findReceipt`, `js/lib/crop.js`), so the reader no longer makes text of the counter around it.
-The review shows that cut-out with a chip, Whole photo, to read all of it instead; the scan does that itself when the
-paper it found has no drink on it.
+first use. It reads clean print and does poorly on real phone photos. Read whole, it made text of the counter around
+the receipt, so since v135 every photo stops at a box first: it starts on the receipt the app found (`findReceipt`,
+`js/lib/crop.js`), you drag its four corners onto the receipt's own, and Read this part flattens what is inside them
+(`flatten`). Whole photo is the button beside it, and the review's chip, Adjust crop, goes back to the box.
 
 The rules know priced receipts, names and prices handed back as separate columns, and a cup's order ticket with no
 prices. A layout they do not know lists the text's lines, and you tap the one that names your drink. To teach it a shop's abbreviation, add a line to

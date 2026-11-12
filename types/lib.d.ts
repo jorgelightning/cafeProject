@@ -33,3 +33,7 @@ declare const lineItem: typeof import("../js/lib/scan.js").lineItem;
 declare const CROP_SMALL: typeof import("../js/lib/crop.js").CROP_SMALL;
 declare const CROP_MID: typeof import("../js/lib/crop.js").CROP_MID;
 declare const findReceipt: typeof import("../js/lib/crop.js").findReceipt;
+declare const foundCorners: typeof import("../js/lib/crop.js").foundCorners;
+declare const quadOk: typeof import("../js/lib/crop.js").quadOk;
+declare const quadSize: typeof import("../js/lib/crop.js").quadSize;
+declare const flatten: typeof import("../js/lib/crop.js").flatten;
