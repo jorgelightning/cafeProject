@@ -81,6 +81,17 @@ test("parseReceipt: an order ticket has no prices: each drink starts 1 ×, and i
   assert.equal(read(["1 × Cortado 5.00", "TOTAL 5.00"]).items[0].price, 5, "a priced receipt that prints 1 × is still a receipt");
 });
 
+test("parseReceipt: a misread 1 × still starts a drink (audit, 12 Nov)", () => {
+  assert.deepEqual(names(read(["George", "ix Matcha Guava Cream", "Top (1602)", "No Sweet"])), ["Matcha Guava Cream Top"], "the 1 read as an i, which had lost the whole ticket");
+  assert.deepEqual(names(read(["lx Flat White", "Ix Drip Coffee"])), ["Flat White", "Drip Coffee"], "…or as an l, or a capital I");
+  const pct = read(["1 x Flat White", "Oat Milk", "1% Cortado", "2% Drip Coffee"]);
+  assert.deepEqual(pct.items.map(x => [x.n, x.milk].join("|")), ["Flat White|Oat", "Cortado|", "Drip Coffee|", "Drip Coffee|"], "the × read as a %, with its count kept");
+  const milk = read(["1 x Latte", "2% Milk", "No Sweet"]);
+  assert.deepEqual(milk.items.map(x => [x.n, x.milk, x.sweet].join("|")), ["Latte|2%|0%"], "2% Milk is still milk, not two of something");
+  assert.deepEqual(names(read(["1 x Latte", "1% Milk"])), ["Latte"], "…nor is 1% Milk a drink");
+  assert.deepEqual(names(read(["1 x Latte", "5% Sugar"])), ["Latte"], "…nor a sweetness");
+});
+
 test("parseReceipt: names and prices handed back as separate columns are put back together", () => {
   const cols = read(["SAMPLE TEA BAR", "123 MAIN ST", "Order #4417", "1 ICD MTCHA LT", "+ OAT MILK", "1 HOJI LT 16OZ", "LESS ICE", "1 CROISSANT", "SUBTOTAL", "TAX", "TOTAL", "VISA 1234", "6.75", "1.00", "7.00", "5.00", "19.75", "1.73", "21.48", "THANK YOU"]);
   assert.deepEqual(cols.items.map(x => [x.n, x.price, x.milk, x.ice].join("|")), ["Iced matcha latte|7.75|Oat|", "Hojicha latte|7|Less ice".replace("7|", "7||"), "Croissant|5||"]);

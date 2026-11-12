@@ -31,7 +31,14 @@
    Since v133 a layout the rules do not know is not a dead end: the text's lines come up, and you tap the one that names
    your drink. The list offers the same ("My drink isn't here"). And on Android the installed app is in the share sheet:
    text shared from Google Lens, or a photo from Photos, arrives here with no copy and paste (sw.js keeps it on the
-   phone; scanShared picks it up). */
+   phone; scanShared picks it up).
+
+   Since v134 a photo is cut down to its receipt before it is read (js/lib/crop.js finds it; _scanPrep cuts it out and
+   stands it upright). An audit had the reader making text of everything around the receipt: on the owner's first real
+   photo, 20 lines from a steel pot's holes. What you check the text against is that cut-out too, so the print is larger.
+   A guess can be wrong, so there are two ways back to the whole photo: the scan takes that look itself when the paper
+   it found has no drink on it, and the review has a chip, Whole photo, which swaps to it and back again. Each look keeps
+   its own text, fixes and all. */
 
 function scanOn() {
   return isAdmin;
@@ -157,7 +164,9 @@ function _scanTextRun(text) {
   const prev = _scan;
   if (prev && prev.url) {
     run.url = prev.url;
+    run.pic = prev.pic;
     prev.url = "";
+    prev.pic = null;
   }
   _scanStop();
   _qc = null;
@@ -221,16 +230,45 @@ function _scanReview(run, text) {
   run.text = text;
   _scanShow(
     '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Check what it read</h2><p>Fix anything it got wrong, then continue.</p></div>' + _scanClose() + "</div>" +
-      _scanThumb(run) +
+      _scanThumb(run, true) +
       '<label class="dnlab" for="scan-text">Text it read</label>' +
       '<textarea id="scan-text" class="dntext scantxt" rows="7" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"' + act("scanTyped", [], "input") + ">" + esc(text) + "</textarea>" +
       '<div class="dnact"><button type="button" class="btn ghost"' + act("scanPhoto") + ">Retake</button>" +
       '<button type="button" class="btn" id="scan-go"' + act("scanText") + (text.trim() ? "" : " disabled") + ">Find the drinks</button></div>"
   );
 }
-/** Your photo, on the text and again on the list (v132): the names are checked against it, so it has to be in view. @param {any} run */
-function _scanThumb(run) {
-  return run.url ? '<div class="scanthumb"><img src="' + esc(run.url) + '" alt="Your photo"></div>' : "";
+/** Your photo, on the text and again on the list (v132): the names are checked against it, so it has to be in view.
+    Since v134 it is the receipt cut out of the photo when one was found, and on the text (`swap`) a chip changes
+    between that and the whole photo. @param {any} run @param {boolean} [swap] */
+function _scanThumb(run, swap) {
+  if (!run.url) return "";
+  const pic = run.pic,
+    cut = !!(pic && pic.crop && pic.view === "crop");
+  return (
+    '<div class="scanthumb"><img src="' + esc(run.url) + '" alt="' + (cut ? "Your receipt, cut out of your photo" : "Your photo") + '">' +
+    (swap && pic && pic.crop ? '<button type="button" class="scanview"' + act("scanView") + "><span>" + (cut ? "Whole photo" : "Just the receipt") + "</span></button>" : "") +
+    "</div>"
+  );
+}
+/** The other look at the photo: all of it, or just the receipt. Each keeps its own text, with what you fixed in it; the
+    whole photo is read the first time it is asked for. */
+function scanView() {
+  const run = _scan,
+    pic = run && run.pic;
+  if (!pic || !pic.crop || !pic[pic.view]) return;
+  const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text"));
+  if (box) pic[pic.view].text = box.value;
+  const to = pic.view === "crop" ? "whole" : "crop";
+  if (pic[to]) {
+    pic.view = to;
+    run.url = pic[to].url;
+    _scanReview(run, pic[to].text);
+    return;
+  }
+  /* the pictures go with the new reading, so stopping this one does not let go of them */
+  run.pic = null;
+  run.url = "";
+  _scanRun(pic.file, pic);
 }
 /* From the list or a failed reading, back to the text it came from */
 function scanBack() {
@@ -260,23 +298,81 @@ function scanPicked(el) {
   const file = el.files && el.files[0];
   if (file) _scanRun(file);
 }
+/** Lets go of a reading's pictures: the one on show, and both looks at the photo. @param {any} run */
+function _scanFree(run) {
+  const pic = run.pic;
+  new Set([run.url, pic && pic.crop && pic.crop.url, pic && pic.whole && pic.whole.url]).forEach(function (u) {
+    if (u) URL.revokeObjectURL(u);
+  });
+  run.url = "";
+  run.pic = null;
+}
 function _scanStop() {
   if (!_scan) return;
   _scan.ctl.abort();
-  if (_scan.url) URL.revokeObjectURL(_scan.url);
+  _scanFree(_scan);
   _scan = null;
+}
+/** Where the receipt is in a photo (js/lib/crop.js), in the photo's own pixels, or null to read all of it. Whatever goes
+    wrong in here, the scan goes on with the whole photo. @param {ImageBitmap} bmp */
+function _scanFind(bmp) {
+  try {
+    /** @param {ImageBitmap|HTMLCanvasElement} from @param {number} side */
+    const shrink = function (from, side) {
+      const k = Math.min(1, side / Math.max(from.width, from.height));
+      const c = document.createElement("canvas");
+      c.width = Math.max(8, Math.round(from.width * k));
+      c.height = Math.max(8, Math.round(from.height * k));
+      const g = c.getContext("2d", { willReadFrequently: true });
+      g.imageSmoothingQuality = "high";
+      g.drawImage(from, 0, 0, c.width, c.height);
+      return c;
+    };
+    /** @param {HTMLCanvasElement} c */
+    const grey = function (c) {
+      const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+      const Y = new Uint8Array(c.width * c.height);
+      for (let i = 0, p = 0; p < Y.length; i += 4, p++) Y[p] = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+      return { Y: Y, w: c.width, h: c.height };
+    };
+    /* down in steps, so a 12-megapixel photo is averaged rather than sampled */
+    const mid = shrink(shrink(bmp, CROP_MID * 2), CROP_MID),
+      small = shrink(mid, CROP_SMALL);
+    const f = findReceipt(grey(small), grey(mid));
+    if (!f) return null;
+    const k = bmp.width / small.width;
+    return { cx: f.cx * k, cy: f.cy * k, w: f.w * k, h: f.h * k, angle: f.angle };
+  } catch (e) {
+    warn("scan.js crop", e);
+    return null;
+  }
 }
 /** The photo twice over: to show (url), and grey with its contrast stretched for the reader, since a receipt photographed
     in a dim cafe has no true black or white. Drawing it on a canvas also turns it upright.
-    @param {Blob} file @returns {Promise<{image: HTMLCanvasElement, url: string}>} */
-async function _scanPrep(file) {
+    Since v134 it is cut down to the receipt first, stood straight, and only then shrunk: the reader no longer makes text
+    of the counter around it, and a small receipt in a large photo keeps its own pixels. `whole` skips the cut.
+    @param {Blob} file @param {boolean} [whole] @returns {Promise<{image: HTMLCanvasElement, url: string, cropped: boolean}>} */
+async function _scanPrep(file, whole) {
   const bmp = await createImageBitmap(file);
-  const k = Math.min(1, SCAN_SIDE / Math.max(bmp.width, bmp.height));
+  const f = whole ? null : _scanFind(bmp);
+  const sw = f ? f.w : bmp.width,
+    sh = f ? f.h : bmp.height;
+  const k = Math.min(1, SCAN_SIDE / Math.max(sw, sh));
   const cv = document.createElement("canvas");
-  cv.width = Math.round(bmp.width * k);
-  cv.height = Math.round(bmp.height * k);
+  cv.width = Math.round(sw * k);
+  cv.height = Math.round(sh * k);
   const g = cv.getContext("2d");
-  g.drawImage(bmp, 0, 0, cv.width, cv.height);
+  if (f) {
+    /* its margin can run past the photo's edge, where there is nothing: paper-grey, so the contrast is not thrown */
+    g.fillStyle = "#e8e8e8";
+    g.fillRect(0, 0, cv.width, cv.height);
+    g.imageSmoothingQuality = "high";
+    g.translate(cv.width / 2, cv.height / 2);
+    g.scale(k, k);
+    g.rotate((-f.angle * Math.PI) / 180);
+    g.drawImage(bmp, -f.cx, -f.cy);
+    g.setTransform(1, 0, 0, 1, 0, 0);
+  } else g.drawImage(bmp, 0, 0, cv.width, cv.height);
   bmp.close();
   const blob = await new Promise(ok => cv.toBlob(ok, "image/jpeg", 0.7));
   if (!blob) throw new Error("no image");
@@ -297,7 +393,7 @@ async function _scanPrep(file) {
   const span = Math.max(1, hi - lo);
   for (let i = 0; i < d.length; i += 4) d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, ((d[i] - lo) * 255) / span));
   g.putImageData(px, 0, 0);
-  return { image: cv, url: URL.createObjectURL(blob) };
+  return { image: cv, url: URL.createObjectURL(blob), cropped: !!f };
 }
 /** A copy with its lighting evened out, for a photo the first read got nothing from. Each pixel is compared with the area
     around it, so a shadow across the paper or a dark table around it cannot pull faint print under the reader's one
@@ -390,11 +486,16 @@ async function scanRead(image, signal, say) {
     worker.terminate();
   }
 }
-/** @param {Blob} file a photo from the file box, or one shared to the app */
-async function _scanRun(file) {
+/** @param {Blob} file a photo from the file box, or one shared to the app
+    @param {any} [from] this photo's pictures, when its receipt was read already and the whole of it is wanted now */
+async function _scanRun(file, from) {
   _scanStop();
   const run = _scanNew();
-  if (!run) return;
+  if (!run) {
+    if (from) _scanFree({ url: "", pic: from });
+    return;
+  }
+  run.pic = from || null;
   _scan = run;
   _qc = null;
   if ($("dnsheet").hidden) openSheet("");
@@ -402,34 +503,83 @@ async function _scanRun(file) {
   _scanShow(
     '<div class="scanr"><button type="button" class="ocx" aria-label="Cancel"' + act("closeSheet") + ">" + ico("x") + "</button>" +
       '<div class="scanphoto"><img id="scan-img" alt="Your photo" hidden><span class="scanline" aria-hidden="true"></span></div>' +
-      '<div class="scanwords"><h2 id="dns-title">Reading your receipt…</h2><p id="scan-note">Getting ready. The first time takes a little longer.</p></div></div>'
+      '<div class="scanwords"><h2 id="dns-title">' + (from ? "Reading the whole photo…" : "Reading your receipt…") + '</h2><p id="scan-note">Getting ready. The first time takes a little longer.</p></div></div>'
   );
   const timer = setTimeout(() => run.ctl.abort(), SCAN_WAIT_MS);
   try {
-    const pic = await _scanPrep(file);
+    const pic = await _scanPrep(file, !!from);
     if (_scan !== run) {
       URL.revokeObjectURL(pic.url);
       return;
     }
     run.url = pic.url;
-    const img = /** @type {HTMLImageElement|null} */ ($("scan-img"));
-    if (img) {
-      img.src = pic.url;
-      img.hidden = false;
-    }
+    const show = /** @param {string} url */ function (url) {
+      const img = /** @type {HTMLImageElement|null} */ ($("scan-img"));
+      if (img) {
+        img.src = url;
+        img.hidden = false;
+      }
+    };
+    show(pic.url);
     /* an abort stops the reader, which then never answers, so it has to end the wait too */
     const stopped = new Promise((_, no) => run.ctl.signal.addEventListener("abort", () => no(new DOMException("stopped", "AbortError"))));
+    let wide = false;
     const say = /** @param {string} step */ function (step) {
+      if (step === "whole") wide = true;
       const note = $("scan-note");
-      if (note && _scan === run) note.textContent = step === "again" ? "That was hard to read. Taking a closer look." : "Looking for drinks and prices. The photo stays on your phone.";
+      if (note && _scan === run)
+        note.textContent =
+          step === "again"
+            ? "That was hard to read. Taking a closer look."
+            : wide
+              ? "No drink on the receipt it found. Looking at the whole photo."
+              : "Looking for drinks and prices. The photo stays on your phone.";
     };
-    const res = await Promise.race([_scanMake(pic.image, run.ctl.signal, _scanCtx(run), say), stopped]);
+    const look = /** @param {HTMLCanvasElement} image */ image => Promise.race([_scanMake(image, run.ctl.signal, _scanCtx(run), say), stopped]);
+    const first = await look(pic.image);
     if (_scan !== run) return;
-    if (!String(res.text || "").trim()) _scanFail("Try your phone’s text reader instead, or type it in.");
-    else _scanReview(run, res.text);
+    const here = { url: pic.url, text: String(first.text || "") };
+    /* both looks at this photo, and which is on show: the receipt cut out of it (crop), and all of it (whole) */
+    /** @type {any} */
+    const views = from || { file: file, view: pic.cropped ? "crop" : "whole", crop: pic.cropped ? here : null, whole: pic.cropped ? null : here };
+    if (from) {
+      views.whole = here;
+      views.view = "whole";
+    } else if (pic.cropped && !first.items.some(/** @param {any} x */ x => x.drink)) {
+      /* no drink on the paper it found, which may be the wrong paper: the whole photo gets its look too, and wins only
+         if it finds more */
+      run.pic = views;
+      say("whole");
+      const all = await _scanPrep(file, true);
+      if (_scan !== run) {
+        URL.revokeObjectURL(all.url);
+        return;
+      }
+      views.whole = { url: all.url, text: "" };
+      const second = await look(all.image);
+      if (_scan !== run) return;
+      views.whole.text = String(second.text || "");
+      if (second.items.length > first.items.length || (!here.text.trim() && views.whole.text.trim())) views.view = "whole";
+    }
+    run.pic = views;
+    const now = views[views.view];
+    run.url = now.url;
+    if (!now.text.trim()) _scanFail("Try your phone’s text reader instead, or type it in.");
+    else _scanReview(run, now.text);
   } catch (e) {
     if (_scan !== run) return;
     warn("scan.js", e);
+    if (from && from.crop) {
+      /* the receipt's own reading is still good: back to it */
+      if (run.url && run.url !== from.crop.url) URL.revokeObjectURL(run.url);
+      from.whole = null;
+      from.view = "crop";
+      run.pic = from;
+      run.url = from.crop.url;
+      _scanReview(run, from.crop.text);
+      toast("Couldn’t read the whole photo");
+      return;
+    }
     _scanFail(
       e && e.name === "AbortError"
         ? "That took too long. Try your phone’s text reader instead, or type it in."

@@ -2419,3 +2419,39 @@ version bump: posters come with each deploy, so a new cafe gets one with the nig
 still opens the app, with no picture. A poster that cannot be drawn falls back to the icon. Chat apps remember a link's
 picture, so an old link can keep the old one.
 `tests/share-pages.js`.
+
+## Read the receipt, not the counter (v134)
+
+The owner asked for an audit of the reader and thought cropping would help. It was measured before anything was built:
+twelve photos, the owner's first real one and eleven generated with known text (counters, a hand, a menu beside the
+receipt, a white table, a 12 degree tilt), each read as the app did and again cut down to the receipt.
+
+| | Whole photo | Cut to the receipt, upright |
+|---|---|---|
+| Lines read right, of 131 | 64 | 93 |
+| Lines of junk | 60 | 6 |
+| Drinks found, of 17 | 11 | 14 |
+
+The reader is told a photo is one block of print, so it made lines of everything: 20 from a steel pot's holes on the
+real photo. The tilt alone took a receipt from 13 lines right to 2. And the photo was shrunk before it was read, so a
+small receipt in a large photo lost its detail; cut first, it keeps nearly twice as much. Three other layout settings
+were tried and each made some receipts unreadable, and enlarging the cut-out did nothing, so neither changed.
+
+**The cut.** `findReceipt` (js/lib/crop.js) works on brightness alone, so Node tests it: the bright, roughly rectangular
+patch with print on it, nearest the middle, at whichever of several brightness cuts shows it best, with its lean from
+how its pixels spread. It gives no answer on a white table, under a hard shadow, or when the paper fills the photo, and
+the whole photo is read as before. Beside a printed menu it took the menu until it was made to prefer the middle.
+
+**The owner chose "just the receipt"** of three mockups (the others: the photo with an outline and a switch, and corners
+to drag before reading, which adds a step to every scan). The review shows the cut-out, so the print you check against
+is larger, with one chip: Whole photo. A guess can be wrong, so there are two ways back. The scan reads the whole photo
+itself when the paper it found has no drink on it, and shows that only if it finds more. And the chip swaps, reading
+the whole photo the first time and never again; each look keeps its own text, so a fix is not lost by looking.
+
+**A rule that lost drinks.** A ticket's drink starts "1 ×". Read as "ix" it lost the whole ticket, and as "1%" that
+drink; the real photo reads "1% Matcha Guava Cream" once cut out. Both count now, the % only when what follows is not
+how a drink is made, since "2% Milk" is milk.
+
+Not fixed: pale small print (a ticket's date and time) is mostly not read even from a perfect cut, and a hard shadow
+still loses what is under it. Only one photo was real, and no phone was timed.
+`tests/unit/crop.test.mjs`, `tests/unit/scan.test.mjs`, `tests/scan-receipt.js`.

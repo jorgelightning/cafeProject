@@ -33,7 +33,9 @@ function main(argv) {
     .replace('CACHE_V = "cafemap-v' + from + '"', 'CACHE_V = "cafemap-v' + to + '"')
     .replace('ASSET_V = "?v=' + from + '"', 'ASSET_V = "?v=' + to + '"');
 
-  const left = (html2.match(new RegExp("\\?v=" + from + "\\b", "g")) || []).length + (sw2.match(new RegExp("v" + from + "\\b", "g")) || []).length;
+  /* in sw.js only its two stamps count: a comment may say which version a thing came in, and "share_target, v133"
+     stopped the bump to v134 */
+  const left = (html2.match(new RegExp("\\?v=" + from + "\\b", "g")) || []).length + (sw2.match(new RegExp("(cafemap-v|\\?v=)" + from + "\\b", "g")) || []).length;
   const now = (html2.match(new RegExp("\\?v=" + to + "\\b", "g")) || []).length;
   if (left || now !== stamps.length) throw new Error("bump left " + left + " old stamps, or wrote " + now + " of " + stamps.length);
 

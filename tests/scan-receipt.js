@@ -315,6 +315,111 @@ const { eq, done } = checker();
   eq(await pg.evaluate(() => $("dns-title").textContent), "Check what it read", "…Back to the text still goes back");
   await pg.evaluate(() => closeSheet());
 
+  /* a photo is cut down to its receipt before it is read (v134): a leaning paper on a dark counter */
+  const shot = await pg.evaluate(() => {
+    const c = document.createElement("canvas"); c.width = 1500; c.height = 2000;
+    const g = c.getContext("2d"); g.fillStyle = "#2e261f"; g.fillRect(0, 0, 1500, 2000);
+    g.translate(700, 1100); g.rotate((8 * Math.PI) / 180);
+    g.fillStyle = "#f3f0e9"; g.fillRect(-300, -450, 600, 900);
+    g.fillStyle = "#444"; g.font = "bold 44px monospace";
+    ["SAMPLE TEA BAR", "CORTADO      6.50", "TOTAL        6.50"].forEach((t, i) => g.fillText(t, -250, -300 + i * 120));
+    return c.toDataURL("image/png").split(",")[1];
+  });
+  const shotFile = () => ({ name: "s.png", mimeType: "image/png", buffer: Buffer.from(shot, "base64") });
+  /* the reader stands in: one text for the receipt cut out of the photo, another for all of it */
+  const readsAs = (cut, whole, failWhole) => pg.evaluate(a => {
+    window.__seen = [];
+    scanRead = image => {
+      const all = image.width >= 1000;
+      window.__seen.push({ w: image.width, h: image.height, all: all, img: image });
+      return all && a.failWhole ? Promise.reject(new Error("no")) : Promise.resolve(all ? a.whole : a.cut);
+    };
+  }, { cut, whole, failWhole: !!failWhole });
+  const review = () => pg.waitForFunction(() => { const i = document.querySelector("#dns-panel .scanthumb img"); return !document.querySelector(".scanr") && $("scan-text") && i && i.complete && i.naturalWidth > 0; });
+  const view = () => pg.evaluate(() => {
+    const chip = document.querySelector("#dns-panel .scanview"), img = document.querySelector("#dns-panel .scanthumb img");
+    return { title: $("dns-title").textContent, text: $("scan-text") ? $("scan-text").value : null, chip: chip ? chip.textContent : null, alt: img ? img.alt : null, reads: window.__seen.map(x => (x.all ? "whole" : "receipt")).join(" ") };
+  });
+  await reset();
+  await readsAs("CORTADO 6.50\nTOTAL 6.50", "e00000O0O0\n000000090\nCORTADO 6.50\nTOTAL 6.50");
+  await pg.evaluate(() => openQuickCup());
+  await pg.setInputFiles("#scan-file", shotFile());
+  await review();
+  eq(await view(), { title: "Check what it read", text: "CORTADO 6.50\nTOTAL 6.50", chip: "Whole photo", alt: "Your receipt, cut out of your photo", reads: "receipt" },
+     "a photo is cut down to its receipt before it is read, and that is what you check the text against (v134)");
+  s = await pg.evaluate(() => {
+    const c = window.__seen[0], g = c.img.getContext("2d"), at = (x, y) => g.getImageData(Math.round(c.w * x), Math.round(c.h * y), 1, 1).data[0];
+    const chip = document.querySelector(".scanview").getBoundingClientRect(), th = document.querySelector(".scanthumb").getBoundingClientRect(), shown = document.querySelector(".scanthumb img");
+    return { size: c.w > 640 && c.w < 720 && c.h > 930 && c.h < 1010, paper: [at(0.1, 0.08), at(0.9, 0.08), at(0.1, 0.92), at(0.9, 0.92)].every(v => v > 170),
+             tall: shown.naturalHeight > shown.naturalWidth * 1.3, tap: chip.width >= 44 && chip.height >= 44, inside: chip.right <= th.right + 1 && chip.bottom <= th.bottom + 1, wide: document.documentElement.scrollWidth <= innerWidth };
+  });
+  eq(s, { size: true, paper: true, tall: true, tap: true, inside: true, wide: true }, "…the receipt alone, with a margin, stood upright so all four of its corners are paper, and a chip that is 44px to tap");
+  await pg.fill("#scan-text", "CORTADO 6.50\nTOTAL 6.50\nmine");
+  await pg.click(".scanview");
+  await review();
+  eq(await view(), { title: "Check what it read", text: "e00000O0O0\n000000090\nCORTADO 6.50\nTOTAL 6.50", chip: "Just the receipt", alt: "Your photo", reads: "receipt whole" },
+     "Whole photo reads all of it, the first time it is asked for, and shows that instead");
+  eq(await pg.evaluate(() => { const c = window.__seen[1]; return [c.w, c.h]; }), [1500, 2000], "…the photo as it was taken");
+  await pg.fill("#scan-text", "CORTADO 6.50\nTOTAL 6.50\nall of it");
+  await pg.click(".scanview");
+  let v = await view();
+  eq([v.text, v.chip, v.alt, v.reads], ["CORTADO 6.50\nTOTAL 6.50\nmine", "Whole photo", "Your receipt, cut out of your photo", "receipt whole"], "Just the receipt goes back at once, with nothing read again and the text as you left it");
+  await pg.click(".scanview");
+  v = await view();
+  eq([v.text, v.reads], ["CORTADO 6.50\nTOTAL 6.50\nall of it", "receipt whole"], "…and each look keeps its own text, fixes and all");
+  await pg.click(".scanview");
+  await pg.click("#scan-go");
+  await pg.waitForFunction(() => !$("scan-text") && document.querySelector("#dns-panel .scanrow"));
+  eq(await pg.evaluate(() => [!!document.querySelector("#dns-panel .scanthumb img"), !!document.querySelector("#dns-panel .scanview"), document.querySelector(".scanname").value]), [true, false, "Cortado"],
+     "the list keeps the receipt above it, without the chip");
+  await pg.click("#dns-panel .scanalt");
+  await pg.click("#dns-panel .dnact .btn:first-child");
+  v = await view();
+  eq([v.title, v.chip, v.text], ["Check what it read", "Whole photo", "CORTADO 6.50\nTOTAL 6.50\nmine"], "…and back at the text the chip is there again");
+  await pg.evaluate(() => closeSheet());
+  eq(await pg.evaluate(() => _scan), null, "closing lets the reading and its pictures go");
+
+  /* the paper it found has no drink on it: perhaps the wrong paper, so the whole photo gets a look by itself */
+  await reset();
+  await readsAs("KEEP THIS RECEIPT\nTHANK YOU", "CORTADO 6.50\nTOTAL 6.50");
+  await pg.evaluate(() => openQuickCup());
+  await pg.setInputFiles("#scan-file", shotFile());
+  await review();
+  v = await view();
+  eq([v.text, v.chip, v.alt, v.reads], ["CORTADO 6.50\nTOTAL 6.50", "Just the receipt", "Your photo", "receipt receipt whole"], "with no drink on the paper it found, the scan reads the whole photo itself, and shows it when that finds one");
+  await pg.click(".scanview");
+  v = await view();
+  eq([v.text, v.chip, v.reads], ["KEEP THIS RECEIPT\nTHANK YOU", "Whole photo", "receipt receipt whole"], "…with the paper it found a tap away");
+  await reset();
+  await readsAs("KEEP THIS RECEIPT\nTHANK YOU", "e00000O0O0\nTHANK YOU");
+  await pg.evaluate(() => openQuickCup());
+  await pg.setInputFiles("#scan-file", shotFile());
+  await review();
+  v = await view();
+  eq([v.text, v.chip], ["KEEP THIS RECEIPT\nTHANK YOU", "Whole photo"], "…and when the whole photo finds no more, the receipt stays on show");
+
+  /* the whole photo cannot be read: the receipt's own reading is still there */
+  await reset();
+  await readsAs("CORTADO 6.50\nTOTAL 6.50", "", true);
+  await pg.evaluate(() => openQuickCup());
+  await pg.setInputFiles("#scan-file", shotFile());
+  await review();
+  await pg.click(".scanview");
+  await pg.waitForFunction(() => $("toast").textContent.includes("whole photo"));
+  await review();
+  v = await view();
+  eq([v.title, v.text, v.chip, await pg.evaluate(() => $("toast").textContent)], ["Check what it read", "CORTADO 6.50\nTOTAL 6.50", "Whole photo", "Couldn’t read the whole photo"], "when the whole photo cannot be read, it says so and goes back to the receipt");
+
+  /* nothing in the photo is plainly a receipt: all of it is read, as before, and there is nothing to swap to */
+  await reset();
+  await readsAs("", "CORTADO 6.50\nTOTAL 6.50");
+  await pg.evaluate(() => openQuickCup());
+  await pg.setInputFiles("#scan-file", file());
+  await review();
+  v = await view();
+  eq([v.text, v.chip, v.alt, v.reads], ["CORTADO 6.50\nTOTAL 6.50", null, "Your photo", "whole"], "a photo with no receipt to find is read whole, with no chip");
+  await pg.evaluate(() => { closeSheet(); scanRead = window.__stub; });
+
   /* shared to the app from the phone's share sheet (v133) */
   const man = JSON.parse(fs.readFileSync(path.join(ROOT, "manifest.json"), "utf8"));
   eq(man.share_target, { action: "./share", method: "POST", enctype: "multipart/form-data", params: { title: "title", text: "text", url: "url", files: [{ name: "photo", accept: ["image/*"] }] } },

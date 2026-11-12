@@ -30,7 +30,7 @@ not built.
 | `js/detail.js` | Cafe detail and order history |
 | `js/form.js` | Complete drink and cafe editor |
 | `js/tips.js` | Reader tips: the visitor's sheet and your inbox (Firestore, behind App Check) |
-| `js/scan.js`, `js/lib/scan.js` | Scan a receipt: the photo, the on-phone text reader, the tick list, filling in the log sheet, and working out what a receipt's text means |
+| `js/scan.js`, `js/lib/scan.js`, `js/lib/crop.js` | Scan a receipt: the photo, finding the receipt in it, the on-phone text reader, the tick list, filling in the log sheet, and working out what a receipt's text means |
 | `js/lib/` | Pure helpers as ES modules, unit-tested by Node: text, Elo, an order's words |
 | `js/boot.js` | Startup, updates and back navigation |
 | `sw.js` | Offline shell and data cache |
@@ -202,7 +202,10 @@ or a photo from Photos, to the app and it is read with no copy and paste (`share
 by `sw.js` so nothing shared leaves the phone). iPhones do not offer this to web apps.
 
 "Or read a photo in the app" is the second choice: Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, about 7 MB on
-first use. It reads clean print and does poorly on real phone photos.
+first use. It reads clean print and does poorly on real phone photos. Since v134 the photo is cut down to its receipt
+and stood upright first (`findReceipt`, `js/lib/crop.js`), so the reader no longer makes text of the counter around it.
+The review shows that cut-out with a chip, Whole photo, to read all of it instead; the scan does that itself when the
+paper it found has no drink on it.
 
 The rules know priced receipts, names and prices handed back as separate columns, and a cup's order ticket with no
 prices. A layout they do not know lists the text's lines, and you tap the one that names your drink. To teach it a shop's abbreviation, add a line to

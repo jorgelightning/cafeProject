@@ -259,7 +259,22 @@ function joinColumns(lines, dec) {
   return out;
 }
 const hasOpt = o => Object.values(o).some(Boolean);
-const QTY = /^(\d{1,2})\s*[x×*]\s+(?=\S)/i;
+/* The count that starts a drink on a ticket, "1 ×". The reader takes the 1 for an i or an l, which lost the whole
+   ticket, and the × for a %, which lost that drink (audit, 12 Nov). A % is believed only when what follows is not how a
+   drink is made: "2% Milk" is milk. */
+const QTY = /^(\d{1,2}|[il])\s*[x×*]\s+(?=\S)/i;
+const QTY_PCT = /^([1-9])\s*%\s+(?=[A-Za-z])/;
+/** @param {string} line @returns {{n: number, len: number}|null} the count, and how much of the line it takes */
+function ticketQty(line) {
+  const q = QTY.exec(line);
+  if (q) return { n: +q[1] || 1, len: q[0].length };
+  const p = QTY_PCT.exec(line);
+  if (!p) return null;
+  const rest = line.slice(p[0].length),
+    made = pullOptions(rest, true);
+  if (/^(MILK|SWEET|SUGAR|SWT|ICE)\b/i.test(rest) || isModifier(rest, made.rest, made.o)) return null;
+  return { n: +p[1], len: p[0].length };
+}
 /** An order ticket, the slip stuck to the cup: no prices, each drink starting "1 ×", and under it the rest of its name
     and how it was made, wrapped over as many lines as the paper needs. @param {string[]} lines */
 function ticketRows(lines) {
@@ -277,11 +292,11 @@ function ticketRows(lines) {
     made = [];
   };
   lines.forEach(function (line) {
-    const q = QTY.exec(line);
+    const q = ticketQty(line);
     if (q) {
       close();
-      const p = pullOptions(line.slice(q[0].length), false);
-      cur = { name: p.rest, qty: Math.max(1, Math.min(+q[1], MAX_QTY)), price: null, o: p.o, printed: line.slice(q[0].length) };
+      const p = pullOptions(line.slice(q.len), false);
+      cur = { name: p.rest, qty: Math.max(1, Math.min(q.n, MAX_QTY)), price: null, o: p.o, printed: line.slice(q.len) };
       nameOpen = !hasOpt(p.o);
       return;
     }
