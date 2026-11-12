@@ -3955,6 +3955,47 @@
     "wish": false
   },
   {
+    "area": "Union Square",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-11-11"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-11-11",
+            "ice": "Warm",
+            "id": "mwcha5hea31m",
+            "milk": "Oat",
+            "p": "8.00",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "8.00",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "emoji": "☕",
+    "fav": false,
+    "id": "mwchaqu9hjam",
+    "lat": 37.78992,
+    "lng": -122.40417,
+    "name": "Diary of Matcha",
+    "pid": "ChIJ0SMoLQCBhYARITzfRWNdCxI",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-11-11T18:54:53.793Z",
+    "wish": false
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
