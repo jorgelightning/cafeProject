@@ -63,7 +63,17 @@
    switch, the way back to the box (Adjust crop, where Back to the text was), and the reader's doubts, now a line under
    the drink they are about. Text shared to the app has no photo and no box to go back to, so it alone still has the
    text to put right, when no drink is found in it.
-   And the box starts in a better place on a pale table (findStart, js/lib/crop.js). */
+   And the box starts in a better place on a pale table (findStart, js/lib/crop.js).
+
+   Since v140, from a review of the whole scan on the owner's seven photos. The box says when the receipt is too small
+   in the photo to read, before any time is spent reading it: at half its size the long receipt went from 28 lines
+   right of 29 to 2. And the list is one you can finish on: a priced line that names no drink it knows is ticked all the
+   same, since at a cafe it most likely is one (three of his ten drinks came unticked); the price is a box, where it
+   could only be put right on the next screen; and a reading that went wrong can be kept, photo and all, on the phone,
+   to be shared later and made into a test, which is how every fix since v134 came about.
+   And the receipt's picture stays in view for as long as its drinks are being put right ("can we keep the image
+   throughout the receipt editing process"): it is pinned while the list scrolls under it, and it goes on with the
+   drinks to each cup's sheet and to Add a visit, where it had been let go the moment Log was pressed. */
 
 function scanOn() {
   return isAdmin;
@@ -234,34 +244,136 @@ function _scanReview(run, text) {
       '<button type="button" class="btn" id="scan-go"' + act("scanText") + (text.trim() ? "" : " disabled") + ">Find the drinks</button></div>"
   );
 }
-/** The picture above the list: as the reader saw it, cleaned up, or as you took it. Only the picture changes, so a name
+/** The picture above the drinks: as the reader saw it, cleaned up, or as you took it. Only the picture changes, so a name
     you have put right stays. @param {string} v "clean" or "orig" */
 function scanShowAs(v) {
-  const run = _scan;
+  /* the reading's picture while there is a reading, and after it the one kept on */
+  const run = _scan && _scan.orig ? _scan : _scanPic;
   if (!run || !run.orig) return;
   run.show = v === "orig" ? "orig" : "clean";
   const img = /** @type {HTMLImageElement|null} */ ($("scan-thumbimg"));
   if (img) img.src = run.show === "orig" ? run.orig : run.url;
-  $("dns-panel").querySelectorAll(".scanseg button").forEach(function (b) {
+  document.querySelectorAll(".scanseg button").forEach(function (b) {
     const on = /** @type {HTMLElement} */ (b).dataset.v === run.show;
     b.setAttribute("aria-pressed", String(on));
     b.classList.toggle("on", on);
   });
 }
 /** The picture the names are checked against, above the list (v132): the part of the photo you boxed, pulled flat (v135)
-    and cleaned up (v136), with a switch to the part as you took it. @param {any} run */
-function _scanThumb(run) {
-  if (!run.url) return "";
-  const pic = run.pic,
-    orig = run.show === "orig" && !!run.orig;
+    and cleaned up (v136), with a switch to the part as you took it. It is pinned while what is under it scrolls (v140).
+    @param {any} o a reading, or the picture kept on after one (_scanPic) */
+function _scanThumb(o) {
+  if (!o || !o.url) return "";
+  const cut = o.cut != null ? o.cut : !!(o.pic && o.pic.read && o.pic.read !== "all"),
+    orig = o.show === "orig" && !!o.orig;
+  /* With the drinks' places known it is shown at the sheet's width, where its print can be read, in a window that moves
+     to the drink in hand (v140). Without them (text shared to the app, a layout no drink was found in) it is shown
+     whole, as before. Its size is given so the window knows the picture's height before the picture has loaded. */
+  const zoom = !!(o.band && o.pw && o.ph);
+  const img = '<img id="scan-thumbimg" src="' + esc(orig ? o.orig : o.url) + '" alt="' + (cut ? "Your receipt, cut out of your photo" : "Your photo") + '"' + (zoom ? ' width="' + o.pw + '" height="' + o.ph + '"' : "") + ">";
   return (
-    '<div class="scanthumb"><img id="scan-thumbimg" src="' + esc(orig ? run.orig : run.url) + '" alt="' + (pic && pic.read && pic.read !== "all" ? "Your receipt, cut out of your photo" : "Your photo") + '"></div>' +
-    (run.orig
+    (zoom
+      ? '<div class="scanthumb zoom" tabindex="0" role="group" aria-label="Your receipt, at the drink you are on"><div class="scanpage">' + img + '<span class="scanmark" aria-hidden="true" hidden></span></div></div>'
+      : '<div class="scanthumb">' + img + "</div>") +
+    (o.orig
       ? '<div class="seg scanseg" role="group" aria-label="Picture">' +
         [["clean", "Cleaned up"], ["orig", "Original"]].map(v => '<button type="button" data-v="' + v[0] + '" aria-pressed="' + ((v[0] === "orig") === orig) + '"' + ((v[0] === "orig") === orig ? ' class="on"' : "") + act("scanShowAs", ["$data.v"]) + ">" + v[1] + "</button>").join("") +
         "</div>"
       : "")
   );
+}
+/* The receipt's picture, kept on after its reading is done with (v140): while each cup is checked on its own sheet, and
+   in Add a visit while the rows it filled in are put right. { url, orig, show, cut } */
+/** @type {any} */
+let _scanPic = null;
+/** Lets go of it, and takes it off Add a visit. */
+function _scanPicFree() {
+  if (_scanPic)
+    new Set([_scanPic.url, _scanPic.orig]).forEach(function (u) {
+      if (u) URL.revokeObjectURL(u);
+    });
+  _scanPic = null;
+  const at = $("f-scanpic");
+  if (at) {
+    at.hidden = true;
+    at.innerHTML = "";
+  }
+}
+/** Takes the picture from a reading that is about to end, so ending it does not let the picture go. @param {any} run */
+function _scanPicTake(run) {
+  /* no reading: a later cup of the same receipt, whose picture is kept already */
+  if (!run) return;
+  /* a reading with no photo (text shared to the app) must not be shown beside the last receipt's */
+  _scanPicFree();
+  if (!run.url) return;
+  _scanPic = { url: run.url, orig: run.orig || "", show: run.show || "clean", cut: !!(run.pic && run.pic.read && run.pic.read !== "all"), pw: run.pw, ph: run.ph, band: run.band || null, at: run.band || null };
+  run.url = "";
+  run.orig = "";
+}
+/** Moves a picture shown at the sheet's width to a place on the receipt and, for one drink's line, marks the line.
+    Nothing to do for a picture shown whole. @param {ParentNode|null} root what holds the picture
+    @param {{y0: number, y1: number, mark?: boolean}|null} at parts of the picture's height */
+function _scanAim(root, at) {
+  const win = /** @type {HTMLElement|null} */ (root && root.querySelector(".scanthumb.zoom"));
+  if (!win || !at) return;
+  const page = /** @type {HTMLElement} */ (win.firstElementChild),
+    mark = /** @type {HTMLElement|null} */ (win.querySelector(".scanmark"));
+  const all = page.offsetHeight,
+    seen = win.clientHeight,
+    tall = (at.y1 - at.y0) * all;
+  /* one line sits in the middle; several that will not all fit start just under the window's top */
+  const top = tall > seen * 0.8 ? at.y0 * all - seen * 0.1 : ((at.y0 + at.y1) / 2) * all - seen / 2;
+  win.scrollTop = Math.max(0, Math.min(all - seen, top));
+  if (!mark) return;
+  mark.hidden = !at.mark;
+  if (at.mark) {
+    const pad = (at.y1 - at.y0) * 0.35;
+    mark.style.top = (at.y0 - pad) * 100 + "%";
+    mark.style.height = (at.y1 - at.y0 + 2 * pad) * 100 + "%";
+  }
+}
+/** The kept picture, moved to the drink it is being checked against. A cup's sheet is drawn again at every choice made
+    on it (form.js, _qcRedraw), which puts the picture back at its top. */
+function _scanPicAim() {
+  if (!_scanPic) return;
+  const form = $("f-scanpic");
+  _scanAim(form && !form.hidden ? form : $("dns-panel"), _scanPic.at);
+}
+/* On the list the picture follows the drink in hand: its name, its price or its tick taken up moves the picture to its
+   line. A tap counts as well as the focus, since a phone gives a button no focus when it is tapped. */
+["focusin", "click"].forEach(function (kind) {
+  document.addEventListener(kind, function (e) {
+    const el = e.target instanceof Element ? e.target.closest(".scanlist .scanrow") : null,
+      tag = /** @type {HTMLElement|null} */ (el && el.querySelector("[data-i]"));
+    const x = _scan && tag ? _scan.items[+(tag.dataset.i || -1)] : null;
+    if (x && x.at) _scanAim($("dns-panel"), { y0: x.at.y0, y1: x.at.y1, mark: true });
+  });
+});
+/** The kept picture, for a cup's sheet (form.js, _qcHTML). */
+function _scanPicHTML() {
+  return _scanThumb(_scanPic);
+}
+/** Sets the kept picture aside while one screen closes on the way to the next, since a screen that closes lets it go
+    (form.js: a cup saved with more of the receipt to come, and a cup taken on to the whole form). @returns {any} */
+function _scanPicAside() {
+  const p = _scanPic;
+  _scanPic = null;
+  return p;
+}
+/** Puts back a picture set aside. @param {any} p */
+function _scanPicBack(p) {
+  if (!p) return;
+  _scanPicFree();
+  _scanPic = p;
+}
+/** The kept picture in Add a visit: above the rows the receipt filled in, pinned while they are put right, until you
+    hide it or leave the form. */
+function _scanPicShow() {
+  const at = $("f-scanpic");
+  if (!at || !_scanPic) return;
+  at.innerHTML = _scanThumb(_scanPic) + '<button type="button" class="scanalt" id="f-scanpic-hide"' + act("scanPicHide") + ">Hide the receipt</button>";
+  at.hidden = false;
+  _scanAim(at, _scanPic.at);
 }
 /** What the way back from a list is called, which is where it goes (scanBack): to the photo's box, or for text shared
     to the app, to that text. @param {any} run */
@@ -281,6 +393,26 @@ function _scanUnsure(x, doubt) {
 const CROP_SHOW = 1600;
 const CROP_LEAST = 0.06;
 const CROP_START = 0.08;
+/* The shorter side of the box, in the photo's own pixels, under which its print is unlikely to read (v140). Measured on
+   the owner's receipts, shrunk: one 372 across read 26 lines right of 29, and at 248 across, 2. */
+const CROP_SMALLEST = 380;
+/** Is the part boxed too small in the photo for its print to read? @param {any} pic */
+function _scanSmall(pic) {
+  const s = quadSize(_scanQuadPx(pic, pic.quad));
+  return Math.min(s.w, s.h) < CROP_SMALLEST;
+}
+/** What the box offers under the photo. With the receipt too small to read, it says so and Retake comes first; the box
+    can still be read, and the whole photo is no better, so that drops to the link. @param {boolean} small */
+function _scanCropActs(small) {
+  return small
+    ? '<p class="scansmall" id="scan-small" role="status">The receipt is small in this photo, so its print may not read. Move closer and retake.</p>' +
+        '<div class="dnact"><button type="button" class="btn ghost" id="scan-read"' + act("scanCropGo") + ">Read anyway</button>" +
+        '<button type="button" class="btn" id="scan-again"' + act("scanPhoto") + ">Retake</button></div>" +
+        '<button type="button" class="scanalt" id="scan-all"' + act("scanCropAll") + ">Whole photo</button>"
+    : '<div class="dnact"><button type="button" class="btn ghost" id="scan-all"' + act("scanCropAll") + ">Whole photo</button>" +
+        '<button type="button" class="btn" id="scan-read"' + act("scanCropGo") + ">Read this part</button></div>" +
+        '<button type="button" class="scanalt"' + act("scanPhoto") + ">Retake</button>";
+}
 /** A box, held as fractions of the photo, in the photo's own pixels. @param {any} pic @param {number[][]} q */
 function _scanQuadPx(pic, q) {
   return q.map(p => [p[0] * pic.w, p[1] * pic.h]);
@@ -300,9 +432,7 @@ function _scanCrop(run) {
       '<svg class="scanquad" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path id="scan-shade" fill-rule="evenodd"/><polygon id="scan-edge"/></svg>' +
       ["Top left", "Top right", "Bottom right", "Bottom left"].map((n, i) => '<button type="button" class="scanhd" data-i="' + i + '" aria-label="' + n + ' corner"></button>').join("") +
       '<canvas class="scanloupe" id="scan-loupe" width="208" height="208" hidden></canvas></div></div>' +
-      '<div class="dnact"><button type="button" class="btn ghost" id="scan-all"' + act("scanCropAll") + ">Whole photo</button>" +
-      '<button type="button" class="btn" id="scan-read"' + act("scanCropGo") + ">Read this part</button></div>" +
-      '<button type="button" class="scanalt"' + act("scanPhoto") + ">Retake</button>"
+      '<div class="scancropacts" id="scan-cropacts"></div>'
   );
   _scanCropDraw();
   $("scan-crop").querySelectorAll(".scanhd").forEach(function (h) {
@@ -365,6 +495,13 @@ function _scanCropDraw() {
     s.left = pic.quad[i][0] * 100 + "%";
     s.top = pic.quad[i][1] * 100 + "%";
   });
+  /* what is offered follows the box: drawn again only when the box crosses from small to not, or back */
+  const acts = $("scan-cropacts"),
+    small = String(_scanSmall(pic));
+  if (acts && acts.dataset.small !== small) {
+    acts.dataset.small = small;
+    acts.innerHTML = _scanCropActs(small === "true");
+  }
 }
 /** One corner goes where it is put, inside the photo. The move is taken only while the box is still a box, so a corner
     cannot be dragged past its neighbours or the box closed up. @param {number} i @param {number} x @param {number} y */
@@ -652,7 +789,7 @@ async function _scanMake(image, signal, ctx, say) {
   const look = async function (img) {
     const r = /** @type {any} */ (await scanRead(img, signal, say));
     const text = typeof r === "string" ? r : String((r && r.text) || "");
-    return Object.assign(parseReceipt(text, ctx), { text: text, doubt: /** @type {string[]} */ ((r && typeof r !== "string" && r.doubt) || []) });
+    return Object.assign(parseReceipt(text, ctx), { text: text, doubt: /** @type {string[]} */ ((r && typeof r !== "string" && r.doubt) || []), rows: /** @type {any[]} */ ((r && typeof r !== "string" && r.rows) || []) });
   };
   /* how many of a look's drinks the reader was sure of, name and price (v139) */
   /** @param {any} r */
@@ -694,8 +831,20 @@ async function scanRead(image, signal, say) {
     const res = await worker.recognize(image, {}, { blocks: true });
     /** @type {{text: string, confidence: number}[][]} */
     const lines = [];
-    (res.data.blocks || []).forEach(b => (b.paragraphs || []).forEach(p => (p.lines || []).forEach(l => lines.push((l.words || []).map(w => ({ text: w.text, confidence: w.confidence }))))));
-    return { text: res.data.text, doubt: doubtWords(lines) };
+    /* and where each line is, as a part of the picture's height, for the picture to be moved to a drink's line (v140) */
+    /** @type {{t: string, y0: number, y1: number}[]} */
+    const rows = [];
+    const high = image.height || 1;
+    (res.data.blocks || []).forEach(b =>
+      (b.paragraphs || []).forEach(p =>
+        (p.lines || []).forEach(function (l) {
+          lines.push((l.words || []).map(w => ({ text: w.text, confidence: w.confidence })));
+          const t = String(l.text || "").trim();
+          if (t && l.bbox) rows.push({ t: t, y0: l.bbox.y0 / high, y1: l.bbox.y1 / high });
+        })
+      )
+    );
+    return { text: res.data.text, doubt: doubtWords(lines), rows: rows };
   } finally {
     signal.removeEventListener("abort", stop);
     worker.terminate();
@@ -713,6 +862,7 @@ function _scanWait(title) {
     of it is the receipt. @param {Blob} file */
 async function _scanRun(file) {
   _scanStop();
+  _scanPicFree();
   const run = _scanNew();
   if (!run) return;
   _scan = run;
@@ -777,6 +927,8 @@ async function _scanRead(run, quad) {
     new Set([run.url, run.orig]).forEach(u => u && URL.revokeObjectURL(u));
     run.url = made.url;
     run.orig = made.orig;
+    run.pw = made.image.width;
+    run.ph = made.image.height;
     run.show = "clean";
     run.doubt = [];
     pic.read = "";
@@ -865,8 +1017,10 @@ function _scanFill(run, rows) {
     dec = ccyMeta(code).dec,
     off = run.off,
     other = run.other;
+  _scanPicTake(run);
   _sheetOnClose = _scanStop;
   closeSheet();
+  _scanPicShow();
   if ($("f-wish") && $("f-wish").checked) {
     $("f-wish").checked = false;
     syncWishMode();
@@ -887,6 +1041,9 @@ function _scanFill(run, rows) {
     first.scrollIntoView({ block: "start" });
   }
   toast(other ? "Filled in. This receipt is in " + other + ", so add the prices." : off ? "Filled in, but the prices don’t add up. Check them." : rows[0].n ? "Filled in from your receipt. Check it and save." : "Only a total on this one. Add your drink.");
+}
+function scanPicHide() {
+  _scanPicFree();
 }
 /** @param {any} run @param {any} res what parseReceipt made of the text */
 function _scanRoute(run, res) {
@@ -915,14 +1072,28 @@ function _scanRoute(run, res) {
   run.off = res.off;
   run.back = "";
   const doubt = run.doubt || [];
-  run.items = res.items.map((x, i) => Object.assign({ i: i, on: x.drink, say: res.off ? "Read from the receipt, but its prices don’t add up. Check this one." : "", unsure: _scanUnsure(x, doubt) }, x));
+  /* where each drink is on the receipt, for the picture to be moved to (v140) */
+  const rows = /** @type {{t: string, y0: number, y1: number}[]} */ (res.rows || []),
+    where = itemLines(res.items, rows);
+  run.items = res.items.map(function (x, i) {
+    const unsure = _scanUnsure(x, doubt);
+    /* A priced line that names no drink it knows is most likely your drink all the same, at a cafe: ticked (v140), and
+       called new here. Not when the reader doubted the line, which is how a misread subtotal looks. */
+    const guess = !!x.odd && x.price != null && !unsure;
+    return Object.assign({ i: i, on: x.drink || guess, guess: guess, say: res.off ? "Read from the receipt, but its prices don’t add up. Check this one." : "", unsure: unsure, at: where[i] >= 0 ? { y0: rows[where[i]].y0, y1: rows[where[i]].y1 } : null }, x);
+  });
+  const placed = run.items.filter(/** @param {any} x */ x => x.at);
+  run.band = placed.length ? { y0: Math.min(...placed.map(/** @param {any} x */ x => x.at.y0)), y1: Math.max(...placed.map(/** @param {any} x */ x => x.at.y1)) } : null;
+  run.kept = false;
   _scanShow(_scanPickHTML(run));
+  _scanAim($("dns-panel"), run.band);
+  _scanKeptSync();
 }
 /** What a row knows, as tags: "oat", "16 oz", and then "had 3× here". @param {any} run @param {any} x a row */
 function _scanTags(run, x) {
   const d = ((run.c && run.c.drinks) || []).find(y => (y.n || "").trim().toLowerCase() === x.n.trim().toLowerCase());
   const cups = d ? drinkOrders(d).reduce((t, o) => t + orderQty(o), 0) : 0;
-  const note = x.odd ? "Not sure it’s a drink" : !x.drink ? "Not a drink" : cups ? "had " + cups + "× here" : run.c ? "new here" : "";
+  const note = x.odd && !x.guess ? "Not sure it’s a drink" : !x.drink && !x.guess ? "Not a drink" : cups ? "had " + cups + "× here" : run.c ? "new here" : "";
   return (
     orderOptsText(x).split(" · ").filter(Boolean).map(t => '<span class="scantag">' + esc(t) + "</span>").join("") +
     (note ? '<span class="scannote">' + esc(note) + "</span>" : "")
@@ -937,6 +1108,7 @@ function _scanGo(run) {
 function _scanPickHTML(run) {
   const go = _scanGo(run);
   const day = run.date || localToday();
+  const money = ccyMeta(run.code);
   return (
     '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">' + (run.items.length === 1 ? "Is this yours?" : "Which ones were yours?") + "</h2><p>" +
     esc(run.c ? run.c.name : $("f-name").value.trim() || "Your receipt") + " · " + (day === localToday() ? "Today, " : "") + esc(_noteDay(day)) + "</p></div>" + _scanClose() + "</div>" +
@@ -950,17 +1122,144 @@ function _scanPickHTML(run) {
           '<span class="scantext"><input class="scanname" type="text" aria-label="Drink name" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="80" data-i="' + x.i + '" value="' + esc(x.n) + '"' +
           act("scanName", ["$data.i", "$value"], "input") + '><span class="scantags">' + _scanTags(run, x) + "</span>" +
           (x.printed ? "<small>Printed: " + esc(x.printed) + "</small>" : "") + (x.unsure ? '<small class="scanunsure">' + esc(x.unsure) + "</small>" : "") + "</span>" +
-          '<span class="scanp">' + esc(x.price != null ? fmtLocal(x.price, run.code) : "") + "</span></div>"
+          /* the price is a box (v140): it could only be put right on the next screen before */
+          '<label class="scanp"><span aria-hidden="true">' + esc(money.sym) + '</span><input class="scanprice" type="text" inputmode="decimal" autocomplete="off" aria-label="Price" maxlength="9" data-i="' + x.i + '" value="' +
+          esc(x.price != null ? x.price.toFixed(money.dec) : "") + '"' + act("scanPrice", ["$data.i", "$value"], "input") + "></label></div>"
         );
       })
       .join("") +
     "</div>" +
     (_scanLinesOf(run).length ? '<button type="button" class="scanalt"' + act("scanPickLine") + ">My drink isn’t here</button>" : "") +
     '<p class="scanfoot">' + (run.other ? "This receipt is in " + esc(run.other) + ", so add each price yourself." : run.off ? "These prices don’t add up to the receipt’s subtotal, so one may be misread." : "Tax, tip and the total are left out.") + "</p>" +
+    '<div class="scankept" id="scan-kept">' + _scanKeptHTML(run, 0) + "</div>" +
     '<div class="dnact"><button type="button" class="btn ghost"' + act("scanBack") + ">" + _scanBackWord(run) + "</button>" +
     '<button type="button" class="btn" id="scan-log"' + act("scanLog") + (go ? ">" + go : " disabled>Tick a drink") + "</button></div>"
   );
 }
+/** A price put right on the list. Empty is no price, for you to fill in on the sheet. @param {string} i @param {string} v */
+function scanPrice(i, v) {
+  if (!_scan) return;
+  const x = _scan.items[+i];
+  if (!x) return;
+  /* a comma for the decimal point, as much of the world writes it */
+  const s = String(v).trim();
+  x.price = ccyNum(s.includes(".") ? s : s.replace(",", "."));
+}
+
+/* ---------- a reading kept for testing (v140) ----------
+   Every fix to the reader came from a real photo the owner sent. This makes sending one a tap at the counter and another
+   later: the photo as taken, and beside it what the app made of it (the box, the text, the drinks), are kept in a cache
+   of their own on the phone, and shared from here when it suits. Nothing leaves the phone until it is shared.
+   sw.js spares this cache when it clears the old ones on an update. */
+const KEPT_CACHE = "cafemap-kept";
+const KEPT_MOST = 12;
+/** The readings kept, oldest first, each by the time it was kept. @returns {Promise<string[]>} */
+async function _scanKept() {
+  try {
+    /* asking must not make it: an emptied store is gone, not empty */
+    if (!(await caches.has(KEPT_CACHE))) return [];
+    const keys = await (await caches.open(KEPT_CACHE)).keys();
+    return [...new Set(keys.map(k => (/__kept\/(\d+)\./.exec(k.url) || [])[1]).filter(Boolean))].sort();
+  } catch (e) {
+    return [];
+  }
+}
+/** The line under the list: the way to keep this reading, and what is kept already. @param {any} run @param {number} n kept so far */
+function _scanKeptHTML(run, n) {
+  return (
+    (run.pic && !run.kept ? '<button type="button" class="scanalt" id="scan-keep"' + act("scanKeep") + ">Read it wrong? Keep this photo for testing</button>" : "") +
+    (n
+      ? '<p class="scankeptn"><span id="scan-keptn">' + n + " kept for testing</span>" +
+        '<button type="button" class="scanalt" id="scan-keptshare"' + act("scanKeptShare") + ">Share</button>" +
+        '<button type="button" class="scanalt" id="scan-keptclear"' + act("scanKeptClear") + ">Clear</button></p>"
+      : "")
+  );
+}
+/** Brings that line up to date, once the phone has said what is kept. */
+async function _scanKeptSync() {
+  const n = (await _scanKept()).length;
+  const el = $("scan-kept");
+  if (el && _scan) el.innerHTML = _scanKeptHTML(_scan, n);
+}
+async function scanKeep() {
+  const run = _scan,
+    pic = run && run.pic;
+  if (!pic) return;
+  try {
+    if ((await _scanKept()).length >= KEPT_MOST) {
+      toast("That’s " + KEPT_MOST + " kept. Share them, then clear them, to keep more.");
+      return;
+    }
+    const id = Date.now();
+    const tag = document.querySelector('script[src*="js/scan.js"]');
+    const v = /[?&]v=(\d+)/.exec((tag && tag.getAttribute("src")) || "");
+    const note = {
+      kept: new Date(id).toISOString(),
+      app: v ? "v" + v[1] : "",
+      photo: pic.w + "x" + pic.h,
+      box: pic.read === "all" ? "whole photo" : pic.quad,
+      read: run.text || "",
+      unsure: run.doubt || [],
+      drinks: run.items.map(/** @param {any} x */ x => ({ name: x.n, price: x.price, ticked: x.on, printed: x.printed })),
+    };
+    const c = await caches.open(KEPT_CACHE);
+    await c.put("__kept/" + id + ".photo", new Response(pic.file, { headers: { "Content-Type": pic.file.type || "image/jpeg" } }));
+    await c.put("__kept/" + id + ".txt", new Response(JSON.stringify(note, null, 1), { headers: { "Content-Type": "text/plain" } }));
+    run.kept = true;
+    toast("Kept on this phone");
+  } catch (e) {
+    warn("scan.js keep", e);
+    toast("Couldn’t keep that photo");
+  }
+  _scanKeptSync();
+}
+/** Every reading kept, to the phone's share sheet: each photo and the note beside it. Where a browser will not share
+    files, they are saved instead. They stay kept until cleared, since a share can be let go half way. */
+async function scanKeptShare() {
+  /** @type {File[]} */
+  const files = [];
+  try {
+    const c = await caches.open(KEPT_CACHE);
+    for (const id of await _scanKept()) {
+      const p = await c.match("__kept/" + id + ".photo"),
+        t = await c.match("__kept/" + id + ".txt");
+      if (p) {
+        const b = await p.blob();
+        files.push(new File([b], "scan-" + id + "." + ((/image\/(\w+)/.exec(b.type) || [])[1] || "jpg").replace("jpeg", "jpg"), { type: b.type || "image/jpeg" }));
+      }
+      if (t) files.push(new File([await t.blob()], "scan-" + id + ".txt", { type: "text/plain" }));
+    }
+  } catch (e) {
+    warn("scan.js kept", e);
+  }
+  if (!files.length) return;
+  if (navigator.canShare && navigator.canShare({ files: files })) {
+    try {
+      await navigator.share({ files: files, title: "Scans kept for testing" });
+    } catch (e) {
+      if (!e || e.name !== "AbortError") toast("Couldn’t share them");
+    }
+    return;
+  }
+  files.forEach(function (f) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(f);
+    a.download = f.name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
+}
+async function scanKeptClear() {
+  try {
+    await caches.delete(KEPT_CACHE);
+  } catch (e) {
+    warn("scan.js kept", e);
+  }
+  if (_scan) _scan.kept = false;
+  toast("Kept photos cleared");
+  _scanKeptSync();
+}
+
 /* The ticks and the button, brought in line with the rows without drawing them again: a name being typed keeps its cursor */
 function _scanPickSync() {
   if (!_scan) return;
@@ -1004,6 +1303,8 @@ function scanLog() {
 /** The quick cup, filled in with one row of the receipt; saving it brings up the next (form.js, qcSave).
     @param {any[]} rows @param {number} i @param {string|null} date @param {string} other a currency not the cafe's */
 function _scanCups(rows, i, date, other) {
+  /* the first cup takes the picture from the reading; the cups after it find it kept */
+  _scanPicTake(_scan);
   _scanStop();
   if (!$("dnsheet").hidden) {
     _sheetOnClose = null;
@@ -1016,6 +1317,8 @@ function _scanCups(rows, i, date, other) {
   });
   openSheet("", document.activeElement, function () {
     _qc = null;
+    /* the last cup saved, or the sheet put away: the picture has done its work */
+    _scanPicFree();
   });
   _qc = {
     n: x.n,
@@ -1034,6 +1337,10 @@ function _scanCups(rows, i, date, other) {
       say: other ? "The receipt is in " + other + ", so the price is yours to fill in." : x.say || (x.price != null ? "From the receipt, before tax and tip." : ""),
     },
   };
+  /* the picture opens on this cup's line, and on the drinks together if its line was not found */
+  if (_scanPic) _scanPic.at = x.at ? { y0: x.at.y0, y1: x.at.y1, mark: true } : _scanPic.band;
   _qcRedraw();
+  /* each cup's sheet starts at its top: the list, and the cup before, leave the sheet where they were scrolled to */
+  $("dns-panel").scrollTop = 0;
   _qcFocus();
 }

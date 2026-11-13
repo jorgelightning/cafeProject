@@ -1355,7 +1355,9 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .scanwords h2{ margin:0; font-size:var(--fs-5); font-weight:800; }
 .scanwords h2:focus{ outline:none; }
 .scanwords p{ margin:var(--sp-1) 0 0; color:var(--soft); font-size:var(--fs-2); line-height:1.5; }
-.scanlist{ border:1px solid var(--border); border-radius:var(--r-3); overflow:hidden; }
+/* flex:none: in the sheet's column a box that hides its overflow may be squeezed to nothing, and a list of two drinks
+   lost its second row under the picture (v140). The sheet scrolls instead. The picture above it likewise. */
+.scanlist{ flex:none; border:1px solid var(--border); border-radius:var(--r-3); overflow:hidden; }
 .scanrow{ display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:start; gap:var(--sp-2); padding:var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-1); border-top:1px solid var(--border); }
 .scanrow:first-child{ border-top:0; }
 .scantick{ width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:0; background:none; cursor:pointer; }
@@ -1370,8 +1372,42 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .scantags:empty{ display:none; }
 .scantag{ padding:3px 9px; border-radius:var(--r-2); background:var(--surface2); color:var(--text); }
 .scantext small{ margin-top:var(--sp-1); font-size:var(--fs-1); color:var(--faint); }
-.scanp{ min-height:44px; display:flex; align-items:center; font-size:var(--fs-3); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.scanthumb{ display:flex; justify-content:center; border-radius:var(--r-2); background:var(--surface2); overflow:hidden; }
+.scanp{ min-height:44px; display:flex; align-items:center; gap:var(--sp-1); font-size:var(--fs-3); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+/* the price is a box of its own (v140), 16px like the name beside it so an iPhone does not zoom in */
+.scanprice{ width:4.6em; min-height:44px; padding:var(--sp-2); box-sizing:border-box; border:1px solid var(--border); border-radius:var(--r-2); background:var(--surface); color:var(--text); font:inherit; font-size:var(--fs-3); font-weight:600; font-variant-numeric:tabular-nums; text-align:right; }
+.scanprice:focus{ outline:none; border-color:var(--acc-strong); box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent); }
+/* a reading kept for testing (v140): the way to keep it, and what is kept */
+.scankept{ display:flex; flex-direction:column; align-items:center; }
+.scankept:empty{ display:none; }
+.scankeptn{ display:flex; align-items:center; margin:0; font-size:var(--fs-2); color:var(--soft); }
+/* the box says the receipt is too small to read (v140) */
+.scancropacts{ display:flex; flex-direction:column; gap:var(--sp-3); }
+.scansmall{ margin:0; padding:var(--sp-2) var(--sp-3); border-radius:var(--r-2); background:color-mix(in srgb,var(--mid) 16%,transparent); color:var(--text); font-size:var(--fs-2); line-height:1.4; }
+.scanthumb{ flex:none; display:flex; justify-content:center; border-radius:var(--r-2); background:var(--surface2); overflow:hidden; }
+/* The receipt stays in view while its drinks are put right (v140): pinned at the top of the sheet as the list, or a
+   cup's sheet, scrolls under it, and at the top of Add a visit while the rows it filled in are in view. A box that is
+   typed in stops below it, not under it. A pinned box stops at the inside of its sheet's padding, which would leave a
+   strip over it for the rows to show through, so it is pinned that much higher, against the sheet's own edge. */
+.dnpanel > .scanthumb{ position:sticky; top:calc(-1 * var(--sp-2)); z-index:2; }
+.dnpanel:has(> .scanthumb) :is(input, textarea, select, button){ scroll-margin-top:calc(30vh + var(--sp-4)); }
+/* in the form only the picture is pinned, and smaller, so a row has room between it and a keyboard; its switch and
+   Hide scroll away with the rows. The holder is no box of its own, or the picture could not stay past its end. */
+.scanpic{ display:contents; }
+.scanpic[hidden]{ display:none; }
+.scanpic > .scanthumb{ position:sticky; top:0; z-index:2; margin-bottom:var(--sp-2); }
+.scanpic > .scanthumb img{ max-height:22vh; }
+.scanpic > .scanalt{ display:block; margin:0 auto var(--sp-2); }
+.scanpic:not([hidden]) ~ .drinkrows :is(.dr, input, textarea, select, button){ scroll-margin-top:calc(22vh + var(--sp-4)); }
+/* With each drink's place on the receipt known, the picture is shown at the sheet's width, where its print can be read,
+   in a window as tall as the picture was. The window moves to the drink in hand and marks its line like a highlighter,
+   and scrolls by hand to the rest of the receipt without taking the sheet with it. */
+.scanthumb.zoom{ display:block; max-height:30vh; overflow-y:auto; overscroll-behavior:contain; }
+.scanthumb.zoom:focus-visible{ outline:2px solid var(--text); outline-offset:-2px; }
+.scanpage{ position:relative; }
+.scanthumb.zoom img, .scanpic > .scanthumb.zoom img{ display:block; width:100%; height:auto; max-height:none; }
+.scanmark{ position:absolute; left:0; right:0; background:var(--acc-strong); opacity:.3; mix-blend-mode:multiply; pointer-events:none; }
+.scanmark[hidden]{ display:none; }
+.scanpic > .scanthumb.zoom{ max-height:22vh; }
 /* Above the list of drinks (v138; on the text until then): which picture the names are checked against, and under a
    drink what the reader was unsure of in its line */
 .scanseg{ margin-top:calc(var(--sp-1) - var(--sp-3)); }

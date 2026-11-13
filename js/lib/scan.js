@@ -555,4 +555,42 @@ export function doubtWords(lines) {
   return out;
 }
 
-if (typeof window !== "undefined") Object.assign(window, { SCAN_ICE, SCAN_MILK, SCAN_MAX_ROWS, parseReceipt, receiptLines, lineItem, doubtWords });
+/** Which of the reader's lines each drink was read from, so that its place on the receipt can be shown beside it
+    (v140). A drink keeps what was printed for it, and its line is looked for three ways, surest first: the printed name
+    and the price on one line; the printed name; then most of the name's words, for a ticket whose name ran on to a
+    second line. A shop called Cortado Coffee has a drink's name in its heading too, which is why the price is asked for
+    first. Drinks come in the order printed, so each is looked for below the one before it.
+    @param {{printed?: string, price?: number|null}[]} items
+    @param {{t: string}[]} rows the reader's lines, top to bottom
+    @returns {number[]} for each item its line's place in rows, or -1 */
+export function itemLines(items, rows) {
+  /** @param {unknown} s */
+  const flat = s => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  /** @param {unknown} s */
+  const words = s => String(s || "").toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2 && !/^\d+$/.test(w));
+  const lines = (rows || []).map(r => ({ flat: flat(r && r.t), words: words(r && r.t) }));
+  let from = 0;
+  return (items || []).map(function (x) {
+    const first = String((x && x.printed) || "").split(" + ")[0];
+    const key = flat(first),
+      want = words(first);
+    if (key.length < 3) return -1;
+    const price = x && typeof x.price === "number" ? [x.price.toFixed(2).replace(".", "")].concat(Number.isInteger(x.price) ? [String(x.price)] : []) : [];
+    /** @param {(l: {flat: string, words: string[]}) => boolean} ok */
+    const find = function (ok) {
+      for (let i = from; i < lines.length; i++) if (ok(lines[i])) return i;
+      return -1;
+    };
+    let hit = price.length ? find(l => l.flat.includes(key) && price.some(p => l.flat.includes(p))) : -1;
+    if (hit < 0) hit = find(l => l.flat.includes(key));
+    if (hit < 0 && want.length)
+      hit = find(function (l) {
+        const both = want.filter(w => l.words.includes(w)).length;
+        return both >= Math.min(2, want.length) && Math.max(both / want.length, l.words.length ? both / l.words.length : 0) >= 0.6;
+      });
+    if (hit >= 0) from = hit + 1;
+    return hit;
+  });
+}
+
+if (typeof window !== "undefined") Object.assign(window, { SCAN_ICE, SCAN_MILK, SCAN_MAX_ROWS, parseReceipt, receiptLines, lineItem, doubtWords, itemLines });

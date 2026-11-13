@@ -2,7 +2,7 @@
    The suite (tests/run.js) runs these through tests/unit.js. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseReceipt, receiptLines, lineItem, doubtWords, SCAN_MAX_ROWS } from "../../js/lib/scan.js";
+import { parseReceipt, receiptLines, lineItem, doubtWords, itemLines, SCAN_MAX_ROWS } from "../../js/lib/scan.js";
 
 const ctx = { known: ["Iced matcha latte", "Cortado", "Black matcha latte", "Hojicha latte"], code: "USD", dec: 2, today: "2026-11-08" };
 const read = (lines, over) => parseReceipt(lines.join("\n"), Object.assign({}, ctx, over));
@@ -252,4 +252,16 @@ test("parseReceipt: a surcharge is not something you drank", () => {
   const r = read(["Hot Hojicha L $7.50", "Subtotal $7.50", "SF Healthcare", "Surcharge (4%) $0.30", "SF Tax (8.625%) $0.65", "Total $8.45"], { known: ["Hojicha latte"] });
   assert.deepEqual(names(r), ["Hojicha latte"]);
   assert.deepEqual(names(read(["Cortado 5.00", "Surcharge 0.30", "Credit Card Surcharge (3.00%) $0.49"], {})), ["Cortado"], "before the totals too, where the owner's photo had it read");
+});
+
+test("itemLines: each drink is found on the line it was read from", () => {
+  const rows = l => l.map(t => ({ t }));
+  const receipt = rows(["CORTADO COFFEE", "12 Oak St", "Cortado  $6.50", "(Default) Whole Milk", "1 Hot Hojicha Latte  $7.25", "Subtotal  $13.75"]);
+  assert.deepEqual(itemLines([{ printed: "Cortado + (Default) Whole Milk", price: 6.5 }, { printed: "1 Hot Hojicha Latte", price: 7.25 }], receipt), [2, 4],
+    "the name and its price on one line, so a shop named for a drink is not taken for the drink");
+  assert.deepEqual(itemLines([{ printed: "Latte", price: 5 }, { printed: "Latte", price: 5 }], rows(["Latte 5.00", "Latte 5.00", "Total 10.00"])), [0, 1], "the same drink twice is two lines, in the order printed");
+  assert.deepEqual(itemLines([{ printed: "Matcha Guava Cream Top", price: null }], rows(["Order 41", "1 x Matcha Guava", "Cream Top", "50% sweet"])), [1], "a ticket's name that ran on to a second line is found by its words");
+  assert.deepEqual(itemLines([{ printed: "Cortado", price: 3.25 }], rows(["Cortado  $6.50"])), [0], "a price shared between two cups is not the one printed, and the name alone finds the line");
+  assert.deepEqual(itemLines([{ printed: "Cold Brew", price: 6.25 }, { printed: "", price: 4 }], rows(["Thank you", "Total 6.25"])), [-1, -1], "a drink on no line has no place, and nor has one with nothing printed");
+  assert.deepEqual(itemLines([{ printed: "Cortado", price: 6.5 }], []), [-1], "and a reader that gave no lines places nothing");
 });

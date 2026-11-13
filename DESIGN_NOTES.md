@@ -2608,3 +2608,68 @@ On the owner's seven photos, read by the app's own code from the corners placed 
 starts: the crumpled receipt from its starting box went from "Cachan $6.28" to "Cold brew $6.25", and no drink that
 was found before is lost. Five of the fourteen readings now take the second look, about a second each.
 `tests/unit/scan.test.mjs`, `tests/scan-receipt.js`.
+
+## The scan, reviewed: a photo check and a list to finish on (v140)
+
+The owner asked for a review of the whole scan, receipts and till screens, for what would make it reliable. Each stage
+was measured on his seven photos with the app's own code.
+
+| Stage | What was measured | Result |
+|---|---|---|
+| The photo | Lines read right, each receipt at full size and at half | 77, then 46, of 102 |
+| The box | Drinks found with the box left as it starts, and with its corners placed | 7, and all 10, of 10 |
+| The clean-up | Lines gained by it (v136) | 10 |
+| The reading | Lines read right from a careful box | 86 of 119 |
+| Finding drinks | Drinks that came unticked for having names it had not seen | 3 of 10 |
+| The first scan | What is downloaded before it can start | 7 MB |
+
+So the early stages decide it, and the app said nothing about either. Softening a photo of a screen against its dot
+pattern was tried too, and read worse. Three fixes were drawn, and the owner took the first two.
+
+**The photo check.** The box says when the part boxed is under 380 of the photo's own pixels on its shorter side: "The
+receipt is small in this photo, so its print may not read. Move closer and retake." His long receipt read 26 lines
+right of 29 at 372 across and 2 at 248. It says so on the box, before any time is spent reading, and follows the box
+as a corner is dragged. Retake becomes the first button; the box can still be read, and Whole photo, no better for a
+small receipt, drops to the link.
+
+**The list.** A priced line that names no drink it knows was left unticked as "Not sure it's a drink". At a cafe it
+most likely is one, so it is ticked and called new here, unless the reader doubted the line, which is how a misread
+subtotal looks, or it has no price. The price is a box, a comma taken for its decimal point: it could only be put
+right on the next screen, one cup at a time. Looking at the first real list of two drinks showed the second row cut
+off: in the sheet's column a box that hides its overflow can be squeezed to nothing, and the list is now kept whole
+while the sheet scrolls.
+
+**Keep this photo for testing.** Every fix to the reader since v134 began with a photo the owner sent. A reading that
+went wrong can now be kept from the list: the photo as taken and, beside it, what the app made of it (the box, the
+text, what was doubted, the drinks), in a cache of their own on the phone, twelve at most. Share hands them to the
+phone's share sheet as files, or saves them where a browser will not share files; Clear lets them go. Nothing leaves
+the phone until it is shared. The service worker cleared every cache it did not know on each update, which would have
+emptied this one at the next release, so it is spared by name.
+
+**The picture stays.** The owner then asked that the receipt's picture be kept "throughout the receipt editing process
+of the drinks like rename drinks and change price for reference". It was above the list only, went up out of sight with
+the first row, and was let go the moment Log was pressed, so each cup's sheet and the rows in Add a visit were checked
+from memory. Now it is pinned at the top of the list while the rows scroll under it, and it goes on with the drinks: to
+each cup's sheet, under the line that says where the cup came from, and to Add a visit, over the rows the receipt
+filled in, whether by Log or by More options. Whichever of Cleaned up and Original was chosen stays chosen. A box taken
+in hand, or a row brought into view, stops below the picture and not under it. In the form only the picture is pinned,
+at 22% of the screen's height against 30% on a sheet, since a keyboard takes the lower half; its switch and Hide scroll
+with the rows. It is let go when the last cup is saved, a cup's sheet is put away, the form is saved or left, or
+another photo is taken. Looking at the first cup's sheet showed it opening part of the way down: a sheet closed and
+opened again in one step keeps where it was scrolled to, so each cup's sheet is now put at its top.
+
+**And it can be read.** Kept in view, the picture was still as tall as 30% of the screen whatever the receipt's length:
+the owner's long receipt came out 83 points wide, its print past reading, and he chose to have that put right before
+going live. The reader already knows where each line is, so its lines now come back with their places, and each drink
+is tied to the line it was read from (`itemLines`, `js/lib/scan.js`): the printed name and the price on one line
+first, since a shop named for a drink has the name in its heading too, then the name, then most of its words, for a
+ticket whose name ran on. With the places known the picture is shown at the sheet's width in a window as tall as the
+picture was. The window opens on the drinks; a name, a price or a tick taken in hand moves it to that drink's line and
+marks the line like a highlighter; each cup's sheet opens on its own cup's line; and it scrolls by hand to the rest. A
+reading with no places (text shared to the app, a layout no drink was found in) shows the picture whole, as before.
+None of this has been tried on a phone with its keyboard up.
+
+Not built, from the same review: fetching the reader's files ahead of the first scan and a warning for a receipt
+already logged (the third drawing); the "(Default) Whole Milk" line on a Square receipt, whose milk is not taken; and a
+better starting box on a till's screen.
+`tests/scan-receipt.js`.

@@ -17,8 +17,8 @@
    CACHE_V would keep serving the old scripts. Anything cross-origin (Maps, Firebase, the FX
    endpoint) is deliberately not intercepted; those must fail normally so their own fallbacks
    run. */
-const CACHE_V = "cafemap-v139";
-const ASSET_V = "?v=139";
+const CACHE_V = "cafemap-v140";
+const ASSET_V = "?v=140";
 
 const SHELL = [
   "./", "./index.html", "./manifest.json", "./cafes.json",
@@ -42,7 +42,8 @@ self.addEventListener("install", function(e){
 
 self.addEventListener("activate", function(e){
   e.waitUntil(caches.keys().then(function(keys){
-    return Promise.all(keys.filter(function(k){ return k !== CACHE_V && k !== SHARE_CACHE; })
+    /* and not the readings kept for testing (scan.js, v140): they are the owner's until he clears them */
+    return Promise.all(keys.filter(function(k){ return k !== CACHE_V && k !== SHARE_CACHE && k !== KEPT_CACHE; })
                            .map(function(k){ return caches.delete(k); }));
   }).then(function(){ return self.clients.claim(); }));
 });
@@ -51,6 +52,7 @@ self.addEventListener("activate", function(e){
    in a cache of its own and the app is opened on ./?do=scan, where scan.js reads it and deletes it. It is answered
    here, so what was shared never leaves the phone, and nothing of it is in the address. */
 const SHARE_CACHE = "cafemap-share";
+const KEPT_CACHE = "cafemap-kept";
 function takeShare(req){
   return req.formData().then(function(form){
     const text = form.get("text") || form.get("title") || form.get("url") || "";

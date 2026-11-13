@@ -75,7 +75,7 @@ const { eq, done } = checker();
 
   /* one drink: the list first, as for several (v130), then the sheet */
   await scan(["SAMPLE TEA BAR", "CORTADO 6.50", "+ OAT MILK", "TAX 0.70", "TOTAL 7.20"], true);
-  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + x.querySelector(".scanp").textContent),
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + (v => (v ? "$" + v : ""))(x.querySelector(".scanprice").value)),
     printed: document.querySelector(".scantext small").textContent, go: [...document.querySelectorAll("#dns-panel .dnact .btn")].pop().textContent.trim(), saved: cafes[0].drinks[0].orders.length }));
   eq(s, { title: "Is this yours?", rows: ["true Cortado $6.50"], printed: "Printed: CORTADO + OAT MILK", go: "Log 1 cup", saved: 2 }, "one drink stops at the list too, showing what was printed beside what the app made of it");
   await one();
@@ -101,11 +101,11 @@ const { eq, done } = checker();
     blob: document.querySelector(".scanthumb img").src.startsWith("blob:"), saved: cafes[0].drinks.length, wide: document.documentElement.scrollWidth <= innerWidth,
     tick: document.querySelector(".scantick").getAttribute("aria-pressed"), note: document.querySelector(".scannote").textContent, go: $("scan-log").textContent + ($("scan-log").disabled ? " off" : ""),
     above: document.querySelector("#dns-panel .scanthumb").getBoundingClientRect().bottom <= document.querySelector(".scanlist").getBoundingClientRect().top }));
-  eq(s, { title: "Is this yours?", box: false, back: "Adjust crop", close: true, blob: true, saved: 2, wide: true, tick: "false", note: "Not sure it’s a drink", go: "Tick a drink off", above: true },
-     "a photo's reading goes straight to the list of drinks, with no text to check first: a line that names no drink comes unticked, your photo above the list to check against (v132), and nothing saved");
+  eq(s, { title: "Is this yours?", box: false, back: "Adjust crop", close: true, blob: true, saved: 2, wide: true, tick: "true", note: "new here", go: "Log 1 cup", above: true },
+     "a photo's reading goes straight to the list of drinks, with no text to check first: a priced line that names no drink it knows comes ticked and called new here (v140), your photo above the list to check against (v132), and nothing saved");
   await pg.fill("#dns-panel .scanname", "Flat white");
   s = await pg.evaluate(() => ({ tick: document.querySelector(".scantick").getAttribute("aria-pressed"), go: $("scan-log").textContent, focus: document.activeElement.className, tall: document.querySelector(".scanname").getBoundingClientRect().height >= 44 }));
-  eq(s, { tick: "true", go: "Log 1 cup", focus: "scanname", tall: true }, "its name is a box: putting it right ticks the row, and the cursor stays in the box");
+  eq(s, { tick: "true", go: "Log 1 cup", focus: "scanname", tall: true }, "its name is a box: putting it right leaves the row ticked, and the cursor stays in the box");
   await pg.fill("#dns-panel .scanname", "  ");
   eq(await pg.evaluate(() => $("scan-log").textContent + ($("scan-log").disabled ? " off" : "")), "Tick a drink off", "a row with no name is not logged");
   await pg.click("#dns-panel .dnact .btn:first-child");
@@ -126,7 +126,7 @@ const { eq, done } = checker();
   /* several items: tick yours, then a sheet each, on the receipt's date */
   const earlier = await pg.evaluate(() => new Date(Date.parse(localToday()) - 3 * 864e5).toISOString().slice(0, 10));
   await scan([earlier, "ICD MTCHA LT 6.75", "+ OAT MILK 1.00", "HOJI LT 16OZ 7.00", "LESS ICE", "CROISSANT 5.00", "SUBTOTAL 19.75", "TAX 1.73", "TOTAL 24.48"]);
-  const pick = () => pg.evaluate(() => ({ title: $("dns-title").textContent, rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + x.querySelector(".scanp").textContent),
+  const pick = () => pg.evaluate(() => ({ title: $("dns-title").textContent, rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + (v => (v ? "$" + v : ""))(x.querySelector(".scanprice").value)),
     meta: [...document.querySelectorAll(".scanrow")].map(x => [...x.querySelectorAll(".scantag, .scannote")].map(e => e.textContent).join(" · ")), go: [...document.querySelectorAll("#dns-panel .dnact .btn")].pop().textContent.trim(), foot: document.querySelector(".scanfoot").textContent }));
   let p = await pick();
   eq(p.rows, ["true Iced matcha latte $7.75", "true Hojicha latte $7.00", "false Croissant $5.00"], "several items ask which were yours: drinks ticked, food not");
@@ -384,7 +384,7 @@ const { eq, done } = checker();
     let grey = true; for (let p = 0; p < d.length; p += 4 * 97) if (d[p] !== d[p + 1] || d[p + 1] !== d[p + 2]) grey = false;
     const seg = [...document.querySelectorAll(".scanseg button")], shown = $("scan-thumbimg");
     return { title: $("dns-title").textContent, box: !!$("scan-text"), back: document.querySelector("#dns-panel .dnact .btn").textContent, alt: shown.alt, reads: window.__seen.length,
-             rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + x.querySelector(".scanp").textContent),
+             rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + (v => (v ? "$" + v : ""))(x.querySelector(".scanprice").value)),
              size: Math.abs(c.w - 600) < 8 && Math.abs(c.h - 900) < 8, grey: grey, paper: [at(0.02, 0.02), at(0.98, 0.02), at(0.02, 0.98), at(0.97, 0.97), at(0.5, 0.01), at(0.01, 0.5)].every(v => v > 200),
              seg: seg.map(b => b.textContent + " " + b.getAttribute("aria-pressed")), cleaned: shown.src === _scan.url && !!_scan.orig && _scan.orig !== _scan.url, tall: seg.every(b => b.getBoundingClientRect().height >= 44),
              under: seg[0].getBoundingClientRect().top >= shown.getBoundingClientRect().bottom - 1 && seg[0].getBoundingClientRect().bottom <= document.querySelector(".scanlist").getBoundingClientRect().top, wide: document.documentElement.scrollWidth <= innerWidth };
@@ -427,14 +427,14 @@ const { eq, done } = checker();
   await pg.evaluate(() => openQuickCup());
   await shoot(shotFile(), "box");
   await listed();
-  s = await pg.evaluate(() => [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scanp").textContent + " " + ((x.querySelector(".scanunsure") || {}).textContent || "sure")));
+  s = await pg.evaluate(() => [...document.querySelectorAll(".scanrow")].map(x => (v => (v ? "$" + v : ""))(x.querySelector(".scanprice").value) + " " + ((x.querySelector(".scanunsure") || {}).textContent || "sure")));
   eq(s, ["$6.50 sure", "$6.95 The reader wasn’t sure of “Whlte” or the price."], "a word or a price the reader was unsure of is said under the drink it is about, and not under the others");
   eq(await pg.evaluate(() => { const u = document.querySelector(".scanunsure"), r = u.closest(".scanrow"); return u.getBoundingClientRect().bottom <= r.getBoundingClientRect().bottom + 1 && document.documentElement.scrollWidth <= innerWidth; }), true, "…inside its row");
   await pg.evaluate(() => closeSheet());
 
   /* a drink the reader doubted gets its second look, which is kept when it is sure of more (v139) */
   const looksAs = (first, second) => pg.evaluate(a => { window.__seen = []; scanRead = image => { window.__seen.push(image.width); return Promise.resolve(window.__seen.length === 1 ? a.first : a.second); }; }, { first, second });
-  const rowsNow = () => pg.evaluate(() => ({ rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + x.querySelector(".scanp").textContent + (x.querySelector(".scanunsure") ? " ?" : "")), looks: window.__seen.length }));
+  const rowsNow = () => pg.evaluate(() => ({ rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + (v => (v ? "$" + v : ""))(x.querySelector(".scanprice").value) + (x.querySelector(".scanunsure") ? " ?" : "")), looks: window.__seen.length }));
   await reset();
   await looksAs({ text: "Xqzv 6.28\nTOTAL 6.28", doubt: ["Xqzv", "6.28"] }, { text: "CORTADO 6.25\nTOTAL 6.25", doubt: [] });
   await pg.evaluate(() => openQuickCup());
@@ -446,7 +446,7 @@ const { eq, done } = checker();
   await pg.evaluate(() => openQuickCup());
   await shoot(shotFile(), "box");
   await listed();
-  eq(await rowsNow(), { rows: ["true Cortado $6.50", "false Xqzv $6.28 ?"], looks: 2 }, "…and the first stands when the second is sure of no more, so a doubted line is shown with its doubt and not dropped");
+  eq(await rowsNow(), { rows: ["true Cortado $6.50", "false Xqzv $6.28 ?"], looks: 2 }, "…and the first stands when the second is sure of no more, so a doubted line is shown with its doubt, unticked, and not dropped");
   await reset();
   await looksAs({ text: "CORTADO 6.50\nTOTAL 6.50", doubt: [] }, { text: "never", doubt: [] });
   await pg.evaluate(() => openQuickCup());
@@ -491,6 +491,220 @@ const { eq, done } = checker();
   eq(await pg.evaluate(() => $("dns-title").textContent), "Where’s the receipt?", "Retake opens the camera again, the box staying until there is a new photo");
   await pg.evaluate(() => { closeSheet(); scanRead = window.__stub; });
 
+  /* the box says when the receipt is too small in the photo to read (v140) */
+  await reset();
+  await readsAs("CORTADO 6.50\nTOTAL 6.50");
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "stay");
+  const acts = () => pg.evaluate(() => ({ warn: $("scan-small") ? $("scan-small").textContent : "", buttons: [...document.querySelectorAll("#scan-cropacts .dnact .btn, #scan-cropacts .scanalt")].map(x => x.textContent + (x.id ? " #" + x.id : "")),
+    tall: [...document.querySelectorAll("#scan-cropacts button")].every(x => x.getBoundingClientRect().height >= 44), reach: $("scan-read").getBoundingClientRect().bottom <= innerHeight, wide: document.documentElement.scrollWidth <= innerWidth }));
+  eq(await acts(), { warn: "", buttons: ["Whole photo #scan-all", "Read this part #scan-read", "Retake"], tall: true, reach: true, wide: true }, "a box big enough to read offers what it always did");
+  /* the box drawn down to a fifth of the photo's width: 300 of its 1500 pixels */
+  await pg.evaluate(() => { _scan.pic.quad = [[0.4, 0.4], [0.6, 0.4], [0.6, 0.62], [0.4, 0.62]]; _scanCropDraw(); });
+  eq(await acts(), { warn: "The receipt is small in this photo, so its print may not read. Move closer and retake.", buttons: ["Read anyway #scan-read", "Retake #scan-again", "Whole photo #scan-all"], tall: true, reach: true, wide: true },
+     "a box too small in the photo for its print to read says so before anything is read, with Retake first and reading it still a choice");
+  eq(await pg.evaluate(() => $("scan-small").getAttribute("role")), "status", "…said for a screen reader as it appears");
+  await pg.focus('.scanhd[data-i="2"]');
+  for (let i = 0; i < 4; i++) await pg.keyboard.press("Shift+ArrowRight");
+  eq([(await acts()).warn, await pg.evaluate(() => document.activeElement.className)], ["", "scanhd"], "…and goes as a corner is drawn out again, the corner still in hand");
+  await pg.evaluate(() => { _scan.pic.quad = [[0.4, 0.4], [0.6, 0.4], [0.6, 0.62], [0.4, 0.62]]; _scanCropDraw(); });
+  await pg.click("#scan-read");
+  await listed();
+  eq(await pg.evaluate(() => [window.__seen.length, window.__seen[0].w < 380]), [1, true], "Read anyway reads the small box all the same");
+  await pg.evaluate(() => closeSheet());
+
+  /* the list is one you can finish on (v140): the price is a box */
+  await reset();
+  await readsAs("CORTADO 6.95\nYuzu Fizz 7.00\nTOTAL 13.95");
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  s = await pg.evaluate(() => { const r = [...document.querySelectorAll(".scanrow")], p = r[0].querySelector(".scanprice"), b = p.getBoundingClientRect(), row = r[0].getBoundingClientRect();
+    return { rows: r.map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + x.querySelector(".scanp").textContent + x.querySelector(".scanprice").value + " " + x.querySelector(".scannote").textContent),
+             label: p.getAttribute("aria-label"), keys: p.getAttribute("inputmode"), tall: b.height >= 44, inside: b.right <= row.right + 1, whole: r.every(x => x.getBoundingClientRect().bottom <= document.querySelector(".scanlist").getBoundingClientRect().bottom + 1), size: parseFloat(getComputedStyle(p).fontSize) >= 16, wide: document.documentElement.scrollWidth <= innerWidth }; });
+  eq(s, { rows: ["true Cortado $6.95 had 2× here", "true Yuzu Fizz $7.00 new here"], label: "Price", keys: "decimal", tall: true, inside: true, whole: true, size: true, wide: true },
+     "each price is a box of its own, 44px and 16px type, inside its row; a priced drink it has not seen is ticked and called new here; and every row is all there, the sheet scrolling when the list is long");
+  await pg.fill('.scanprice[data-i="0"]', "6,25");
+  eq(await pg.evaluate(() => [_scan.items[0].price, document.activeElement.className, $("scan-log").textContent]), [6.25, "scanprice", "Log 2 cups"], "a price put right there is the price, a comma read as its decimal point, the cursor staying in the box");
+  await pg.fill('.scanprice[data-i="1"]', "");
+  eq(await pg.evaluate(() => _scan.items[1].price), null, "…and an emptied box is no price, to fill in on the sheet");
+  await pg.click('.scantick[data-i="1"]');
+  await pg.click("#scan-log");
+  s = await sheet();
+  eq([s.on, s.price], [["Cortado 2"], "6.25"], "…and the price you put right is the one on the sheet");
+  await pg.evaluate(() => closeSheet());
+  /* a line with no price that names no drink is still only a maybe */
+  await reset();
+  await pg.evaluate(() => _scanTextRun("1 x Yuzu Fizz\n1 x Cortado"));
+  eq(await pg.evaluate(() => [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + x.querySelector(".scannote").textContent)),
+     ["false Yuzu Fizz Not sure it’s a drink", "true Cortado had 2× here"], "a line with no price that names no drink it knows is still left for you to tick");
+  eq(await pg.evaluate(() => !!$("scan-keep")), false, "…and text shared to the app has no photo to keep");
+  await pg.evaluate(() => closeSheet());
+
+  /* a reading that went wrong can be kept on the phone, photo and all, and shared later (v140) */
+  await pg.evaluate(() => caches.delete("cafemap-kept"));
+  await reset();
+  await readsAs("Xqzv 6.28\nTOTAL 6.28", false, ["Xqzv"]);
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  eq(await pg.evaluate(() => [$("scan-keep").textContent, !!$("scan-keptn"), $("scan-keep").getBoundingClientRect().height >= 44, $("scan-keep").getBoundingClientRect().bottom <= document.querySelector("#dns-panel .dnact").getBoundingClientRect().top + 1]),
+     ["Read it wrong? Keep this photo for testing", false, true, true], "the list offers to keep a reading that went wrong, above its buttons");
+  await pg.click("#scan-keep");
+  await pg.waitForFunction(() => !!$("scan-keptn"));
+  s = await pg.evaluate(async () => {
+    const c = await caches.open("cafemap-kept"), keys = (await c.keys()).map(k => k.url.replace(/.*__kept\/\d+/, "")).sort();
+    const id = (/__kept\/(\d+)/.exec((await c.keys())[0].url) || [])[1];
+    const photo = await (await c.match("__kept/" + id + ".photo")).blob(), note = JSON.parse(await (await c.match("__kept/" + id + ".txt")).text());
+    return { keys, photo: [photo.type, photo.size > 10000], app: /^v\d+$/.test(note.app), size: note.photo, box: Array.isArray(note.box) && note.box.length === 4, read: note.read, unsure: note.unsure, drinks: note.drinks,
+             says: $("scan-keptn").textContent, keep: !!$("scan-keep"), toast: $("toast").textContent, links: [...document.querySelectorAll("#scan-kept .scankeptn button")].map(b => b.textContent + " " + (b.getBoundingClientRect().height >= 44)) };
+  });
+  eq(s, { keys: [".photo", ".txt"], photo: ["image/png", true], app: true, size: "1500x2000", box: true, read: "Xqzv 6.28\nTOTAL 6.28", unsure: ["Xqzv"], drinks: [{ name: "Xqzv", price: 6.28, ticked: false, printed: "Xqzv" }],
+          says: "1 kept for testing", keep: false, toast: "Kept on this phone", links: ["Share true", "Clear true"] },
+     "Keep stores the photo as it was taken and, beside it, what the app made of it: the box, the text, what was doubted and the drinks, on the phone alone");
+  eq(await pg.evaluate(async () => { const reg = await navigator.serviceWorker.ready, sw = await (await fetch(reg.active.scriptURL)).text(); /* as written, and as the built site has it, shortened */ return /!==\s*KEPT_CACHE\b/.test(sw) && /KEPT_CACHE\s*=\s*"cafemap-kept"/.test(sw); }), true, "…in a cache the app's updates do not clear");
+  s = await pg.evaluate(async () => {
+    window.__shared = null;
+    Object.defineProperty(navigator, "canShare", { configurable: true, value: d => !!(d && d.files && d.files.length) });
+    Object.defineProperty(navigator, "share", { configurable: true, value: async d => { window.__shared = d.files.map(f => f.name.replace(/\d+/, "N") + " " + f.type); } });
+    $("scan-keptshare").click();
+    for (let i = 0; i < 50 && !window.__shared; i++) await new Promise(ok => setTimeout(ok, 40));
+    return { shared: window.__shared, still: (await (await caches.open("cafemap-kept")).keys()).length };
+  });
+  eq(s, { shared: ["scan-N.png image/png", "scan-N.txt text/plain"], still: 2 }, "Share hands each photo and its note to the phone's share sheet, and they stay kept until cleared");
+  await pg.click("#scan-keptclear");
+  await pg.waitForFunction(() => !$("scan-keptn") && !!$("scan-keep"));
+  eq(await pg.evaluate(async () => [(await caches.keys()).includes("cafemap-kept"), $("toast").textContent]), [false, "Kept photos cleared"], "Clear lets them go, and the reading can be kept again");
+  await pg.evaluate(() => closeSheet());
+
+
+  /* the receipt's picture stays in view while its drinks are put right (v140): "can we keep the image throughout the
+     receipt editing process of the drinks like rename drinks and change price for reference" */
+  const picAt = at => pg.evaluate(async at => {
+    const i = document.querySelector(at + " .scanthumb img");
+    if (!i) return null;
+    for (let k = 0; k < 60 && !i.complete; k++) await new Promise(ok => setTimeout(ok, 50));
+    return { loads: i.complete && i.naturalWidth > 0, pinned: getComputedStyle(i.closest(".scanthumb")).position, shows: (document.querySelector(at + " .scanseg .on") || {}).textContent || "" };
+  }, at);
+  const five = async () => {
+    await readsAs("CORTADO 6.50\nHOJICHA LATTE 7.00\nYUZU FIZZ 6.00\nMATCHA LATTE 7.50\nFLAT WHITE 5.00\nTOTAL 32.00");
+    await shoot(shotFile(), "box");
+    await listed();
+  };
+  await reset();
+  await pg.evaluate(() => openQuickCup());
+  eq(await pg.evaluate(() => !!document.querySelector("#dns-panel .scanthumb")), false, "a cup that came from no receipt has no picture");
+  await five();
+  s = await pg.evaluate(() => {
+    const d = $("dns-panel"), th = d.querySelector(".scanthumb");
+    d.scrollTo(0, 99999);
+    const far = d.scrollTop, pinned = Math.abs(th.getBoundingClientRect().top - d.getBoundingClientRect().top) < 2;
+    /* the first name is under the picture by now, or past it: taking it in hand brings it back, to below the picture */
+    d.querySelector(".scanname").focus();
+    const a = th.getBoundingClientRect(), b = document.activeElement.getBoundingClientRect(), p = d.getBoundingClientRect();
+    return { rows: d.querySelectorAll(".scanrow").length, scrolls: far > 0, pinned: pinned, whole: a.height > 60, below: b.top >= a.bottom - 1 && a.top >= p.top - 1, inView: b.bottom <= innerHeight };
+  });
+  eq(s, { rows: 5, scrolls: true, pinned: true, whole: true, below: true, inView: true }, "the picture stays at the top of the list while its rows scroll under it, and a name taken in hand stops below it, not under it");
+  await pg.evaluate(() => { [2, 3, 4].forEach(i => document.querySelector('.scantick[data-i="' + i + '"]').click()); $("scan-log").click(); });
+  await pg.waitForFunction(() => !!$("qc-price"));
+  const held = await pg.evaluate(() => ({ url: _scanPic.url, orig: _scanPic.orig }));
+  s = await pg.evaluate(() => { const d = $("dns-panel"), a = d.querySelector(".scanthumb").getBoundingClientRect(); return { of: d.querySelector(".qcof").textContent, top: d.scrollTop, under: a.top >= d.querySelector(".qcfrom").getBoundingClientRect().bottom - 1, over: a.bottom <= d.querySelector(".dntag").getBoundingClientRect().top + 1, reading: _scan }; });
+  eq([s, await picAt("#dns-panel")], [{ of: "Cup 1 of 2", top: 0, under: true, over: true, reading: null }, { loads: true, pinned: "sticky", shows: "Cleaned up" }],
+     "Log takes the picture on to the first cup's sheet, which starts at its top: under the line that says where the cup came from, over the drinks, the reading itself done with");
+  await pg.click('#dns-panel .scanseg button[data-v="orig"]');
+  eq(await pg.evaluate(() => [document.querySelector("#dns-panel .scanthumb img").src === _scanPic.orig, _scanPic.orig !== _scanPic.url]), [true, true], "…with the photo as you took it a tap away there too");
+  await pg.evaluate(() => $("dns-panel").scrollTo(0, 200));
+  await save();
+  await pg.waitForFunction(() => /2 of 2/.test((document.querySelector(".qcof") || {}).textContent || ""));
+  s = await pg.evaluate(() => ({ top: $("dns-panel").scrollTop, same: !!_scanPic && document.querySelector("#dns-panel .scanthumb img").src === _scanPic.orig }));
+  eq([s, await picAt("#dns-panel")], [{ top: 0, same: true }, { loads: true, pinned: "sticky", shows: "Original" }], "saving a cup takes the picture on to the next, the one you chose still chosen, and that sheet starts at its top too");
+  await save();
+  const gone = u => pg.evaluate(async u => { const lost = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(false); i.onerror = () => ok(true); i.src = src; }); return [$("dnsheet").hidden, _scanPic, await lost(u.url), await lost(u.orig)]; }, u);
+  eq(await gone(held), [true, null, true, true], "the last cup saved, the picture is let go");
+  await reset();
+  await pg.evaluate(() => openQuickCup());
+  await five();
+  await pg.evaluate(() => $("scan-log").click());
+  await pg.waitForFunction(() => !!$("qc-price"));
+  eq(await pg.evaluate(() => { const had = !!_scanPic; closeSheet(); return [had, _scanPic]; }), [true, null], "…and so it is when a cup's sheet is put away");
+  /* on to the whole form, by More options */
+  await pg.evaluate(() => openQuickCup());
+  await five();
+  await pg.evaluate(() => $("scan-log").click());
+  await pg.waitForFunction(() => !!$("qc-price"));
+  await pg.evaluate(() => qcMore());
+  await pg.waitForFunction(() => [...document.querySelectorAll("#f-drinks .dn")].some(x => /yuzu/i.test(x.value)));
+  await pg.waitForTimeout(200);
+  s = await pg.evaluate(() => {
+    const at = $("f-scanpic"), sc = document.querySelector("#pane-form .scroll"), a = at.querySelector(".scanthumb").getBoundingClientRect(), p = sc.getBoundingClientRect();
+    const row = [...document.querySelectorAll("#f-drinks .dr")].find(r => r.querySelector(".dn").value === "Cortado").getBoundingClientRect();
+    return { view: app.dataset.view, shown: !at.hidden, pinned: sc.scrollTop > 0 && Math.abs(a.top - p.top) < 2, row: row.top >= a.bottom - 1, hide: $("f-scanpic-hide").getBoundingClientRect().height >= 44, wide: document.documentElement.scrollWidth <= innerWidth };
+  });
+  eq([s, await picAt("#f-scanpic")], [{ view: "form", shown: true, pinned: true, row: true, hide: true, wide: true }, { loads: true, pinned: "sticky", shows: "Cleaned up" }],
+     "More options takes the picture on to the form with the rest of the receipt: pinned over the rows, the cup's own row brought to just below it");
+  await pg.evaluate(() => $("f-scanpic-hide").click());
+  eq(await pg.evaluate(() => [$("f-scanpic").hidden, $("f-scanpic").children.length, _scanPic]), [true, 0, null], "…until you hide it");
+  /* and by a scan from the form itself */
+  await pg.evaluate(() => { _formSnap = formSnapshot(); });
+  await reset();
+  await pg.evaluate(() => { userLoc = null; show("list"); logTab(); $("f-name").value = "New Place Coffee"; nameTyped(); });
+  await five();
+  await pg.evaluate(() => $("scan-log").click());
+  await pg.waitForFunction(() => $("dnsheet").hidden && !$("f-scanpic").hidden);
+  s = await pg.evaluate(() => ({ view: app.dataset.view, rows: [...document.querySelectorAll("#f-drinks .dn")].filter(x => x.value).length, reading: _scan }));
+  eq([s, await picAt("#f-scanpic")], [{ view: "form", rows: 5, reading: null }, { loads: true, pinned: "sticky", shows: "Cleaned up" }], "a receipt scanned from Add a visit leaves its picture over the rows it filled in");
+  const inForm = await pg.evaluate(() => ({ url: _scanPic.url, orig: _scanPic.orig }));
+  await pg.evaluate(() => { _formSnap = formSnapshot(); closeForm(); });
+  eq([await pg.evaluate(() => $("f-scanpic").hidden), (await gone(inForm)).slice(1)], [true, [null, true, true]], "…and leaving the form lets it go");
+  await reset();
+
+  /* with each drink's place on the receipt known, the picture is shown at the sheet's width, where it can be read, and
+     moved to the drink in hand (v140): kept in view it was still 30% of the screen tall whatever the receipt's length */
+  const places = text => pg.evaluate(text => {
+    /* the reader's lines with where each is: the drinks in the lower half of the receipt, 7% of its height apart */
+    scanRead = () => Promise.resolve({ text: text, doubt: [], rows: text.split("\n").map((t, k) => ({ t: t, y0: 0.5 + k * 0.07, y1: 0.53 + k * 0.07 })) });
+  }, text);
+  const zoomAt = at => pg.evaluate(at => {
+    const w = document.querySelector(at + " .scanthumb.zoom");
+    if (!w) return null;
+    const m = w.querySelector(".scanmark"), a = w.getBoundingClientRect(), b = m.getBoundingClientRect(), i = w.querySelector("img").getBoundingClientRect();
+    return { wide: Math.abs(i.width - w.clientWidth) < 2, scrolls: w.scrollHeight > w.clientHeight + 20, moved: w.scrollTop > 0, seen: m.hidden || (b.top >= a.top - 1 && b.bottom <= a.bottom + 1),
+             line: m.hidden ? "" : (parseFloat(m.style.top) + parseFloat(m.style.height) / 2).toFixed(1) };
+  }, at);
+  await reset();
+  await places("SAMPLE TEA BAR\nCORTADO 6.50\nHOJICHA LATTE 7.00\nYUZU FIZZ 6.00\nTOTAL 19.50");
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  eq([await zoomAt("#dns-panel"), await picAt("#dns-panel")], [{ wide: true, scrolls: true, moved: true, seen: true, line: "" }, { loads: true, pinned: "sticky", shows: "Cleaned up" }],
+     "with the drinks' places known the picture is at the sheet's width, in a window of its own that opens on the drinks, still pinned");
+  await pg.focus('.scanname[data-i="2"]');
+  eq(await zoomAt("#dns-panel"), { wide: true, scrolls: true, moved: true, seen: true, line: "72.5" }, "a drink's name taken in hand moves the picture to its line, and marks the line");
+  await pg.click('.scanprice[data-i="0"]');
+  eq((await zoomAt("#dns-panel")).line, "58.5", "…and so does its price, for another drink");
+  await pg.click('#dns-panel .scanseg button[data-v="orig"]');
+  eq((await zoomAt("#dns-panel")).line, "58.5", "…the photo as you took it shown at the same place");
+  await pg.evaluate(() => $("scan-log").click());
+  await pg.waitForFunction(() => !!$("qc-price"));
+  s = await zoomAt("#dns-panel");
+  await pg.evaluate(() => _qcRedraw());
+  eq([s, await zoomAt("#dns-panel")], [{ wide: true, scrolls: true, moved: true, seen: true, line: "58.5" }, { wide: true, scrolls: true, moved: true, seen: true, line: "58.5" }],
+     "each cup's sheet opens on its own cup's line, and is there still when the sheet is drawn again");
+  await save();
+  await pg.waitForFunction(() => /2 of 3/.test((document.querySelector(".qcof") || {}).textContent || ""));
+  eq((await zoomAt("#dns-panel")).line, "65.5", "…the next cup's sheet on the next cup's");
+  await pg.evaluate(() => qcMore());
+  await pg.waitForFunction(() => [...document.querySelectorAll("#f-drinks .dn")].some(x => /yuzu/i.test(x.value)));
+  eq(await zoomAt("#f-scanpic"), { wide: true, scrolls: true, moved: true, seen: true, line: "65.5" }, "…and in Add a visit it is at the form's width, on the cup that was taken there");
+  await pg.evaluate(() => { _formSnap = formSnapshot(); closeForm(); });
+  await reset();
+  await readsAs("CORTADO 6.50\nTOTAL 6.50");
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  eq([await zoomAt("#dns-panel"), await pg.evaluate(() => { const i = document.querySelector("#dns-panel .scanthumb img").getBoundingClientRect(); return i.height <= innerHeight * 0.3 + 1; })], [null, true], "a reader that says where nothing is leaves the picture whole, as it was");
+  await reset();
+
   /* on a pale table there is no bright paper to find, and the box starts round the print (v138) */
   const pale = await pg.evaluate(() => {
     const c = document.createElement("canvas"); c.width = 1500; c.height = 2000;
@@ -533,7 +747,7 @@ const { eq, done } = checker();
   eq(s, { scan: false, kept: false, sheet: false }, "with no cafe to hand it opens Add a visit and waits for the cafe's name, and the stored copy is gone");
   await pg.fill("#f-name", "New Place Coffee");
   await pg.click("#f-scan");
-  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, name: document.querySelector(".scanname").value, price: document.querySelector(".scanp").textContent }));
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, name: document.querySelector(".scanname").value, price: (v => (v ? "$" + v : ""))(document.querySelector(".scanprice").value) }));
   eq(s, { title: "Is this yours?", name: "Cortado", price: "$6.50" }, "…then Scan reads what was shared, with no photo asked for");
   await pg.evaluate(() => closeSheet());
   const [next] = await Promise.all([pg.waitForEvent("filechooser"), pg.click("#f-scan")]);
@@ -580,7 +794,7 @@ const { eq, done } = checker();
   await scan(["<img src=x onerror=alert(1)> 3.00", "Drip 2.00", "TOTAL 5.00"]);
   s = await pg.evaluate(() => ({ imgs: document.querySelectorAll(".scantext img").length, printed: document.querySelector(".scantext small").textContent,
     first: document.querySelector(".scantick").getAttribute("aria-pressed") + " " + document.querySelector(".scannote").textContent }));
-  eq(s, { imgs: 0, printed: "Printed: <img src=x onerror=alert(1)>", first: "false Not sure it’s a drink" }, "text from a receipt is shown as text, never as markup, and a line that names no drink is listed unticked");
+  eq(s, { imgs: 0, printed: "Printed: <img src=x onerror=alert(1)>", first: "true new here" }, "text from a receipt is shown as text, never as markup, even as the name of a drink to tick");
 
   /* the real reader, on a drawn receipt, under the real page */
   const receipt = await pg.evaluate(() => {
@@ -608,6 +822,8 @@ const { eq, done } = checker();
   p = await pick().catch(async () => ({ rows: await pg.evaluate(() => $("dns-panel").textContent) }));
   eq(p.rows, ["true Cortado $6.50"], "…and a leaning receipt, boxed where the app found it and pulled flat, reads true (" + JSON.stringify(flat) + ")");
   eq(await pg.evaluate(() => [Array.isArray(_scan.doubt), _scan.doubt.every(w => typeof w === "string"), !!_scan.orig && _scan.orig !== _scan.url]), [true, true, true], "…with the real reader's own list of words it doubted, and both pictures kept");
+  eq(await pg.evaluate(() => [!!_scan.band, _scan.items.every(x => x.at && x.at.y0 > 0 && x.at.y1 < 1 && x.at.y1 > x.at.y0), !!document.querySelector("#dns-panel .scanthumb.zoom")]), [true, true, true],
+     "…and where each drink is on the receipt, so the picture is shown at the sheet's width and can be moved to it");
   eq([sent.filter(u => /^(POST|PUT)/.test(u) || /jsdelivr|unpkg|tessdata/.test(u)), csp], [[], []], "…sending nothing anywhere, fetching nothing from elsewhere, and within the page's security policy");
 
   eq(errs, [], "no page errors");

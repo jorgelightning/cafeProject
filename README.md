@@ -210,6 +210,11 @@ the receipt, so since v135 every photo stops at a box first: it starts on the re
 no bright paper stands out, the box starts round the print (`findStart`). What is inside the box is cleaned before
 it is read (`readable`: the light evened, colour left out), and the list shows that picture above the drinks, with the
 original a tap away and what the reader was unsure of said under the drink it is about (`doubtWords`, `js/lib/scan.js`).
+The box says when the receipt is too small in the photo to read, with Retake first. On the list each price is a box, a
+priced line it does not know as a drink is ticked all the same, and a reading that went wrong can be kept on the phone,
+photo and all, to share later for testing. The receipt's picture stays in view while its drinks are put right: pinned
+over the list, and taken on to each cup's sheet and to Add a visit, at the sheet's width and moved to the line of the
+drink in hand (`itemLines`, `js/lib/scan.js`).
 
 The rules know priced receipts, names and prices handed back as separate columns, a cup's order ticket with no
 prices, and a till's order screen with its buttons on the drink's line. A layout they do not know lists the text's lines, and you tap the one that names your drink. To teach it a shop's abbreviation, add a line to

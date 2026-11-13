@@ -140,6 +140,8 @@ function updateBrandBtn() {
 }
 /** @param {string|{branchOf:string}} [id] a cafe id to edit, or {branchOf} to add another branch of that cafe's brand */
 function openForm(id) {
+  /* a receipt's picture from the last visit added is not this one's (scan.js, v140) */
+  if (typeof _scanPicFree === "function") _scanPicFree();
   editId = typeof id === "string" ? id : null;
   const c = editId ? cafes.find(x => x.id === editId) : null;
   branchSrc = (id && typeof id === "object" && cafes.find(x => x.id === id.branchOf)) || null;
@@ -272,6 +274,7 @@ function logDrinkHere() {
 function closeForm() {
   if (formDirty() && !confirm("Discard unsaved changes to this visit?")) return;
   _formSnap = null;
+  if (typeof _scanPicFree === "function") _scanPicFree();
   if (editId) show("detail");
   else if (listTab === "want") show("wish");
   else if (favOnly) show("list", true);
@@ -2191,6 +2194,7 @@ function saveForm() {
       if (!untouched) savePrivateDetail(savedId, _exact);
     } else removePrivateDetail(savedId, wasCustom);
     _formSnap = null;
+    if (typeof _scanPicFree === "function") _scanPicFree();
     try {
       renderMarkers();
     } catch (e) {
@@ -2426,6 +2430,8 @@ function _qcHTML(c) {
         : "") +
     "</div>" +
     (st.scan ? '<p class="qcfrom">' + ico("camera") + esc(st.scan.notice) + "</p>" : "") +
+    /* the receipt it came from, kept in view while this cup is checked (scan.js, v140) */
+    (st.scan && typeof _scanPicHTML === "function" ? _scanPicHTML() : "") +
     (st.here != null
       ? '<p class="qchere">' + ico("pin") + "You’re here · " + esc(fmtDist(st.here / 1000)) +
         '<button type="button" class="qcnot"' + act("qcNotHere") + ">Not here?</button></p>"
@@ -2446,6 +2452,8 @@ function _qcRedraw() {
   const p2 = /** @type {HTMLInputElement|null} */ ($("qc-price"));
   if (p2 && keep != null && _qc.keepPrice) p2.value = keep;
   qcPriceCtx();
+  /* the receipt's picture, drawn again with the rest, goes back to this cup's line (scan.js, v140) */
+  if (typeof _scanPicAim === "function") _scanPicAim();
 }
 /* ---------- the price, in context ----------
    Typing $8.14 for a hojicha latte said nothing about whether that is a lot (ideas, 28 Oct). Under the price, every
@@ -2802,7 +2810,12 @@ function qcSave() {
   if (c.wish) c.wish = false;
   c.updated = new Date().toISOString();
   saveCafe(c.id);
+  const nextCup = scan && scan.i + 1 < scan.rows.length;
+  /* with more of the receipt to come its picture goes on to the next cup, so this sheet's closing does not let it go
+     (scan.js, v140) */
+  const pic = nextCup && typeof _scanPicAside === "function" ? _scanPicAside() : null;
   closeSheet();
+  if (pic) _scanPicBack(pic);
   try {
     renderMarkers();
     renderList();
@@ -2810,7 +2823,6 @@ function qcSave() {
     warn("form.js quick cup", e);
   }
   toast("Logged " + n);
-  const nextCup = scan && scan.i + 1 < scan.rows.length;
   /* the comparison waits for the last cup of a receipt */
   try {
     if (!nextCup) chaserArm(c.id);
@@ -2834,12 +2846,18 @@ function qcMore() {
   const day = (scan && scan.date) || localToday();
   const ccy = String(src.pc || ccyFor(c)).toUpperCase();
   const asLocal = /** @param {string} a */ a => (src.pc ? { pc: src.pc, pl: a } : scan && ccy !== "USD" ? { pc: ccy, pl: a } : null);
+  /* a cup from a receipt takes the receipt's picture on to the form with it (scan.js, v140) */
+  const pic = scan && n && typeof _scanPicAside === "function" ? _scanPicAside() : null;
   closeSheet();
   if (!n) {
     logDrinkHere();
     return;
   }
   openForm(c.id);
+  if (pic) {
+    _scanPicBack(pic);
+    _scanPicShow();
+  }
   if ($("f-wish") && $("f-wish").checked) {
     $("f-wish").checked = false;
     syncWishMode();
