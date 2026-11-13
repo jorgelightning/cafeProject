@@ -2,7 +2,7 @@
    The suite (tests/run.js) runs these through tests/unit.js. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseReceipt, receiptLines, lineItem, SCAN_MAX_ROWS } from "../../js/lib/scan.js";
+import { parseReceipt, receiptLines, lineItem, doubtWords, SCAN_MAX_ROWS } from "../../js/lib/scan.js";
 
 const ctx = { known: ["Iced matcha latte", "Cortado", "Black matcha latte", "Hojicha latte"], code: "USD", dec: 2, today: "2026-11-08" };
 const read = (lines, over) => parseReceipt(lines.join("\n"), Object.assign({}, ctx, over));
@@ -180,4 +180,24 @@ test("parseReceipt: a receipt in another currency keeps its drinks and drops its
   assert.equal(read(["Cortado €4.50", "TOTAL €4.50"], { code: "EUR" }).other, "", "the cafe's own currency is not another");
   assert.equal(read(["Cortado ¥600", "TOTAL ¥600"], { code: "JPY", dec: 0 }).items[0].price, 600, "whole numbers count in a currency with no cents");
   assert.equal(read(["Cortado 1,200", "TOTAL 1,200"], { code: "KRW", dec: 0 }).items[0].price, 1200);
+});
+
+test("doubtWords: the words worth checking are the unsure ones on lines with a price", () => {
+  const w = (text, confidence) => ({ text, confidence });
+  const receipt = [
+    [w("800", 7), w("Great", 17), w("Hwy", 95)],
+    [w("Cold", 96), w("Brew", 96), w("$6.25", 85)],
+    [w("Flat", 96), w("Whlte", 41), w("$6.95", 69)],
+    [w("|", 12), w("Oat", 67), w("Milk", 91)],
+    [w("Total", 95), w("$12.50", 89)],
+  ];
+  assert.deepEqual(doubtWords(receipt), ["Whlte", "$6.95"], "the address and the milk are doubtful too, but no one needs them put right");
+  assert.deepEqual(doubtWords(receipt.concat([[w("Tota1", 20), w("$1250", 30)], [w("Mastercar", 1), w("8315", 91), w("(Contactless)", 40), w("$12.50", 90)], [w("Sales", 10), w("Tax", 96), w("$1.37", 20)]])), ["Whlte", "$6.95"],
+    "the card that paid and the tax are not items, so their words are not offered; nor is a line that lost its price along with its sense");
+  assert.equal(parseReceipt(["Cold Brew 6.25", "Mastercar 8315 (Contactless) 12.50"].join("\n"), ctx).items.length, 1, "…and a card line the reader clipped is no more a drink than a whole one");
+  assert.deepEqual(doubtWords([[w("Ticket:", 20), w("Gorge", 30)], [w("ix", 30), w("Matcha", 94)], [w("Top", 96), w("(1602)", 55)], [w("|", 3), w("a", 0)]]), ["ix", "(1602)"], "a ticket has no prices, so every line that could be an item counts; marks and single letters never do");
+  assert.deepEqual(doubtWords([[w("$6.95", 10), w("$6.95", 20), w("Latte", 70)]]), ["$6.95"], "said once, and 70 is sure enough");
+  const many = [Array.from({ length: 12 }, (_, i) => w("w" + i + "x", 5)).concat(w("$1.00", 96))];
+  assert.equal(doubtWords(many).length, 6, "no more than six");
+  assert.deepEqual([doubtWords([]), doubtWords(null), doubtWords([null, [null, w("$1.00", 1)]])], [[], [], ["$1.00"]], "nothing to go on is nothing to check");
 });

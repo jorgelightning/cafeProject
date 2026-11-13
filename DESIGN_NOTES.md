@@ -2485,3 +2485,45 @@ would not read goes back to its box on Try again, where the old Try again went b
 
 Not measured: a real phone. The magnifier and the drag are tested with a mouse in the suite's browser.
 `tests/unit/crop.test.mjs`, `tests/scan-receipt.js`.
+
+## Clean it first, and say what you doubt (v136)
+
+The owner asked whether the picture could be edited for more contrast, and sent six of his own photos to test on: a
+till's screen, a receipt on marble, a crumpled one with the pink end-of-roll stripes down both edges, a long one, one
+held in the hand, and that one again under a hard shadow. With his first ticket that is seven real photos, where the
+audit two days before had one. Each was cut out by hand, as v135 has him do, and read after each clean-up in turn.
+
+| On the seven real photos | As it was | Light evened | Light evened, colour left out |
+|---|---|---|---|
+| Lines read right, of 119 | 76 | 87 | 90 |
+| Lines of junk | 33 | 19 | 28 |
+
+**What helped.** Evening the light: each pixel as its share of the paper's brightness around it, so a shadow, which is
+only darker paper, comes out white. The shadowed receipt went from 8 lines right to 15 of 18. And leaving colour out:
+print is dark in every colour, a highlighter stripe is as bright as paper in at least one, so a pixel that bright in
+its brightest colour is read by that colour and the stripe is gone, with the prices it sat on left behind. A pixel
+darker than that is read by the usual blend, so blue or purple print is not washed out with the stripes.
+
+**What did not.** The contrast slider asked for is not built, because darker print lost lines on the real photos (87
+down to 78 at three times as dark), as did sharpening, pure black and white, and enlarging. On the generated photos
+darker print had looked like a gain. The real ones are the better judge, and it is why they are in the bench now.
+
+**The reader's doubt.** It scores each word for how sure it is. Of the words it scored under 70, 85 in 100 were wrong,
+and that was three in four of all the wrong ones: a price read as $6.95 for $6.25 scored 69. So the doubted words on
+item lines are listed under the text, **Check these**, and a tap on one selects it there to type over. Only item lines,
+because a receipt is mostly not drinks: the first try offered "Mastercar", from the line for the card that paid, which
+the rules had also taken for a drink. Both are put right.
+
+**The box for the receipt's text is gone.** The owner asked whether the camera could do the reading and hand it to the
+app. It can, and that is the better reader, but a web page cannot start it: an iPhone has no door to Live Text for a
+page, and Chrome's text detector is still behind a flag. The box Scan had opened on since v129 was that reader's way
+in, and it was first made the plain first choice here, with its steps, above "Read a photo here". Shown that screen,
+the owner had the box taken out: "I don't think it'll be useful". So Scan opens the camera, in one tap where there
+were two. What is given up is the phone's reader on an iPhone, which has no other way in. On Android the share sheet
+still brings text from Google Lens to the app, and text that arrives that way is put right in the same box a photo's
+is, with a photo offered where Retake would be.
+
+Measured again with the app's own code: 86 of 119 lines right on the real photos where it was 76, and 116 of 151 on
+the generated set where it was 102. Still wrong on the real ones: a till's screen puts its buttons' names on the
+drink's line, paper curved in the hand splits its lines, and the box starts in the right place on two photos of seven.
+`tests/unit/crop.test.mjs`, `tests/unit/scan.test.mjs`, `tests/scan-receipt.js`.

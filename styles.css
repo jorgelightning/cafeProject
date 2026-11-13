@@ -1377,6 +1377,13 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .scanview span{ padding:var(--sp-1) var(--sp-3); border-radius:var(--r-pill); background:var(--surface); color:var(--text); font-size:var(--fs-1); font-weight:600; box-shadow:0 0 0 1px var(--border); }
 .scanview:focus-visible{ outline:none; }
 .scanview:focus-visible span{ outline:2px solid var(--text); outline-offset:2px; }
+/* The review (v136): which picture is beside the text, and the words to check under it */
+.scanseg{ margin-top:calc(var(--sp-1) - var(--sp-3)); }
+.scandoubt{ display:flex; flex-direction:column; gap:var(--sp-2); }
+.scandoubt[hidden]{ display:none; }
+.scanchk{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.scanchk .dntag{ border-color:var(--mid); }
+.scanchk .dntag[hidden]{ display:none; }
 /* Where's the receipt? (v135): the photo, a box over it, and a corner to drag at each of the box's corners. The sheet
    takes the whole screen, as it does while reading, so the photo is as large as the phone allows; the photo sits half a
    corner in from the sheet's edge, so a corner at the photo's edge is still all there to take hold of. */

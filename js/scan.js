@@ -45,7 +45,17 @@
    of its four corners is dragged onto the receipt's own with a magnifier beside the finger, and Read this part
    flattens what is inside them (js/lib/crop.js). The review's chip is Adjust crop now, back to the box; the swap to the
    whole photo and the scan's own second look went, since the box is where you say which part is the receipt, and
-   Whole photo is a button beside it. */
+   Whole photo is a button beside it.
+
+   Since v136 the part you boxed is cleaned before it is read, and the reader says what it doubts. The owner sent six
+   of his own photos; measured on them, evening the light and leaving colour out (readable, js/lib/crop.js) was the one
+   clean-up that helped, and the contrast slider he had in mind did not. So the text is checked against the cleaned
+   picture, with the photo as it was one tap away. The reader's doubt turned out to be worth listening to (85 in 100
+   of the words it was unsure of were wrong), so the unsure words on priced lines are listed under the text as Check
+   these, and a tap on one selects it there.
+   And the box for the receipt's text, which Scan had opened on since v129, is gone: the owner did not think it would be
+   useful. Scan opens the camera. The phone's own reader, which a web page cannot start, now reaches the app one way:
+   text shared to it from the phone's share sheet (v133), which needs no box. */
 
 function scanOn() {
   return isAdmin;
@@ -60,9 +70,6 @@ const SCAN_SIDE = 2400;
 const OCR_DIR = "vendor/tesseract-7.0.0/";
 /** The scan in progress: what the sheet is showing while it is not the quick cup. @type {any} */
 let _scan = null;
-/* text that found no drinks, kept so Try again does not start from an empty box */
-let _scanDraft = "";
-
 /** A receipt shared to the app and not read yet. @type {{text: string, photo: Blob|null, at: number}|null} */
 let _scanShare = null;
 const SHARE_FRESH_MS = 600000;
@@ -105,10 +112,10 @@ async function scanShared() {
   };
   go(12);
 }
-/** Scan opens on a box for the receipt's text. */
+/** Scan opens the camera (v136). From v129 it opened on a box for the receipt's text, for the phone's own reader to
+    fill; the owner had it taken out. A receipt shared to the app is still read first, with no photo asked for. */
 function scanStart() {
   if (!scanOn()) return;
-  /* a receipt shared to the app is what Scan reads, without asking again */
   if (_scanShare && Date.now() - _scanShare.at < SHARE_FRESH_MS) {
     const s = _scanShare;
     _scanShare = null;
@@ -117,45 +124,26 @@ function scanStart() {
     return;
   }
   _scanShare = null;
-  _scanStop();
-  _qc = null;
-  if ($("dnsheet").hidden) openSheet("");
-  _sheetOnClose = _scanStop;
-  const ua = navigator.userAgent || "";
-  const how = /iPhone|iPad|iPod/.test(ua)
-    ? "Tap the box and choose Scan Text (it may be under AutoFill), then point the camera at the receipt. Or paste text copied from a photo."
-    : /Android/.test(ua)
-      ? "Open the receipt in Google Lens or your Photos app, copy its text, then paste it here."
-      : "Copy the receipt’s text with your phone’s text reader, then paste it here.";
-  const canPaste = !!(navigator.clipboard && navigator.clipboard.readText);
-  _scanShow(
-    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Scan a receipt</h2><p>' + esc(how) + "</p></div>" + _scanClose() + "</div>" +
-      '<label class="dnlab" for="scan-text">Receipt text</label>' +
-      '<textarea id="scan-text" class="dntext scantxt" rows="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Paste or scan the text here"' +
-      act("scanTyped", [], "input") + ">" + esc(_scanDraft) + "</textarea>" +
-      '<div class="dnact">' + (canPaste ? '<button type="button" class="btn ghost"' + act("scanPaste") + ">Paste</button>" : "") +
-      '<button type="button" class="btn" id="scan-go"' + act("scanText") + (_scanDraft.trim() ? "" : " disabled") + ">Read it</button></div>" +
-      (_scanCanRead() ? '<button type="button" class="scanalt"' + act("scanPhoto") + ">Or read a photo in the app</button>" : "")
-  );
+  if (!_scanCanRead()) {
+    toast("This browser can’t read a photo. Type it in.");
+    return;
+  }
+  scanPhoto();
 }
 function scanTyped() {
   const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text")),
     go = /** @type {HTMLButtonElement|null} */ ($("scan-go"));
   if (box && go) go.disabled = !box.value.trim();
-}
-async function scanPaste() {
-  const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text"));
-  if (!box) return;
-  try {
-    const t = await navigator.clipboard.readText();
-    if (!t.trim()) {
-      toast("Nothing copied yet");
-      return;
-    }
-    box.value = t;
-    scanTyped();
-  } catch (e) {
-    toast("Couldn’t paste. Press and hold the box, then choose Paste.");
+  /* a word put right is no longer one to check */
+  const list = $("scan-doubt");
+  if (box && list) {
+    let left = 0;
+    list.querySelectorAll(".dntag").forEach(function (b) {
+      const el = /** @type {HTMLElement} */ (b);
+      el.hidden = !box.value.includes(el.dataset.w || "");
+      if (!el.hidden) left++;
+    });
+    list.hidden = !left;
   }
 }
 /** The box's text, read as a receipt. */
@@ -171,8 +159,12 @@ function _scanTextRun(text) {
   const prev = _scan;
   if (prev && prev.url) {
     run.url = prev.url;
+    run.orig = prev.orig;
+    run.show = prev.show;
+    run.doubt = prev.doubt;
     run.pic = prev.pic;
     prev.url = "";
+    prev.orig = "";
     prev.pic = null;
   }
   _scanStop();
@@ -181,7 +173,6 @@ function _scanTextRun(text) {
   _sheetOnClose = _scanStop;
   run.text = text;
   _scan = run;
-  _scanDraft = text;
   _scanRoute(run, parseReceipt(text, _scanCtx(run)));
 }
 /** The lines a drink could be picked from: the ones with words in them. @param {any} run */
@@ -235,14 +226,49 @@ function scanPickLine() {
 /** Your photo and the text it read, to put right before anything is made of it. @param {any} run @param {string} text */
 function _scanReview(run, text) {
   run.text = text;
+  /* the words the reader was unsure of (doubtWords), while they are still in the text */
+  const doubt = (run.doubt || []).filter(/** @param {string} w */ w => text.includes(w));
+  const orig = run.show === "orig" && !!run.orig;
   _scanShow(
-    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Check what it read</h2><p>Fix anything it got wrong, then continue.</p></div>' + _scanClose() + "</div>" +
+    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Check what it read</h2><p>' +
+      (doubt.length ? "It wasn’t sure of " + doubt.length + (doubt.length === 1 ? " word. " : " words. ") : "") + "Fix anything it got wrong, then continue.</p></div>" + _scanClose() + "</div>" +
       _scanThumb(run, true) +
+      (run.orig
+        ? '<div class="seg scanseg" role="group" aria-label="Picture">' +
+          [["clean", "Cleaned up"], ["orig", "Original"]].map(v => '<button type="button" data-v="' + v[0] + '" aria-pressed="' + ((v[0] === "orig") === orig) + '"' + ((v[0] === "orig") === orig ? ' class="on"' : "") + act("scanShowAs", ["$data.v"]) + ">" + v[1] + "</button>").join("") +
+          "</div>"
+        : "") +
       '<label class="dnlab" for="scan-text">Text it read</label>' +
       '<textarea id="scan-text" class="dntext scantxt" rows="7" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"' + act("scanTyped", [], "input") + ">" + esc(text) + "</textarea>" +
-      '<div class="dnact"><button type="button" class="btn ghost"' + act("scanPhoto") + ">Retake</button>" +
+      '<div class="scandoubt" id="scan-doubt"' + (doubt.length ? "" : " hidden") + '><span class="dnlab">Check these</span><div class="scanchk">' +
+      doubt.map(/** @param {string} w */ w => '<button type="button" class="dntag" data-w="' + esc(w) + '"' + act("scanDoubt", ["$data.w"]) + ">" + esc(w) + "</button>").join("") +
+      "</div></div>" +
+      /* text shared to the app has no photo to take again */
+      '<div class="dnact"><button type="button" class="btn ghost"' + act("scanPhoto") + ">" + (run.url ? "Retake" : "Take a photo") + "</button>" +
       '<button type="button" class="btn" id="scan-go"' + act("scanText") + (text.trim() ? "" : " disabled") + ">Find the drinks</button></div>"
   );
+}
+/** The picture beside the text: as the reader saw it, cleaned up, or as you took it. Only the picture changes, so what
+    you have typed stays. @param {string} v "clean" or "orig" */
+function scanShowAs(v) {
+  const run = _scan;
+  if (!run || !run.orig) return;
+  run.show = v === "orig" ? "orig" : "clean";
+  const img = /** @type {HTMLImageElement|null} */ ($("scan-thumbimg"));
+  if (img) img.src = run.show === "orig" ? run.orig : run.url;
+  $("dns-panel").querySelectorAll(".scanseg button").forEach(function (b) {
+    const on = /** @type {HTMLElement} */ (b).dataset.v === run.show;
+    b.setAttribute("aria-pressed", String(on));
+    b.classList.toggle("on", on);
+  });
+}
+/** A word to check, found in the text and selected there, ready to be typed over. @param {string} w */
+function scanDoubt(w) {
+  const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text"));
+  const at = box ? box.value.indexOf(w) : -1;
+  if (!box || at < 0) return;
+  box.focus();
+  box.setSelectionRange(at, at + w.length);
 }
 /** Your photo, on the text and again on the list (v132): the names are checked against it, so it has to be in view.
     Since v135 it is the part of the photo you boxed, pulled flat, and on the text (`again`) a chip goes back to the box.
@@ -251,7 +277,7 @@ function _scanThumb(run, again) {
   if (!run.url) return "";
   const pic = run.pic;
   return (
-    '<div class="scanthumb"><img src="' + esc(run.url) + '" alt="' + (pic && pic.read && pic.read !== "all" ? "Your receipt, cut out of your photo" : "Your photo") + '">' +
+    '<div class="scanthumb"><img id="scan-thumbimg" src="' + esc(run.show === "orig" && run.orig ? run.orig : run.url) + '" alt="' + (pic && pic.read && pic.read !== "all" ? "Your receipt, cut out of your photo" : "Your photo") + '">' +
     (again && pic ? '<button type="button" class="scanview"' + act("scanCropAgain") + "><span>Adjust crop</span></button>" : "") +
     "</div>"
   );
@@ -422,7 +448,8 @@ function scanCropAgain() {
 }
 /* From the list or a failed reading, back to the text it came from */
 function scanBack() {
-  if (_scan && _scan.url && _scan.text != null) {
+  /* a reading with text to it, from a photo or shared to the app: back to that text, to put right */
+  if (_scan && _scan.text != null) {
     _scanReview(_scan, _scan.text);
     return;
   }
@@ -431,7 +458,6 @@ function scanBack() {
     _scanCrop(_scan);
     return;
   }
-  if (_scan && _scan.text != null) _scanDraft = _scan.text;
   scanStart();
 }
 function scanPhoto() {
@@ -453,12 +479,13 @@ function scanPicked(el) {
   const file = el.files && el.files[0];
   if (file) _scanRun(file);
 }
-/** Lets go of a reading's pictures: the part that was read, and the photo under the box. @param {any} run */
+/** Lets go of a reading's pictures: the part that was read, cleaned and as it was, and the photo under the box. @param {any} run */
 function _scanFree(run) {
-  new Set([run.url, run.pic && run.pic.url]).forEach(function (u) {
+  new Set([run.url, run.orig, run.pic && run.pic.url]).forEach(function (u) {
     if (u) URL.revokeObjectURL(u);
   });
   run.url = "";
+  run.orig = "";
   run.pic = null;
 }
 function _scanStop() {
@@ -531,10 +558,11 @@ function _scanFlat(bmp, quad) {
   cv.getContext("2d").putImageData(px, 0, 0);
   return cv;
 }
-/** What is read, twice over: to show (url), and grey with its contrast stretched for the reader, since a receipt
-    photographed in a dim cafe has no true black or white. Drawing it on a canvas also turns it upright.
+/** What is read, three times over: as the reader gets it, grey with the light evened and colour left out (readable,
+    js/lib/crop.js; before v136 its contrast was only stretched), that same picture to show (url), and the part as it was
+    in the photo (orig). Drawing it on a canvas also turns it upright.
     With a box it is the part of the photo inside it, pulled flat (v135); with none, the whole photo.
-    @param {Blob} file @param {number[][]|null} [quad] in the photo's pixels @returns {Promise<{image: HTMLCanvasElement, url: string}>} */
+    @param {Blob} file @param {number[][]|null} [quad] in the photo's pixels @returns {Promise<{image: HTMLCanvasElement, url: string, orig: string}>} */
 async function _scanPrep(file, quad) {
   const bmp = await createImageBitmap(file);
   /** @type {HTMLCanvasElement} */
@@ -549,26 +577,16 @@ async function _scanPrep(file, quad) {
   }
   bmp.close();
   const g = cv.getContext("2d");
-  const blob = await new Promise(ok => cv.toBlob(ok, "image/jpeg", 0.7));
-  if (!blob) throw new Error("no image");
+  /** @param {number} q @returns {Promise<Blob|null>} */
+  const jpeg = q => new Promise(ok => cv.toBlob(ok, "image/jpeg", q));
+  const before = await jpeg(0.7);
+  if (!before) throw new Error("no image");
   const px = g.getImageData(0, 0, cv.width, cv.height);
-  const d = px.data;
-  const seen = new Uint32Array(256);
-  for (let i = 0; i < d.length; i += 4) {
-    const y = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
-    d[i] = y;
-    seen[y]++;
-  }
-  /* the darkest and lightest 1% are specks and glare */
-  const edge = (d.length / 4) * 0.01;
-  let lo = 0,
-    hi = 255;
-  for (let n = 0; lo < 255 && (n += seen[lo]) < edge; ) lo++;
-  for (let n = 0; hi > 0 && (n += seen[hi]) < edge; ) hi--;
-  const span = Math.max(1, hi - lo);
-  for (let i = 0; i < d.length; i += 4) d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, ((d[i] - lo) * 255) / span));
+  px.data.set(readable(px.data, cv.width, cv.height));
   g.putImageData(px, 0, 0);
-  return { image: cv, url: URL.createObjectURL(blob) };
+  const after = await jpeg(0.8);
+  if (!after) throw new Error("no image");
+  return { image: cv, url: URL.createObjectURL(after), orig: URL.createObjectURL(before) };
 }
 /** A copy with its lighting evened out, for a photo the first read got nothing from. Each pixel is compared with the area
     around it, so a shadow across the paper or a dark table around it cannot pull faint print under the reader's one
@@ -624,13 +642,18 @@ function _ocrLoad() {
     read, being short and clean; a total picked out of a long page of print is a receipt the reader mostly missed.
     @param {HTMLCanvasElement} image @param {AbortSignal} signal @param {any} ctx for parseReceipt @param {(step: string) => void} [say] */
 async function _scanMake(image, signal, ctx, say) {
-  const text = await scanRead(image, signal, say);
-  const res = Object.assign(parseReceipt(text, ctx), { text: text });
-  const lines = String(text).split("\n").filter(l => l.trim()).length;
+  /* a reader may answer with the text alone (the tests' stand-ins do) or with the words it doubted as well */
+  /** @param {HTMLCanvasElement} img */
+  const look = async function (img) {
+    const r = /** @type {any} */ (await scanRead(img, signal, say));
+    const text = typeof r === "string" ? r : String((r && r.text) || "");
+    return Object.assign(parseReceipt(text, ctx), { text: text, doubt: /** @type {string[]} */ ((r && typeof r !== "string" && r.doubt) || []) });
+  };
+  const res = await look(image);
+  const lines = res.text.split("\n").filter(l => l.trim()).length;
   if (res.kind === "receipt" || (res.kind === "total_only" && lines <= 8)) return res;
   if (say) say("again");
-  const second = await scanRead(_scanEven(image), signal, say);
-  const again = Object.assign(parseReceipt(second, ctx), { text: second });
+  const again = await look(_scanEven(image));
   return again.items.length > res.items.length || res.kind === "unreadable" ? again : res;
 }
 /** The text in the picture. Tests replace it. Its worker is a file of our own rather than a blob, because a worker
@@ -654,8 +677,12 @@ async function scanRead(image, signal, say) {
     signal.addEventListener("abort", stop, { once: true });
     /* one column of lines, keeping the gap before a price */
     await worker.setParameters({ tessedit_pageseg_mode: "6", preserve_interword_spaces: "1" });
-    const res = await worker.recognize(image);
-    return res.data.text;
+    /* the words come back too, each with how sure the reader was of it, for Check these (v136) */
+    const res = await worker.recognize(image, {}, { blocks: true });
+    /** @type {{text: string, confidence: number}[][]} */
+    const lines = [];
+    (res.data.blocks || []).forEach(b => (b.paragraphs || []).forEach(p => (p.lines || []).forEach(l => lines.push((l.words || []).map(w => ({ text: w.text, confidence: w.confidence }))))));
+    return { text: res.data.text, doubt: doubtWords(lines) };
   } finally {
     signal.removeEventListener("abort", stop);
     worker.terminate();
@@ -731,10 +758,14 @@ async function _scanRead(run, quad) {
     const made = await _scanPrep(pic.file, quad ? _scanQuadPx(pic, quad) : null);
     if (_scan !== run) {
       URL.revokeObjectURL(made.url);
+      URL.revokeObjectURL(made.orig);
       return;
     }
-    if (run.url) URL.revokeObjectURL(run.url);
+    new Set([run.url, run.orig]).forEach(u => u && URL.revokeObjectURL(u));
     run.url = made.url;
+    run.orig = made.orig;
+    run.show = "clean";
+    run.doubt = [];
     pic.read = "";
     const img = /** @type {HTMLImageElement|null} */ ($("scan-img"));
     if (img) {
@@ -755,6 +786,7 @@ async function _scanRead(run, quad) {
       _scanFail("Try your phone’s text reader instead, or type it in.");
     } else {
       pic.read = key;
+      run.doubt = res.doubt || [];
       _scanReview(run, res.text);
     }
   } catch (e) {
@@ -851,7 +883,6 @@ function _scanRoute(run, res) {
     else _scanFail("No drinks found in that text. Check that it all came across, or type it in.");
     return;
   }
-  _scanDraft = "";
   if (res.kind === "total_only") {
     const amount = res.total != null ? fmtLocal(res.total, run.code) : "";
     if (run.form) {

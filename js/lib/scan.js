@@ -23,7 +23,7 @@ const MAX_AGE_DAYS = 400;
 
 const ENDS_ITEMS = /\b(SUB\s*-?TOTAL|TOTAL|TAX|VAT|GST)\b/i;
 const NOT_ITEM =
-  /\b(SUB\s*-?TOTAL|TOTAL|TAX|VAT|GST|TIP|GRATUITY|SERVICE|CHANGE|CASH|CARD|VISA|MASTERCARD|AMEX|DISCOVER|DEBIT|CREDIT|BALANCE|AMOUNT|DUE|PAID|AUTH|APPROVAL|APPROVED|INVOICE|RECEIPT|TICKET|ORDER|CHECK|TABLE|GUEST|SERVER|CASHIER|TEL|PHONE|THANK|DISCOUNT|COUPON|PROMO|REWARDS?|LOYALTY|POINTS|ROUNDING|FEE|ACCOUNT)\b/i;
+  /\b(SUB\s*-?TOTAL|TOTAL|TAX|VAT|GST|TIP|GRATUITY|SERVICE|CHANGE|CASH|CARD|VISA|MASTERCAR\w*|CONTACTLESS|AMEX|DISCOVER|DEBIT|CREDIT|BALANCE|AMOUNT|DUE|PAID|AUTH|APPROVAL|APPROVED|INVOICE|RECEIPT|TICKET|ORDER|CHECK|TABLE|GUEST|SERVER|CASHIER|TEL|PHONE|THANK|DISCOUNT|COUPON|PROMO|REWARDS?|LOYALTY|POINTS|ROUNDING|FEE|ACCOUNT)\b/i;
 const FOOD = /\b(CROISSANT|COOKIE|MUFFIN|BAGEL|TOAST|SANDWICH|CAKE|SCONE|DONUT|DOUGHNUT|BROWNIE|PASTRY|WAFFLE|BURRITO|SALAD|MUG|TOTE|SHIRT|STICKER|BEANS|GIFT)\b/i;
 const MODIFIER_WORD = /\b(SHOT|SHOTS|SYRUP|PUMPS?|FOAM|DRIZZLE|MODIFIER)\b/i;
 
@@ -484,4 +484,29 @@ export function parseReceipt(text, ctx) {
   };
 }
 
-if (typeof window !== "undefined") Object.assign(window, { SCAN_ICE, SCAN_MILK, SCAN_MAX_ROWS, parseReceipt, receiptLines, lineItem });
+/* a word the reader was less sure of than this, out of 100, is worth a second look; and the most to list */
+const DOUBT_BELOW = 70;
+const DOUBT_MOST = 6;
+/** The words worth checking (v136). The reader says how sure it is of each word, and on the owner's own receipts 85 of
+    every 100 words it was less than 70 sure of were wrong: a price read as $6.95 for $6.25 scored 69. A receipt is
+    mostly not drinks, though, and its doubtful address and card lines are not worth anyone's time, so only lines with
+    a price on them count, where a wrong word is a wrong name or a wrong amount; a ticket has no prices, and there every
+    line counts. Lines that are plainly not items (the total, the card that paid) are left out either way: the owner's
+    Andytown receipt offered "Mastercar" to check. Marks and single letters are left out, as is anything said twice.
+    @param {{text: string, confidence: number}[][]} lines the reader's words, line by line @returns {string[]} */
+export function doubtWords(lines) {
+  const real = (Array.isArray(lines) ? lines : []).filter(l => Array.isArray(l) && !NOT_ITEM.test(l.map(w => String((w && w.text) || "")).join(" ")));
+  const priced = real.filter(l => l.some(w => /\d[.,]\d{2}(?!\d)/.test(String((w && w.text) || ""))));
+  /** @type {string[]} */
+  const out = [];
+  (priced.length ? priced : real).forEach(function (l) {
+    l.forEach(function (w) {
+      const t = String((w && w.text) || "").trim();
+      if (!w || !(w.confidence < DOUBT_BELOW) || !/[A-Za-z0-9].*[A-Za-z0-9]/.test(t) || out.includes(t)) return;
+      if (out.length < DOUBT_MOST) out.push(t);
+    });
+  });
+  return out;
+}
+
+if (typeof window !== "undefined") Object.assign(window, { SCAN_ICE, SCAN_MILK, SCAN_MAX_ROWS, parseReceipt, receiptLines, lineItem, doubtWords });

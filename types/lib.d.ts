@@ -29,6 +29,7 @@ declare const orderLangFor: typeof import("../js/lib/order.js").orderLangFor;
 declare const parseReceipt: typeof import("../js/lib/scan.js").parseReceipt;
 declare const receiptLines: typeof import("../js/lib/scan.js").receiptLines;
 declare const lineItem: typeof import("../js/lib/scan.js").lineItem;
+declare const doubtWords: typeof import("../js/lib/scan.js").doubtWords;
 
 declare const CROP_SMALL: typeof import("../js/lib/crop.js").CROP_SMALL;
 declare const CROP_MID: typeof import("../js/lib/crop.js").CROP_MID;
@@ -37,3 +38,4 @@ declare const foundCorners: typeof import("../js/lib/crop.js").foundCorners;
 declare const quadOk: typeof import("../js/lib/crop.js").quadOk;
 declare const quadSize: typeof import("../js/lib/crop.js").quadSize;
 declare const flatten: typeof import("../js/lib/crop.js").flatten;
+declare const readable: typeof import("../js/lib/crop.js").readable;

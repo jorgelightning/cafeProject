@@ -199,28 +199,23 @@ const { eq, done } = checker();
   s = await sheet();
   eq(s.say, "Read from the receipt, but its prices don’t add up. Check this one.", "…on each cup's sheet too");
 
-  /* Scan opens on a box for the phone's own reader (v129) */
+  /* Scan opens the camera (v136): the box for the receipt's text, there since v129, is gone */
   const ticket = [earlier, "Alex", "FOR HERE", "1 × Matcha Guava Cream", "Top (16oz)", "Lactose Free Whole", "Milk", "No Sweet"].join("\n");
   await reset();
   await pg.evaluate(() => openQuickCup());
-  await pg.click("#dns-panel .qcscan");
-  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, box: !!$("scan-text"), go: $("scan-go").disabled, photo: (document.querySelector(".scanalt") || {}).textContent, close: !!document.querySelector("#dns-panel .ocx"),
-    focus: document.activeElement.id, tall: $("scan-go").getBoundingClientRect().height >= 44 && document.querySelector(".scanalt").getBoundingClientRect().height >= 44, wide: document.documentElement.scrollWidth <= innerWidth }));
-  eq(s, { title: "Scan a receipt", box: true, go: true, photo: "Or read a photo in the app", close: true, focus: "dns-title", tall: true, wide: true },
-     "Scan opens on a box for the receipt's text, with Read it off until there is some and the photo as the second choice");
-  await pg.fill("#scan-text", "12 34 ;;");
-  eq(await pg.evaluate(() => $("scan-go").disabled), false, "typing or pasting turns Read it on");
-  await pg.click("#scan-go");
+  const [picker] = await Promise.all([pg.waitForEvent("filechooser"), pg.click("#dns-panel .qcscan")]);
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, box: !!$("scan-text"), sheet: !$("dnsheet").hidden, scan: _scan }));
+  eq([picker.isMultiple(), s], [false, { title: "A cup at Sample Tea Bar", box: false, sheet: true, scan: null }], "Scan opens the camera for one photo, with no box for text first and the sheet you were on left as it was");
+  /* text still reaches the app when it is shared to it, and is put right in the same place a photo's is */
+  await pg.evaluate(() => _scanTextRun("12 34 ;;"));
   s = await pg.evaluate(() => document.querySelector(".dnhead p").textContent);
   eq(s, "No drinks found in that text. Check that it all came across, or type it in.", "text with no drinks in it says so");
   await pg.click("#dns-panel .dnact .btn:last-child");
-  eq(await pg.evaluate(() => $("scan-text").value), "12 34 ;;", "…and Try again brings the text back to fix");
-  await pg.evaluate(t => { Object.defineProperty(navigator, "clipboard", { configurable: true, value: { readText: async () => t } }); }, ticket);
-  await pg.click("#dns-panel .dnact .btn:first-child");
-  await pg.waitForFunction(t => $("scan-text").value === t, ticket);
-  eq(await pg.evaluate(() => $("scan-go").disabled), false, "Paste fills the box from the clipboard");
+  s = await pg.evaluate(() => ({ title: $("dns-title").textContent, text: $("scan-text").value, photo: !!document.querySelector("#dns-panel .scanthumb"), seg: !!document.querySelector("#dns-panel .scanseg"), buttons: [...document.querySelectorAll("#dns-panel .dnact .btn")].map(x => x.textContent) }));
+  eq(s, { title: "Check what it read", text: "12 34 ;;", photo: false, seg: false, buttons: ["Take a photo", "Find the drinks"] }, "…and Try again brings the text back to fix, with no photo beside it and a photo offered");
+  await pg.fill("#scan-text", ticket);
   await pg.click("#scan-go");
-  eq(await pg.evaluate(() => [document.querySelectorAll("#dns-panel .scanrow").length, document.querySelectorAll("#dns-panel .scanthumb").length]), [1, 0], "pasted text has no photo to show on the list");
+  eq(await pg.evaluate(() => [document.querySelectorAll("#dns-panel .scanrow").length, document.querySelectorAll("#dns-panel .scanthumb").length]), [1, 0], "text has no photo to show on the list");
   await one();
   s = await sheet();
   eq([s.title, s.on, s.same, s.spec, s.price, s.date.includes("Today")], ["A cup at Sample Tea Bar", ["Matcha Guava Cream Top"], "✓ From the receipt", "16 oz · lactose-free · no sugar", "", false],
@@ -228,8 +223,6 @@ const { eq, done } = checker();
   await save();
   saved = (await orders("Matcha Guava Cream Top")).pop();
   eq([saved.date, saved.size, saved.milk, saved.sweet, saved.p], [earlier, "16 oz", "Lactose-free", "0%", undefined], "…and saves it with no price, since the ticket had none");
-  await pg.evaluate(() => { openQuickCup(); scanStart(); });
-  eq(await pg.evaluate(() => $("scan-text").value), "", "a reading that worked leaves the box empty next time");
   await pg.evaluate(() => closeSheet());
 
   /* Log with no cafe open: Add a visit has Scan too */
@@ -272,12 +265,10 @@ const { eq, done } = checker();
   await reset();
   await pg.evaluate(() => { userLoc = null; show("list"); logTab(); });
   await pg.fill("#f-name", "New Place Coffee");
-  await pg.click("#f-scan");
-  await pg.fill("#scan-text", ticket);
-  await pg.click("#scan-go");
+  await pg.evaluate(t => _scanTextRun(t), ticket);
   await one();
   s = await form();
-  eq([s.view, s.name, s.rows, s.sheet], ["form", "New Place Coffee", ["Matcha Guava Cream Top "], false], "a ticket pasted into Add a visit adds the drink and leaves the cafe's name as you typed it");
+  eq([s.view, s.name, s.rows, s.sheet], ["form", "New Place Coffee", ["Matcha Guava Cream Top "], false], "a ticket's text read from Add a visit adds the drink and leaves the cafe's name as you typed it");
 
   /* always a way out */
   await pg.evaluate(() => { _formSnap = formSnapshot(); });
@@ -434,6 +425,44 @@ const { eq, done } = checker();
   await pg.evaluate(() => closeSheet());
   eq(await pg.evaluate(() => _scan), null, "closing lets the reading and its pictures go");
 
+  /* what is read is cleaned first, and the reader says what it doubts (v136) */
+  await reset();
+  await pg.evaluate(() => { window.__seen = []; scanRead = image => { window.__seen.push({ w: image.width, h: image.height, img: image }); return Promise.resolve({ text: "CORTADO 6.50\nFlat Whlte 6.95\nTOTAL 13.45", doubt: ["Whlte", "6.95"] }); }; });
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "stay");
+  await pg.evaluate(q => { _scan.pic.quad = q; _scanCropDraw(); }, paper);
+  await pg.click("#scan-read");
+  await review();
+  s = await pg.evaluate(() => {
+    const c = window.__seen[0], d = c.img.getContext("2d").getImageData(0, 0, c.w, c.h).data; let grey = true, white = 0;
+    for (let p = 0; p < d.length; p += 4 * 97) { if (d[p] !== d[p + 1] || d[p + 1] !== d[p + 2]) grey = false; if (d[p] > 240) white++; }
+    const seg = [...document.querySelectorAll(".scanseg button")], img = $("scan-thumbimg");
+    return { say: document.querySelector(".dnhead p").textContent, grey: grey, paper: white / (d.length / (4 * 97)) > 0.8, seg: seg.map(b => b.textContent + " " + b.getAttribute("aria-pressed")), shown: img.src === _scan.url && _scan.url !== _scan.orig && !!_scan.orig,
+             chips: [...document.querySelectorAll("#scan-doubt .dntag")].map(b => b.textContent), head: document.querySelector("#scan-doubt .dnlab").textContent, tall: [...document.querySelectorAll(".scanseg button, #scan-doubt .dntag")].every(b => b.getBoundingClientRect().height >= 44),
+             under: $("scan-doubt").getBoundingClientRect().top >= $("scan-text").getBoundingClientRect().bottom, wide: document.documentElement.scrollWidth <= innerWidth }; });
+  eq(s, { say: "It wasn’t sure of 2 words. Fix anything it got wrong, then continue.", grey: true, paper: true, seg: ["Cleaned up true", "Original false"], shown: true, chips: ["Whlte", "6.95"], head: "Check these", tall: true, under: true, wide: true },
+     "the reader gets the part you boxed cleaned up, grey with its paper white; that is the picture beside the text, and the words it was unsure of are listed under it");
+  await pg.fill("#scan-text", "CORTADO 6.50\nFlat Whlte 6.95\nTOTAL 13.45\nmine");
+  await pg.click('.scanseg button[data-v="orig"]');
+  s = await pg.evaluate(() => ({ seg: [...document.querySelectorAll(".scanseg button")].map(b => b.getAttribute("aria-pressed")), shown: $("scan-thumbimg").src === _scan.orig, text: $("scan-text").value, reads: window.__seen.length }));
+  eq(s, { seg: ["false", "true"], shown: true, text: "CORTADO 6.50\nFlat Whlte 6.95\nTOTAL 13.45\nmine", reads: 1 }, "Original shows the part as you took it, with nothing read again and what you typed still there");
+  await pg.click("#scan-doubt .dntag");
+  s = await pg.evaluate(() => { const b = $("scan-text"); return [document.activeElement.id, b.value.slice(b.selectionStart, b.selectionEnd)]; });
+  eq(s, ["scan-text", "Whlte"], "a tap on a word to check selects it in the text, ready to type over");
+  await pg.keyboard.type("White");
+  s = await pg.evaluate(() => ({ text: $("scan-text").value.split("\n")[1], chips: [...document.querySelectorAll("#scan-doubt .dntag")].filter(b => !b.hidden).map(b => b.textContent), list: !$("scan-doubt").hidden }));
+  eq(s, { text: "Flat White 6.95", chips: ["6.95"], list: true }, "…and once it is put right it leaves the list");
+  await pg.click("#scan-go");
+  await pg.waitForFunction(() => !$("scan-text") && document.querySelector("#dns-panel .scanrow"));
+  eq(await pg.evaluate(() => [$("scan-thumbimg").src === _scan.orig, !!document.querySelector("#dns-panel .scanseg")]), [true, false], "the list keeps the picture you were looking at, without the switch");
+  await pg.click("#dns-panel .scanalt");
+  await pg.click("#dns-panel .dnact .btn:first-child");
+  s = await pg.evaluate(() => ({ say: document.querySelector(".dnhead p").textContent, chips: [...document.querySelectorAll("#scan-doubt .dntag")].map(b => b.textContent), seg: [...document.querySelectorAll(".scanseg button")].map(b => b.getAttribute("aria-pressed")) }));
+  eq(s, { say: "It wasn’t sure of 1 word. Fix anything it got wrong, then continue.", chips: ["6.95"], seg: ["false", "true"] }, "…and back at the text, the word still to check and the picture you chose are as you left them");
+  await pg.fill("#scan-text", "CORTADO 6.50\nFlat White 6.25\nTOTAL 12.75");
+  eq(await pg.evaluate(() => $("scan-doubt").hidden), true, "with every doubted word put right, the list goes");
+  await pg.evaluate(() => closeSheet());
+
   /* Whole photo, said at the box, reads all of it */
   await reset();
   await readsAs("CORTADO 6.50\nTOTAL 6.50");
@@ -496,9 +525,10 @@ const { eq, done } = checker();
   await pg.fill("#f-name", "New Place Coffee");
   await pg.click("#f-scan");
   s = await pg.evaluate(() => ({ title: $("dns-title").textContent, name: document.querySelector(".scanname").value, price: document.querySelector(".scanp").textContent }));
-  eq(s, { title: "Is this yours?", name: "Cortado", price: "$6.50" }, "…then Scan reads what was shared, with no box to paste into");
-  await pg.evaluate(() => { closeSheet(); scanStart(); });
-  eq(await pg.evaluate(() => $("dns-title").textContent), "Scan a receipt", "…once: the next Scan is an ordinary one");
+  eq(s, { title: "Is this yours?", name: "Cortado", price: "$6.50" }, "…then Scan reads what was shared, with no photo asked for");
+  await pg.evaluate(() => closeSheet());
+  const [next] = await Promise.all([pg.waitForEvent("filechooser"), pg.click("#f-scan")]);
+  eq([!!next, await pg.evaluate(() => $("dnsheet").hidden)], [true, true], "…once: the next Scan is an ordinary one, and opens the camera");
   await pg.evaluate(() => { closeSheet(); _formSnap = formSnapshot(); });
   s = await share("", true);
   eq([s.text, s.photo], ["", "image/png"], "a shared photo is kept the same way");
@@ -570,6 +600,7 @@ const { eq, done } = checker();
   await past();
   p = await pick().catch(async () => ({ rows: await pg.evaluate(() => $("dns-panel").textContent) }));
   eq(p.rows, ["true Cortado $6.50"], "…and a leaning receipt, boxed where the app found it and pulled flat, reads true (" + JSON.stringify(flat) + ")");
+  eq(await pg.evaluate(() => [Array.isArray(_scan.doubt), _scan.doubt.every(w => typeof w === "string"), !!_scan.orig && _scan.orig !== _scan.url]), [true, true, true], "…with the real reader's own list of words it doubted, and both pictures kept");
   eq([sent.filter(u => /^(POST|PUT)/.test(u) || /jsdelivr|unpkg|tessdata/.test(u)), csp], [[], []], "…sending nothing anywhere, fetching nothing from elsewhere, and within the page's security policy");
 
   eq(errs, [], "no page errors");

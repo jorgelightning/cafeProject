@@ -2,7 +2,7 @@
    The suite (tests/run.js) runs these through tests/unit.js. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { findReceipt, foundCorners, quadOk, quadSize, flatten, CROP_SMALL, CROP_MID } from "../../js/lib/crop.js";
+import { findReceipt, foundCorners, quadOk, quadSize, flatten, readable, CROP_SMALL, CROP_MID } from "../../js/lib/crop.js";
 
 /** A photo 3 wide by 4 tall at `side` on its long side: a background, then papers. A paper is where its middle is and
     how big it is, as fractions of the photo's width, with its lean in degrees; rows of dark print unless it is blank. */
@@ -153,4 +153,53 @@ test("flatten: a leaning box and a trapezium are pulled square, each corner to i
 test("flatten: corners at or past the photo's edge read its edge, not past its end", () => {
   const out = flatten(ramp(50, 50), 50, 50, [[-10, -10], [60, -10], [60, 60], [-10, 60]], 20, 20);
   assert.deepEqual([at(out, 20, 0, 0), at(out, 20, 19, 19)], [[0, 0], [49, 49]]);
+});
+
+/** A 200 by 300 receipt as a picture: paper, a shadow over its lower half if asked, and whatever `paint` adds. */
+function sheet(shadow, paint) {
+  const w = 200, h = 300, d = new Uint8ClampedArray(w * h * 4);
+  const put = (x, y, c) => d.set([c[0], c[1], c[2], 255], (y * w + x) * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) put(x, y, shadow && y >= 150 ? [110, 120, 150] : [236, 234, 228]);
+  /* rows of print: black, at the paper's own share of light where the shadow falls */
+  for (const y0 of [40, 90, 200, 250]) for (let y = y0; y < y0 + 6; y++) for (let x = 30; x < 170; x += 3) put(x, y, shadow && y >= 150 ? [20, 22, 28] : [40, 40, 40]);
+  if (paint) paint(put);
+  return { d, w, h };
+}
+const greyAt = (out, w, x, y) => out[(y * w + x) * 4];
+
+test("readable: grey, solid, and the same size", () => {
+  const s = sheet(false), out = readable(s.d, s.w, s.h);
+  assert.equal(out.length, s.d.length);
+  for (const p of [0, 5000, 59999]) assert.deepEqual([out[p * 4] === out[p * 4 + 1], out[p * 4 + 1] === out[p * 4 + 2], out[p * 4 + 3]], [true, true, 255]);
+  assert.ok(greyAt(out, s.w, 100, 20) > 240, "paper comes out white");
+  assert.ok(greyAt(out, s.w, 30, 42) < 80, "print stays dark");
+});
+
+test("readable: a shadow across the receipt comes out as white as the rest, its print as dark", () => {
+  const s = sheet(true), out = readable(s.d, s.w, s.h);
+  const lit = greyAt(out, s.w, 100, 60), shaded = greyAt(out, s.w, 100, 270);
+  assert.ok(lit > 235 && shaded > 235, "paper in the light " + lit + ", in the shadow " + shaded);
+  assert.ok(Math.abs(greyAt(out, s.w, 30, 42) - greyAt(out, s.w, 30, 202)) < 40, "print reads alike on both sides of the shadow's edge");
+  assert.ok(greyAt(out, s.w, 30, 202) < 90, "…and dark");
+});
+
+test("readable: a highlighter stripe vanishes, the print under it does not, and coloured ink stays dark", () => {
+  const s = sheet(false, put => {
+    /* a pink stripe down the right, over the ends of the lines of print */
+    for (let y = 0; y < 300; y++) for (let x = 150; x < 185; x++) put(x, y, [236, 72, 153]);
+    for (let y = 40; y < 46; y++) for (let x = 150; x < 170; x += 3) put(x, y, [60, 20, 40]);
+    /* and a line printed in blue ink */
+    for (let y = 120; y < 126; y++) for (let x = 30; x < 140; x += 3) put(x, y, [30, 40, 150]);
+  });
+  const out = readable(s.d, s.w, s.h);
+  assert.ok(greyAt(out, s.w, 176, 20) > 235, "the stripe is paper now: " + greyAt(out, s.w, 176, 20));
+  assert.ok(greyAt(out, s.w, 150, 42) < 100, "print under the stripe is still there: " + greyAt(out, s.w, 150, 42));
+  assert.ok(greyAt(out, s.w, 30, 122) < 90, "blue ink is as dark as it was: " + greyAt(out, s.w, 30, 122));
+});
+
+test("readable: a picture cut short or of no size is answered with nothing, not read past its end", () => {
+  assert.equal(readable(new Uint8ClampedArray(10), 100, 100).length, 40000);
+  assert.equal(readable(new Uint8ClampedArray(0), 0, 0).length, 0);
+  const one = readable(new Uint8ClampedArray([200, 200, 200, 255]), 1, 1);
+  assert.deepEqual([one[0], one[3]], [255, 255], "one pixel is its own paper");
 });

@@ -193,19 +193,22 @@ so a visitor who never does never loads them.
 ## Scan a receipt
 
 The log sheet and Add a visit (once the cafe has a name) each have a Scan button that fills them in from a receipt. A photo read in the app stops first at the photo and the text it read, to put right. Every reading then stops at a list to tick, showing what was printed and with each name editable, and you still press Save. Scan
-opens on a box for the receipt's text, which the phone's own reader fills: Scan Text from an iPhone's keyboard, or text
-copied out of Google Lens or the Photos app and pasted. `parseReceipt` (`js/lib/scan.js`) works out what the text means.
+opens the camera (from v129 to v135 it opened on a box for the receipt's text, for the phone's own reader to fill; the
+owner had it taken out in v136). `parseReceipt` (`js/lib/scan.js`) works out what the text means.
 It costs nothing, needs no account, and nothing leaves the phone.
 
-On Android, with the app installed to the home screen, it is also in the share sheet: share the text from Google Lens,
-or a photo from Photos, to the app and it is read with no copy and paste (`share_target` in `manifest.json`, answered
+The phone's own text reader is better than anything a page can load, and a web page cannot start it, so it reaches the
+app one way. On Android, with the app installed to the home screen, the app is in the share sheet: share the text from
+Google Lens, or a photo from Photos, to the app and it is read with no copy and paste (`share_target` in `manifest.json`, answered
 by `sw.js` so nothing shared leaves the phone). iPhones do not offer this to web apps.
 
-"Or read a photo in the app" is the second choice: Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, about 7 MB on
+The photo is read by Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, about 7 MB on
 first use. It reads clean print and does poorly on real phone photos. Read whole, it made text of the counter around
 the receipt, so since v135 every photo stops at a box first: it starts on the receipt the app found (`findReceipt`,
 `js/lib/crop.js`), you drag its four corners onto the receipt's own, and Read this part flattens what is inside them
-(`flatten`). Whole photo is the button beside it, and the review's chip, Adjust crop, goes back to the box.
+(`flatten`). Whole photo is the button beside it, and the review's chip, Adjust crop, goes back to the box. What is inside the box
+is cleaned before it is read (`readable`: the light evened, colour left out), and the review shows that picture, with
+the original a tap away and the words the reader was unsure of listed to check (`doubtWords`, `js/lib/scan.js`).
 
 The rules know priced receipts, names and prices handed back as separate columns, and a cup's order ticket with no
 prices. A layout they do not know lists the text's lines, and you tap the one that names your drink. To teach it a shop's abbreviation, add a line to

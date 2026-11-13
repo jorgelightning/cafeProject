@@ -20,6 +20,12 @@
    (foundCorners); its four corners are dragged onto the receipt's, each on its own, and flatten pulls what is inside
    them square. Four free corners say more than a box and a lean: a receipt photographed from an angle is a
    trapezium, and flattening undoes that as well as the tilt.
+
+   Since v136 the cut-out is cleaned before it is read (readable). The owner sent six of his own photos and each
+   clean-up was measured on them and on his first ticket, cut out by hand: evening the light took the lines read right
+   from 76 to 87 of 119 and a receipt under a hard shadow from 8 to 15 of 18, and leaving colour out took the pink
+   end-of-roll stripes off another's prices. Darker print, sharpening, pure black and white and enlarging were tried
+   too and did not help on real photos, though darker print had looked good on generated ones.
    Like the other lib files, the app gets these as globals. */
 
 /* the long side, in pixels, of the two pictures findReceipt wants: one to find the paper, a finer one to see print */
@@ -314,4 +320,80 @@ export function flatten(src, sw, sh, q, ow, oh) {
   return out;
 }
 
-if (typeof window !== "undefined") Object.assign(window, { CROP_SMALL, CROP_MID, findReceipt, foundCorners, quadOk, quadSize, flatten });
+/* a pixel at least this bright, of the paper around it, in any one of its colours is a mark on the paper, not print */
+const MARK = 0.8;
+/** The picture made ready for the reader: grey, with the light evened and coloured marks gone.
+    Light: each pixel becomes its share of the paper's brightness around it, so a shadow across the receipt, which is
+    darker paper, comes out as white as the rest. The paper's brightness is the 90th percentile of each small cell of
+    the picture, which print does not pull down, smoothed across cells.
+    Colour: print is dark in every colour, while a highlighter stripe is as bright as paper in at least one. So a pixel
+    that bright in its brightest colour is read by that colour, and the stripe vanishes; anything darker is read by the
+    usual blend, so print in blue or purple ink stays as dark as it is.
+    @param {Uint8ClampedArray|Uint8Array} src four numbers a pixel @param {number} w @param {number} h
+    @returns {Uint8ClampedArray} grey, four numbers a pixel */
+export function readable(src, w, h) {
+  const n = w * h;
+  const out = new Uint8ClampedArray(n * 4);
+  if (!(w > 0 && h > 0) || src.length < n * 4) return out;
+  const top = new Uint8Array(n),
+    mix = new Uint8Array(n);
+  for (let i = 0, p = 0; p < n; i += 4, p++) {
+    top[p] = Math.max(src[i], src[i + 1], src[i + 2]);
+    mix[p] = Math.round(0.299 * src[i] + 0.587 * src[i + 1] + 0.114 * src[i + 2]);
+  }
+  /* the paper's brightness, cell by cell */
+  const cs = Math.max(8, Math.round(Math.max(w, h) / 60));
+  const gw = Math.ceil(w / cs),
+    gh = Math.ceil(h / cs);
+  let grid = new Float32Array(gw * gh);
+  const hist = new Uint32Array(256);
+  for (let gy = 0; gy < gh; gy++)
+    for (let gx = 0; gx < gw; gx++) {
+      hist.fill(0);
+      let count = 0;
+      for (let y = gy * cs; y < Math.min(h, (gy + 1) * cs); y += 2)
+        for (let x = gx * cs; x < Math.min(w, (gx + 1) * cs); x += 2) {
+          hist[top[y * w + x]]++;
+          count++;
+        }
+      let v = 255;
+      for (let c = hist[v]; v > 0 && c < count * 0.1; ) c += hist[--v];
+      grid[gy * gw + gx] = Math.max(1, v);
+    }
+  /* smoothed twice over the cells beside it, so the paper's brightness has no steps in it */
+  for (let pass = 0; pass < 2; pass++) {
+    const next = new Float32Array(gw * gh);
+    for (let gy = 0; gy < gh; gy++)
+      for (let gx = 0; gx < gw; gx++) {
+        let sum = 0,
+          c = 0;
+        for (let y = Math.max(0, gy - 2); y <= Math.min(gh - 1, gy + 2); y++)
+          for (let x = Math.max(0, gx - 2); x <= Math.min(gw - 1, gx + 2); x++) {
+            sum += grid[y * gw + x];
+            c++;
+          }
+        next[gy * gw + gx] = sum / c;
+      }
+    grid = next;
+  }
+  for (let y = 0, p = 0; y < h; y++) {
+    const fy = Math.min(gh - 1, Math.max(0, (y + 0.5) / cs - 0.5)),
+      y0 = Math.min(Math.max(0, gh - 2), Math.floor(fy)),
+      ty = gh > 1 ? fy - y0 : 0,
+      y1 = Math.min(gh - 1, y0 + 1);
+    for (let x = 0; x < w; x++, p++) {
+      const fx = Math.min(gw - 1, Math.max(0, (x + 0.5) / cs - 0.5)),
+        x0 = Math.min(Math.max(0, gw - 2), Math.floor(fx)),
+        tx = gw > 1 ? fx - x0 : 0,
+        x1 = Math.min(gw - 1, x0 + 1);
+      const paper = (grid[y0 * gw + x0] * (1 - tx) + grid[y0 * gw + x1] * tx) * (1 - ty) + (grid[y1 * gw + x0] * (1 - tx) + grid[y1 * gw + x1] * tx) * ty;
+      const v = Math.min(255, ((top[p] >= MARK * paper ? top[p] : mix[p]) / paper) * 255);
+      const o = p * 4;
+      out[o] = out[o + 1] = out[o + 2] = v;
+      out[o + 3] = 255;
+    }
+  }
+  return out;
+}
+
+if (typeof window !== "undefined") Object.assign(window, { CROP_SMALL, CROP_MID, findReceipt, foundCorners, quadOk, quadSize, flatten, readable });
