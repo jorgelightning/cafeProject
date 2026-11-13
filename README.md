@@ -210,8 +210,8 @@ the receipt, so since v135 every photo stops at a box first: it starts on the re
 is cleaned before it is read (`readable`: the light evened, colour left out), and the review shows that picture, with
 the original a tap away and the words the reader was unsure of listed to check (`doubtWords`, `js/lib/scan.js`).
 
-The rules know priced receipts, names and prices handed back as separate columns, and a cup's order ticket with no
-prices. A layout they do not know lists the text's lines, and you tap the one that names your drink. To teach it a shop's abbreviation, add a line to
+The rules know priced receipts, names and prices handed back as separate columns, a cup's order ticket with no
+prices, and a till's order screen with its buttons on the drink's line. A layout they do not know lists the text's lines, and you tap the one that names your drink. To teach it a shop's abbreviation, add a line to
 `WORDS` in `js/lib/scan.js`; a new layout is a new rule and a test in `tests/unit/scan.test.mjs`.
 
 ## Owner checklist (things the code cannot check for you)

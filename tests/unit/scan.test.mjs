@@ -201,3 +201,40 @@ test("doubtWords: the words worth checking are the unsure ones on lines with a p
   assert.equal(doubtWords(many).length, 6, "no more than six");
   assert.deepEqual([doubtWords([]), doubtWords(null), doubtWords([null, [null, w("$1.00", 1)]])], [[], [], ["$1.00"]], "nothing to go on is nothing to check");
 });
+
+/* three ways the owner's own photos lost a drink (12 Nov), each as the reader really gave it */
+test("parseReceipt: a till's screen has its buttons on the drink's line", () => {
+  const mine = { known: ["Cortado", "Flat white"] };
+  for (const line of ["-— Cortado   / Edititem   OJ Remove   fila  1   $6.50", "Cortado   © Edititen   J Remove   ©   1   (+)   $6.50", "Cortado Edit item Remove - 1 + $6.50"]) {
+    const r = read(["My Order", line, "Subtotal (1 item) $6.50", "Taxes $0.00", "Total $6.50"], mine);
+    assert.deepEqual(r.items.map(x => [x.n, x.price, x.isNew]), [["Cortado", 6.5, false]], line);
+    assert.deepEqual([r.off, r.total], [false, 6.5]);
+  }
+  assert.deepEqual(names(read(["Yuzu Fizz   / Edititem   Remove   1   $7.00", "Total $7.00"], mine)), ["Yuzu Fizz"], "a drink that is new to you is cut at the buttons too");
+  assert.deepEqual(names(read(["Edit item Remove 1 $7.00", "Total $7.00"], mine)), [], "buttons with no drink before them are not a drink");
+  assert.equal(lineItem(["Cortado © Edititen J Remove © 1 $6.50"], 0, Object.assign({}, ctx, mine)).n, "Cortado", "…and the same where you tap the line yourself");
+});
+
+test("parseReceipt: a drink whose price lost its end is still offered, with the price left to you", () => {
+  const mine = { known: ["Flat white", "Cold brew"] };
+  const r = read(["MASTERCARD", "Cold Brew $6.25", "o A  Flat White   6.2", "\"oat Milk   ep", "Total $1250", "Mastercar 8315 (Contactless) $12.50"], mine);
+  assert.deepEqual(r.items.map(x => [x.n, x.price, x.drink]), [["Cold brew", 6.25, true], ["Flat white", null, true]]);
+  assert.equal(r.items[1].printed, "o A Flat White 6.2", "what was printed is shown beside it");
+  assert.deepEqual(names(read(["Cold Brew $6.25", "Yuzu Latte $7.", "Total $13.25"], mine)), ["Cold brew", "Yuzu Latte"], "a drink word is enough when the name is not one of yours");
+  assert.deepEqual(names(read(["Cold Brew $6.25", "Ref 4.2", "Table 12.", "Total $6.25"], mine)), ["Cold brew"], "a number after words that name no drink is not one");
+  assert.deepEqual(names(read(["Flat White 6.2", "Total $6.25"], mine)), [], "nor is it one before the first real item, where a receipt keeps its address");
+  assert.equal(read(["Cold Brew $6.25", "Flat White 6.2", "Subtotal $12.50", "Total $12.50"], mine).off, true, "…and with a subtotal printed, the gap is called out");
+  const made = read(["Cold Brew $6.25", "Oat Milk 0.", "Total $6.25"], mine);
+  assert.deepEqual([names(made), made.items[0].milk], [["Cold brew"], "Oat"], "a line that says how the drink above was made is still that");
+});
+
+test("parseReceipt: a name the receipt cut short is yours when only one of yours fits", () => {
+  const mine = { known: ["Hojicha latte", "Matcha latte", "Cortado"] };
+  const n = (line, over) => read([line, "Total 7.50"], Object.assign({}, mine, over)).items[0];
+  assert.deepEqual([n("Hot Hojicha L $7.50").n, n("Hot Hojicha L $7.50").isNew, n("Hot Hojicha L $7.50").price], ["Hojicha latte", false, 7.5]);
+  assert.equal(n("Matcha La 7.50").n, "Matcha latte", "two letters too");
+  assert.deepEqual([n("Hojicha L 7.50", { known: ["Hojicha latte", "Hojicha lemonade"] }).n, n("Hojicha L 7.50", { known: ["Hojicha latte", "Hojicha lemonade"] }).isNew], ["Hojicha L", true], "two of yours fit, so it is neither");
+  assert.equal(n("Cortado L 7.50").isNew, true, "a letter after a whole name of yours is a size, or anything");
+  assert.equal(n("Yuzu L 7.50").isNew, true, "nothing of yours starts like it");
+  assert.equal(lineItem(["Hot Hojicha L $7.50"], 0, Object.assign({}, ctx, mine)).n, "Hojicha latte", "…and the same where you tap the line yourself");
+});

@@ -2527,3 +2527,27 @@ Measured again with the app's own code: 86 of 119 lines right on the real photos
 the generated set where it was 102. Still wrong on the real ones: a till's screen puts its buttons' names on the
 drink's line, paper curved in the hand splits its lines, and the box starts in the right place on two photos of seven.
 `tests/unit/crop.test.mjs`, `tests/unit/scan.test.mjs`, `tests/scan-receipt.js`.
+
+## Three drinks the rules lost (v137)
+
+With the picture cleaned (v136) the reader got the words of the owner's seven photos mostly right, and the app still
+found six of their ten drinks. The other four were lost after the reading, by the rules. Each is fixed from the line
+the reader really gave, which is now a unit test.
+
+**A till's screen.** "Cortado  Edit item  Remove  − 1 +  $6.50" is one line on the screen and came back as
+"-— Cortado / Edititem OJ Remove fila 1 $6.50". The name was everything before the price, buttons and all, and the
+dash in front made it look like a note on the drink above, so nothing was offered. What comes from "Edit item" or
+"Remove" on is the screen's, and so are marks left at either end of the name.
+
+**A price that lost its end.** "Flat White 6.2", for $6.25, where the pink stripe had been. A line with no whole price
+was only ever a note on the item above. Now a line among the items that ends in most of a price, and whose name is one
+of your drinks or has a drink's word in it, is offered with its price left for you. Both conditions, because a number
+after other words is a table or a reference, and a receipt's first lines are its address.
+
+**A name cut short.** "Hot Hojicha L" was offered as that, a new drink, beside the Hojicha latte already on the list.
+A last word of one or two letters now pairs with the start of yours when every word before it pairs and only one of
+your drinks fits. Two that fit leave it alone, since an L after a whole name is as likely Large.
+
+Measured on the seven photos with the app's own code: 10 of 10 drinks found where it was 6, 9 with the right price,
+the tenth being the one whose price could not be read. The generated photos read as they did.
+`tests/unit/scan.test.mjs`.

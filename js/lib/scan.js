@@ -217,6 +217,39 @@ function matchKnown(name, known) {
   return best;
 }
 
+/** One of your drink names, when the receipt cut its last word down to a letter or two: "Hot Hojicha L" is your Hojicha
+    latte (the owner's Jandii receipt, 12 Nov). Every word before it has to pair up, and only one of your drinks may
+    fit, or it is nobody's: an L could be Large. Three letters and more already pair as the start of a word.
+    @param {string} name @param {string[]} known @returns {string|null} */
+function matchCut(name, known) {
+  const a = words(name).filter(w => !SOFT.has(w));
+  const last = a[a.length - 1];
+  if (a.length < 2 || !/^[a-z]{1,2}$/.test(last)) return null;
+  const fits = known.filter(function (k) {
+    const open = words(k).filter(w => !SOFT.has(w));
+    if (open.length !== a.length) return false;
+    for (const w of a.slice(0, -1)) {
+      const i = open.findIndex(x => sameWord(w, x));
+      if (i < 0) return false;
+      open.splice(i, 1);
+    }
+    return open[0].length > last.length && open[0].startsWith(last);
+  });
+  return fits.length === 1 ? fits[0] : null;
+}
+/* A till's screen puts its buttons on the drink's line: "Cortado  Edit item  Remove  - 1 +  $6.50" (the owner's photo of
+   one, 12 Nov; the reader runs the first two together). What comes from the first of them on is the screen's, and so
+   are any marks left at either end of the name. */
+const SCREEN = /\b(EDIT\s?ITE\w*|REMOVE)\b/i;
+/** @param {string} name a line's words, before its price */
+function offScreen(name) {
+  const at = name.search(SCREEN);
+  return at < 0 ? name : name.slice(0, at).replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9)]+$/g, "");
+}
+/* A price the reader lost the end of: "Flat White 6.2" for $6.25, under a stripe of pink on the owner's Andytown receipt.
+   The line is still a drink and worth offering, with its price left for you. */
+const CUT_PRICE = /\s(?:[A-Z]{0,2}\$)?\d{1,3}[.,]\d?$/;
+
 /** A phone's text reader often hands back a receipt's names and its prices as two separate runs of lines, or each price
     on the line under its name. This puts each price back on its line, so the rest can read it as printed.
     @param {string[]} lines @param {number} dec */
@@ -349,6 +382,7 @@ export function lineItem(lines, i, ctx) {
     return h && /[A-Za-z]{2}/.test(h.name) ? h : { name: l, price: null, neg: false, sym: "" };
   };
   const hit = body(lines[i] || "");
+  hit.name = offScreen(hit.name);
   const p = pullOptions(hit.name, false);
   const q = /^(\d{1,2})\s*[x×*]?\s+(?=\D)/i.exec(p.rest);
   const o = p.o;
@@ -361,7 +395,7 @@ export function lineItem(lines, i, ctx) {
     printed.push(b);
   }
   const plain = plainName(q ? p.rest.slice(q[0].length) : p.rest, ownWords(known));
-  const mine = matchKnown(plain, known);
+  const mine = matchKnown(plain, known) || matchCut(plain, known);
   const foreign = !!hit.sym && hit.sym !== "$" && (hit.sym === "¥" ? "JPY" : SYMBOLS[hit.sym]) !== code && !(hit.sym === "¥" && code === "CNY");
   return {
     n: (mine || plain).slice(0, 80),
@@ -410,10 +444,20 @@ export function parseReceipt(text, ctx) {
         if (isModifier(line, p.rest, p.o)) {
           Object.assign(last.o, Object.fromEntries(Object.entries(p.o).filter(e => e[1])));
           last.printed += " + " + line.replace(/^[+*>~-]\s*/, "");
+          return;
+        }
+        /* or a drink whose price lost its end: among the items, ending in most of a price, and by its name a drink */
+        const cut = CUT_PRICE.exec(line);
+        if (cut) {
+          const name = pullOptions(line.slice(0, cut.index), false);
+          const plain = plainName(name.rest, own);
+          if (/[A-Za-z]{3}/.test(plain) && (matchKnown(plain, known) || words(plain).some(w => DRINK.has(w) || own.has(w))))
+            rows.push({ name: name.rest, qty: 1, price: null, o: name.o, printed: line });
         }
       }
       return;
     }
+    hit.name = offScreen(hit.name);
     if (hit.sym && hit.sym !== "$") {
       const c = hit.sym === "¥" ? (code === "JPY" || code === "CNY" ? code : "JPY") : SYMBOLS[hit.sym];
       if (c && c !== code) other = c;
@@ -453,7 +497,7 @@ export function parseReceipt(text, ctx) {
   const items = [];
   rows.forEach(function (r) {
     const plain = plainName(r.name, own);
-    const mine = matchKnown(plain, known);
+    const mine = matchKnown(plain, known) || matchCut(plain, known);
     const food = FOOD.test(r.name);
     const named = words(plain).some(w => DRINK.has(w) || own.has(w));
     for (let i = 0; i < r.qty && items.length < SCAN_MAX_ROWS; i++)
