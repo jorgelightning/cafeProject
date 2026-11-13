@@ -705,6 +705,82 @@ const { eq, done } = checker();
   eq([await zoomAt("#dns-panel"), await pg.evaluate(() => { const i = document.querySelector("#dns-panel .scanthumb img").getBoundingClientRect(); return i.height <= innerHeight * 0.3 + 1; })], [null, true], "a reader that says where nothing is leaves the picture whole, as it was");
   await reset();
 
+  /* the box says when the photo is blurred or in shadow (v141): measured on pieces of the photo itself, before any
+     time is spent reading. A printed sheet on a dark counter, as it is, blurred, and with its lower half in shadow */
+  const sheetFor = how => pg.evaluate(how => {
+    const c = document.createElement("canvas"); c.width = 1500; c.height = 2000;
+    const g = c.getContext("2d");
+    g.fillStyle = "#2e261f"; g.fillRect(0, 0, 1500, 2000);
+    if (how === "blur") g.filter = "blur(6px)";
+    g.fillStyle = "#f3f0e9"; g.fillRect(250, 200, 1000, 1600);
+    g.fillStyle = "#222"; g.font = "bold 40px 'Courier New', monospace";
+    for (let i = 0; i < 20; i++) g.fillText("SAMPLE LINE " + i + " OF PRINT 12.00", 300, 300 + i * 74);
+    g.filter = "none";
+    if (how === "shadow") { g.fillStyle = "rgba(0,0,0,0.65)"; g.fillRect(0, 1000, 1500, 1000); }
+    return c.toDataURL("image/png").split(",")[1];
+  }, how);
+  const photoOf = async how => {
+    await pg.setInputFiles("#scan-file", { name: "p.png", mimeType: "image/png", buffer: Buffer.from(await sheetFor(how), "base64") });
+    await pg.waitForFunction(() => { const i = $("scan-cropimg"); return $("scan-read") && i && i.complete && i.naturalWidth > 0; });
+    /* the box round the sheet, wherever the app would have started it */
+    await pg.evaluate(() => { _scan.pic.quad = [[0.17, 0.1], [0.83, 0.1], [0.83, 0.9], [0.17, 0.9]]; _scanCropDraw(); });
+  };
+  const warned = () => pg.evaluate(() => { const w = $("scan-warn"); return { why: w ? w.dataset.why : "", says: w ? w.textContent : "", role: w ? w.getAttribute("role") : "", small: !!$("scan-small"),
+    buttons: [...document.querySelectorAll("#scan-cropacts .dnact .btn, #scan-cropacts .scanalt")].map(x => x.textContent), tall: [...document.querySelectorAll("#scan-cropacts button")].every(x => x.getBoundingClientRect().height >= 44) }; });
+  await reset();
+  await readsAs("CORTADO 6.50\nTOTAL 6.50");
+  await pg.evaluate(() => openQuickCup());
+  await photoOf("");
+  eq(await warned(), { why: "", says: "", role: "", small: false, buttons: ["Whole photo", "Read this part", "Retake"], tall: true }, "a sharp photo in even light is offered as it always was");
+  await photoOf("blur");
+  eq(await warned(), { why: "blur", says: "This photo looks blurred, so its print may not read. Hold the phone still and retake.", role: "status", small: false, buttons: ["Read anyway", "Retake", "Whole photo"], tall: true },
+     "a blurred photo says so on the box before anything is read, with Retake first and reading it still a choice");
+  await photoOf("shadow");
+  eq(await warned(), { why: "shadow", says: "A shadow falls across the receipt, so part of it may not read. Turn to even light and retake.", role: "status", small: false, buttons: ["Read anyway", "Retake", "Whole photo"], tall: true },
+     "…and so does one with a shadow across the sheet");
+  await pg.evaluate(() => { _scan.pic.quad = [[0.17, 0.1], [0.83, 0.1], [0.83, 0.46], [0.17, 0.46]]; _scanCropDraw(); });
+  eq((await warned()).why, "", "…which it stops saying when the box is drawn up out of the shadow, since it is the part boxed that is judged");
+  await pg.evaluate(() => { _scan.pic.quad = [[0.17, 0.1], [0.83, 0.1], [0.83, 0.9], [0.17, 0.9]]; _scanCropDraw(); });
+  await pg.click("#scan-read");
+  await listed();
+  eq(await pg.evaluate(() => [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scanname").value)), ["Cortado"], "Read anyway reads it all the same");
+  await pg.evaluate(() => closeSheet());
+
+  /* a drink the reader doubted is read again by itself, cut from the photo at its own size (v141) */
+  const twice = (first, strip) => pg.evaluate(a => {
+    window.__seen = [];
+    scanRead = image => {
+      const band = image.height < image.width * 0.6, t = band ? a.strip : a.first;
+      window.__seen.push(band ? "strip" : "whole");
+      return Promise.resolve({ text: t.text, doubt: t.doubt, rows: t.text.split("\n").map((l, k, all) => ({ t: l, y0: (k + 0.3) / all.length, y1: (k + 0.7) / all.length })) });
+    };
+  }, { first, strip });
+  const drinksNow = () => pg.evaluate(() => ({ rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " $" + x.querySelector(".scanprice").value),
+    unsure: [...document.querySelectorAll(".scanunsure")].map(x => x.textContent), seen: window.__seen }));
+  const doubted = { text: "SAMPLE TEA BAR\nCachan $6.28\nTOTAL 6.28", doubt: ["Cachan", "$6.28"] };
+  await reset();
+  await twice(doubted, { text: "Cold Brew $6.25", doubt: [] });
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  eq(await drinksNow(), { rows: ["true Cold Brew $6.25"], unsure: [], seen: ["whole", "whole", "strip"] },
+     "a drink doubted on both looks has its line read again by itself, and what the reader is sure of this time is what the list shows: the crumpled receipt's Cachan $6.28 is Cold Brew $6.25");
+  await reset();
+  await twice(doubted, { text: "Cachan $6.28", doubt: ["Cachan"] });
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  s = await drinksNow();
+  eq([s.rows, s.unsure.length, s.seen], [["false Cachan $6.28"], 1, ["whole", "whole", "strip"]], "…a line doubted up close as well stays as it was, still marked for you to check");
+  await reset();
+  await twice({ text: "SAMPLE TEA BAR\nCortado $6.50\nie 12.5\nTAX 0.50", doubt: ["ie"] }, { text: "Total 12.50", doubt: [] });
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  s = await drinksNow();
+  eq([s.rows, s.unsure], [["true Cortado $6.50"], []], "…and a doubted row that turns out, read up close, to be the total and no drink at all is taken off the list");
+  await reset();
+
   /* on a pale table there is no bright paper to find, and the box starts round the print (v138) */
   const pale = await pg.evaluate(() => {
     const c = document.createElement("canvas"); c.width = 1500; c.height = 2000;

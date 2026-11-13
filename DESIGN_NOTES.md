@@ -2673,3 +2673,51 @@ Not built, from the same review: fetching the reader's files ahead of the first 
 already logged (the third drawing); the "(Default) Whole Milk" line on a Square receipt, whose milk is not taken; and a
 better starting box on a till's screen.
 `tests/scan-receipt.js`.
+
+## The photo, checked for blur and shadow, and a closer look at a doubted line (v141)
+
+The owner asked how the scan could be made to work when he travels, and on creased, shadowed or faint print. Six
+options were drawn: three for travel (the prices read and the names left to him; his phone's own reader; an AI model
+behind a small server) and three for hard print. He took two of the hard-print ones. Before drawing, the reader, which
+knows English only, was tried on a receipt drawn in Chinese and one in Japanese: every price right and every drink's
+line placed, no name right, and the subtotal taken for a drink.
+
+**The photo check.** v140 says when the receipt is too small in the photo. The box now also says when the part boxed
+is blurred or in shadow, with Retake first and reading it still a choice. Both are measured as the photo comes in, on a
+grid of small pieces of it, each brought to the size it would have in a photo 1650 across (`patchLook`,
+`js/lib/crop.js`); the box then asks only which pieces it holds, so what it says follows a corner. Five of his
+receipts were blurred, shadowed and faded by known amounts and read by the real reader:
+
+| Done to the photos | Lines right, of 102 | What the check measured |
+|---|---|---|
+| As they are (saved again as JPEG) | 56 | crisp 0.74 to 0.84, even 0.68 to 0.91, ink 0.64 to 0.87 |
+| Blurred by 1 pixel | 56 | crisp 0.37 to 0.41 |
+| Blurred by 1.8 | 44 | crisp 0.28 to 0.34 |
+| Blurred by 3 | 10 | crisp 0.14 to 0.16 |
+| Half the light across a corner | 35 | even 0.39 to 0.52 |
+| A third of the light | 42 | even 0.23 to 0.30 |
+| The print's contrast cut to two fifths | 59 | ink 0.20 to 0.25 |
+| …to a fifth | 54 | ink 0.10 to 0.12 |
+| …to a tenth | 50 | no print found to measure |
+
+So it says blurred under 0.3 and in shadow under 0.55, and of fading it says nothing: the clean-up of v136 carries the
+reader through it, and a warning there would have been wrong four times in five. His own shadowed receipt, at 0.68,
+read, and is not warned of. The first measure of blur tried, how much of what is off the paper is fully dark, sat
+between 0.35 and 0.5 whatever was done to the photo: it was taken against each piece's own darkest print, which blur
+lightens too. The one kept is the steepest step between neighbouring pixels as a part of the way from paper to print,
+which fading leaves alone and blur brings down.
+
+**The closer look.** The reader is given the whole receipt brought down to 2400 across its longer side, so a long
+receipt's print comes out small. A drink doubted on both looks now has its line cut from the photo as taken, at the
+photo's own size, pulled flat and cleaned as the whole was, and read by itself (`_scanCloser`; `quadBand` goes
+from a line's place in the flattened picture back to the photo). What it says is taken only if the reader is sure of
+it this time. With no drink doubted nothing more is read. Tried with the first look taken from half-size copies: the
+marble-table receipt's two drinks, both doubted, were both settled in a third of a second; and the Andytown total,
+first read "ie 12.5" and taken for a drink, read "Total 12.50" up close, which is why a doubted row that turns out to be
+no drink is taken off the list. It cannot help a first look that found no drinks at all, since there is no line to go
+back to, and what it gains on a full-size photo of a long receipt could not be measured: the copies kept of his photos
+are already shrunk.
+
+Not built: the three travel options, the handles for a fold, and a warning for faded print, which needs a photo of a
+receipt that has really faded to be set by.
+`tests/scan-receipt.js`, `tests/unit/crop.test.mjs`.

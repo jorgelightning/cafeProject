@@ -604,4 +604,116 @@ export function readable(src, w, h) {
   return out;
 }
 
-if (typeof window !== "undefined") Object.assign(window, { CROP_SMALL, CROP_MID, findReceipt, findStart, foundCorners, quadOk, quadSize, flatten, readable });
+/* ---- a strip of the box, and whether the photo is fit to read (v141) ---- */
+
+/** Where a place inside the box is in the photo: u across and v down the flattened picture, as parts of its width and
+    height, through the same projection flatten uses, so a line found in the flattened picture can be gone back to in
+    the photo itself. @param {Quad} q @param {number} u @param {number} v @returns {number[]} */
+export function quadPoint(q, u, v) {
+  const x0 = q[0][0],
+    y0 = q[0][1],
+    x1 = q[1][0],
+    y1 = q[1][1],
+    x2 = q[2][0],
+    y2 = q[2][1],
+    x3 = q[3][0],
+    y3 = q[3][1];
+  const dx1 = x1 - x2,
+    dx2 = x3 - x2,
+    dy1 = y1 - y2,
+    dy2 = y3 - y2,
+    sx = x0 - x1 + x2 - x3,
+    sy = y0 - y1 + y2 - y3;
+  const den = dx1 * dy2 - dx2 * dy1;
+  const g = den ? (sx * dy2 - dx2 * sy) / den : 0,
+    h = den ? (dx1 * sy - sx * dy1) / den : 0;
+  const z = g * u + h * v + 1;
+  return [((x1 - x0 + g * x1) * u + (x3 - x0 + h * x3) * v + x0) / z, ((y1 - y0 + g * y1) * u + (y3 - y0 + h * y3) * v + y0) / z];
+}
+/** The strip of the box between two heights, as a box of its own: one printed line, to be read again by itself.
+    @param {Quad} q @param {number} v0 @param {number} v1 parts of the flattened picture's height @returns {Quad} */
+export function quadBand(q, v0, v1) {
+  const a = Math.max(0, Math.min(v0, v1)),
+    b = Math.min(1, Math.max(v0, v1));
+  return /** @type {Quad} */ ([quadPoint(q, 0, a), quadPoint(q, 1, a), quadPoint(q, 1, b), quadPoint(q, 0, b)]);
+}
+
+/* Whether a photo is fit to read is judged on small pieces of it, each brought to the size it would have in a photo
+   1650 across its longer side: the size the numbers below were measured at, and near the size the reader works at. A
+   thumbnail would hide blur. In a piece with print on it, three things are measured against the paper's own
+   brightness there:
+   - how far the print stands from the paper (ink);
+   - how sharply it does: the steepest steps between neighbouring pixels, as a part of that distance (crisp). Fading
+     shrinks both alike and leaves it be; blur spreads each step over more pixels and brings it down;
+   - and the paper's brightness itself, which the pieces are compared by: a shadow leaves some far darker than the rest.
+   The first try at crisp, how much of what is off the paper is fully dark, did not move with blur at all, because it
+   was measured against the piece's own darkest print, which blur lightens too. */
+const OFF = 0.2; /* this far from the paper toward the darkest print, and a pixel is no longer paper */
+const PRINT_RANGE = 8; /* paper and print at least this far apart, */
+const PRINT_INK = 0.08; /* …and this much of the paper's brightness, or there is no print in the piece */
+const PRINT_LEAST = 0.02; /* of the piece off the paper: less is a speck */
+const PRINT_MOST = 0.45; /* more is a dark thing, not print */
+const STEEP = 0.99; /* the steps this many of the others are gentler than */
+const PIECES_LEAST = 4; /* pieces with print in the box, under which nothing is said */
+const BEST = 0.75; /* blur is judged by the box's better pieces: a crease or a blank patch is not blur */
+/* Measured on five of the owner's receipts, blurred, shadowed and faded by known amounts, beside how many of their 102
+   lines the reader then got right (v141; 56 as they are):
+   - crisp was 0.74 to 0.84 as they are; 0.28 to 0.34 blurred enough to lose a fifth of the lines; 0.14 to 0.16 blurred
+     enough to lose nearly all of them;
+   - the darkest tenth of the pieces was 0.68 to 0.91 as bright as the brightest as they are, and 0.39 to 0.52 with a
+     shadow that halved the light across a corner, which lost a third of the lines;
+   - fading is measured (ink) and not warned of: with the print's contrast cut to a fifth the reader still got 54. */
+const BLUR_BELOW = 0.3;
+const SHADE_BELOW = 0.55;
+/** One piece of the photo. @param {Uint8Array|Uint8ClampedArray} Y its brightness, a number a pixel @param {number} w
+    @param {number} h @returns {{text: boolean, paper: number, ink: number, crisp: number}} */
+export function patchLook(Y, w, h) {
+  const n = w * h,
+    hist = new Uint32Array(256),
+    steps = new Uint32Array(256);
+  for (let i = 0; i < n; i++) hist[Y[i]]++;
+  for (let y = 0; y < h - 1; y++)
+    for (let x = 0, i = y * w; x < w - 1; x++, i++) {
+      const a = Math.abs(Y[i + 1] - Y[i]),
+        b = Math.abs(Y[i + w] - Y[i]);
+      steps[a > b ? a : b]++;
+    }
+  /** @param {Uint32Array} of @param {number} share @param {number} all */
+  const at = function (of, share, all) {
+    let seen = 0;
+    for (let v = 0; v < 256; v++) {
+      seen += of[v];
+      if (seen >= share * all) return v;
+    }
+    return 255;
+  };
+  const paper = at(hist, 0.9, n),
+    range = paper - at(hist, 0.01, n),
+    ink = paper ? range / paper : 0;
+  let off = 0;
+  for (let v = 0; v < paper - OFF * range; v++) off += hist[v];
+  const share = n ? off / n : 0;
+  return {
+    text: range >= PRINT_RANGE && ink >= PRINT_INK && share >= PRINT_LEAST && share <= PRINT_MOST,
+    paper: paper,
+    ink: ink,
+    crisp: range > 0 ? Math.min(1, at(steps, STEEP, (w - 1) * (h - 1)) / range) : 0,
+  };
+}
+/** What is wrong with the part of a photo that is to be read, if anything, from its pieces (patchLook): "blur",
+    "shadow", or "" for nothing, or too little print to tell.
+    @param {{text: boolean, paper: number, ink: number, crisp: number}[]} looks the pieces inside the box
+    @returns {{why: string, n: number, crisp: number, ink: number, even: number}} */
+export function photoCheck(looks) {
+  const t = (looks || []).filter(l => l && l.text);
+  if (t.length < PIECES_LEAST) return { why: "", n: t.length, crisp: 1, ink: 1, even: 1 };
+  /** @param {number[]} a @param {number} share */
+  const at = (a, share) => a.slice().sort((x, y) => x - y)[Math.min(a.length - 1, Math.floor(share * a.length))];
+  const crisp = at(t.map(l => l.crisp), BEST),
+    ink = at(t.map(l => l.ink), BEST),
+    papers = t.map(l => l.paper),
+    even = at(papers, 0.9) ? at(papers, 0.1) / at(papers, 0.9) : 1;
+  return { why: crisp < BLUR_BELOW ? "blur" : even < SHADE_BELOW ? "shadow" : "", n: t.length, crisp: crisp, ink: ink, even: even };
+}
+
+if (typeof window !== "undefined") Object.assign(window, { CROP_SMALL, CROP_MID, findReceipt, findStart, foundCorners, quadOk, quadSize, flatten, readable, quadPoint, quadBand, patchLook, photoCheck });

@@ -2,7 +2,7 @@
    The suite (tests/run.js) runs these through tests/unit.js. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { findReceipt, findStart, foundCorners, quadOk, quadSize, flatten, readable, CROP_SMALL, CROP_MID } from "../../js/lib/crop.js";
+import { findReceipt, findStart, foundCorners, quadOk, quadSize, flatten, readable, quadPoint, quadBand, patchLook, photoCheck, CROP_SMALL, CROP_MID } from "../../js/lib/crop.js";
 
 /** A photo 3 wide by 4 tall at `side` on its long side: a background, then papers. A paper is where its middle is and
     how big it is, as fractions of the photo's width, with its lean in degrees; rows of dark print unless it is blank. */
@@ -270,4 +270,56 @@ test("findStart: nothing to go by is no answer, and a photo that is all print is
   assert.equal(start(232, [{ x0: 0.3, y0: 0.25, x1: 0.7, y1: 0.8, level: 232, print: false }]), null, "a pale table with a blank sheet on it");
   assert.equal(start(232, [{ x0: -0.2, y0: -0.2, x1: 1.2, y1: 1.2, level: 232 }]), null, "print from edge to edge says nothing about where the receipt is");
   assert.equal(findStart({ Y: new Uint8Array(16), w: 4, h: 4 }, { Y: new Uint8Array(16), w: 4, h: 4 }), null);
+});
+
+test("quadPoint and quadBand: a place in the flattened picture, gone back to in the photo", () => {
+  const near = (a, b) => a.length === b.length && a.every((p, i) => Math.abs(p[0] - b[i][0]) < 1e-9 && Math.abs(p[1] - b[i][1]) < 1e-9);
+  const sq = [[10, 20], [110, 20], [110, 220], [10, 220]];
+  assert.ok(near([quadPoint(sq, 0, 0), quadPoint(sq, 1, 1), quadPoint(sq, 0.5, 0.25)], [[10, 20], [110, 220], [60, 70]]), "in an upright box a place is where it looks to be");
+  const trap = [[40, 0], [60, 0], [100, 100], [0, 100]];
+  assert.ok(near([quadPoint(trap, 0.5, 0.5)], [[50, 100 / 6]]), "the middle of a leaning box is where its diagonals cross, nearer its far end, as flatten has it");
+  assert.ok(near(quadBand(sq, 0.25, 0.5), [[10, 70], [110, 70], [110, 120], [10, 120]]), "a strip of an upright box is that strip");
+  assert.ok(near(quadBand(sq, 1.4, -0.2), sq), "…stopping at the box's own top and bottom, whichever way round it is asked for");
+  const band = quadBand(trap, 0.4, 0.6);
+  assert.ok(Math.abs(band[0][1] - band[1][1]) < 1e-9 && band[0][1] < band[3][1] && band[1][0] - band[0][0] < band[2][0] - band[3][0], "a strip of a leaning box leans with it: level, and wider toward the near end");
+});
+
+/** A piece of paper with dark bars down it, each edge spread over soft pixels (none: a clean cut). */
+const bars = (paper, ink, soft) => {
+  const side = 80,
+    Y = new Uint8Array(side * side);
+  for (let y = 0; y < side; y++)
+    for (let x = 0; x < side; x++) {
+      const p = x % 40,
+        t = soft ? Math.max(0, Math.min(1, Math.min(p - 4, 10 - p) / soft + 0.5)) : p >= 4 && p < 10 ? 1 : 0;
+      Y[y * side + x] = Math.round(paper - (paper - ink) * t);
+    }
+  return Y;
+};
+test("patchLook: whether a piece has print, how far the print stands from the paper, and how sharply", () => {
+  const sharp = patchLook(bars(230, 40, 0), 80, 80),
+    soft = patchLook(bars(230, 40, 8), 80, 80),
+    pale = patchLook(bars(230, 200, 0), 80, 80),
+    dim = patchLook(bars(70, 12, 0), 80, 80),
+    blank = patchLook(new Uint8Array(6400).fill(230), 80, 80);
+  assert.deepEqual([sharp.text, sharp.paper, sharp.crisp, +sharp.ink.toFixed(2)], [true, 230, 1, 0.83], "clean print on bright paper");
+  assert.ok(soft.text && soft.crisp < 0.2, "blurred print: each step between neighbours is a small part of the way from paper to ink (" + soft.crisp.toFixed(2) + ")");
+  assert.ok(pale.text && pale.crisp === 1 && pale.ink < 0.15, "faded print is as sharp as it was, only nearer the paper");
+  assert.ok(dim.text && dim.crisp === 1 && dim.paper === 70 && dim.ink > 0.8, "print in shadow is still print, as sharp and as far from its paper: the paper is what is darker");
+  assert.equal(blank.text, false, "and bare paper has none");
+});
+
+test("photoCheck: blur and shadow are said, fading is not, and too little print says nothing", () => {
+  const many = (n, o) => Array.from({ length: n }, () => Object.assign({ text: true, paper: 220, ink: 0.7, crisp: 0.75 }, o));
+  assert.equal(photoCheck(many(12)).why, "", "sharp and evenly lit");
+  assert.equal(photoCheck(many(12, { crisp: 0.15 })).why, "blur");
+  assert.equal(photoCheck(many(12, { crisp: 0.35 })).why, "", "a little soft, as five of the owner's read no worse for");
+  assert.equal(photoCheck(many(9, { crisp: 0.15 }).concat(many(4))).why, "", "sharp in a quarter of its pieces, and the rest is a crease or a blank patch, not blur");
+  assert.equal(photoCheck(many(8).concat(many(4, { paper: 80 }))).why, "shadow");
+  assert.equal(photoCheck(many(8).concat(many(4, { paper: 150 }))).why, "", "…a shadow that takes a third of the light is not said: the owner's own shadowed receipt read");
+  assert.equal(photoCheck(many(11).concat(many(1, { paper: 80 }))).why, "", "one dark piece in twelve is not a shadow across the receipt");
+  assert.equal(photoCheck(many(12, { ink: 0.1 })).why, "", "faded print is left be: it read all the same");
+  assert.equal(photoCheck(many(3, { crisp: 0.1 })).why, "", "three pieces of print are too few to judge by");
+  assert.equal(photoCheck(many(12, { crisp: 0.1, text: false })).why, "", "and pieces with no print in them are not asked");
+  assert.equal(photoCheck([]).n, 0);
 });

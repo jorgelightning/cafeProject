@@ -214,7 +214,8 @@ The box says when the receipt is too small in the photo to read, with Retake fir
 priced line it does not know as a drink is ticked all the same, and a reading that went wrong can be kept on the phone,
 photo and all, to share later for testing. The receipt's picture stays in view while its drinks are put right: pinned
 over the list, and taken on to each cup's sheet and to Add a visit, at the sheet's width and moved to the line of the
-drink in hand (`itemLines`, `js/lib/scan.js`).
+drink in hand (`itemLines`, `js/lib/scan.js`). The box also says when the part boxed is blurred or in shadow (`patchLook`,
+`photoCheck`), and a drink the reader doubted has its line read again by itself from the photo at its own size.
 
 The rules know priced receipts, names and prices handed back as separate columns, a cup's order ticket with no
 prices, and a till's order screen with its buttons on the drink's line. A layout they do not know lists the text's lines, and you tap the one that names your drink. To teach it a shop's abbreviation, add a line to

@@ -41,3 +41,7 @@ declare const quadOk: typeof import("../js/lib/crop.js").quadOk;
 declare const quadSize: typeof import("../js/lib/crop.js").quadSize;
 declare const flatten: typeof import("../js/lib/crop.js").flatten;
 declare const readable: typeof import("../js/lib/crop.js").readable;
+declare const quadPoint: typeof import("../js/lib/crop.js").quadPoint;
+declare const quadBand: typeof import("../js/lib/crop.js").quadBand;
+declare const patchLook: typeof import("../js/lib/crop.js").patchLook;
+declare const photoCheck: typeof import("../js/lib/crop.js").photoCheck;

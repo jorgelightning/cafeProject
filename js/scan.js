@@ -383,6 +383,8 @@ function _scanBackWord(run) {
 /** What the reader was unsure of in a drink's line (doubtWords, js/lib/scan.js), as a line under the drink: its words
     as printed, and its price. Before v138 these were chips under the text. @param {any} x a row @param {string[]} doubt */
 function _scanUnsure(x, doubt) {
+  /* read again by itself and found sure (v141) */
+  if (x.sure) return "";
   const names = doubt.filter(w => !!x.printed && x.printed.includes(w));
   const price = x.price != null && doubt.some(w => Math.abs(parseFloat(w.replace(/[^0-9.,]/g, "").replace(",", ".")) - x.price) < 0.005);
   if (!names.length) return price ? "The reader wasn’t sure of the price." : "";
@@ -401,11 +403,76 @@ function _scanSmall(pic) {
   const s = quadSize(_scanQuadPx(pic, pic.quad));
   return Math.min(s.w, s.h) < CROP_SMALLEST;
 }
+/* Pieces of the photo, on a grid across it, each judged for print, blur and brightness as the photo comes in
+   (patchLook, js/lib/crop.js), at the size it would have in a photo 1650 across its longer side, which is the size the
+   thresholds were measured at. The box then asks only which pieces it holds, so what it says can follow a corner. */
+const LOOK_LONG = 1650;
+const LOOK_INSIDE = 0.9; /* of the box, about its middle: a piece on its very edge may be the table */
+const LOOK_SIDE = 128;
+const LOOK_ACROSS = 8;
+const LOOK_DOWN_MOST = 12;
+/** @param {ImageBitmap} bmp @returns {any[]} each piece with where its middle is, as parts of the photo */
+function _scanLooks(bmp) {
+  try {
+    const across = LOOK_ACROSS,
+      down = Math.max(2, Math.min(LOOK_DOWN_MOST, Math.round((across * bmp.height) / bmp.width)));
+    const k = Math.min(1, LOOK_LONG / Math.max(bmp.width, bmp.height));
+    const side = Math.max(16, Math.min(LOOK_SIDE, Math.floor((bmp.width * k) / across), Math.floor((bmp.height * k) / down))),
+      from = side / k;
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = side;
+    const g = cv.getContext("2d", { willReadFrequently: true });
+    g.imageSmoothingQuality = "high";
+    const Y = new Uint8Array(side * side),
+      out = [];
+    for (let j = 0; j < down; j++)
+      for (let i = 0; i < across; i++) {
+        const x = (i + 0.5) / across,
+          y = (j + 0.5) / down;
+        g.drawImage(bmp, Math.round(x * bmp.width - from / 2), Math.round(y * bmp.height - from / 2), from, from, 0, 0, side, side);
+        const d = g.getImageData(0, 0, side, side).data;
+        for (let p = 0, k = 0; k < Y.length; p += 4, k++) Y[k] = (d[p] * 77 + d[p + 1] * 150 + d[p + 2] * 29) >> 8;
+        out.push(Object.assign({ x: x, y: y }, patchLook(Y, side, side)));
+      }
+    return out;
+  } catch (e) {
+    warn("scan.js looks", e);
+    return [];
+  }
+}
+/** Whether a place is inside the box: on the same side of all four of its edges. @param {number[][]} q @param {number} x @param {number} y */
+function _scanInBox(q, x, y) {
+  let side = 0;
+  for (let i = 0; i < 4; i++) {
+    const a = q[i],
+      b = q[(i + 1) % 4];
+    const c = Math.sign((b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]));
+    if (c && side && c !== side) return false;
+    side = side || c;
+  }
+  return true;
+}
+/** Why the part boxed may not read, if it may not: "small", "blur", "shadow", or "". @param {any} pic */
+function _scanWhy(pic) {
+  if (_scanSmall(pic)) return "small";
+  const mx = pic.quad.reduce(/** @param {number} s @param {number[]} p */ (s, p) => s + p[0] / 4, 0),
+    my = pic.quad.reduce(/** @param {number} s @param {number[]} p */ (s, p) => s + p[1] / 4, 0);
+  const inner = pic.quad.map(/** @param {number[]} p */ p => [mx + (p[0] - mx) * LOOK_INSIDE, my + (p[1] - my) * LOOK_INSIDE]);
+  return photoCheck((pic.looks || []).filter(/** @param {any} l */ l => _scanInBox(inner, l.x, l.y))).why;
+}
+/* What the box says for each, always with what to do about it. */
+/** @type {Record<string, string>} */
+const SCAN_WHY = {
+  small: "The receipt is small in this photo, so its print may not read. Move closer and retake.",
+  blur: "This photo looks blurred, so its print may not read. Hold the phone still and retake.",
+  shadow: "A shadow falls across the receipt, so part of it may not read. Turn to even light and retake.",
+};
 /** What the box offers under the photo. With the receipt too small to read, it says so and Retake comes first; the box
-    can still be read, and the whole photo is no better, so that drops to the link. @param {boolean} small */
-function _scanCropActs(small) {
-  return small
-    ? '<p class="scansmall" id="scan-small" role="status">The receipt is small in this photo, so its print may not read. Move closer and retake.</p>' +
+    can still be read, and the whole photo is no better, so that drops to the link. The same goes for a photo that is
+    blurred or in shadow (v141). @param {string} why "" for a box that should read */
+function _scanCropActs(why) {
+  return why
+    ? '<p class="scansmall" id="' + (why === "small" ? "scan-small" : "scan-warn") + '" data-why="' + esc(why) + '" role="status">' + esc(SCAN_WHY[why] || "") + "</p>" +
         '<div class="dnact"><button type="button" class="btn ghost" id="scan-read"' + act("scanCropGo") + ">Read anyway</button>" +
         '<button type="button" class="btn" id="scan-again"' + act("scanPhoto") + ">Retake</button></div>" +
         '<button type="button" class="scanalt" id="scan-all"' + act("scanCropAll") + ">Whole photo</button>"
@@ -495,12 +562,12 @@ function _scanCropDraw() {
     s.left = pic.quad[i][0] * 100 + "%";
     s.top = pic.quad[i][1] * 100 + "%";
   });
-  /* what is offered follows the box: drawn again only when the box crosses from small to not, or back */
+  /* what is offered follows the box: drawn again only when what is wrong with the part boxed changes */
   const acts = $("scan-cropacts"),
-    small = String(_scanSmall(pic));
-  if (acts && acts.dataset.small !== small) {
-    acts.dataset.small = small;
-    acts.innerHTML = _scanCropActs(small === "true");
+    why = _scanWhy(pic);
+  if (acts && acts.dataset.why !== why) {
+    acts.dataset.why = why;
+    acts.innerHTML = _scanCropActs(why);
   }
 }
 /** One corner goes where it is put, inside the photo. The move is taken only while the box is still a box, so a corner
@@ -806,6 +873,69 @@ async function _scanMake(image, signal, ctx, say) {
   if (found) return again.kind === "receipt" && sure(again) > sure(res) ? again : res;
   return again.items.length > res.items.length || res.kind === "unreadable" ? again : res;
 }
+/* A closer look at the drinks the reader doubted (v141). The picture it reads is the whole receipt, brought down to
+   2400 across its longer side, and a long receipt's print comes out small. A doubted drink's line is cut out of the
+   photo as it was taken, at the photo's own size, pulled flat and cleaned as the whole was, and read by itself: more
+   of the photo's detail on the one line that matters, and a line is straight even where the receipt is creased. What
+   it says is taken only if the reader is sure of it this time; a line doubted twice stays as it was, still marked. */
+const CLOSER_MOST = 3; /* lines looked at again, at most: each is a reading of its own */
+const CLOSER_PAD = 0.6; /* of the line's height, kept above it and below */
+/** @param {Blob} file the photo as taken @param {number[][]} quad the box, in the photo's pixels
+    @param {any} res a look's answer, put right in place @param {any} ctx @param {AbortSignal} signal
+    @param {(step: string) => void} [say] @returns {Promise<number>} how many drinks it settled */
+async function _scanCloser(file, quad, res, ctx, signal, say) {
+  const rows = /** @type {{t: string, y0: number, y1: number}[]} */ (res.rows || []);
+  if (!rows.length || !res.items || !res.items.length) return 0;
+  const where = itemLines(res.items, rows);
+  const todo = res.items
+    .map(/** @param {any} x @param {number} i */ (x, i) => ({ x: x, row: where[i] >= 0 ? rows[where[i]] : null }))
+    .filter(/** @param {any} t */ t => t.row && _scanUnsure(t.x, res.doubt || []))
+    .slice(0, CLOSER_MOST);
+  if (!todo.length) return 0;
+  if (say) say("closer");
+  const bmp = await createImageBitmap(file);
+  let settled = 0;
+  try {
+    for (const t of todo) {
+      const tall = t.row.y1 - t.row.y0;
+      const cv = _scanFlat(bmp, quadBand(quad, t.row.y0 - tall * CLOSER_PAD, t.row.y1 + tall * CLOSER_PAD));
+      const g = cv.getContext("2d"),
+        px = g.getImageData(0, 0, cv.width, cv.height);
+      px.data.set(readable(px.data, cv.width, cv.height));
+      g.putImageData(px, 0, 0);
+      const r = /** @type {any} */ (await scanRead(cv, signal));
+      /* a reader that does not say what it doubted cannot settle a doubt */
+      if (!r || typeof r === "string" || !Array.isArray(r.rows) || !r.rows.length) continue;
+      /* the strip holds the line and the edges of its neighbours: the line is the one nearest its middle */
+      const line = r.rows.slice().sort(/** @param {any} a @param {any} b */ (a, b) => Math.abs((a.y0 + a.y1) / 2 - 0.5) - Math.abs((b.y0 + b.y1) / 2 - 0.5))[0];
+      const said = String(line.t || "");
+      const it = /** @type {any} */ (parseReceipt(said, ctx).items[0]);
+      if (!it) {
+        /* Read up close it is no drink at all but a line the rules leave out, a total or a tax, that the first look
+           had garbled into one: on the owner's Andytown receipt "Total 12.50" was first read "ie 12.5". It goes,
+           unless it is the only row there is. */
+        if (res.items.length > 1 && /[A-Za-z]{3}/.test(said) && /\d/.test(said)) {
+          res.items.splice(res.items.indexOf(t.x), 1);
+          settled++;
+        }
+        continue;
+      }
+      if (!it.n || it.price == null || _scanUnsure(it, r.doubt || [])) continue;
+      ["n", "price", "drink", "odd", "isNew"].forEach(function (k) {
+        t.x[k] = it[k];
+      });
+      ["size", "sweet", "ice", "milk"].forEach(function (k) {
+        if (it[k]) t.x[k] = it[k];
+      });
+      t.x.printed = [it.printed].concat(String(t.x.printed || "").split(" + ").slice(1)).join(" + ").slice(0, 80);
+      t.x.sure = true;
+      settled++;
+    }
+  } finally {
+    bmp.close();
+  }
+  return settled;
+}
 /** The text in the picture. Tests replace it. Its worker is a file of our own rather than a blob, because a worker
     from a file is not bound by this page's Content Security Policy, which does not allow WebAssembly.
     @param {HTMLCanvasElement} image @param {AbortSignal} signal @param {(step: string) => void} [say] */
@@ -873,6 +1003,7 @@ async function _scanRun(file) {
   try {
     const bmp = await createImageBitmap(file);
     const f = _scanFind(bmp);
+    const looks = _scanLooks(bmp);
     const w = bmp.width,
       h = bmp.height;
     const k = Math.min(1, CROP_SHOW / Math.max(w, h));
@@ -887,7 +1018,7 @@ async function _scanRun(file) {
     /* the box starts on the receipt it found, kept inside the photo; with none found, or a find that is not a box
        once it is kept inside, a little in from the photo's edges */
     /** @type {any} */
-    const pic = { file: file, w: w, h: h, url: URL.createObjectURL(blob), guess: false, read: "", quad: [[CROP_START, CROP_START], [1 - CROP_START, CROP_START], [1 - CROP_START, 1 - CROP_START], [CROP_START, 1 - CROP_START]] };
+    const pic = { file: file, w: w, h: h, looks: looks, url: URL.createObjectURL(blob), guess: false, read: "", quad: [[CROP_START, CROP_START], [1 - CROP_START, CROP_START], [1 - CROP_START, 1 - CROP_START], [CROP_START, 1 - CROP_START]] };
     if (f) {
       const q = foundCorners(f).map(p => [Math.min(1, Math.max(0, p[0] / w)), Math.min(1, Math.max(0, p[1] / h))]);
       if (_scanQuadOk(pic, q)) {
@@ -941,10 +1072,23 @@ async function _scanRead(run, quad) {
     const stopped = new Promise((_, no) => ctl.signal.addEventListener("abort", () => no(new DOMException("stopped", "AbortError"))));
     const say = /** @param {string} step */ function (step) {
       const note = $("scan-note");
-      if (note && _scan === run) note.textContent = step === "again" ? "That was hard to read. Taking a closer look." : "Looking for drinks and prices. The photo stays on your phone.";
+      if (note && _scan === run)
+        note.textContent = step === "again" ? "That was hard to read. Taking a closer look." : step === "closer" ? "Reading a line it wasn’t sure of again, up close." : "Looking for drinks and prices. The photo stays on your phone.";
     };
     if (ctl.signal.aborted) throw new DOMException("stopped", "AbortError");
-    const res = await Promise.race([_scanMake(made.image, ctl.signal, _scanCtx(run), say), stopped]);
+    /* the box in the photo's pixels, or the whole photo's corners */
+    const corners = quad ? _scanQuadPx(pic, quad) : [[0, 0], [pic.w, 0], [pic.w, pic.h], [0, pic.h]];
+    const made2 = _scanMake(made.image, ctl.signal, _scanCtx(run), say).then(async function (r) {
+      try {
+        await _scanCloser(pic.file, corners, r, _scanCtx(run), ctl.signal, say);
+      } catch (e) {
+        /* the closer look is a help, not a need: the reading stands without it */
+        if (e && /** @type {any} */ (e).name === "AbortError") throw e;
+        warn("scan.js closer", e);
+      }
+      return r;
+    });
+    const res = await Promise.race([made2, stopped]);
     if (_scan !== run) return;
     if (!String(res.text || "").trim()) {
       run.text = null;
