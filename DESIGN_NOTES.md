@@ -2586,3 +2586,25 @@ Seen and left: on the crumpled receipt, read from the box as it starts, the firs
 "Cold Brew $6.25" and said it was unsure of both, while the second look, which is only taken when the first finds no
 drink, read it right. The doubt could be the reason to take the second look.
 `tests/unit/crop.test.mjs`, `tests/scan-receipt.js`.
+
+## A second look when the first is unsure (v139)
+
+The reader takes two looks at a photo, the second with the light evened harder, but the second was only taken when the
+first found no drink. v138's notes ended on a case that showed the gap: from the box as it starts, the first look made
+"Cachan $6.28" of "Cold Brew $6.25" on the owner's crumpled receipt and said it was unsure of both words, while the
+second, never taken, had it right.
+
+Now a first look that found drinks but doubted any of them gets the second look too, and stands unless the second is
+sure of more of its drinks. Sure of more, not simply more or fewer: a tie keeps the first, which reads bold print
+better, so a doubted line is shown with its doubt and not dropped for a second look that only missed it. A look with
+nothing doubted is still the only look, so a clean receipt costs no more time.
+
+Two rules went with it, both from what the second look gave. Its line was "Cold Brew $6.25 1", a stray figure from the
+paper's edge after the price, and the price was looked for only in the last word: a single figure or mark after what
+is plainly a whole price is now passed over. And "Surcharge (4%) $0.30", split from "SF Healthcare" on paper curved in
+the hand, was offered as a drink: a surcharge is not an item.
+
+On the owner's seven photos, read by the app's own code from the corners placed by hand and again from the box as it
+starts: the crumpled receipt from its starting box went from "Cachan $6.28" to "Cold brew $6.25", and no drink that
+was found before is lost. Five of the fourteen readings now take the second look, about a second each.
+`tests/unit/scan.test.mjs`, `tests/scan-receipt.js`.

@@ -432,6 +432,29 @@ const { eq, done } = checker();
   eq(await pg.evaluate(() => { const u = document.querySelector(".scanunsure"), r = u.closest(".scanrow"); return u.getBoundingClientRect().bottom <= r.getBoundingClientRect().bottom + 1 && document.documentElement.scrollWidth <= innerWidth; }), true, "…inside its row");
   await pg.evaluate(() => closeSheet());
 
+  /* a drink the reader doubted gets its second look, which is kept when it is sure of more (v139) */
+  const looksAs = (first, second) => pg.evaluate(a => { window.__seen = []; scanRead = image => { window.__seen.push(image.width); return Promise.resolve(window.__seen.length === 1 ? a.first : a.second); }; }, { first, second });
+  const rowsNow = () => pg.evaluate(() => ({ rows: [...document.querySelectorAll(".scanrow")].map(x => x.querySelector(".scantick").getAttribute("aria-pressed") + " " + x.querySelector(".scanname").value + " " + x.querySelector(".scanp").textContent + (x.querySelector(".scanunsure") ? " ?" : "")), looks: window.__seen.length }));
+  await reset();
+  await looksAs({ text: "Xqzv 6.28\nTOTAL 6.28", doubt: ["Xqzv", "6.28"] }, { text: "CORTADO 6.25\nTOTAL 6.25", doubt: [] });
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  eq(await rowsNow(), { rows: ["true Cortado $6.25"], looks: 2 }, "a first look that doubts its drink gets the second look, and the second is kept when it is sure of more: a misread name and price come out right");
+  await reset();
+  await looksAs({ text: "CORTADO 6.50\nXqzv 6.28\nTOTAL 12.78", doubt: ["Xqzv"] }, { text: "CORTADO 6.50\nTOTAL 6.50", doubt: [] });
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  eq(await rowsNow(), { rows: ["true Cortado $6.50", "false Xqzv $6.28 ?"], looks: 2 }, "…and the first stands when the second is sure of no more, so a doubted line is shown with its doubt and not dropped");
+  await reset();
+  await looksAs({ text: "CORTADO 6.50\nTOTAL 6.50", doubt: [] }, { text: "never", doubt: [] });
+  await pg.evaluate(() => openQuickCup());
+  await shoot(shotFile(), "box");
+  await listed();
+  eq(await rowsNow(), { rows: ["true Cortado $6.50"], looks: 1 }, "…and a first look with nothing doubted is the only look");
+  await pg.evaluate(() => closeSheet());
+
   /* Whole photo, said at the box, reads all of it */
   await reset();
   await readsAs("CORTADO 6.50\nTOTAL 6.50");

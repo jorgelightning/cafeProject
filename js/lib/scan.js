@@ -23,7 +23,7 @@ const MAX_AGE_DAYS = 400;
 
 const ENDS_ITEMS = /\b(SUB\s*-?TOTAL|TOTAL|TAX|VAT|GST)\b/i;
 const NOT_ITEM =
-  /\b(SUB\s*-?TOTAL|TOTAL|TAX|VAT|GST|TIP|GRATUITY|SERVICE|CHANGE|CASH|CARD|VISA|MASTERCAR\w*|CONTACTLESS|AMEX|DISCOVER|DEBIT|CREDIT|BALANCE|AMOUNT|DUE|PAID|AUTH|APPROVAL|APPROVED|INVOICE|RECEIPT|TICKET|ORDER|CHECK|TABLE|GUEST|SERVER|CASHIER|TEL|PHONE|THANK|DISCOUNT|COUPON|PROMO|REWARDS?|LOYALTY|POINTS|ROUNDING|FEE|ACCOUNT)\b/i;
+  /\b(SUB\s*-?TOTAL|TOTAL|TAX|VAT|GST|TIP|GRATUITY|SERVICE|CHANGE|CASH|CARD|VISA|MASTERCAR\w*|CONTACTLESS|AMEX|DISCOVER|DEBIT|CREDIT|BALANCE|AMOUNT|DUE|PAID|AUTH|APPROVAL|APPROVED|INVOICE|RECEIPT|TICKET|ORDER|CHECK|TABLE|GUEST|SERVER|CASHIER|TEL|PHONE|THANK|DISCOUNT|COUPON|PROMO|REWARDS?|LOYALTY|POINTS|ROUNDING|FEE|SURCHARGE|ACCOUNT)\b/i;
 const FOOD = /\b(CROISSANT|COOKIE|MUFFIN|BAGEL|TOAST|SANDWICH|CAKE|SCONE|DONUT|DOUGHNUT|BROWNIE|PASTRY|WAFFLE|BURRITO|SALAD|MUG|TOTE|SHIRT|STICKER|BEANS|GIFT)\b/i;
 const MODIFIER_WORD = /\b(SHOT|SHOTS|SYRUP|PUMPS?|FOAM|DRIZZLE|MODIFIER)\b/i;
 
@@ -87,6 +87,8 @@ function splitPrice(line, dec) {
   const toks = line.split(" ");
   let i = toks.length - 1;
   if (i > 0 && /^[A-Z]$/.test(toks[i])) i--; /* a tax flag after the price */
+  /* or a stray figure or mark the reader made of the paper's edge, after what is plainly a whole price (v139) */
+  else if (i > 0 && /^(\d|[^A-Za-z0-9]{1,2})$/.test(toks[i]) && /\d[.,]\d{2}$/.test(toks[i - 1])) i--;
   const m = /^(-?)([A-Z]{0,2}\$|[€£¥₩])?(-?)(.+)$/.exec(toks[i]);
   if (!m) return null;
   const digits = m[4].replace(/[Oo]/g, "0").replace(/[lI|]/g, "1").replace(/[Ss]/g, "5");

@@ -643,7 +643,7 @@ function _ocrLoad() {
     });
   return _ocrLoading;
 }
-/** What the photo says, with a second look when the first read found nothing to log. A real payment screen stops at one
+/** What the photo says, with a second look when the first read found nothing to log, or (v139) doubted what it found. A real payment screen stops at one
     read, being short and clean; a total picked out of a long page of print is a receipt the reader mostly missed.
     @param {HTMLCanvasElement} image @param {AbortSignal} signal @param {any} ctx for parseReceipt @param {(step: string) => void} [say] */
 async function _scanMake(image, signal, ctx, say) {
@@ -654,11 +654,19 @@ async function _scanMake(image, signal, ctx, say) {
     const text = typeof r === "string" ? r : String((r && r.text) || "");
     return Object.assign(parseReceipt(text, ctx), { text: text, doubt: /** @type {string[]} */ ((r && typeof r !== "string" && r.doubt) || []) });
   };
+  /* how many of a look's drinks the reader was sure of, name and price (v139) */
+  /** @param {any} r */
+  const sure = r => r.items.filter(/** @param {any} x */ x => !_scanUnsure(x, r.doubt)).length;
   const res = await look(image);
   const lines = res.text.split("\n").filter(l => l.trim()).length;
-  if (res.kind === "receipt" || (res.kind === "total_only" && lines <= 8)) return res;
+  const found = res.kind === "receipt" || (res.kind === "total_only" && lines <= 8);
+  if (found && sure(res) === res.items.length) return res;
   if (say) say("again");
   const again = await look(_scanEven(image));
+  /* A first look that found drinks but doubted one gets the second look too, and stands unless the second is sure of
+     more of its drinks: on the owner's crumpled receipt the first made "Cachan $6.28" of "Cold Brew $6.25", said it was
+     unsure of both, and the second, never taken, read it right. */
+  if (found) return again.kind === "receipt" && sure(again) > sure(res) ? again : res;
   return again.items.length > res.items.length || res.kind === "unreadable" ? again : res;
 }
 /** The text in the picture. Tests replace it. Its worker is a file of our own rather than a blob, because a worker

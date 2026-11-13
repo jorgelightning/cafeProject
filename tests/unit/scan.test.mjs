@@ -238,3 +238,18 @@ test("parseReceipt: a name the receipt cut short is yours when only one of yours
   assert.equal(n("Yuzu L 7.50").isNew, true, "nothing of yours starts like it");
   assert.equal(lineItem(["Hot Hojicha L $7.50"], 0, Object.assign({}, ctx, mine)).n, "Hojicha latte", "…and the same where you tap the line yourself");
 });
+
+test("parseReceipt: a stray figure or mark after a whole price is the paper's edge, not the price", () => {
+  const mine = { known: ["Cold brew"] };
+  assert.deepEqual(read(["1  Cold Brew   $6.25 1", "Total $6.25"], mine).items.map(x => [x.n, x.price]), [["Cold brew", 6.25]], "the reader's second look at the owner's crumpled receipt, which found no drink in this line");
+  assert.deepEqual(read(["Cold Brew 6.25 }", "Total 6.25"], mine).items.map(x => x.price), [6.25]);
+  assert.deepEqual(read(["Cold Brew 6.25 T", "Total 6.25"], mine).items.map(x => x.price), [6.25], "a tax flag still is one");
+  assert.deepEqual(names(read(["Cold Brew 6", "Total 6.25"], mine)), [], "a figure after words is not a price for lacking one before it");
+  assert.equal(read(["Cortado ¥600", "合計 ¥600"], { code: "JPY", dec: 0 }).items[0].price, 600, "a currency with no cents is read as it was");
+});
+
+test("parseReceipt: a surcharge is not something you drank", () => {
+  const r = read(["Hot Hojicha L $7.50", "Subtotal $7.50", "SF Healthcare", "Surcharge (4%) $0.30", "SF Tax (8.625%) $0.65", "Total $8.45"], { known: ["Hojicha latte"] });
+  assert.deepEqual(names(r), ["Hojicha latte"]);
+  assert.deepEqual(names(read(["Cortado 5.00", "Surcharge 0.30", "Credit Card Surcharge (3.00%) $0.49"], {})), ["Cortado"], "before the totals too, where the owner's photo had it read");
+});

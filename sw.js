@@ -17,8 +17,8 @@
    CACHE_V would keep serving the old scripts. Anything cross-origin (Maps, Firebase, the FX
    endpoint) is deliberately not intercepted; those must fail normally so their own fallbacks
    run. */
-const CACHE_V = "cafemap-v138";
-const ASSET_V = "?v=138";
+const CACHE_V = "cafemap-v139";
+const ASSET_V = "?v=139";
 
 const SHELL = [
   "./", "./index.html", "./manifest.json", "./cafes.json",
