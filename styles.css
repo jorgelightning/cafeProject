@@ -1371,19 +1371,11 @@ body{ font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helv
 .scantag{ padding:3px 9px; border-radius:var(--r-2); background:var(--surface2); color:var(--text); }
 .scantext small{ margin-top:var(--sp-1); font-size:var(--fs-1); color:var(--faint); }
 .scanp{ min-height:44px; display:flex; align-items:center; font-size:var(--fs-3); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.scanthumb{ position:relative; display:flex; justify-content:center; border-radius:var(--r-2); background:var(--surface2); overflow:hidden; }
-/* Adjust crop (v135; Whole photo in v134): a small pill to look at, inside a 44px button to tap */
-.scanview{ position:absolute; right:0; bottom:0; min-height:44px; padding:var(--sp-2); display:flex; align-items:flex-end; border:0; background:none; font:inherit; cursor:pointer; }
-.scanview span{ padding:var(--sp-1) var(--sp-3); border-radius:var(--r-pill); background:var(--surface); color:var(--text); font-size:var(--fs-1); font-weight:600; box-shadow:0 0 0 1px var(--border); }
-.scanview:focus-visible{ outline:none; }
-.scanview:focus-visible span{ outline:2px solid var(--text); outline-offset:2px; }
-/* The review (v136): which picture is beside the text, and the words to check under it */
+.scanthumb{ display:flex; justify-content:center; border-radius:var(--r-2); background:var(--surface2); overflow:hidden; }
+/* Above the list of drinks (v138; on the text until then): which picture the names are checked against, and under a
+   drink what the reader was unsure of in its line */
 .scanseg{ margin-top:calc(var(--sp-1) - var(--sp-3)); }
-.scandoubt{ display:flex; flex-direction:column; gap:var(--sp-2); }
-.scandoubt[hidden]{ display:none; }
-.scanchk{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
-.scanchk .dntag{ border-color:var(--mid); }
-.scanchk .dntag[hidden]{ display:none; }
+.scantext small.scanunsure{ color:var(--mid); }
 /* Where's the receipt? (v135): the photo, a box over it, and a corner to drag at each of the box's corners. The sheet
    takes the whole screen, as it does while reading, so the photo is as large as the phone allows; the photo sits half a
    corner in from the sheet's edge, so a corner at the photo's edge is still all there to take hold of. */

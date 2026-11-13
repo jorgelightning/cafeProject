@@ -55,7 +55,15 @@
    these, and a tap on one selects it there.
    And the box for the receipt's text, which Scan had opened on since v129, is gone: the owner did not think it would be
    useful. Scan opens the camera. The phone's own reader, which a web page cannot start, now reaches the app one way:
-   text shared to it from the phone's share sheet (v133), which needs no box. */
+   text shared to it from the phone's share sheet (v133), which needs no box.
+
+   Since v138 a photo does not stop at "Text it read" either: "I just don't think it's needed, where the screen where
+   you check the drink we can edit there". So it goes from the box to the reading to the list of drinks, where each
+   name is a box of its own already. What that screen held moved to the list: the picture and its Cleaned up / Original
+   switch, the way back to the box (Adjust crop, where Back to the text was), and the reader's doubts, now a line under
+   the drink they are about. Text shared to the app has no photo and no box to go back to, so it alone still has the
+   text to put right, when no drink is found in it.
+   And the box starts in a better place on a pale table (findStart, js/lib/crop.js). */
 
 function scanOn() {
   return isAdmin;
@@ -134,17 +142,6 @@ function scanTyped() {
   const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text")),
     go = /** @type {HTMLButtonElement|null} */ ($("scan-go"));
   if (box && go) go.disabled = !box.value.trim();
-  /* a word put right is no longer one to check */
-  const list = $("scan-doubt");
-  if (box && list) {
-    let left = 0;
-    list.querySelectorAll(".dntag").forEach(function (b) {
-      const el = /** @type {HTMLElement} */ (b);
-      el.hidden = !box.value.includes(el.dataset.w || "");
-      if (!el.hidden) left++;
-    });
-    list.hidden = !left;
-  }
 }
 /** The box's text, read as a receipt. */
 function scanText() {
@@ -183,6 +180,7 @@ function _scanLinesOf(run) {
 function _scanLines(run, fromList) {
   run.lines = _scanLinesOf(run);
   run.items = [];
+  run.back = fromList ? "list" : "";
   _scanShow(
     '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Which line is your drink?</h2><p>' +
       (fromList ? "Tap the line that names your drink." : "It couldn’t find a drink in this layout. Tap the line that names yours.") + "</p></div>" + _scanClose() + "</div>" +
@@ -192,7 +190,7 @@ function _scanLines(run, fromList) {
       "</div>" +
       '<label class="dnlab" for="scan-linename">Drink</label>' +
       '<input id="scan-linename" class="scanname" type="text" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="80" placeholder="Tap a line above"' + act("scanLineName", ["$value"], "input") + ">" +
-      '<div class="dnact"><button type="button" class="btn ghost"' + act("scanBack") + ">Back to the text</button>" +
+      '<div class="dnact"><button type="button" class="btn ghost"' + act("scanBack") + ">" + (fromList ? "Back to the list" : _scanBackWord(run)) + "</button>" +
       '<button type="button" class="btn" id="scan-log"' + act("scanLog") + " disabled>Tap a line</button></div>"
   );
 }
@@ -223,33 +221,21 @@ function scanLineName(v) {
 function scanPickLine() {
   if (_scan) _scanLines(_scan, true);
 }
-/** Your photo and the text it read, to put right before anything is made of it. @param {any} run @param {string} text */
+/** Text shared to the app, to put right when no drink was found in it. A photo stopped here too, from v131 until the
+    owner had that taken out in v138; what a photo's reading needs is on the list of drinks now.
+    @param {any} run @param {string} text */
 function _scanReview(run, text) {
   run.text = text;
-  /* the words the reader was unsure of (doubtWords), while they are still in the text */
-  const doubt = (run.doubt || []).filter(/** @param {string} w */ w => text.includes(w));
-  const orig = run.show === "orig" && !!run.orig;
   _scanShow(
-    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Check what it read</h2><p>' +
-      (doubt.length ? "It wasn’t sure of " + doubt.length + (doubt.length === 1 ? " word. " : " words. ") : "") + "Fix anything it got wrong, then continue.</p></div>" + _scanClose() + "</div>" +
-      _scanThumb(run, true) +
-      (run.orig
-        ? '<div class="seg scanseg" role="group" aria-label="Picture">' +
-          [["clean", "Cleaned up"], ["orig", "Original"]].map(v => '<button type="button" data-v="' + v[0] + '" aria-pressed="' + ((v[0] === "orig") === orig) + '"' + ((v[0] === "orig") === orig ? ' class="on"' : "") + act("scanShowAs", ["$data.v"]) + ">" + v[1] + "</button>").join("") +
-          "</div>"
-        : "") +
+    '<span class="dngrab" aria-hidden="true"></span><div class="qctop"><div class="dnhead"><h2 id="dns-title">Check what it read</h2><p>Fix anything it got wrong, then continue.</p></div>' + _scanClose() + "</div>" +
       '<label class="dnlab" for="scan-text">Text it read</label>' +
       '<textarea id="scan-text" class="dntext scantxt" rows="7" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"' + act("scanTyped", [], "input") + ">" + esc(text) + "</textarea>" +
-      '<div class="scandoubt" id="scan-doubt"' + (doubt.length ? "" : " hidden") + '><span class="dnlab">Check these</span><div class="scanchk">' +
-      doubt.map(/** @param {string} w */ w => '<button type="button" class="dntag" data-w="' + esc(w) + '"' + act("scanDoubt", ["$data.w"]) + ">" + esc(w) + "</button>").join("") +
-      "</div></div>" +
-      /* text shared to the app has no photo to take again */
-      '<div class="dnact"><button type="button" class="btn ghost"' + act("scanPhoto") + ">" + (run.url ? "Retake" : "Take a photo") + "</button>" +
+      '<div class="dnact"><button type="button" class="btn ghost"' + act("scanPhoto") + ">Take a photo</button>" +
       '<button type="button" class="btn" id="scan-go"' + act("scanText") + (text.trim() ? "" : " disabled") + ">Find the drinks</button></div>"
   );
 }
-/** The picture beside the text: as the reader saw it, cleaned up, or as you took it. Only the picture changes, so what
-    you have typed stays. @param {string} v "clean" or "orig" */
+/** The picture above the list: as the reader saw it, cleaned up, or as you took it. Only the picture changes, so a name
+    you have put right stays. @param {string} v "clean" or "orig" */
 function scanShowAs(v) {
   const run = _scan;
   if (!run || !run.orig) return;
@@ -262,25 +248,33 @@ function scanShowAs(v) {
     b.classList.toggle("on", on);
   });
 }
-/** A word to check, found in the text and selected there, ready to be typed over. @param {string} w */
-function scanDoubt(w) {
-  const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text"));
-  const at = box ? box.value.indexOf(w) : -1;
-  if (!box || at < 0) return;
-  box.focus();
-  box.setSelectionRange(at, at + w.length);
-}
-/** Your photo, on the text and again on the list (v132): the names are checked against it, so it has to be in view.
-    Since v135 it is the part of the photo you boxed, pulled flat, and on the text (`again`) a chip goes back to the box.
-    @param {any} run @param {boolean} [again] */
-function _scanThumb(run, again) {
+/** The picture the names are checked against, above the list (v132): the part of the photo you boxed, pulled flat (v135)
+    and cleaned up (v136), with a switch to the part as you took it. @param {any} run */
+function _scanThumb(run) {
   if (!run.url) return "";
-  const pic = run.pic;
+  const pic = run.pic,
+    orig = run.show === "orig" && !!run.orig;
   return (
-    '<div class="scanthumb"><img id="scan-thumbimg" src="' + esc(run.show === "orig" && run.orig ? run.orig : run.url) + '" alt="' + (pic && pic.read && pic.read !== "all" ? "Your receipt, cut out of your photo" : "Your photo") + '">' +
-    (again && pic ? '<button type="button" class="scanview"' + act("scanCropAgain") + "><span>Adjust crop</span></button>" : "") +
-    "</div>"
+    '<div class="scanthumb"><img id="scan-thumbimg" src="' + esc(orig ? run.orig : run.url) + '" alt="' + (pic && pic.read && pic.read !== "all" ? "Your receipt, cut out of your photo" : "Your photo") + '"></div>' +
+    (run.orig
+      ? '<div class="seg scanseg" role="group" aria-label="Picture">' +
+        [["clean", "Cleaned up"], ["orig", "Original"]].map(v => '<button type="button" data-v="' + v[0] + '" aria-pressed="' + ((v[0] === "orig") === orig) + '"' + ((v[0] === "orig") === orig ? ' class="on"' : "") + act("scanShowAs", ["$data.v"]) + ">" + v[1] + "</button>").join("") +
+        "</div>"
+      : "")
   );
+}
+/** What the way back from a list is called, which is where it goes (scanBack): to the photo's box, or for text shared
+    to the app, to that text. @param {any} run */
+function _scanBackWord(run) {
+  return run.pic ? "Adjust crop" : "Back to the text";
+}
+/** What the reader was unsure of in a drink's line (doubtWords, js/lib/scan.js), as a line under the drink: its words
+    as printed, and its price. Before v138 these were chips under the text. @param {any} x a row @param {string[]} doubt */
+function _scanUnsure(x, doubt) {
+  const names = doubt.filter(w => !!x.printed && x.printed.includes(w));
+  const price = x.price != null && doubt.some(w => Math.abs(parseFloat(w.replace(/[^0-9.,]/g, "").replace(",", ".")) - x.price) < 0.005);
+  if (!names.length) return price ? "The reader wasn’t sure of the price." : "";
+  return "The reader wasn’t sure of “" + names.join("”, “") + "”" + (price ? " or the price." : ".");
 }
 /* the photo as it is shown under the box, on its longer side; and the shortest a side of the box may be, of the photo's
    shorter side, so the box cannot be closed up to nothing */
@@ -438,24 +432,21 @@ function scanCropGo() {
 function scanCropAll() {
   if (_scan && _scan.pic) _scanRead(_scan, null);
 }
-/** From the text back to the box. What you fixed in the text is kept, and comes back if the box is left as it was. */
-function scanCropAgain() {
-  const run = _scan;
-  if (!run || !run.pic) return;
-  const box = /** @type {HTMLTextAreaElement|null} */ ($("scan-text"));
-  if (box) run.text = box.value;
-  _scanCrop(run);
-}
-/* From the list or a failed reading, back to the text it came from */
+/* Back, from a list or a reading that came to nothing: to the list the lines were opened from, else to the photo's box
+   (move it, read the whole photo, or retake), else to the text that was shared to the app */
 function scanBack() {
-  /* a reading with text to it, from a photo or shared to the app: back to that text, to put right */
-  if (_scan && _scan.text != null) {
-    _scanReview(_scan, _scan.text);
+  const run = _scan;
+  if (run && run.back === "list" && run.text != null) {
+    run.back = "";
+    _scanRoute(run, parseReceipt(run.text, _scanCtx(run)));
     return;
   }
-  /* a photo that would not read goes back to its box: move it, read the whole photo, or retake */
-  if (_scan && _scan.pic) {
-    _scanCrop(_scan);
+  if (run && run.pic) {
+    _scanCrop(run);
+    return;
+  }
+  if (run && run.text != null) {
+    _scanReview(run, run.text);
     return;
   }
   scanStart();
@@ -513,13 +504,27 @@ function _scanFind(bmp) {
     const grey = function (c) {
       const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
       const Y = new Uint8Array(c.width * c.height);
-      for (let i = 0, p = 0; p < Y.length; i += 4, p++) Y[p] = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
-      return { Y: Y, w: c.width, h: c.height };
+      const seen = new Uint32Array(256);
+      for (let i = 0, p = 0; p < Y.length; i += 4, p++) seen[(Y[p] = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]))]++;
+      /* the photo's own white: the colour of its brightest tenth, whatever the light was. A pixel is plain when it is
+         no redder, against that, than it is blue: paper and a pale table are, in shadow too; skin and wood are not. */
+      let top = 255;
+      for (let n = seen[top]; top > 0 && n < Y.length * 0.1; ) n += seen[--top];
+      let wr = 0,
+        wb = 0;
+      for (let i = 0, p = 0; p < Y.length; i += 4, p++)
+        if (Y[p] >= top) {
+          wr += d[i];
+          wb += d[i + 2];
+        }
+      const plain = new Uint8Array(Y.length);
+      for (let i = 0, p = 0; p < Y.length; i += 4, p++) plain[p] = d[i] * wb - d[i + 2] * wr <= 0.14 * Math.max(d[i] * wb, d[i + 2] * wr, 1) ? 1 : 0;
+      return { Y: Y, w: c.width, h: c.height, plain: plain };
     };
     /* down in steps, so a 12-megapixel photo is averaged rather than sampled */
     const mid = shrink(shrink(bmp, CROP_MID * 2), CROP_MID),
       small = shrink(mid, CROP_SMALL);
-    const f = findReceipt(grey(small), grey(mid));
+    const f = findStart(grey(small), grey(mid));
     if (!f) return null;
     const k = bmp.width / small.width;
     return { cx: f.cx * k, cy: f.cy * k, w: f.w * k, h: f.h * k, angle: f.angle };
@@ -740,13 +745,13 @@ async function _scanRun(file) {
     _scanFail("Something went wrong reading that. Try again, or type it in.");
   }
 }
-/** Reads the part of the photo inside the box, or all of it, and goes on to the text. A box left as it was is not read
-    twice: the text comes back as you left it. @param {any} run @param {number[][]|null} quad as fractions of the photo */
+/** Reads the part of the photo inside the box, or all of it, and goes on to the drinks it found (to the text it read,
+    until v138). A box left as it was is not read twice. @param {any} run @param {number[][]|null} quad as fractions of the photo */
 async function _scanRead(run, quad) {
   const pic = run.pic,
     key = quad ? JSON.stringify(quad) : "all";
   if (pic.read === key && run.url && run.text != null) {
-    _scanReview(run, run.text);
+    _scanRoute(run, parseReceipt(run.text, _scanCtx(run)));
     return;
   }
   /* an earlier reading that ran out of time has spent its stop: this one gets its own */
@@ -787,7 +792,8 @@ async function _scanRead(run, quad) {
     } else {
       pic.read = key;
       run.doubt = res.doubt || [];
-      _scanReview(run, res.text);
+      run.text = res.text;
+      _scanRoute(run, res);
     }
   } catch (e) {
     if (_scan !== run) return;
@@ -880,7 +886,7 @@ function _scanRoute(run, res) {
   run.other = res.other;
   if (res.kind === "unreadable") {
     if (_scanLinesOf(run).length) _scanLines(run, false);
-    else _scanFail("No drinks found in that text. Check that it all came across, or type it in.");
+    else _scanFail(run.pic ? "No drinks found in that part of the photo. Adjust the crop, or type it in." : "No drinks found in that text. Check that it all came across, or type it in.");
     return;
   }
   if (res.kind === "total_only") {
@@ -899,7 +905,9 @@ function _scanRoute(run, res) {
     return;
   }
   run.off = res.off;
-  run.items = res.items.map((x, i) => Object.assign({ i: i, on: x.drink, say: res.off ? "Read from the receipt, but its prices don’t add up. Check this one." : "" }, x));
+  run.back = "";
+  const doubt = run.doubt || [];
+  run.items = res.items.map((x, i) => Object.assign({ i: i, on: x.drink, say: res.off ? "Read from the receipt, but its prices don’t add up. Check this one." : "", unsure: _scanUnsure(x, doubt) }, x));
   _scanShow(_scanPickHTML(run));
 }
 /** What a row knows, as tags: "oat", "16 oz", and then "had 3× here". @param {any} run @param {any} x a row */
@@ -933,7 +941,7 @@ function _scanPickHTML(run) {
           '<span class="scanbox" aria-hidden="true">' + (x.on ? "✓" : "") + "</span></button>" +
           '<span class="scantext"><input class="scanname" type="text" aria-label="Drink name" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="80" data-i="' + x.i + '" value="' + esc(x.n) + '"' +
           act("scanName", ["$data.i", "$value"], "input") + '><span class="scantags">' + _scanTags(run, x) + "</span>" +
-          (x.printed ? "<small>Printed: " + esc(x.printed) + "</small>" : "") + "</span>" +
+          (x.printed ? "<small>Printed: " + esc(x.printed) + "</small>" : "") + (x.unsure ? '<small class="scanunsure">' + esc(x.unsure) + "</small>" : "") + "</span>" +
           '<span class="scanp">' + esc(x.price != null ? fmtLocal(x.price, run.code) : "") + "</span></div>"
         );
       })
@@ -941,7 +949,7 @@ function _scanPickHTML(run) {
     "</div>" +
     (_scanLinesOf(run).length ? '<button type="button" class="scanalt"' + act("scanPickLine") + ">My drink isn’t here</button>" : "") +
     '<p class="scanfoot">' + (run.other ? "This receipt is in " + esc(run.other) + ", so add each price yourself." : run.off ? "These prices don’t add up to the receipt’s subtotal, so one may be misread." : "Tax, tip and the total are left out.") + "</p>" +
-    '<div class="dnact"><button type="button" class="btn ghost"' + act("scanBack") + ">Back to the text</button>" +
+    '<div class="dnact"><button type="button" class="btn ghost"' + act("scanBack") + ">" + _scanBackWord(run) + "</button>" +
     '<button type="button" class="btn" id="scan-log"' + act("scanLog") + (go ? ">" + go : " disabled>Tick a drink") + "</button></div>"
   );
 }

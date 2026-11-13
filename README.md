@@ -192,7 +192,7 @@ so a visitor who never does never loads them.
 
 ## Scan a receipt
 
-The log sheet and Add a visit (once the cafe has a name) each have a Scan button that fills them in from a receipt. A photo read in the app stops first at the photo and the text it read, to put right. Every reading then stops at a list to tick, showing what was printed and with each name editable, and you still press Save. Scan
+The log sheet and Add a visit (once the cafe has a name) each have a Scan button that fills them in from a receipt. A photo stops at a box to put round the receipt, is read, and goes straight to a list of the drinks it found (from v131 to v137 it stopped at the text it read on the way). Every reading stops at that list to tick, showing what was printed and with each name editable, and you still press Save. Scan
 opens the camera (from v129 to v135 it opened on a box for the receipt's text, for the phone's own reader to fill; the
 owner had it taken out in v136). `parseReceipt` (`js/lib/scan.js`) works out what the text means.
 It costs nothing, needs no account, and nothing leaves the phone.
@@ -206,9 +206,10 @@ The photo is read by Tesseract, self-hosted in `vendor/tesseract-7.0.0/`, about 
 first use. It reads clean print and does poorly on real phone photos. Read whole, it made text of the counter around
 the receipt, so since v135 every photo stops at a box first: it starts on the receipt the app found (`findReceipt`,
 `js/lib/crop.js`), you drag its four corners onto the receipt's own, and Read this part flattens what is inside them
-(`flatten`). Whole photo is the button beside it, and the review's chip, Adjust crop, goes back to the box. What is inside the box
-is cleaned before it is read (`readable`: the light evened, colour left out), and the review shows that picture, with
-the original a tap away and the words the reader was unsure of listed to check (`doubtWords`, `js/lib/scan.js`).
+(`flatten`). Whole photo is the button beside it, and Adjust crop on the list of drinks goes back to the box. On a pale table, where
+no bright paper stands out, the box starts round the print (`findStart`). What is inside the box is cleaned before
+it is read (`readable`: the light evened, colour left out), and the list shows that picture above the drinks, with the
+original a tap away and what the reader was unsure of said under the drink it is about (`doubtWords`, `js/lib/scan.js`).
 
 The rules know priced receipts, names and prices handed back as separate columns, a cup's order ticket with no
 prices, and a till's order screen with its buttons on the drink's line. A layout they do not know lists the text's lines, and you tap the one that names your drink. To teach it a shop's abbreviation, add a line to

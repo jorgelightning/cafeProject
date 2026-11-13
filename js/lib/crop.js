@@ -41,7 +41,9 @@ const FILLS_PHOTO = 0.9; /* this much of the width and the height: there is noth
 const UPRIGHT = 1.5; /* degrees: a lean under this is left alone, since turning a picture softens it */
 const PAD = 0.04; /* of the longer side, kept around the paper */
 
-/** A picture's brightness, a number from 0 to 255 for each pixel, row by row. @typedef {{Y: Uint8Array, w: number, h: number}} Grey */
+/** A picture's brightness, a number from 0 to 255 for each pixel, row by row. `plain`, when it is there, marks the pixels
+    that are no warmer in colour than the photo's own white: paper and a pale table are, a hand and a wooden counter are
+    not. @typedef {{Y: Uint8Array, w: number, h: number, plain?: Uint8Array}} Grey */
 /** Where the receipt is, in the small picture's pixels: its middle, its size with a margin, and its lean in degrees
     (clockwise, as a canvas turns). Turn the photo back by `angle` about (cx, cy) and it is a w by h upright rectangle.
     @typedef {{cx: number, cy: number, w: number, h: number, angle: number}} Found */
@@ -239,6 +241,212 @@ export function findReceipt(small, mid) {
   return { cx: best.cx + 0.5, cy: best.cy + 0.5, w: best.w + 2 * pad, h: best.h + 2 * pad, angle: best.angle };
 }
 
+/* Print (v138). A receipt on a pale table has no bright edge to find: on the owner's seven photos the box started on the
+   receipt twice. But a receipt is also where the print is, whatever it lies on. A pixel is print when it is clearly
+   darker than the small patch around it, which holds in shadow as in light and which a thin stroke is but the middle
+   of a dark thing is not; the photo is cut into cells, a cell with some print in it but not mostly print is a cell of
+   text, and cells of text that touch are a block. The creases of a hand and the grain of a counter are thin and dark
+   too, and joined everything into one block, so print only counts where the photo is not warm in colour (Grey.plain). */
+const INK = 0.8; /* this much of the brightness around it, or less, is print */
+const INK_LEAST = 14; /* …and at least this much darker, so grain on a dark table is not print */
+const TEXT_LEAST = 0.03; /* of a cell: less is a speck */
+const TEXT_MOST = 0.5; /* more is a dark thing, not words on a light one */
+const BLOCK_LEAST = 6; /* cells: fewer is a label */
+const WHOLE = 0.8; /* this much of a block inside the paper found, and the paper holds it */
+const PART = 0.2; /* this much of it inside, and no more than that, and the paper has cut it */
+const MOST = 0.85; /* of the photo: a block this large says nothing about where the receipt is */
+const LOOSE = 2.2; /* paper this many times the size of the print it holds is not that print's paper */
+const PRINT_PAD = 0.14; /* of a block's shorter side, kept round it: about a receipt's own margin */
+
+/** The blocks of print in a photo, the likeliest receipt first: the biggest, nearest the middle.
+    @param {Grey} g the photo about CROP_MID on its long side
+    @returns {{cells: number[][], cx: number, cy: number, w: number, h: number, angle: number}[]} each with the middles of
+    its cells and the upright rectangle round its print, in the picture's pixels */
+function printBlocks(g) {
+  const w = g.w,
+    h = g.h,
+    Y = g.Y;
+  if (!(w >= 32 && h >= 32) || Y.length < w * h) return [];
+  /* the brightness around each pixel: a running total, so any patch costs four lookups */
+  const row = w + 1;
+  const sum = new Float64Array(row * (h + 1));
+  for (let y = 0, p = 0; y < h; y++) for (let x = 0; x < w; x++, p++) sum[(y + 1) * row + x + 1] = Y[p] + sum[y * row + x + 1] + sum[(y + 1) * row + x] - sum[y * row + x];
+  const r = Math.max(2, Math.round(Math.max(w, h) / 160));
+  const cs = Math.max(8, Math.round(Math.max(w, h) / 40));
+  const plain = g.plain && g.plain.length >= w * h ? g.plain : null;
+  const gw = Math.ceil(w / cs),
+    gh = Math.ceil(h / cs);
+  const ink = new Uint8Array(w * h);
+  const dens = new Float32Array(gw * gh),
+    size = new Uint16Array(gw * gh);
+  for (let y = 0, p = 0; y < h; y++) {
+    const y0 = Math.max(0, y - r),
+      y1 = Math.min(h, y + r + 1);
+    for (let x = 0; x < w; x++, p++) {
+      const x0 = Math.max(0, x - r),
+        x1 = Math.min(w, x + r + 1);
+      const mean = (sum[y1 * row + x1] - sum[y0 * row + x1] - sum[y1 * row + x0] + sum[y0 * row + x0]) / ((x1 - x0) * (y1 - y0));
+      const c = Math.floor(y / cs) * gw + Math.floor(x / cs);
+      size[c]++;
+      if (Y[p] < mean * INK && mean - Y[p] > INK_LEAST && (!plain || plain[p])) {
+        ink[p] = 1;
+        dens[c]++;
+      }
+    }
+  }
+  const text = new Uint8Array(gw * gh);
+  for (let c = 0; c < text.length; c++) {
+    const d = dens[c] / Math.max(1, size[c]);
+    text[c] = d >= TEXT_LEAST && d <= TEXT_MOST ? 1 : 0;
+  }
+  /* lines of large print are a cell or two apart: a cell between two cells of text, up and down, joins them */
+  const joined = new Uint8Array(text);
+  for (let y = 0; y < gh; y++)
+    for (let x = 0; x < gw; x++) {
+      if (text[y * gw + x]) continue;
+      const up = (y > 0 && text[(y - 1) * gw + x]) || (y > 1 && text[(y - 2) * gw + x]),
+        down = (y < gh - 1 && text[(y + 1) * gw + x]) || (y < gh - 2 && text[(y + 2) * gw + x]);
+      if (up && down) joined[y * gw + x] = 1;
+    }
+  const seen = new Uint8Array(gw * gh);
+  /** @type {{cells: number[][], cx: number, cy: number, w: number, h: number, angle: number, score: number}[]} */
+  const out = [];
+  for (let s = 0; s < joined.length; s++) {
+    if (!joined[s] || seen[s]) continue;
+    const stack = [s];
+    seen[s] = 1;
+    /** @type {number[]} */
+    const cells = [];
+    while (stack.length) {
+      const c = /** @type {number} */ (stack.pop());
+      const x = c % gw,
+        y = (c - x) / gw;
+      if (text[c]) cells.push(c);
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx,
+            ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= gw || ny >= gh) continue;
+          const n = ny * gw + nx;
+          if (joined[n] && !seen[n]) {
+            seen[n] = 1;
+            stack.push(n);
+          }
+        }
+    }
+    if (cells.length < BLOCK_LEAST) continue;
+    /* its lean and its rectangle, from the print itself, as findReceipt takes them from the paper */
+    let n = 0,
+      sx = 0,
+      sy = 0;
+    /** @param {(x: number, y: number) => void} fn */
+    const each = function (fn) {
+      for (const c of cells) {
+        const cx0 = (c % gw) * cs,
+          cy0 = ((c - (c % gw)) / gw) * cs;
+        for (let y = cy0; y < Math.min(h, cy0 + cs); y++) for (let x = cx0; x < Math.min(w, cx0 + cs); x++) if (ink[y * w + x]) fn(x, y);
+      }
+    };
+    each(function (x, y) {
+      n++;
+      sx += x;
+      sy += y;
+    });
+    if (!n) continue;
+    const mx = sx / n,
+      my = sy / n;
+    let xx = 0,
+      yy = 0,
+      xy = 0;
+    each(function (x, y) {
+      xx += (x - mx) * (x - mx);
+      yy += (y - my) * (y - my);
+      xy += (x - mx) * (y - my);
+    });
+    const both = Math.sqrt(4 * xy * xy + (xx - yy) * (xx - yy));
+    let lean = 0;
+    if ((xx + yy + both) / Math.max(1e-6, xx + yy - both) > 1.25) {
+      const deg = (0.5 * Math.atan2(2 * xy, xx - yy) * 180) / Math.PI;
+      lean = Math.abs(deg) > 45 ? deg - Math.sign(deg) * 90 : deg;
+    }
+    if (Math.abs(lean) < UPRIGHT) lean = 0;
+    const a = (lean * Math.PI) / 180,
+      ca = Math.cos(a),
+      sa = Math.sin(a);
+    let u0 = Infinity,
+      u1 = -Infinity,
+      v0 = Infinity,
+      v1 = -Infinity;
+    each(function (x, y) {
+      const u = x * ca + y * sa,
+        v = y * ca - x * sa;
+      if (u < u0) u0 = u;
+      if (u > u1) u1 = u;
+      if (v < v0) v0 = v;
+      if (v > v1) v1 = v;
+    });
+    const rw = u1 - u0 + 1,
+      rh = v1 - v0 + 1,
+      pad = Math.min(rw, rh) * PRINT_PAD,
+      uc = (u0 + u1) / 2,
+      vc = (v0 + v1) / 2;
+    const off = Math.hypot(mx / w - 0.5, my / h - 0.5) / Math.SQRT1_2;
+    out.push({
+      cells: cells.map(c => [((c % gw) + 0.5) * cs, ((c - (c % gw)) / gw + 0.5) * cs]),
+      cx: uc * ca - vc * sa + 0.5,
+      cy: uc * sa + vc * ca + 0.5,
+      w: rw + 2 * pad,
+      h: rh + 2 * pad,
+      angle: lean,
+      score: cells.length * Math.pow(Math.max(0, 1 - off), 1.5),
+    });
+  }
+  return out.sort((p, q) => q.score - p.score);
+}
+/** Where the box should start. The paper, when it was found: its edges are the receipt's own. But paper that runs off
+    the photo's edge and cuts a block of print in two is a patch of light on the receipt, not the receipt (on the
+    owner's photo under a hard shadow it was the lit third), and then the box goes round that block. So is paper that
+    runs off the edge and is far larger than the print it holds: that is the table. With no paper found, as on a pale table, it goes
+    round the likeliest block of print, which only says where the words are, so the box guesses the margin.
+    @param {Grey} small the photo about CROP_SMALL on its long side @param {Grey} mid the same photo about CROP_MID
+    @returns {Found|null} in the small picture's pixels */
+export function findStart(small, mid) {
+  const paper = findReceipt(small, mid);
+  const blocks = printBlocks(mid);
+  if (!blocks.length) return paper;
+  const k = mid.w / small.w;
+  /** @param {{cx: number, cy: number, w: number, h: number, angle: number}} b */
+  const round = b => ({ cx: b.cx / k, cy: b.cy / k, w: b.w / k, h: b.h / k, angle: b.angle });
+  if (paper) {
+    const a = (paper.angle * Math.PI) / 180,
+      ca = Math.cos(a),
+      sa = Math.sin(a);
+    /** @param {number[]} c a point of the finer picture */
+    const inside = function (c) {
+      const x = c[0] / k - paper.cx,
+        y = c[1] / k - paper.cy;
+      return Math.abs(x * ca + y * sa) <= paper.w / 2 && Math.abs(y * ca - x * sa) <= paper.h / 2;
+    };
+    /* Paper with the photo all round it is a whole sheet, and stands: on a crowded counter a block of print runs on
+       from the receipt into a pot's holes, and the paper is still right. Only paper that runs off the photo's edge
+       may be a part of the receipt, and then the block it cuts through says so: some of it inside, and much of it not. */
+    const edge = Math.max(small.w, small.h) * 0.02;
+    const off = foundCorners(paper).some(p => p[0] <= edge || p[1] <= edge || p[0] >= small.w - edge || p[1] >= small.h - edge);
+    const cut = off && blocks.find(function (b) {
+      const n = b.cells.filter(inside).length;
+      return n >= b.cells.length * PART && n < b.cells.length * WHOLE;
+    });
+    if (cut) return round(cut);
+    /* …or it is the pale table the receipt lies on, bright all the way to the photo's edge: then it holds the receipt's
+       print whole and is far larger than it (the owner's long receipt on a white table, 12 Nov) */
+    const held = blocks.filter(b => b.cells.filter(inside).length >= b.cells.length * WHOLE).sort((p, q) => q.cells.length - p.cells.length)[0];
+    return off && held && paper.w * paper.h > ((held.w * held.h) / (k * k)) * LOOSE ? round(held) : paper;
+  }
+  /* no paper to go by: the likeliest block, unless it is most of the photo, which is no better than no answer */
+  const b = blocks[0];
+  return b.w * b.h > mid.w * mid.h * MOST ? null : round(b);
+}
+
 /** A box's four corners, clockwise from the top left as you look at it, each [x, y]. @typedef {number[][]} Quad */
 
 /** The corners of what findReceipt found: where the box starts. @param {Found} f @returns {Quad} */
@@ -396,4 +604,4 @@ export function readable(src, w, h) {
   return out;
 }
 
-if (typeof window !== "undefined") Object.assign(window, { CROP_SMALL, CROP_MID, findReceipt, foundCorners, quadOk, quadSize, flatten, readable });
+if (typeof window !== "undefined") Object.assign(window, { CROP_SMALL, CROP_MID, findReceipt, findStart, foundCorners, quadOk, quadSize, flatten, readable });

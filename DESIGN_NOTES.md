@@ -2551,3 +2551,38 @@ your drinks fits. Two that fit leave it alone, since an L after a whole name is 
 Measured on the seven photos with the app's own code: 10 of 10 drinks found where it was 6, 9 with the right price,
 the tenth being the one whose price could not be read. The generated photos read as they did.
 `tests/unit/scan.test.mjs`.
+
+## Straight to the drinks, and a box that starts on pale tables (v138)
+
+**The text is not a stop any more.** "We can skip the Text it read, I just don't think it's needed, where the screen
+where you check the drink we can edit there." It had been a stop since v131, when a misread word and a misunderstood
+line looked the same from the far end. Since then the list of drinks got a box for each name (v131), the picture above
+it (v132), a way to pick a line by hand (v133) and a cleaner reading (v136), and the owner now crops each photo himself.
+So a photo goes from its box to the reading to the list. What the text screen held moved there: the picture and its
+Cleaned up / Original switch; Adjust crop, where Back to the text was; and the reader's doubts, which were chips that
+selected a word in the text and are now a line under the drink they are about ("The reader wasn't sure of “Whlte” or
+the price."). The lines of the text are still one tap away, under My drink isn't here, and go back to the list. Text
+shared to the app has no photo and no box, so it alone still has the text to put right when no drink is found in it.
+
+**Where the box starts.** The finder looked for bright paper, and on the owner's seven photos the box started on the
+receipt twice: a receipt on a pale table has no bright edge. But a receipt is also where the print is. A pixel is print
+when it is clearly darker than the small patch round it; a cell of the photo with some print in it is a cell of text;
+cells that touch are a block; and the box goes round the likeliest block with a receipt's margin. Two things had to be
+learned from the photos. Creases in a hand and grain in a counter are thin and dark too and joined everything into one
+block, so print counts only where the photo is no warmer in colour than its own brightest tenth. And the paper found
+is still believed first, since its edges are the receipt's own, unless it runs off the photo's edge and either cuts a
+block of print in two (a patch of light on a shadowed receipt) or is far larger than the print it holds (the table).
+
+| Overlap of the starting box with the receipt (1 is exact) | Before | Now |
+|---|---|---|
+| The owner's seven photos, average | 0.59 | 0.76 |
+| …of them a good start, 0.7 or more | 3 | 5 |
+| Thirteen generated photos, a good start | 11 | 13 |
+
+None got worse. The two real ones still under 0.7 are the first ticket (0.67, a little wide) and the long receipt on a
+white table (0.68, up from 0.47).
+
+Seen and left: on the crumpled receipt, read from the box as it starts, the first look made "Cachan $6.28" of
+"Cold Brew $6.25" and said it was unsure of both, while the second look, which is only taken when the first finds no
+drink, read it right. The doubt could be the reason to take the second look.
+`tests/unit/crop.test.mjs`, `tests/scan-receipt.js`.

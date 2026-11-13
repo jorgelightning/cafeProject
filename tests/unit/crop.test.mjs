@@ -2,7 +2,7 @@
    The suite (tests/run.js) runs these through tests/unit.js. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { findReceipt, foundCorners, quadOk, quadSize, flatten, readable, CROP_SMALL, CROP_MID } from "../../js/lib/crop.js";
+import { findReceipt, findStart, foundCorners, quadOk, quadSize, flatten, readable, CROP_SMALL, CROP_MID } from "../../js/lib/crop.js";
 
 /** A photo 3 wide by 4 tall at `side` on its long side: a background, then papers. A paper is where its middle is and
     how big it is, as fractions of the photo's width, with its lean in degrees; rows of dark print unless it is blank. */
@@ -202,4 +202,72 @@ test("readable: a picture cut short or of no size is answered with nothing, not 
   assert.equal(readable(new Uint8ClampedArray(0), 0, 0).length, 0);
   const one = readable(new Uint8ClampedArray([200, 200, 200, 255]), 1, 1);
   assert.deepEqual([one[0], one[3]], [255, 255], "one pixel is its own paper");
+});
+
+/* ---- where the box starts (v138): the paper, or failing that the print ---- */
+/** A photo 3 wide by 4 tall, as `photo` above, but with print as it is: thin lines of short dashes. Each area is
+    { x0, y0, x1, y1 } as fractions of the photo's width and height, with `level` for its paper, `print` unless it
+    is blank, and `warm` to mark it as coloured like a hand or a counter. */
+function scene(side, bg, areas) {
+  const h = side, w = Math.round(side * 0.75), Y = new Uint8Array(w * h).fill(bg), plain = new Uint8Array(w * h).fill(1);
+  const thick = Math.max(1, Math.round(side / 320)), pitch = Math.max(5, Math.round(side / 40));
+  for (const a of areas) {
+    const X0 = Math.round(a.x0 * w), X1 = Math.round(a.x1 * w), Y0 = Math.max(0, Math.round(a.y0 * h)), Y1 = Math.min(h, Math.round(a.y1 * h));
+    for (let y = Y0; y < Y1; y++) for (let x = Math.max(0, X0); x < Math.min(w, X1); x++) {
+      const p = y * w + x;
+      Y[p] = a.level;
+      if (a.warm) plain[p] = 0;
+      /* a line of dashes every `pitch`, inside a margin a tenth of the area's width */
+      const m = (X1 - X0) * 0.1;
+      if (a.print !== false && x > X0 + m && x < X1 - m && y > Y0 + m && y < Y1 - m && (y - Y0) % pitch < thick && Math.floor((x - X0) / (thick * 2)) % 2 === 0) Y[p] = Math.round(a.level * 0.25);
+    }
+  }
+  return { Y, w, h, plain };
+}
+const start = (bg, areas) => findStart(scene(CROP_SMALL, bg, areas), scene(CROP_MID, bg, areas));
+const paperOnly = (bg, areas) => findReceipt(scene(CROP_SMALL, bg, areas), scene(CROP_MID, bg, areas));
+/* answers are in the small picture's pixels: as fractions of the photo's width and height */
+const box = f => f && { x0: (f.cx - f.w / 2) / (CROP_SMALL * 0.75), x1: (f.cx + f.w / 2) / (CROP_SMALL * 0.75), y0: (f.cy - f.h / 2) / CROP_SMALL, y1: (f.cy + f.h / 2) / CROP_SMALL };
+const about = (got, want, by, what) => { assert.ok(got, what + ": no answer"); for (const k of ["x0", "x1", "y0", "y1"]) near(got[k], want[k], by, what + " " + k); };
+
+test("findStart: on a pale table there is no paper to find, and the box goes round the print", () => {
+  const table = [{ x0: 0.3, y0: 0.25, x1: 0.7, y1: 0.8, level: 232 }];
+  assert.equal(paperOnly(232, table), null, "the paper alone is not found: it is as bright as the table");
+  about(box(start(232, table)), { x0: 0.3, y0: 0.25, x1: 0.7, y1: 0.8 }, 0.06, "the receipt, from its print and a margin");
+});
+
+test("findStart: paper with the photo all round it stands, whatever print lies beside it", () => {
+  const counter = [{ x0: 0.3, y0: 0.4, x1: 0.7, y1: 0.9, level: 235 }, { x0: 0.05, y0: 0.05, x1: 0.6, y1: 0.4, level: 150 }];
+  assert.deepEqual(start(40, counter), paperOnly(40, counter), "a pot's holes run into the receipt's print, and the paper is still the answer");
+  const blank = [{ x0: 0.3, y0: 0.4, x1: 0.7, y1: 0.9, level: 235 }];
+  assert.deepEqual(start(40, blank), paperOnly(40, blank));
+});
+
+test("findStart: a patch of light on a receipt is not the receipt", () => {
+  /* a receipt that fills the photo, its top third in the light and the rest under a shadow as dark as the table beside it */
+  const shadowed = [{ x0: 0.08, y0: -0.1, x1: 0.8, y1: 0.36, level: 235 }, { x0: 0.08, y0: 0.36, x1: 0.8, y1: 1.1, level: 120 }, { x0: 0.8, y0: -0.1, x1: 1.1, y1: 1.1, level: 120, print: false }];
+  const lit = box(paperOnly(40, shadowed));
+  assert.ok(lit && lit.y1 < 0.5, "the paper alone is the lit third");
+  const b = box(start(40, shadowed));
+  assert.ok(b.y1 > 0.85 && b.y0 < 0.15, "the print runs on under the shadow, and the box goes with it: " + JSON.stringify(b));
+});
+
+test("findStart: a pale table bright to the photo's edge is not the receipt lying on it", () => {
+  /* the table is a shade darker than the paper and runs off two edges; darker wall round the rest */
+  const onTable = [{ x0: -0.1, y0: 0.1, x1: 0.85, y1: 1.1, level: 215, print: false }, { x0: 0.3, y0: 0.2, x1: 0.62, y1: 0.9, level: 215 }];
+  const table = box(paperOnly(60, onTable));
+  assert.ok(table && table.x1 - table.x0 > 0.7, "the paper alone is the whole table");
+  about(box(start(60, onTable)), { x0: 0.3, y0: 0.2, x1: 0.62, y1: 0.9 }, 0.07, "the receipt on it");
+});
+
+test("findStart: print only counts where the photo is not warm in colour", () => {
+  const hand = [{ x0: 0.0, y0: 0.0, x1: 0.55, y1: 1.0, level: 200, warm: true }, { x0: 0.6, y0: 0.3, x1: 0.95, y1: 0.75, level: 232 }];
+  about(box(start(232, hand)), { x0: 0.6, y0: 0.3, x1: 0.95, y1: 0.75 }, 0.06, "the creases of a hand are larger and nearer the middle, and are not the receipt");
+});
+
+test("findStart: nothing to go by is no answer, and a photo that is all print is none either", () => {
+  assert.equal(start(40, []), null);
+  assert.equal(start(232, [{ x0: 0.3, y0: 0.25, x1: 0.7, y1: 0.8, level: 232, print: false }]), null, "a pale table with a blank sheet on it");
+  assert.equal(start(232, [{ x0: -0.2, y0: -0.2, x1: 1.2, y1: 1.2, level: 232 }]), null, "print from edge to edge says nothing about where the receipt is");
+  assert.equal(findStart({ Y: new Uint8Array(16), w: 4, h: 4 }, { Y: new Uint8Array(16), w: 4, h: 4 }), null);
 });
