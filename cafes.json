@@ -3996,6 +3996,50 @@
     "wish": false
   },
   {
+    "area": "Mission Dolores",
+    "brand": "JANDii Cafe",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-11-12"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hot Holicha",
+        "orders": [
+          {
+            "date": "2026-11-12",
+            "ice": "Warm",
+            "id": "mwdyju6aea61",
+            "milk": "Oat",
+            "note": "Amazing taste of Hojicha!",
+            "p": "7.50",
+            "size": "10 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.50",
+        "size": "10 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1591,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mwdymjl6gc34",
+    "lat": 37.76423,
+    "lng": -122.4307,
+    "matches": 1,
+    "name": "JANDii Cafe",
+    "pid": "ChIJ50RkKQB_j4ARGEi4SZjuMLk",
+    "rating": 0,
+    "review": "Wow, they remade my drink for no sweet! The vibe is really cool to study and chill!",
+    "updated": "2026-11-12T19:50:30.223Z",
+    "wish": false
+  },
+  {
     "area": "San Francisco, CA",
     "drinks": [
       {
@@ -4684,13 +4728,13 @@
         ]
       }
     ],
-    "elo": 1591,
+    "elo": 1589,
     "emoji": "☕",
     "fav": true,
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 25,
+    "matches": 26,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.\n\nAshley Cafe is next around the corner for a good bagel and sandwiches!",
