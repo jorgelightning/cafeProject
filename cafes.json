@@ -1306,7 +1306,7 @@
     "id": "mqlipq5e1fwo",
     "lat": 37.77591,
     "lng": -122.49649,
-    "matches": 9,
+    "matches": 10,
     "name": "Constance Tea & Matcha",
     "rating": 5,
     "review": "Freshly milled! Great information from the staff!",
@@ -3894,18 +3894,18 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1569,
+    "elo": 1589,
     "emoji": "☕",
     "fav": false,
     "id": "mw9mnsuz8lmg",
     "lat": 37.78861,
     "lng": -122.39538,
-    "matches": 3,
+    "matches": 4,
     "name": "Q Specialty Coffee",
     "pid": "ChIJw2NiLQCBhYARCRc2ms4E6t8",
-    "rating": 0,
+    "rating": 5,
     "review": "The vibes are cool, a lot people studying or working. People from working coming to grab their tea and go! Not many drinks sugar was customizable tho. Drinks so far is good!",
-    "updated": "2026-11-09T20:05:11.237Z",
+    "updated": "2026-11-13T22:13:33.181Z",
     "wish": false
   },
   {
@@ -3949,9 +3949,9 @@
     "matches": 1,
     "name": "Andytown Coffee Roasters",
     "pid": "ChIJIWto0vGHhYAR1koqXLM7-Io",
-    "rating": 0,
+    "rating": 3,
     "review": "",
-    "updated": "2026-11-10T22:48:36.305Z",
+    "updated": "2026-11-13T22:14:20.186Z",
     "wish": false
   },
   {
@@ -3974,25 +3974,29 @@
             "id": "mwcha5hea31m",
             "milk": "Oat",
             "p": "8.00",
+            "reorder": "yes",
             "size": "16 oz",
             "sweet": "0%"
           }
         ],
         "p": "8.00",
+        "reorder": "yes",
         "size": "16 oz",
         "sweet": "0%"
       }
     ],
+    "elo": 1500,
     "emoji": "☕",
     "fav": false,
     "id": "mwchaqu9hjam",
     "lat": 37.78992,
     "lng": -122.40417,
+    "matches": 1,
     "name": "Diary of Matcha",
     "pid": "ChIJ0SMoLQCBhYARITzfRWNdCxI",
-    "rating": 0,
-    "review": "",
-    "updated": "2026-11-11T18:54:53.793Z",
+    "rating": 5,
+    "review": "Cute place and not bad hojicha!",
+    "updated": "2026-11-13T22:13:19.079Z",
     "wish": false
   },
   {
@@ -4025,19 +4029,36 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1591,
+    "elo": 1589,
     "emoji": "☕",
     "fav": false,
     "id": "mwdymjl6gc34",
     "lat": 37.76423,
     "lng": -122.4307,
-    "matches": 1,
+    "matches": 2,
     "name": "JANDii Cafe",
     "pid": "ChIJ50RkKQB_j4ARGEi4SZjuMLk",
-    "rating": 0,
+    "rating": 5,
     "review": "Wow, they remade my drink for no sweet! The vibe is really cool to study and chill!",
-    "updated": "2026-11-12T19:50:30.223Z",
+    "updated": "2026-11-13T22:13:59.271Z",
     "wish": false
+  },
+  {
+    "area": "Staumbaugh Heller",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mwfx7z7vk887",
+    "lat": 37.4835,
+    "lng": -122.22437,
+    "name": "LUMA COFFEE LOUNGE",
+    "pid": "ChIJZzujHgCjj4ARJ84UpAT5gYs",
+    "rating": 0,
+    "review": "",
+    "updated": "2026-11-14T04:43:57.067Z",
+    "wish": true
   },
   {
     "area": "San Francisco, CA",
@@ -4319,7 +4340,27 @@
     "custom": false,
     "drinks": [
       {
-        "count": 14,
+        "dates": [
+          "2026-11-13"
+        ],
+        "ice": "Less ice",
+        "n": "Always & forever",
+        "orders": [
+          {
+            "date": "2026-11-13",
+            "ice": "Less ice",
+            "id": "mwfcei4fpyfv",
+            "p": "7.75",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.75",
+        "size": "16 oz",
+        "sweet": "0%"
+      },
+      {
+        "count": 15,
         "dates": [
           "2026-03-24",
           "2026-07-09",
@@ -4334,7 +4375,8 @@
           "2026-10-15",
           "2026-10-17",
           "2026-10-28",
-          "2026-11-08"
+          "2026-11-08",
+          "2026-11-13"
         ],
         "ice": "Warm",
         "milk": "Oat",
@@ -4480,10 +4522,21 @@
             "reorder": "yes",
             "size": "8 oz",
             "sweet": "0%"
+          },
+          {
+            "date": "2026-11-13",
+            "ice": "Warm",
+            "id": "mwfcei4kxpn3",
+            "milk": "Oat",
+            "p": "5.00",
+            "reorder": "yes",
+            "size": "10 oz",
+            "sweet": "0%"
           }
         ],
+        "p": "5.00",
         "reorder": "yes",
-        "size": "8 oz",
+        "size": "10 oz",
         "sweet": "0%"
       },
       {
@@ -4734,14 +4787,14 @@
     "id": "tea-kissaten",
     "lat": 37.7852,
     "lng": -122.46477,
-    "matches": 26,
+    "matches": 28,
     "name": "Kissaten HiFi",
     "rating": 4,
     "review": "Go-to for hojicha lattes and flat white — consistent and cozy.\n\nAshley Cafe is next around the corner for a good bagel and sandwiches!",
     "tags": [
       "specialty"
     ],
-    "updated": "2026-11-09T05:51:42.356Z",
+    "updated": "2026-11-13T19:02:10.523Z",
     "wish": false
   },
   {
