@@ -2169,6 +2169,43 @@
     "custom": false,
     "drinks": [
       {
+        "count": 2,
+        "dates": [
+          "2026-08-10",
+          "2026-11-15"
+        ],
+        "ice": "Less ice",
+        "milk": "Oat",
+        "n": "Pandan Muối Latte",
+        "orders": [
+          {
+            "date": "2026-08-10",
+            "ice": "Less ice",
+            "id": "muaeummelust",
+            "milk": "Oat",
+            "p": "7.50",
+            "reorder": "yes"
+          },
+          {
+            "date": "2026-11-15",
+            "ice": "Less ice",
+            "id": "mwie5sbpszpb",
+            "milk": "Oat",
+            "note": "Taste amazing! I wish I had better words for it!",
+            "p": "7.50",
+            "reorder": "yes",
+            "size": "12 oz",
+            "tags": [
+              "Pretty",
+              "Just right"
+            ]
+          }
+        ],
+        "p": "7.50",
+        "reorder": "yes",
+        "size": "12 oz"
+      },
+      {
         "dates": [
           "2026-09-20"
         ],
@@ -2193,26 +2230,6 @@
         "dates": [
           "2026-08-10"
         ],
-        "ice": "Less ice",
-        "milk": "Oat",
-        "n": "Pandan Muối Latte",
-        "orders": [
-          {
-            "date": "2026-08-10",
-            "ice": "Less ice",
-            "id": "muaeummelust",
-            "milk": "Oat",
-            "p": "7.50",
-            "reorder": "yes"
-          }
-        ],
-        "p": "7.50",
-        "reorder": "yes"
-      },
-      {
-        "dates": [
-          "2026-08-10"
-        ],
         "n": "Davao Mocha",
         "orders": [
           {
@@ -2226,20 +2243,20 @@
         "reorder": "yes"
       }
     ],
-    "elo": 1595,
+    "elo": 1602,
     "emoji": "☕",
     "fav": true,
     "id": "msu1xc32ec38",
     "lat": 37.33282,
     "lng": -121.90455,
-    "matches": 10,
+    "matches": 11,
     "name": "Kasama Cà Phê",
     "rating": 5,
     "review": "Amazing drinks and interior design! The drinks aren't customizable tho.",
     "tags": [
       "cozy"
     ],
-    "updated": "2026-10-26T20:13:45.399Z",
+    "updated": "2026-11-15T22:14:29.043Z",
     "wish": false
   },
   {
@@ -3658,13 +3675,13 @@
         "sweet": "0%"
       }
     ],
-    "elo": 1562,
+    "elo": 1586,
     "emoji": "☕",
     "fav": false,
     "id": "mvpnj21f2cco",
     "lat": 37.77552,
     "lng": -122.4977,
-    "matches": 1,
+    "matches": 2,
     "name": "Devil's Teeth Baking Company",
     "pid": "ChIJIQxgbuKHhYARMxc7ZR5MUIg",
     "rating": 5,
