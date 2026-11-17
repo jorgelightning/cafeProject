@@ -1300,13 +1300,13 @@
         "sweet": "85%"
       }
     ],
-    "elo": 1500,
+    "elo": 1508,
     "emoji": "☕",
     "fav": true,
     "id": "mqlipq5e1fwo",
     "lat": 37.77591,
     "lng": -122.49649,
-    "matches": 10,
+    "matches": 11,
     "name": "Constance Tea & Matcha",
     "rating": 5,
     "review": "Freshly milled! Great information from the staff!",
@@ -4076,6 +4076,52 @@
     "review": "",
     "updated": "2026-11-14T04:43:57.067Z",
     "wish": true
+  },
+  {
+    "area": "The Castro",
+    "brand": "",
+    "cc": "US",
+    "custom": false,
+    "drinks": [
+      {
+        "dates": [
+          "2026-11-16"
+        ],
+        "ice": "Warm",
+        "milk": "Oat",
+        "n": "Hojicha latte",
+        "orders": [
+          {
+            "date": "2026-11-16",
+            "ice": "Warm",
+            "id": "mwjyk4hhp2hm",
+            "milk": "Oat",
+            "note": "Too much milk and lacking hojicha",
+            "p": "7.48",
+            "reorder": "neutral",
+            "size": "16 oz",
+            "sweet": "0%"
+          }
+        ],
+        "p": "7.48",
+        "reorder": "neutral",
+        "size": "16 oz",
+        "sweet": "0%"
+      }
+    ],
+    "elo": 1441,
+    "emoji": "☕",
+    "fav": false,
+    "id": "mwjyujpnbqoc",
+    "lat": 37.76407,
+    "lng": -122.43281,
+    "matches": 1,
+    "name": "OISHII MATCHA CASTRO",
+    "pid": "ChIJQ9BDBmJ_j4ARNmkqFDhNhoY",
+    "rating": 3,
+    "review": "Interior design was okay and same as the drinks!",
+    "updated": "2026-11-17T00:40:34.379Z",
+    "wish": false
   },
   {
     "area": "San Francisco, CA",
