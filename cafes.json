@@ -4866,10 +4866,11 @@
     "custom": false,
     "drinks": [
       {
-        "count": 2,
+        "count": 3,
         "dates": [
           "2026-02-13",
-          "2026-09-29"
+          "2026-09-29",
+          "2026-11-17"
         ],
         "ice": "Warm",
         "milk": "Oat",
@@ -4891,11 +4892,22 @@
             "reorder": "yes",
             "size": "14 oz",
             "sweet": "0%"
+          },
+          {
+            "date": "2026-11-17",
+            "ice": "Warm",
+            "id": "mwl8bp6l3hkb",
+            "milk": "Oat",
+            "note": "A nice smooth hojicha taste!",
+            "p": "6.75",
+            "reorder": "yes",
+            "size": "12 oz",
+            "sweet": "0%"
           }
         ],
         "p": "6.75",
         "reorder": "yes",
-        "size": "14 oz",
+        "size": "12 oz",
         "sweet": "0%"
       },
       {
@@ -4957,7 +4969,7 @@
       "matcha",
       "to-go"
     ],
-    "updated": "2026-10-16T05:46:08.000Z",
+    "updated": "2026-11-17T21:55:54.339Z",
     "wish": false
   },
   {
